@@ -1,0 +1,41 @@
+.footer {
+  min-height: 100px;
+  padding: 34px 80px;
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #777777;
+  font-size: 13px;
+}
+
+.footer-logo {
+  display: block;
+  width: 90px;
+  max-width: 90px;
+  height: auto;
+  max-height: 45px;
+  object-fit: contain;
+}
+
+.footer div {
+  display: flex;
+  gap: 24px;
+}
+
+.footer a {
+  transition: var(--transition);
+}
+
+.footer a:hover {
+  color: var(--primary);
+}
+
+@media (max-width: 900px) {
+  .footer {
+    padding: 28px;
+    flex-direction: column;
+    gap: 20px;
+  }
+}

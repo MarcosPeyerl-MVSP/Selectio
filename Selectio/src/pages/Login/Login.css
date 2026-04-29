@@ -1,0 +1,145 @@
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #ffffff;
+}
+
+.login-container {
+  min-height: 100vh; 
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #ffffff; 
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--white);
+  padding: 42px 38px;
+  border-radius: 18px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+.login-card h1 {
+  font-size: 28px;
+  margin-bottom: 28px;
+  letter-spacing: -0.5px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.login-form label {
+  text-align: left;
+  font-size: 13px;
+  font-weight: 700;
+  color: #444;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.login-form input {
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  transition: var(--transition);
+}
+
+.login-form input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(182, 28, 47, 0.12);
+}
+
+.forgot-password {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--primary);
+  text-align: right;
+  font-weight: 600;
+}
+
+.login-button {
+  margin-top: 14px;
+  background: var(--primary);
+  color: var(--white);
+  padding: 14px;
+  border-radius: 8px;
+  font-weight: 800;
+  border: 1px solid var(--primary);
+  box-shadow: 0 8px 20px rgba(182, 28, 47, 0.18);
+}
+
+.login-button:hover {
+  background: var(--white);
+  color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(182, 28, 47, 0.25);
+}
+
+.login-divider {
+  margin: 26px 0;
+  position: relative;
+  text-align: center;
+}
+
+.login-divider span {
+  background: var(--white);
+  padding: 0 14px;
+  font-size: 12px;
+  color: #888;
+  position: relative;
+  z-index: 1;
+}
+
+.login-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: #e0e0e0;
+}
+
+.social-login {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.social-login button {
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  border: 1px solid #ddd;
+  background: #fafafa;
+  transition: var(--transition);
+}
+
+.social-login button:hover {
+  background: #fff;
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.register-link {
+  margin-top: 22px;
+  font-size: 13px;
+  color: #666;
+}
+
+.register-link a {
+  color: var(--primary);
+  font-weight: 700;
+}
