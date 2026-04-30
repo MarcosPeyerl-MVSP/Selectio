@@ -213,13 +213,13 @@ export default function Cadastro() {
 
             {/* IA */}
             <div className="ia-box">
-              <span>Curadoria Inteligente (IA)</span>
               <input
                 type="checkbox"
                 name="ia"
                 checked={form.ia}
                 onChange={handleChange}
               />
+              <span>Curadoria Inteligente (IA)</span>
             </div>
 
             {/* TERMOS */}
