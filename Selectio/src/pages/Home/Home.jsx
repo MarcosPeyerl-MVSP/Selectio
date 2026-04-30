@@ -1,6 +1,16 @@
 import './Home.css'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import {
+  FiBriefcase,
+  FiUsers,
+  FiCpu,
+  FiTarget,
+  FiShare2,
+  FiFilter,
+  FiChevronLeft,
+  FiChevronRight
+} from 'react-icons/fi'
 import Navbar from '../../components/Navbar/Navbar'
 import Footer from '../../components/Footer/Footer'
 
@@ -86,14 +96,11 @@ function Home() {
           </div>
 
           <button className="carousel-btn carousel-prev" onClick={vagaAnterior} aria-label="Vaga anterior">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
+            <FiChevronLeft />
           </button>
+
           <button className="carousel-btn carousel-next" onClick={proximaVaga} aria-label="Próxima vaga">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
+            <FiChevronRight />
           </button>
 
           <div className="carousel-indicators">
@@ -114,19 +121,33 @@ function Home() {
 
           <div className="ecosystem-grid">
             <div className="solution-card">
+              <div className="solution-icon">
+                <FiBriefcase />
+              </div>
+
               <h3>Para Empresas</h3>
               <p>Acesso a talentos qualificados fora do mercado comum.</p>
               <p>Filtragem inteligente para apoiar a tomada de decisão.</p>
               <p>Processo focado em eficiência, curadoria e resultado.</p>
-              <Link className="btn-primary" to={"/cadastro/Empresa"}>Cadastrar Empresa</Link>
+
+              <Link className="home-button-primary" to="/cadastro/empresa">
+              Cadastrar Empresa
+              </Link>
             </div>
 
             <div className="solution-card">
+              <div className="solution-icon">
+                <FiUsers />
+              </div>
+
               <h3>Para Indicadores</h3>
               <p>Transforme sua rede profissional em oportunidades reais.</p>
               <p>Acompanhe suas indicações em um painel transparente.</p>
               <p>Receba recompensas por indicações bem-sucedidas.</p>
-              <Link className="btn-primary" to={"/cadastro/indicador"}>Tornar-se Indicador</Link>
+
+              <Link className="home-button-primary" to="/cadastro/indicador">
+              Tornar-se Indicador
+              </Link>
             </div>
           </div>
         </section>
@@ -149,39 +170,49 @@ function Home() {
             </p>
 
             <div className="steps">
+            <div>
+              <span>
+                <FiTarget />
+              </span>
               <div>
-                <span>1</span>
-                <div>
-                  <h3>Curadoria da Vaga</h3>
-                  <p>As vaga passam por análise antes da publicação.</p>
-                </div>
-              </div>
+                <h3>Curadoria da Vaga</h3>
+                <p>As vagas passam por análise antes da publicação.</p>
+             </div>
+            </div>
 
-              <div>
-                <span>2</span>
-                <div>
-                  <h3>Ativação da Rede</h3>
-                  <p>Indicadores recebem vaga compatíveis com sua rede.</p>
-                </div>
-              </div>
+            <div>
+             <span>
+              <FiShare2 />
+            </span>
+            <div>
+              <h3>Ativação da Rede</h3>
+              <p>Indicadores recebem vagas compatíveis com sua rede.</p>
+            </div>
+            </div>
 
-              <div>
-                <span>3</span>
-                <div>
-                  <h3>Filtragem de Precisão</h3>
-                  <p>Dados de perfil e indicação ajudam a montar uma lista qualificada.</p>
-                </div>
-              </div>
+            <div>
+              <span>
+                <FiFilter />
+              </span>
+             <div>
+              <h3>Filtragem de Precisão</h3>
+              <p>Dados de perfil e indicação ajudam a montar uma lista qualificada.</p>
+             </div>
             </div>
           </div>
+         </div>
 
-          <div className="matching-card">
-            <span>ALGORITMO DE MATCHING</span>
-            <div className="bar large"></div>
-            <div className="bar medium"></div>
-            <div className="bar small"></div>
-            <strong>Indicador de compatibilidade</strong>
-          </div>
+         <div className="matching-card">
+  <div className="matching-icon">
+    <FiCpu />
+  </div>
+
+  <span>ALGORITMO DE MATCHING</span>
+  <div className="bar large"></div>
+  <div className="bar medium"></div>
+  <div className="bar small"></div>
+  <strong>Indicador de compatibilidade</strong>
+</div>
         </section>
 
         <section className="cta">

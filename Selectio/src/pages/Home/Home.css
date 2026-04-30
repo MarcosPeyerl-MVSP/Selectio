@@ -314,15 +314,7 @@
   box-shadow: 0 14px 35px rgba(0, 0, 0, 0.05);
 }
 
-.solution-card .icon {
-  width: 42px;
-  height: 42px;
-  background: #ffe7ec;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  margin-bottom: 18px;
-}
+
 
 .solution-card h3 {
   font-size: 24px;
@@ -549,4 +541,61 @@
   .cta h2 {
     font-size: 30px;
   }
+}
+
+.solution-icon {
+  width: 46px;
+  height: 46px;
+  background: #ffe7ec;
+  color: var(--primary);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  margin-bottom: 18px;
+}
+
+.home-button-primary {
+  margin-top: 20px;
+  width: 100%;
+  background: var(--primary);
+  color: var(--white) !important;
+  padding: 14px 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  border: 1px solid var(--primary);
+  box-shadow: 0 8px 20px rgba(182, 28, 47, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.home-button-primary:hover {
+  background: var(--white);
+  color: var(--primary) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(182, 28, 47, 0.25);
+}
+
+.steps span svg {
+  width: 16px;
+  height: 16px;
+}
+
+.matching-icon {
+  width: 48px;
+  height: 48px;
+  background: #ffe7ec;
+  color: var(--primary);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  margin-bottom: 18px;
+}
+
+.carousel-btn svg {
+  width: 26px;
+  height: 26px;
 }
