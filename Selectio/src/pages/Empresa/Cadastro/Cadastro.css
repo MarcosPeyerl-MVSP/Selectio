@@ -6,6 +6,37 @@
   background: #ffffff;
   display: flex;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.empresa-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(182, 28, 47, 0.06) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: float 8s ease-in-out infinite;
+}
+
+.empresa-container::after {
+  content: '';
+  position: absolute;
+  bottom: -20%;
+  left: -5%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(182, 28, 47, 0.04) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: float 10s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(20px); }
 }
 
 .empresa-wrapper {
@@ -13,33 +44,67 @@
   max-width: 1200px;
   display: grid;
   grid-template-columns: 1fr 320px;
-  gap: 40px;
+  gap: 45px;
+  position: relative;
+  z-index: 1;
 }
 
 /* ===== FORMULÁRIO ===== */
 
 .empresa-form {
   background: #ffffff;
-  border-radius: 18px;
-  padding: 40px;
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+  border: 2px solid #b61c2f;
+  border-radius: 16px;
+  padding: 45px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.empresa-form:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
 }
 
 .empresa-form h1 {
-  font-size: 28px;
-  margin-bottom: 8px;
+  font-size: 38px;
+  margin-bottom: 6px;
+  color: #1a1a1a;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.empresa-form h1 strong {
+  color: #b61c2f;
 }
 
 .subtitle {
   font-size: 14px;
-  color: #666;
-  margin-bottom: 28px;
+  color: #666666;
+  margin-bottom: 32px;
+  line-height: 1.5;
+  font-weight: 400;
 }
 
 .empresa-form h3 {
-  font-size: 16px;
-  margin: 30px 0 12px;
-  color: #111;
+  font-size: 13px;
+  margin: 32px 0 14px;
+  color: #1a1a1a;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.empresa-form h3::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  background: #b61c2f;
+  border-radius: 2px;
 }
 
 /* ===== INPUTS E SELECTS ===== */
@@ -47,19 +112,32 @@
 .empresa-form input,
 .empresa-form select {
   width: 100%;
-  padding: 13px 14px;
+  padding: 12px 14px;
   border-radius: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid #e0e0e0;
   font-size: 14px;
-  transition: 0.2s ease;
-  margin-bottom: 14px; /* ✅ espaçamento vertical */
+  transition: all 0.3s ease;
+  margin-bottom: 14px;
+  background: #fafafa;
+  color: #333333;
+  font-weight: 500;
+  font-family: inherit;
+}
+
+.empresa-form input::placeholder {
+  color: #999999;
 }
 
 .empresa-form input:focus,
 .empresa-form select:focus {
   outline: none;
   border-color: #b61c2f;
-  box-shadow: 0 0 0 2px rgba(182, 28, 47, 0.12);
+  background: #ffffff;
+  box-shadow: 0 0 0 2px rgba(182, 28, 47, 0.1);
+}
+
+.empresa-form input:valid {
+  border-color: #b61c2f;
 }
 
 /* ===== GRID DE 2 COLUNAS ===== */
@@ -67,11 +145,10 @@
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 14px; /* ✅ espaço após o grid */
+  gap: 18px;
+  margin-bottom: 14px;
 }
 
-/* remove margem duplicada dentro do grid */
 .grid-2 input,
 .grid-2 select {
   margin-bottom: 0;
@@ -81,25 +158,33 @@
 
 .ia-box {
   margin-top: 20px;
-  background: #fafafa;
-  border-radius: 12px;
+  background: #f8f8f8;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
   padding: 16px 18px;
-
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.ia-box:hover {
+  background: #f5f5f5;
+  border-color: #d8d8d8;
 }
 
 .ia-box span {
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: #333333;
 }
 
 .ia-box input[type="checkbox"] {
   width: 18px;
   height: 18px;
   cursor: pointer;
+  accent-color: #b61c2f;
 }
 
 /* ===== TERMOS ===== */
@@ -107,43 +192,80 @@
 .termos {
   margin-top: 18px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
+  padding: 14px;
+  background: #f8f8f8;
+  border: 1px solid #b61c2f;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.termos:hover {
+  background: #f5f5f5;
+  border-color: #97001f;
 }
 
 .termos input[type="checkbox"] {
   width: 18px;
   height: 18px;
   cursor: pointer;
+  accent-color: #b61c2f;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .termos span {
   font-size: 13px;
-  color: #333;
+  color: #555555;
+  line-height: 1.5;
+}
+
+.termos a {
+  color: #b61c2f;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.termos a:hover {
+  text-decoration: underline;
 }
 
 /* ===== BOTÃO SUBMIT ===== */
 
 .empresa-form button[type="submit"] {
-  margin-top: 30px;
+  margin-top: 36px;
   width: 100%;
   padding: 14px;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #b61c2f;
   color: #ffffff;
-  font-weight: 800;
+  font-weight: 700;
   border: none;
   cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(182, 28, 47, 0.15);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 13px;
 }
 
 .empresa-form button[type="submit"]:hover {
-  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(182, 28, 47, 0.2);
+  background: #a01827;
 }
 
+.empresa-form button[type="submit"]:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(182, 28, 47, 0.15);
+}
 /* ===== SIDEBAR ===== */
 
 .plano-box {
-  background: #fafafa;
+  background: #ffffff;
   border-radius: 20px;
   padding: 22px;
   display: flex;
