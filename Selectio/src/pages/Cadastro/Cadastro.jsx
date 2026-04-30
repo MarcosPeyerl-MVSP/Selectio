@@ -31,7 +31,7 @@ function Cadastro() {
               <li>Gestão simplificada de candidaturas</li>
             </ul>
 
-            <button>Começar</button>
+            <Link className="btn-primary" to={"/cadastro/empresa"}>Começar</Link>
           </div>
 
           <div className="cadastro-card">

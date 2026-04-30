@@ -1,0 +1,278 @@
+/* ===== CONTAINER GERAL ===== */
+
+.empresa-container {
+  min-height: calc(100vh - 140px);
+  padding: 60px 20px;
+  background: #ffffff;
+  display: flex;
+  justify-content: center;
+}
+
+.empresa-wrapper {
+  width: 100%;
+  max-width: 1200px;
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 40px;
+}
+
+/* ===== FORMULÁRIO ===== */
+
+.empresa-form {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 40px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+}
+
+.empresa-form h1 {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 28px;
+}
+
+.empresa-form h3 {
+  font-size: 16px;
+  margin: 30px 0 12px;
+  color: #111;
+}
+
+/* ===== INPUTS E SELECTS ===== */
+
+.empresa-form input,
+.empresa-form select {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  transition: 0.2s ease;
+  margin-bottom: 14px; /* ✅ espaçamento vertical */
+}
+
+.empresa-form input:focus,
+.empresa-form select:focus {
+  outline: none;
+  border-color: #b61c2f;
+  box-shadow: 0 0 0 2px rgba(182, 28, 47, 0.12);
+}
+
+/* ===== GRID DE 2 COLUNAS ===== */
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 14px; /* ✅ espaço após o grid */
+}
+
+/* remove margem duplicada dentro do grid */
+.grid-2 input,
+.grid-2 select {
+  margin-bottom: 0;
+}
+
+/* ===== IA BOX ===== */
+
+.ia-box {
+  margin-top: 20px;
+  background: #fafafa;
+  border-radius: 12px;
+  padding: 16px 18px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ia-box span {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.ia-box input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+/* ===== TERMOS ===== */
+
+.termos {
+  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.termos input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.termos span {
+  font-size: 13px;
+  color: #333;
+}
+
+/* ===== BOTÃO SUBMIT ===== */
+
+.empresa-form button[type="submit"] {
+  margin-top: 30px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  background: #b61c2f;
+  color: #ffffff;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+}
+
+.empresa-form button[type="submit"]:hover {
+  opacity: 0.9;
+}
+
+/* ===== SIDEBAR ===== */
+
+.plano-box {
+  background: #fafafa;
+  border-radius: 20px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.plano-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: #b61c2f;
+  letter-spacing: 1px;
+}
+
+/* ===== PLANO CARD ===== */
+
+.plano-card {
+  position: relative;
+  background: #ffffff;
+  border: 2px solid #b61c2f;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.badge {
+  position: absolute;
+  top: -12px;
+  left: 16px;
+  background: #b61c2f;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.plano-card h2 {
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+
+.preco {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 14px;
+}
+
+.preco span {
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+}
+
+.plano-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.plano-card li {
+  font-size: 13px;
+  margin-bottom: 8px;
+  padding-left: 18px;
+  position: relative;
+}
+
+.plano-card li::before {
+  content: "✓";
+  color: #2ecc71;
+  position: absolute;
+  left: 0;
+}
+
+/* ===== BOTÃO ALTERAR PLANO ===== */
+
+.plano-btn {
+  margin-top: 6px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  background: transparent;
+  border: 2px solid #b61c2f;
+  color: #b61c2f;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.plano-btn:hover {
+  background: #b61c2f;
+  color: #ffffff;
+}
+
+/* ===== HELP BOX ===== */
+
+.help-box {
+  margin-top: 14px;
+  background: #111111;
+  border-radius: 16px;
+  padding: 20px;
+  color: #ffffff;
+}
+
+.help-box h4 {
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+
+.help-box p {
+  font-size: 13px;
+  color: #cccccc;
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+
+.help-link {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ff4d4d;
+  cursor: pointer;
+}
+
+/* ===== RESPONSIVO ===== */
+
+@media (max-width: 900px) {
+  .empresa-wrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .plano-box {
+    max-width: 100%;
+  }
+}

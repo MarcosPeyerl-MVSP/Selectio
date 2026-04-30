@@ -35,4 +35,73 @@ router.post('/indicador/cadastro', async (req, res) => {
   )
 })
 
+router.post('/empresa/cadastro', (req, res) => {
+  const {
+    nomeEmpresa,
+    razaoSocial,
+    cnpj,
+    email,
+    telefone,
+    site,
+    endereco,
+    setor,
+    tamanho,
+    formaPagamento,
+    dadosPagamento,
+    curadoriaIA
+  } = req.body
+
+  if (!nomeEmpresa || !cnpj || !email) {
+    return res.status(400).json({
+      erro: 'Nome da empresa, CNPJ e e-mail são obrigatórios'
+    })
+  }
+
+  const sql = `
+    INSERT INTO empresas (
+      nome_empresa,
+      razao_social,
+      cnpj,
+      email,
+      telefone,
+      site,
+      endereco,
+      setor,
+      tamanho,
+      forma_pagamento,
+      dados_pagamento,
+      curadoria_ia
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `
+
+  db.run(
+    sql,
+    [
+      nomeEmpresa,
+      razaoSocial,
+      cnpj,
+      email,
+      telefone,
+      site,
+      endereco,
+      setor,
+      tamanho,
+      formaPagamento,
+      dadosPagamento,
+      curadoriaIA ? 1 : 0
+    ],
+    function (err) {
+      if (err) {
+        return res.status(500).json({
+          erro: 'Empresa já cadastrada ou erro no banco'
+        })
+      }
+
+      res.json({ sucesso: true })
+    }
+  )
+})
+
+
 module.exports = router

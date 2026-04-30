@@ -4,6 +4,8 @@ import Home from './pages/Home/Home'
 import Login from './pages/Login/Login'
 import Cadastro from './pages/Cadastro/Cadastro'
 import CadastroIndicador from './pages/Indicador/Cadastro/Cadastro'
+import CadastroEmpresa from './pages/Empresa/Cadastro/Cadastro'
+
 
 function App() {
   return (
@@ -13,6 +15,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/cadastro" element={<Cadastro />} />
         <Route path="/cadastro/indicador" element={<CadastroIndicador />} />
+        <Route path="/cadastro/empresa" element={<CadastroEmpresa />} />
         <Route path="*" element={<h1>PAGE NOT FOUND</h1>} />
       </Routes>
     </BrowserRouter>

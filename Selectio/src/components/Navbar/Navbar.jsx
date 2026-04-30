@@ -19,22 +19,6 @@ function Navbar() {
           <Link className="btn-primary" to={"/Cadastro"}>Cadastre-se</Link>
           <Link className="btn-secondary" to={"/Login"}>Login</Link>
         </nav>
-
-        {/* SO APARECEM NA TELA LOGADA
-
-        <div className="user-actions">
-          <button className="icon-button" title="Notificações">
-            <img src={notifIcon} alt="Notificações" />
-          </button>
-
-          <button className="icon-button" title="Perfil">
-            <img src={perfilIcon} alt="Perfil" />
-          </button>
-
-          <button className="icon-button" title="Sair">
-            <img src={sairIcon} alt="Sair" />
-          </button> 
-        </div>*/}
       </div>
     </header>
   )
