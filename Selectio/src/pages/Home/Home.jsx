@@ -1,6 +1,6 @@
 import './Home.css'
 import { useState } from 'react'
-
+import { Link } from 'react-router-dom'
 import Navbar from '../../components/Navbar/Navbar'
 import Footer from '../../components/Footer/Footer'
 
@@ -118,7 +118,7 @@ function Home() {
               <p>Acesso a talentos qualificados fora do mercado comum.</p>
               <p>Filtragem inteligente para apoiar a tomada de decisão.</p>
               <p>Processo focado em eficiência, curadoria e resultado.</p>
-              <button>Cadastrar Empresa</button>
+              <Link className="btn-primary" to={"/cadastro/Empresa"}>Cadastrar Empresa</Link>
             </div>
 
             <div className="solution-card">
@@ -126,7 +126,7 @@ function Home() {
               <p>Transforme sua rede profissional em oportunidades reais.</p>
               <p>Acompanhe suas indicações em um painel transparente.</p>
               <p>Receba recompensas por indicações bem-sucedidas.</p>
-              <button>Tornar-se Indicador</button>
+              <Link className="btn-primary" to={"/cadastro/indicador"}>Tornar-se Indicador</Link>
             </div>
           </div>
         </section>
