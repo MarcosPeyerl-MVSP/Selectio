@@ -103,5 +103,79 @@ router.post('/empresa/cadastro', (req, res) => {
   )
 })
 
+router.post('/indicador/login', async (req, res) => {
+  const { login, senha } = req.body
+
+  if (!login || !senha) {
+    return res.status(400).json({
+      erro: 'E-mail/usuário e senha são obrigatórios'
+    })
+  }
+
+  const sql = `SELECT * FROM indicadores WHERE email = ? OR nome = ?`
+
+  db.get(sql, [login, login], async (err, row) => {
+    if (err) {
+      return res.status(500).json({
+        erro: 'Erro ao buscar usuário no banco'
+      })
+    }
+
+    if (!row) {
+      return res.status(401).json({
+        erro: 'E-mail/usuário ou senha inválidos'
+      })
+    }
+
+    const senhaValida = await bcrypt.compare(senha, row.senha)
+
+    if (!senhaValida) {
+      return res.status(401).json({
+        erro: 'E-mail/usuário ou senha inválidos'
+      })
+    }
+
+    const user = {
+      id: row.id,
+      nome: row.nome,
+      email: row.email,
+      cpf: row.cpf,
+      pix: row.pix,
+      dataNascimento: row.data_nascimento
+    }
+
+    res.json(user)
+  })
+})
+
+router.get('/indicador/:id', (req, res) => {
+  const { id } = req.params
+
+  const sql = `SELECT id, nome, email, cpf, pix, data_nascimento FROM indicadores WHERE id = ?`
+
+  db.get(sql, [id], (err, row) => {
+    if (err) {
+      return res.status(500).json({
+        erro: 'Erro ao buscar usuário'
+      })
+    }
+
+    if (!row) {
+      return res.status(404).json({
+        erro: 'Usuário não encontrado'
+      })
+    }
+
+    res.json({
+      id: row.id,
+      nome: row.nome,
+      email: row.email,
+      cpf: row.cpf,
+      pix: row.pix,
+      dataNascimento: row.data_nascimento
+    })
+  })
+})
 
 module.exports = router
+
