@@ -10,7 +10,7 @@ function Navbar() {
       <img className="logo-img" src={logoVermelho} alt="Selectio" />
 
       <nav className="nav-links">
-        <Link className="active" to={"/"}>Home</Link>
+        <Link className="" to={"/"}>Home</Link>
         <a href="#">Vagas</a>
       </nav>
 
