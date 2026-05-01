@@ -32,7 +32,7 @@ function Navbar() {
       <nav className="nav-links">
         <Link className="" to={"/"}>Home</Link>
         <a href="#">Vagas</a>
-        <Link className="" to={"/painel/indicador"}>Painel</Link>
+        <Link className="active-link" to={"/painel/indicador"}>Painel</Link>
       </nav>
 
       <div className="navbar-right">

@@ -33,6 +33,7 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 14px;
+  margin-bottom: 40px;
 }
 
 .form-grid input {
@@ -51,7 +52,7 @@
 }
 
 .btn-primary {
-  margin-top: 22px;
+  margin-top: 20px;
   width: 100%;
   background: var(--primary);
   color: var(--white);
@@ -60,6 +61,8 @@
   font-weight: 800;
   border: 1px solid var(--primary);
   box-shadow: 0 8px 20px rgba(182, 28, 47, 0.18);
+  cursor: pointer;
+  transition: 0.25s ease;
 }
 
 .btn-primary:hover {

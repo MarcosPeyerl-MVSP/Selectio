@@ -58,17 +58,25 @@
 }
 
 .btn-primary {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   background: var(--primary);
   color: var(--white);
-  padding: 10px 20px;
-  margin-bottom: 22px;
+  padding: 0 20px !important;
+  margin: 0 !important;
   border-radius: 6px;
   font-weight: 700;
   border: 1px solid var(--primary);
   cursor: pointer;
   transition: var(--transition);
   font-size: 14px;
-  height: 47px;
+  height: 47px !important;
+  min-height: 47px !important;
+  line-height: 47px !important;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
 }
 
 .btn-primary:hover {
@@ -78,6 +86,9 @@
 }
 
 .btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   color: var(--primary);
   padding: 10px 20px;
@@ -87,6 +98,8 @@
   cursor: pointer;
   transition: var(--transition);
   font-size: 14px;
+  line-height: 1;
+  text-align: center;
 }
 
 .btn-secondary:hover {
