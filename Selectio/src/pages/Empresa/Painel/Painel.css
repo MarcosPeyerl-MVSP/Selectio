@@ -1,0 +1,284 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ===== CONTAINER GERAL ===== */
+
+.empresa-container {
+  min-height: calc(100vh - 140px);
+  padding: 60px 20px;
+  background: #ffffff;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.empresa-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(182, 28, 47, 0.06) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: float 8s ease-in-out infinite;
+}
+
+.empresa-container::after {
+  content: '';
+  position: absolute;
+  bottom: -20%;
+  left: -5%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(182, 28, 47, 0.04) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: float 10s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(20px); }
+}
+
+/* ===== LAYOUT PRINCIPAL ===== */
+
+.empresa-wrapper {
+  width: 100%;
+  max-width: 1200px;
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 45px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== FORM ===== */
+
+.empresa-form {
+  background: #ffffff;
+  border: 2px solid #f5f5f5;
+  border-radius: 16px;
+  padding: 45px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: 0.3s;
+}
+
+.empresa-form:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.empresa-form h1 {
+  font-size: 38px;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.empresa-form h1 strong {
+  color: #b61c2f;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 32px;
+}
+
+.empresa-form h3 {
+  font-size: 13px;
+  margin: 32px 0 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: flex;
+  gap: 8px;
+}
+
+.empresa-form h3::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  background: #b61c2f;
+}
+
+/* INPUTS */
+
+.empresa-form input,
+.empresa-form select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 14px;
+  background: #fafafa;
+  transition: 0.3s;
+}
+
+.empresa-form input:focus,
+.empresa-form select:focus {
+  outline: none;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(182, 28, 47, 0.1);
+}
+
+/* GRID 2 COL */
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+/* CHECKBOXES */
+
+.ia-box,
+.termos {
+  margin-top: 18px;
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.ia-box {
+  background: #f8f8f8;
+}
+
+.termos {
+  border: 1px solid #b61c2f;
+}
+
+/* BOTÃO */
+
+.empresa-form button {
+  margin-top: 36px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 8px;
+  background: #b61c2f;
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+}
+
+.empresa-form button:hover {
+  background: #a01827;
+}
+
+/* ===== SIDEBAR ===== */
+
+.plano-box {
+  background: #fff;
+  border-radius: 20px;
+  padding: 22px;
+}
+
+.plano-card {
+  border: 2px solid #b61c2f;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+/* ===== DASHBOARD (CARDS) ===== */
+
+.empresa-dashboard {
+  width: 100%;
+  max-width: 1200px;
+  margin: 50px auto 0;
+}
+
+/* GRID IGUAL AO PRINT */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
+}
+
+/* CARD */
+.card {
+  background: #f8f8f8;
+  border: 1px solid #e5e5e5;
+  border-radius: 16px;
+  padding: 22px;
+  min-height: 200px;
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+}
+
+/* CARD ATIVO */
+.card.active {
+  border: 1px solid #b61c2f;
+  background: #ffffff;
+}
+
+/* TEXTOS */
+
+.card h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.card p {
+  font-size: 13px;
+  color: #666;
+}
+
+.card a {
+  display: inline-block;
+  margin-top: 12px;
+  color: #b61c2f;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* BOTÃO FLUTUANTE */
+
+.floating-btn {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: #fff;
+  color: #b61c2f;
+  font-size: 28px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.14);
+  cursor: pointer;
+}
+
+.floating-btn:hover {
+  background: #b61c2f;
+  color: #fff;
+}
+
+/* ===== RESPONSIVO ===== */
+
+@media (max-width: 1200px) {
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .empresa-wrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .cards {
+    grid-template-columns: 1fr;
+  }
+}

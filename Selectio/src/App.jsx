@@ -8,6 +8,8 @@ import CadastroIndicador from './pages/Indicador/Cadastro/Cadastro'
 import CadastroEmpresa from './pages/Empresa/Cadastro/Cadastro'
 //PAINEIS
 import PainelIndicado from './pages/Indicador/Painel/Painel'
+import PainelEmpresa from './pages/Empresa/Painel/Painel'
+
 
 
 
@@ -25,6 +27,7 @@ function App() {
         <Route path="/cadastro/empresa" element={<CadastroEmpresa />} />
         {/* ROTA PAINEIS */}
         <Route path="/painel/indicador" element={<PainelIndicado />} />
+        <Route path="/painel/empresa" element={<PainelEmpresa />} />
         {/* ROTA PAGE NOT FOUND */}
         <Route path="*" element={<h1>PAGE NOT FOUND</h1>} />
       </Routes>
