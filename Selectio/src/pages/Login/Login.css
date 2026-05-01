@@ -50,9 +50,28 @@ html, body, #root {
 .login-form input {
   padding: 12px 14px;
   border-radius: 8px;
+  width: 100%;
   border: 1px solid #ddd;
   font-size: 14px;
   transition: var(--transition);
+}
+
+.input-group {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.input-group input {
+  padding-left: 40px;
 }
 
 .login-form input:focus {
@@ -119,6 +138,10 @@ html, body, #root {
 }
 
 .social-login button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   padding: 12px;
   border-radius: 8px;
   font-weight: 700;

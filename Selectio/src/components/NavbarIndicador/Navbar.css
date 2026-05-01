@@ -36,12 +36,25 @@
   transition: var(--transition);
 }
 
-.nav-links .active {
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -8px;
+  width: 0;
+  height: 2px;
+  background: var(--primary);
+  transition: var(--transition);
+}
+
+.nav-links a:hover,
+.nav-links a.active-link {
   color: var(--primary);
 }
 
-.nav-links a:hover {
-  color: var(--primary);
+.nav-links a:hover::after,
+.nav-links a.active-link::after {
+  width: 100%;
 }
 
 .navbar-right {
@@ -68,7 +81,6 @@
   cursor: pointer;
   transition: var(--transition);
   font-size: 14px;
-  height: 47px;
 }
 
 .btn-primary:hover {
@@ -80,13 +92,14 @@
 .btn-secondary {
   background: transparent;
   color: var(--primary);
-  padding: 10px 20px;
+  padding: 13px 20px;
   border-radius: 6px;
   font-weight: 700;
   border: 1px solid var(--primary);
   cursor: pointer;
   transition: var(--transition);
   font-size: 14px;
+  height: 46px;
 }
 
 .btn-secondary:hover {
@@ -133,36 +146,32 @@
 }
 
 .icon-button {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: transparent;
   border: 1px solid transparent;
   display: grid;
   place-items: center;
+  color: #585858;
+  transition: var(--transition);
 }
 
-.icon-button img {
+.icon-button svg {
   width: 18px;
   height: 18px;
-  object-fit: contain;
   opacity: 0.75;
   transition: var(--transition);
 }
 
-.user-actions .icon-button:nth-child(1) img {
-  width: 21px;
-  height: 21px;
-}
-
 .icon-button:hover {
   background: var(--white);
-  border-color: var(--primary);
+  border-color: transparent;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(182, 28, 47, 0.15);
+  box-shadow: none;
 }
 
-.icon-button:hover img {
+.icon-button:hover svg {
   opacity: 1;
 }
 

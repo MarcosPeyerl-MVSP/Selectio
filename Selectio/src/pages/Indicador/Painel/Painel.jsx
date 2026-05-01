@@ -1,8 +1,8 @@
-import React from "react";
-import "./Painel.css";
-
-import Navbar from "../../../components/Navbar/Navbar";
-import Footer from "../../../components/Footer/Footer";
+import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import './Painel.css'
+import Navbar from '../../../components/NavbarIndicador/Navbar'
+import Footer from '../../../components/Footer/Footer'
 
 import {
   FaUserTie,
@@ -11,9 +11,61 @@ import {
   FaChartBar,
   FaCog,
   FaPlus,
-} from "react-icons/fa";
+} from 'react-icons/fa'
 
 function Painel() {
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('indicadorUser')
+    if (!storedUser) {
+      navigate('/login')
+      return
+    }
+
+    try {
+      const parsedUser = JSON.parse(storedUser)
+      setUser(parsedUser)
+      setLoading(false)
+    } catch (error) {
+      localStorage.removeItem('indicadorUser')
+      navigate('/login')
+    }
+  }, [navigate])
+
+  useEffect(() => {
+    if (!user?.id) return
+
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await fetch(`http://localhost:3333/indicador/${user.id}`)
+        if (!response.ok) {
+          localStorage.removeItem('indicadorUser')
+          navigate('/login')
+          return
+        }
+
+        const data = await response.json()
+        setUser(data)
+        localStorage.setItem('indicadorUser', JSON.stringify(data))
+      } catch (error) {
+        console.error('Erro ao buscar usuário:', error)
+      }
+    }
+
+    fetchCurrentUser()
+  }, [user?.id, navigate])
+
+  if (loading) {
+    return <div className="painel-container">Carregando painel...</div>
+  }
+
+  if (!user) {
+    return null
+  }
+
   return (
     <>
       <Navbar />
@@ -26,8 +78,8 @@ function Painel() {
           <div className="sidebar-user">
             <FaUserTie />
             <div>
-              <strong>INDICADOR</strong>
-              <p>Nome Indicador</p>
+              <strong>{user.nome}</strong>
+              <p>{user.email}</p>
             </div>
           </div>
 
@@ -49,7 +101,7 @@ function Painel() {
           <p className="breadcrumb">BOAS-VINDAS • Painel Central</p>
 
           <h1>
-            Olá, <span>Indicador.</span>
+            Olá, <span>{user.nome}</span>.
           </h1>
 
           <p className="subtitle">
