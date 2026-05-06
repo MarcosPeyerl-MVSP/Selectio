@@ -59,6 +59,7 @@
 }
 
 .app-sidebar-menu a {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -69,24 +70,45 @@
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
-  transition: 0.25s ease;
+  text-decoration: none;
+  transition: color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
 }
 
 .app-sidebar-menu a svg {
   color: #585858;
   font-size: 12px;
+  transition: color 0.25s ease;
 }
 
-.app-sidebar-menu a:hover,
-.app-sidebar-menu a.active {
+.app-sidebar-menu a:hover {
   background: #ffffff;
   color: #c3383d;
   transform: translateX(3px);
 }
 
-.app-sidebar-menu a:hover svg,
-.app-sidebar-menu a.active svg {
+.app-sidebar-menu a.active {
+  background: transparent;
+  color: #171717;
+  transform: none;
+}
+
+.app-sidebar-menu a.active::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 9px;
+  bottom: 9px;
+  width: 3px;
+  border-radius: 999px;
+  background: #6a0f21;
+}
+
+.app-sidebar-menu a:hover svg {
   color: #c3383d;
+}
+
+.app-sidebar-menu a.active svg {
+  color: #585858;
 }
 
 .app-sidebar-btn {
@@ -102,13 +124,15 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  text-decoration: none;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-.app-sidebar-btn:hover,
-.app-sidebar-btn.active {
+.app-sidebar-btn:hover {
   background: #c3383d;
   color: #ffffff;
   transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(195, 56, 61, 0.22);
 }
 
 @media (max-width: 900px) {

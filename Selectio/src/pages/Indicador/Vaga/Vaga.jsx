@@ -1,5 +1,5 @@
 import './Vaga.css'
-import { Link, useParams } from 'react-router-dom'
+import { Link, Navigate, useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Sidebar from '../../../components/Sidebar/Sidebar'
@@ -50,6 +50,8 @@ function Vaga() {
 
   useEffect(() => {
     const fetchVaga = async () => {
+      if (perfil.tipo === 'publico') return
+
       try {
         const response = await fetch(`http://localhost:3333/vagas/${id}`)
         if (!response.ok) {
@@ -66,6 +68,10 @@ function Vaga() {
 
     fetchVaga()
   }, [id, perfil])
+
+  if (perfil.tipo === 'publico') {
+    return <Navigate to={`/login?redirect=/vaga/${id}`} replace />
+  }
 
   if (loading) {
     return (

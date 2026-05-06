@@ -1,5 +1,5 @@
 import './Sidebar.css'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import {
   FaBriefcase,
   FaCalendarAlt,
@@ -16,11 +16,11 @@ const sidebarConfig = {
     userLabel: 'Indicador',
     action: { to: '/vagas', label: 'Candidato', icon: FaPlus },
     items: [
-      { to: '/vagas', label: 'Vagas', icon: FaBriefcase },
-      { to: '/painel/indicador', label: 'Dashboard', icon: FaChartBar },
-      { to: '/painel/indicador', label: 'Candidatos', icon: FaUserFriends },
-      { to: '/painel/indicador', label: 'Perfil', icon: FaUserTie },
-      { to: '/painel/indicador', label: 'Configuracoes', icon: FaCog },
+      { to: '/vagas', label: 'Vagas', icon: FaBriefcase, activeOn: ['/vagas'] },
+      { to: '/painel/indicador', label: 'Dashboard', icon: FaChartBar, activeOn: ['/painel/indicador'] },
+      { to: '/painel/indicador', label: 'Candidatos', icon: FaUserFriends, activeOn: [] },
+      { to: '/painel/indicador', label: 'Perfil', icon: FaUserTie, activeOn: [] },
+      { to: '/painel/indicador', label: 'Configuracoes', icon: FaCog, activeOn: [] },
     ],
   },
   empresa: {
@@ -28,17 +28,18 @@ const sidebarConfig = {
     userLabel: 'Empresa',
     action: { to: '/criar-vaga/empresa', label: 'Nova vaga', icon: FaPlus },
     items: [
-      { to: '/vagas', label: 'Vagas', icon: FaBriefcase },
-      { to: '/painel/empresa', label: 'Dashboard', icon: FaChartBar },
-      { to: '/painel/empresa', label: 'Perfil', icon: FaUserTie },
-      { to: '/painel/empresa', label: 'Configuracoes', icon: FaCog },
-      { to: '/painel/empresa', label: 'Entrevistas', icon: FaCalendarAlt },
+      { to: '/vagas', label: 'Vagas', icon: FaBriefcase, activeOn: ['/vagas'] },
+      { to: '/painel/empresa', label: 'Dashboard', icon: FaChartBar, activeOn: ['/painel/empresa'] },
+      { to: '/painel/empresa', label: 'Perfil', icon: FaUserTie, activeOn: [] },
+      { to: '/painel/empresa', label: 'Configuracoes', icon: FaCog, activeOn: [] },
+      { to: '/painel/empresa', label: 'Entrevistas', icon: FaCalendarAlt, activeOn: [] },
     ],
   },
 }
 
 function Sidebar({ type, user }) {
   const session = getSession()
+  const { pathname } = useLocation()
   const activeType = type || session.type
   const activeUser = user || session.user
   if (!activeType || activeType === 'publico') return null
@@ -65,14 +66,20 @@ function Sidebar({ type, user }) {
           const Icon = item.icon
 
           return (
-            <NavLink key={`${item.to}-${item.label}`} to={item.to}>
+            <NavLink
+              key={`${item.to}-${item.label}`}
+              to={item.to}
+              className={({ isActive }) =>
+                isActive && item.activeOn?.includes(pathname) ? 'active' : ''
+              }
+            >
               <Icon /> {item.label}
             </NavLink>
           )
         })}
       </nav>
 
-      <NavLink className="app-sidebar-btn" to={config.action.to}>
+      <NavLink className={() => 'app-sidebar-btn'} to={config.action.to}>
         <ActionIcon /> {config.action.label}
       </NavLink>
     </aside>

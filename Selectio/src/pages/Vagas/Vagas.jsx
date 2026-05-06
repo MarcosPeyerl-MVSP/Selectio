@@ -6,6 +6,36 @@ import Sidebar from '../../components/Sidebar/Sidebar'
 import Footer from '../../components/Footer/Footer'
 import { FiSearch } from 'react-icons/fi'
 
+const formatCurrencyFilter = (value) => {
+  const numbers = value.replace(/\D/g, '')
+  if (!numbers) return ''
+
+  return Number(numbers).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    maximumFractionDigits: 0,
+  })
+}
+
+const getCurrencyValue = (value) => Number(value.replace(/\D/g, ''))
+
+const normalizeText = (value) => String(value || '')
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase()
+
+const getSalaryValues = (value) => {
+  const matches = [...String(value || '').matchAll(/(\d[\d.,]*)\s*k?/gi)]
+
+  return matches
+    .map((match) => {
+      const amount = Number(match[1].replace(/\./g, '').replace(',', '.'))
+      if (!amount) return null
+      return /k/i.test(match[0]) ? amount * 1000 : amount
+    })
+    .filter(Boolean)
+}
+
 const getSession = () => {
   const indicador = getStoredUser('indicadorUser')
   const empresa = getStoredUser('empresaUser')
@@ -54,19 +84,20 @@ function Vagas() {
   }, [])
 
   const vagasFiltradas = vagas.filter((vaga) => {
-    const busca = filtro.busca.trim().toLowerCase()
-    const salario = filtro.salario.trim().toLowerCase()
-    const area = filtro.area.trim().toLowerCase()
+    const busca = normalizeText(filtro.busca.trim())
+    const salario = getCurrencyValue(filtro.salario)
+    const area = normalizeText(filtro.area.trim())
+    const salariosVaga = getSalaryValues(vaga.salario)
 
     const matchesBusca = !busca || [
       vaga.titulo,
       vaga.area,
       vaga.empresa,
       vaga.localizacao,
-    ].some((value) => value?.toLowerCase().includes(busca))
+    ].some((value) => normalizeText(value).includes(busca))
 
-    const matchesArea = !area || vaga.area?.toLowerCase().includes(area)
-    const matchesSalario = !salario || vaga.salario?.toLowerCase().includes(salario)
+    const matchesArea = !area || normalizeText(vaga.area).includes(area)
+    const matchesSalario = !salario || salariosVaga.some((value) => value >= salario)
 
     return matchesBusca && matchesArea && matchesSalario
   })
@@ -100,12 +131,6 @@ function Vagas() {
             <h1>{headerCopy.title}</h1>
             <p>{headerCopy.text}</p>
           </div>
-
-          {session.type === 'empresa' && (
-            <Link className="btn-criar-vaga" to="/criar-vaga/empresa">
-              Nova vaga
-            </Link>
-          )}
         </section>
 
         <section className="filtros">
@@ -122,9 +147,10 @@ function Vagas() {
           <div className="filtro-input">
             <input
               type="text"
-              placeholder="Faixa salarial"
+              inputMode="numeric"
+              placeholder="Salario minimo"
               value={filtro.salario}
-              onChange={(e) => setFiltro({ ...filtro, salario: e.target.value })}
+              onChange={(e) => setFiltro({ ...filtro, salario: formatCurrencyFilter(e.target.value) })}
             />
           </div>
 
@@ -154,10 +180,13 @@ function Vagas() {
             const isOwnCompanyJob = session.type === 'empresa'
               && Number(vaga.empresaId) === Number(session.user?.id)
             const empresaActionLabel = isOwnCompanyJob ? 'Gerenciar vaga' : 'Ver vaga'
+            const detailPath = session.type === 'publico'
+              ? `/login?redirect=/vaga/${vaga.id}`
+              : `/vaga/${vaga.id}`
 
             return (
               <article key={vaga.id} className="vaga-card">
-                <Link to={`/vaga/${vaga.id}`}>
+                <Link to={detailPath}>
                   <div
                     className="vaga-img"
                     style={vaga.imagem ? { backgroundImage: `url(${vaga.imagem})` } : undefined}

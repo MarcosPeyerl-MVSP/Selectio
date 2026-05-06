@@ -1,2 +1,0 @@
-FORMATAÇÃO:
- - Resolver a formatação da tela baseada com o figma

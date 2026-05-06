@@ -184,23 +184,27 @@
   color: #6b7280;
 }
 
-.password-field {
+.empresa-container .empresa-form .password-field {
   position: relative;
 }
 
-.password-field input {
-  padding-right: 48px;
+.empresa-container .empresa-form .password-field input {
+  margin-bottom: 0;
+  padding-right: 52px;
 }
 
-.password-toggle {
+.empresa-container .empresa-form .password-field .password-toggle {
   position: absolute;
   top: 50%;
   right: 12px;
   width: 28px;
+  min-width: 28px;
   height: 28px;
+  min-height: 28px;
   display: inline-grid;
   place-items: center;
   transform: translateY(-50%);
+  margin: 0;
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -209,16 +213,16 @@
   color: #1f1f1f;
   cursor: pointer;
   line-height: 0;
-  min-height: 0;
 }
 
-.password-toggle:hover {
+.empresa-container .empresa-form .password-field .password-toggle:hover {
   background: transparent;
   color: #b61c2f;
   box-shadow: none;
+  transform: translateY(-50%);
 }
 
-.password-toggle svg {
+.empresa-container .empresa-form .password-field .password-toggle svg {
   width: 22px;
   height: 22px;
 }

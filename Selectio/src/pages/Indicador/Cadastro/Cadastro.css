@@ -72,21 +72,23 @@
 
 .password-field input,
 .confirm-password-field input {
-  padding-right: 48px;
+  padding-right: 52px;
 }
 
 .password-toggle {
   position: absolute;
-  top: 9px;
-  right: 9px;
-  width: 32px;
-  height: 32px;
+  top: 24px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
   display: inline-grid;
   place-items: center;
   border-radius: 8px;
-  background: #f7f7f7;
+  border: 0;
+  background: transparent;
   color: #555;
   cursor: pointer;
+  line-height: 1;
 }
 
 .password-toggle:hover {
