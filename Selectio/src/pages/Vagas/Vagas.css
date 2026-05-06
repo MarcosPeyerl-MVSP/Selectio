@@ -2,6 +2,23 @@
   padding: 60px 20px;
 }
 
+.vagas-layout {
+  display: grid;
+  grid-template-columns: 255px minmax(0, 1fr);
+  max-width: none;
+  margin: 0;
+}
+
+.vagas-layout.public-layout {
+  display: block;
+}
+
+.vagas-layout .vagas-page {
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+}
+
 /* HEADER */
 
 .vagas-header {
@@ -172,6 +189,10 @@
 /* RESPONSIVO */
 
 @media (max-width: 900px) {
+  .vagas-layout {
+    grid-template-columns: 1fr;
+  }
+
   .vagas-grid {
     grid-template-columns: 1fr;
   }

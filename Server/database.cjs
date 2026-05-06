@@ -1,5 +1,6 @@
 const sqlite3 = require('sqlite3').verbose()
 const path = require('path')
+const bcrypt = require('bcryptjs')
 
 const db = new sqlite3.Database(path.join(__dirname, 'selectio.db'))
 
@@ -110,6 +111,42 @@ db.serialize(() => {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (indicador_id) REFERENCES indicadores (id)
     )
+  `)
+
+  db.run(`
+    INSERT OR IGNORE INTO indicadores (id, nome, email, senha, cpf, pix)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `, [
+    2,
+    'Indicador Selectio',
+    'indicador2@selectio.local',
+    bcrypt.hashSync('Selectio@123456', 10),
+    '000.000.000-00',
+    'indicador2@selectio.local'
+  ])
+
+  db.run(`
+    INSERT INTO statusIndicador (
+      indicador_id,
+      total_indicacoes,
+      vagas_ativas,
+      vagas_canceladas,
+      vagas_sucesso,
+      valor_recebido,
+      valor_pendente,
+      taxa_sucesso
+    )
+    SELECT 2, 12, 8, 1, 3, 4500, 1500, 25
+    WHERE EXISTS (SELECT 1 FROM indicadores WHERE id = 2)
+    ON CONFLICT(indicador_id) DO UPDATE SET
+      total_indicacoes = excluded.total_indicacoes,
+      vagas_ativas = excluded.vagas_ativas,
+      vagas_canceladas = excluded.vagas_canceladas,
+      vagas_sucesso = excluded.vagas_sucesso,
+      valor_recebido = excluded.valor_recebido,
+      valor_pendente = excluded.valor_pendente,
+      taxa_sucesso = excluded.taxa_sucesso,
+      updated_at = CURRENT_TIMESTAMP
   `)
 })
 

@@ -1,19 +1,30 @@
 import './Vagas.css'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import NavbarPublic from '../../components/Navbar/Navbar/Navbar'
-import NavbarIndicador from '../../components/Navbar/NavbarIndicador/Navbar'
-import NavbarEmpresa from '../../components/Navbar/NavbarEmpresa/Navbar'
+import Navbar from '../../components/Navbar/Navbar/Navbar'
+import Sidebar from '../../components/Sidebar/Sidebar'
 import Footer from '../../components/Footer/Footer'
 import { FiSearch } from 'react-icons/fi'
 
 const getSession = () => {
-  const indicador = localStorage.getItem('indicadorUser')
-  const empresa = localStorage.getItem('empresaUser')
+  const indicador = getStoredUser('indicadorUser')
+  const empresa = getStoredUser('empresaUser')
 
-  if (empresa) return { type: 'empresa', user: JSON.parse(empresa) }
-  if (indicador) return { type: 'indicador', user: JSON.parse(indicador) }
+  if (empresa) return { type: 'empresa', user: empresa }
+  if (indicador) return { type: 'indicador', user: indicador }
   return { type: 'publico', user: null }
+}
+
+const getStoredUser = (key) => {
+  const stored = localStorage.getItem(key)
+  if (!stored) return null
+
+  try {
+    return JSON.parse(stored)
+  } catch {
+    localStorage.removeItem(key)
+    return null
+  }
 }
 
 function Vagas() {
@@ -42,14 +53,10 @@ function Vagas() {
     fetchVagas()
   }, [])
 
-  const areas = useMemo(
-    () => [...new Set(vagas.map((vaga) => vaga.area).filter(Boolean))].sort(),
-    [vagas]
-  )
-
   const vagasFiltradas = vagas.filter((vaga) => {
     const busca = filtro.busca.trim().toLowerCase()
     const salario = filtro.salario.trim().toLowerCase()
+    const area = filtro.area.trim().toLowerCase()
 
     const matchesBusca = !busca || [
       vaga.titulo,
@@ -58,17 +65,11 @@ function Vagas() {
       vaga.localizacao,
     ].some((value) => value?.toLowerCase().includes(busca))
 
-    const matchesArea = !filtro.area || vaga.area === filtro.area
+    const matchesArea = !area || vaga.area?.toLowerCase().includes(area)
     const matchesSalario = !salario || vaga.salario?.toLowerCase().includes(salario)
 
     return matchesBusca && matchesArea && matchesSalario
   })
-
-  const Navbar = session.type === 'empresa'
-    ? NavbarEmpresa
-    : session.type === 'indicador'
-      ? NavbarIndicador
-      : NavbarPublic
 
   const headerCopy = {
     publico: {
@@ -89,7 +90,10 @@ function Vagas() {
     <div className="page">
       <Navbar />
 
-      <main className="vagas-page">
+      <div className={`vagas-layout ${session.type === 'publico' ? 'public-layout' : ''}`}>
+        {session.type !== 'publico' && <Sidebar type={session.type} user={session.user} />}
+
+        <main className="vagas-page">
         <section className="vagas-header empresa-vagas-header">
           <div>
             <span className="tag">OPORTUNIDADES</span>
@@ -124,16 +128,14 @@ function Vagas() {
             />
           </div>
 
-          <select
-            className="filtro-select"
-            value={filtro.area}
-            onChange={(e) => setFiltro({ ...filtro, area: e.target.value })}
-          >
-            <option value="">Todas as areas</option>
-            {areas.map((area) => (
-              <option key={area} value={area}>{area}</option>
-            ))}
-          </select>
+          <div className="filtro-input">
+            <input
+              type="text"
+              placeholder="Filtrar por area"
+              value={filtro.area}
+              onChange={(e) => setFiltro({ ...filtro, area: e.target.value })}
+            />
+          </div>
 
           <button
             className="btn-filtrar"
@@ -148,46 +150,52 @@ function Vagas() {
           {loading && <p>Carregando vagas...</p>}
           {error && <p>Erro ao carregar vagas: {error}</p>}
 
-          {!loading && !error && vagasFiltradas.map((vaga) => (
-            <article key={vaga.id} className="vaga-card">
-              <Link to={`/vaga/${vaga.id}`}>
-                <div
-                  className="vaga-img"
-                  style={vaga.imagem ? { backgroundImage: `url(${vaga.imagem})` } : undefined}
-                />
+          {!loading && !error && vagasFiltradas.map((vaga) => {
+            const isOwnCompanyJob = session.type === 'empresa'
+              && Number(vaga.empresaId) === Number(session.user?.id)
+            const empresaActionLabel = isOwnCompanyJob ? 'Gerenciar vaga' : 'Ver vaga'
 
-                <div className="vaga-content">
-                  <span className="vaga-area">{vaga.area}</span>
-                  <h3>{vaga.titulo}</h3>
-                  <span className="vaga-salario">{vaga.salario}</span>
-                  <p>{vaga.empresa}</p>
+            return (
+              <article key={vaga.id} className="vaga-card">
+                <Link to={`/vaga/${vaga.id}`}>
+                  <div
+                    className="vaga-img"
+                    style={vaga.imagem ? { backgroundImage: `url(${vaga.imagem})` } : undefined}
+                  />
+
+                  <div className="vaga-content">
+                    <span className="vaga-area">{vaga.area}</span>
+                    <h3>{vaga.titulo}</h3>
+                    <span className="vaga-salario">{vaga.salario}</span>
+                    <p>{vaga.empresa}</p>
+                  </div>
+                </Link>
+
+                <div className="vaga-actions">
+                  {session.type === 'indicador' && (
+                    <Link to={`/vaga/${vaga.id}`} className="vaga-action-primary">
+                      Fazer indicacao
+                    </Link>
+                  )}
+
+                  {session.type === 'empresa' && (
+                    <Link to={`/vaga/${vaga.id}`} className="vaga-action-primary">
+                      {empresaActionLabel}
+                    </Link>
+                  )}
+
+                  {session.type === 'publico' && (
+                    <Link
+                      to={`/login?redirect=/vaga/${vaga.id}`}
+                      className="vaga-action-primary"
+                    >
+                      Entrar para indicar
+                    </Link>
+                  )}
                 </div>
-              </Link>
-
-              <div className="vaga-actions">
-                {session.type === 'indicador' && (
-                  <Link to={`/vaga/${vaga.id}`} className="vaga-action-primary">
-                    Fazer indicacao
-                  </Link>
-                )}
-
-                {session.type === 'empresa' && (
-                  <Link to={`/vaga/${vaga.id}`} className="vaga-action-primary">
-                    Gerenciar
-                  </Link>
-                )}
-
-                {session.type === 'publico' && (
-                  <Link
-                    to={`/login?redirect=/vaga/${vaga.id}`}
-                    className="vaga-action-primary"
-                  >
-                    Entrar para indicar
-                  </Link>
-                )}
-              </div>
-            </article>
-          ))}
+              </article>
+            )
+          })}
         </section>
 
         {!loading && !error && vagasFiltradas.length === 0 && (
@@ -196,7 +204,8 @@ function Vagas() {
             <p>Ajuste os filtros para visualizar outras oportunidades.</p>
           </div>
         )}
-      </main>
+        </main>
+      </div>
 
       <Footer />
     </div>

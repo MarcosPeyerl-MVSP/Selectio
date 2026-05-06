@@ -1,7 +1,7 @@
 import './Vagas.css'
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import Navbar from '../../../components/Navbar/NavbarIndicador/Navbar'
+import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Footer from '../../../components/Footer/Footer'
 import { FiSearch, FiChevronDown } from 'react-icons/fi'
 

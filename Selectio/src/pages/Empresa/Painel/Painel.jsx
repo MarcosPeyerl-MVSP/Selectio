@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Painel.css";
 
-import Navbar from "../../../components/Navbar/NavbarEmpresa/Navbar";
+import Navbar from "../../../components/Navbar/Navbar/Navbar";
 import Sidebar from "../../../components/Sidebar/Sidebar";
 import Footer from "../../../components/Footer/Footer";
 

@@ -1,9 +1,7 @@
 import './Vaga.css'
 import { Link, useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import Navbar from '../../../components/Navbar/NavbarIndicador/Navbar'
-import NavbarEmpresa from '../../../components/Navbar/NavbarEmpresa/Navbar'
-import NavbarPublic from '../../../components/Navbar/Navbar/Navbar'
+import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Sidebar from '../../../components/Sidebar/Sidebar'
 import Footer from '../../../components/Footer/Footer'
 import {
@@ -69,16 +67,10 @@ function Vaga() {
     fetchVaga()
   }, [id, perfil])
 
-  const PageNavbar = perfil.tipo === 'empresa'
-    ? NavbarEmpresa
-    : perfil.tipo === 'indicador'
-      ? Navbar
-      : NavbarPublic
-
   if (loading) {
     return (
       <>
-        <PageNavbar />
+        <Navbar />
         <main className="vaga-detail-content">
           <div style={{ textAlign: 'center', padding: '60px 20px' }}>
             <p>Carregando vaga...</p>
@@ -92,7 +84,7 @@ function Vaga() {
   if (error || !vaga) {
     return (
       <>
-        <PageNavbar />
+        <Navbar />
         <main className="vaga-detail-content">
           <div className="not-found-message">
             <h2>Vaga nao encontrada</h2>
@@ -124,7 +116,7 @@ function Vaga() {
 
   return (
     <>
-      <PageNavbar />
+      <Navbar />
 
       <div className={`vaga-detail-page ${perfil.tipo === 'publico' ? 'public-layout' : ''}`}>
         {perfil.tipo !== 'publico' && (

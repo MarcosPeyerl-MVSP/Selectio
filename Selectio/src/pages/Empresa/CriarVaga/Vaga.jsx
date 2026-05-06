@@ -1,7 +1,7 @@
 import './Vaga.css'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Navbar from '../../../components/Navbar/NavbarEmpresa/Navbar'
+import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Sidebar from '../../../components/Sidebar/Sidebar'
 import Footer from '../../../components/Footer/Footer'
 
@@ -13,7 +13,8 @@ const initialForm = {
   experiencia: 'Senior',
   experienciaPersonalizada: '',
   tipo: 'Tempo Integral',
-  tipoDataPersonalizada: '',
+  tipoDataInicio: '',
+  tipoDataFim: '',
   descricaoCurta: '',
   descricaoLonga: '',
   requisitos: '',
@@ -59,11 +60,12 @@ function CriarVagaEmpresa() {
 
   const formatCurrency = (value) => {
     const numbers = value.replace(/\D/g, '')
-    const cents = Number(numbers || 0) / 100
+    const amount = Number(numbers || 0)
 
-    return cents.toLocaleString('pt-BR', {
+    return amount.toLocaleString('pt-BR', {
       style: 'currency',
       currency: 'BRL',
+      maximumFractionDigits: 0,
     })
   }
 
@@ -72,7 +74,13 @@ function CriarVagaEmpresa() {
     setForm((current) => ({ ...current, [name]: formatCurrency(value) }))
   }
 
-  const getNumberFromCurrency = (value) => Number(value.replace(/\D/g, '')) / 100
+  const getNumberFromCurrency = (value) => Number(value.replace(/\D/g, ''))
+
+  const formatDate = (value) => {
+    if (!value) return ''
+    const [year, month, day] = value.split('-')
+    return `${day}/${month}/${year}`
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -92,8 +100,23 @@ function CriarVagaEmpresa() {
       return
     }
 
+    if (form.tipo === 'Contrato temporario' && (!form.tipoDataInicio || !form.tipoDataFim)) {
+      setMessage('Informe a data de inicio e a data de fim do contrato temporario.')
+      return
+    }
+
+    if (
+      form.tipo === 'Contrato temporario'
+      && form.tipoDataInicio
+      && form.tipoDataFim
+      && form.tipoDataInicio > form.tipoDataFim
+    ) {
+      setMessage('A data de inicio nao pode ser posterior a data de fim.')
+      return
+    }
+
     const salario = form.salarioMin || form.salarioMax
-      ? `${form.salarioMin || 'A combinar'} - ${form.salarioMax || 'A combinar'}`
+      ? `${form.salarioMin || 'A combinar'} – ${form.salarioMax || 'A combinar'}`
       : 'A combinar'
 
     const payload = {
@@ -102,7 +125,7 @@ function CriarVagaEmpresa() {
       localizacao: form.localizacao,
       salario,
       tipo: form.tipo === 'Contrato temporario'
-        ? `${form.tipo}${form.tipoDataPersonalizada ? ` ate ${form.tipoDataPersonalizada}` : ''}`
+        ? `${form.tipo} (${formatDate(form.tipoDataInicio)} – ${formatDate(form.tipoDataFim)})`
         : form.tipo,
       recompensa: getRecompensa(),
       descricaoCurta: form.descricaoCurta || form.descricaoLonga.slice(0, 160),
@@ -235,13 +258,30 @@ function CriarVagaEmpresa() {
                     ))}
                   </div>
                   {form.tipo === 'Contrato temporario' && (
-                    <input
-                      className="inline-input"
-                      name="tipoDataPersonalizada"
-                      type="date"
-                      value={form.tipoDataPersonalizada}
-                      onChange={handleChange}
-                    />
+                    <div className="temporary-contract-grid">
+                      <div>
+                        <label>Data de inicio</label>
+                        <input
+                          className="inline-input"
+                          name="tipoDataInicio"
+                          type="date"
+                          value={form.tipoDataInicio}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label>Data de fim</label>
+                        <input
+                          className="inline-input"
+                          name="tipoDataFim"
+                          type="date"
+                          value={form.tipoDataFim}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>

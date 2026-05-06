@@ -30,7 +30,17 @@ router.post('/indicador/cadastro', async (req, res) => {
         })
       }
 
-      res.json({ sucesso: true })
+      res.json({
+        sucesso: true,
+        indicador: {
+          id: this.lastID,
+          nome,
+          email,
+          cpf,
+          pix,
+          dataNascimento
+        }
+      })
     }
   )
 })
@@ -254,6 +264,58 @@ router.get('/indicador/:id', (req, res) => {
       cpf: row.cpf,
       pix: row.pix,
       dataNascimento: row.data_nascimento
+    })
+  })
+})
+
+const mapStatusIndicador = (row) => {
+  const totalIndicacoes = Number(row?.total_indicacoes || 0)
+  const vagasSucesso = Number(row?.vagas_sucesso || 0)
+  const taxaSucesso = totalIndicacoes
+    ? Number(((vagasSucesso / totalIndicacoes) * 100).toFixed(1))
+    : 0
+
+  return {
+    indicadorId: Number(row?.indicador_id || 0),
+    totalIndicacoes,
+    vagasAtivas: Number(row?.vagas_ativas || 0),
+    vagasCanceladas: Number(row?.vagas_canceladas || 0),
+    vagasSucesso,
+    valorRecebido: Number(row?.valor_recebido || 0),
+    valorPendente: Number(row?.valor_pendente || 0),
+    taxaSucesso
+  }
+}
+
+router.get('/indicador/:id/status', (req, res) => {
+  const { id } = req.params
+
+  db.get('SELECT id FROM indicadores WHERE id = ?', [id], (indicadorErr, indicador) => {
+    if (indicadorErr) {
+      return res.status(500).json({
+        erro: 'Erro ao buscar indicador'
+      })
+    }
+
+    if (!indicador) {
+      return res.status(404).json({
+        erro: 'Indicador nao encontrado'
+      })
+    }
+
+    db.get('SELECT * FROM statusIndicador WHERE indicador_id = ?', [id], (err, row) => {
+      if (err) {
+        return res.status(500).json({
+          erro: 'Erro ao buscar status do indicador'
+        })
+      }
+
+      if (row) {
+        return res.json(mapStatusIndicador(row))
+      }
+
+      const emptyStatus = mapStatusIndicador({ indicador_id: id })
+      res.json(emptyStatus)
     })
   })
 })

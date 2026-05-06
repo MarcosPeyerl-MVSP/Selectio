@@ -37,11 +37,16 @@ const sidebarConfig = {
   },
 }
 
-function Sidebar({ type = 'indicador', user }) {
-  const config = sidebarConfig[type] || sidebarConfig.indicador
+function Sidebar({ type, user }) {
+  const session = getSession()
+  const activeType = type || session.type
+  const activeUser = user || session.user
+  if (!activeType || activeType === 'publico') return null
+
+  const config = sidebarConfig[activeType] || sidebarConfig.indicador
   const ActionIcon = config.action.icon
-  const userName = user?.nome || user?.nomeEmpresa || config.userLabel
-  const userInfo = user?.email || user?.cnpj || config.userLabel
+  const userName = activeUser?.nome || activeUser?.nomeEmpresa || config.userLabel
+  const userInfo = activeUser?.email || activeUser?.cnpj || config.userLabel
 
   return (
     <aside className="app-sidebar">
@@ -72,6 +77,28 @@ function Sidebar({ type = 'indicador', user }) {
       </NavLink>
     </aside>
   )
+}
+
+function getSession() {
+  const empresa = getStoredUser('empresaUser')
+  if (empresa) return { type: 'empresa', user: empresa }
+
+  const indicador = getStoredUser('indicadorUser')
+  if (indicador) return { type: 'indicador', user: indicador }
+
+  return { type: 'publico', user: null }
+}
+
+function getStoredUser(key) {
+  const stored = localStorage.getItem(key)
+  if (!stored) return null
+
+  try {
+    return JSON.parse(stored)
+  } catch {
+    localStorage.removeItem(key)
+    return null
+  }
 }
 
 export default Sidebar

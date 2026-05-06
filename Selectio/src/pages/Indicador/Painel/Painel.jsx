@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import './Painel.css'
-import Navbar from '../../../components/Navbar/NavbarIndicador/Navbar'
+import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Sidebar from '../../../components/Sidebar/Sidebar'
 import Footer from '../../../components/Footer/Footer'
 import { FaChartBar, FaSuitcase, FaUserFriends, FaUserTie } from 'react-icons/fa'
+
+const formatCurrency = (value) => Number(value || 0).toLocaleString('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+  maximumFractionDigits: 0,
+})
 
 function Painel() {
   const [user, setUser] = useState(() => {
@@ -19,6 +25,7 @@ function Painel() {
     }
   })
   const navigate = useNavigate()
+  const [status, setStatus] = useState(null)
 
   useEffect(() => {
     if (!user) {
@@ -48,6 +55,24 @@ function Painel() {
 
     fetchCurrentUser()
   }, [user?.id, navigate])
+
+  useEffect(() => {
+    if (!user?.id) return
+
+    const fetchStatus = async () => {
+      try {
+        const response = await fetch(`http://localhost:3333/indicador/${user.id}/status`)
+        if (!response.ok) return
+
+        const data = await response.json()
+        setStatus(data)
+      } catch (error) {
+        console.error('Erro ao buscar status do indicador:', error)
+      }
+    }
+
+    fetchStatus()
+  }, [user?.id])
 
   if (!user) return null
 
@@ -103,17 +128,17 @@ function Painel() {
           <section className="stats">
             <div>
               <span>Total de Indicacoes</span>
-              <h2>42</h2>
+              <h2>{status?.totalIndicacoes ?? 0}</h2>
             </div>
 
             <div>
               <span>Taxa de Conversao</span>
-              <h2 className="red">18%</h2>
+              <h2 className="red">{status?.taxaSucesso ?? 0}%</h2>
             </div>
 
             <div>
               <span>Ganhos Totais</span>
-              <h2>R$ 12.450</h2>
+              <h2>{formatCurrency(status?.valorRecebido ?? 0)}</h2>
             </div>
           </section>
 

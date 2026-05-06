@@ -9,76 +9,6 @@
   min-height: calc(100vh - 86px);
 }
 
-.empresa-vaga-sidebar {
-  background: #eeeeef;
-  padding: 28px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.empresa-vaga-user {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: #fff;
-  border-radius: 4px;
-  padding: 14px;
-  color: #c51d32;
-}
-
-.empresa-vaga-user div {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.empresa-vaga-user strong {
-  color: #c51d32;
-  font-size: 11px;
-  text-transform: uppercase;
-}
-
-.empresa-vaga-user span {
-  color: #777;
-  font-size: 11px;
-}
-
-.empresa-vaga-sidebar nav {
-  display: grid;
-  gap: 8px;
-}
-
-.empresa-vaga-sidebar nav a,
-.nova-vaga-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 36px;
-  color: #555;
-  text-decoration: none;
-  font-size: 12px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0;
-  border-radius: 4px;
-  padding: 10px;
-}
-
-.empresa-vaga-sidebar nav a.active {
-  background: #fff;
-  color: #c51d32;
-}
-
-.nova-vaga-btn {
-  margin-top: auto;
-  background: #fff;
-  color: #c51d32;
-  justify-content: center;
-  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.14);
-  text-transform: none;
-}
-
 .empresa-vaga-content {
   display: grid;
   grid-template-columns: minmax(220px, 330px) minmax(520px, 720px);
@@ -89,8 +19,7 @@
 }
 
 .empresa-vaga-intro {
-  position: sticky;
-  top: 28px;
+  position: static;
 }
 
 .empresa-vaga-intro > span {
@@ -199,6 +128,17 @@
 .inline-input,
 .reward-value-input {
   margin-top: 12px;
+}
+
+.temporary-contract-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.temporary-contract-grid .inline-input {
+  margin-top: 0;
 }
 
 .form-grid {
@@ -342,10 +282,6 @@
     grid-template-columns: 1fr;
   }
 
-  .empresa-vaga-sidebar {
-    display: none;
-  }
-
   .empresa-vaga-layout .app-sidebar {
     display: none;
   }
@@ -362,7 +298,8 @@
 
   .form-grid.two,
   .form-grid.three,
-  .reward-grid {
+  .reward-grid,
+  .temporary-contract-grid {
     grid-template-columns: 1fr;
   }
 

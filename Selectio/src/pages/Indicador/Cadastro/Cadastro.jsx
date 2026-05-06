@@ -1,5 +1,6 @@
 import './Cadastro.css'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FaCheck, FaEye, FaEyeSlash, FaTimes } from 'react-icons/fa'
 import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Footer from '../../../components/Footer/Footer'
@@ -29,6 +30,7 @@ const strengthCopy = {
 }
 
 function CadastroIndicador() {
+  const navigate = useNavigate()
   const [form, setForm] = useState({
     nome: '',
     email: '',
@@ -147,7 +149,9 @@ function CadastroIndicador() {
     const data = await response.json()
 
     if (data.sucesso) {
-      alert('Cadastro realizado com sucesso!')
+      localStorage.setItem('indicadorUser', JSON.stringify(data.indicador))
+      localStorage.removeItem('empresaUser')
+      navigate('/painel/indicador')
     } else {
       alert(data.erro || 'Erro ao cadastrar')
     }
