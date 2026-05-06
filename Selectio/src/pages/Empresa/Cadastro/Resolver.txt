@@ -1,0 +1,9 @@
+PERFIL EMPRESA:
+    - Setor: tem que colocar a opção outro... ou a opção da Empresa digitar
+    - Tamamho: colocar junto as opções colocar o numero de funcionarios, pequena 0 - 5,...
+ACESSO:
+    - Senha: o botão de vizualizar a senha esta com o CSS errado
+    - Acho melhor fazer o "password-toggle" poderia estar dentro da caixa de texto,
+      como esta no perfil indicador
+CHOICE_LIST:
+    - As checkbox estão desanlinhadas com os textos 

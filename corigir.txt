@@ -1,0 +1,88 @@
+==============================
+COMPONENTE: NAVBAR (GLOBAL)
+==============================
+
+- O navbar deve ser UM ÚNICO componente reutilizável.
+- O comportamento do navbar deve ser modular conforme o perfil do login:
+  - Empresa
+  - Indicador
+  - Usuário não logado
+- Não deve existir navbar duplicado por perfil.
+- O mesmo componente deve se ajustar dinamicamente com base no tipo de usuário logado.
+- O navbar deve sempre aparecer de acordo com o login atual.
+
+
+==============================
+ROTA: /criar-vaga/empresa
+==============================
+
+- Tipo de contratação:
+  - Quando selecionado "Contrato temporário", deve permitir:
+    - Data de início personalizada
+    - Data de fim personalizada
+  - Ambas as datas devem ser obrigatórias nesse caso.
+
+- Faixa salarial:
+  - Ajustar formatação do texto exibido.
+  - Garantir padrão visual consistente (ex: R$ X.XXX – R$ X.XXX).
+
+
+==============================
+COMPONENTE: .empresa-vaga-intro
+==============================
+
+- O elemento com class="empresa-vaga-intro" está descendo junto com o scroll da tela /vagas.
+- Corrigir para que o componente fique estático conforme o layout definido.
+- Garantir comportamento consistente em todas as resoluções.
+
+
+==============================
+ROTA: /vagas
+==============================
+
+- Perfil EMPRESA:
+  - Só pode aparecer opção "Gerenciar vaga" para vagas criadas pela própria empresa logada.
+  - Para vagas criadas por outras empresas, deve aparecer apenas "Ver vaga".
+
+- Filtro "Filtrar por área":
+  - Deve existir opção de digitar livremente (input de texto).
+  - Não deve ser apenas uma lista fechada.
+
+
+==============================
+COMPONENTE: SIDEBAR (GLOBAL)
+==============================
+
+- A sidebar deve aparecer sempre com base no login do usuário.
+- Não deve existir sidebar fixa por rota.
+- A sidebar deve ser modular conforme o perfil:
+  - Empresa
+  - Indicador
+
+- Problema atual:
+  - Sidebar não está padronizada visualmente.
+  - Algumas telas aparecem com sidebar vermelha e outras cinzas.
+
+- Ação necessária:
+  - Padronizar cores, estilos e estados ativos da sidebar em todas as telas.
+  - Garantir consistência visual independente da rota.
+  - Utilizar sempre o componente global de sidebar.
+
+
+==============================
+TABELA: statusIndicador
+==============================
+
+- Preencher os dados do statusIndicador para o indicador com id = 2.
+- Garantir que os campos de métricas estejam corretamente calculados e exibidos.
+- Validar integração desses dados com o painel do indicador.
+
+
+==============================
+COMPONENTE: NAVBAR / SIDEBAR (ALINHAMENTO)
+==============================
+
+- Garantir que navbar e sidebar sigam o mesmo padrão de modularização:
+  - Um único componente base
+  - Ajuste dinâmico conforme login
+- Evitar qualquer duplicação de componentes por perfil ou por rota.

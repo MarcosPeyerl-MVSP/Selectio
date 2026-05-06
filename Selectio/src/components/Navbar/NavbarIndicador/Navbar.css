@@ -36,12 +36,33 @@
   transition: var(--transition);
 }
 
-.nav-links .active {
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -8px;
+  width: 0;
+  height: 2px;
+  background: var(--primary);
+  transition: var(--transition);
+}
+
+.nav-links a:hover,
+.nav-links a.active {
   color: var(--primary);
 }
 
-.nav-links a:hover {
-  color: var(--primary);
+.nav-links a:hover::after,
+.nav-links a.active::after {
+  width: 100%;
+}
+
+.nav-links a.active {
+  color: var(--primary) !important;
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
 }
 
 .navbar-right {
@@ -95,36 +116,7 @@
   box-shadow: 0 6px 16px rgba(182, 28, 47, 0.15);
 }
 
-.nav-links a:not(:nth-child(3)):not(:nth-child(4))::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: -8px;
-  width: 0;
-  height: 2px;
-  background: var(--primary);
-  transition: var(--transition);
-}
 
-.nav-links a:not(:nth-child(3)):not(:nth-child(4)):hover::after,
-.nav-links a.active::after {
-  width: 100%;
-}
-
-.nav-links a:nth-child(3),
-.nav-links a:nth-child(4) {
-  background: var(--primary);
-  color: var(--white) !important;
-  padding: 10px 18px;
-  border-radius: 6px;
-  border: 1px solid var(--primary);
-}
-
-.nav-links a:nth-child(3):hover,
-.nav-links a:nth-child(4):hover {
-  background: var(--white);
-  color: var(--primary) !important;
-}
 
 .user-actions {
   display: flex;
@@ -133,36 +125,32 @@
 }
 
 .icon-button {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: transparent;
   border: 1px solid transparent;
   display: grid;
   place-items: center;
+  color: #585858;
+  transition: var(--transition);
 }
 
-.icon-button img {
+.icon-button svg {
   width: 18px;
   height: 18px;
-  object-fit: contain;
   opacity: 0.75;
   transition: var(--transition);
 }
 
-.user-actions .icon-button:nth-child(1) img {
-  width: 21px;
-  height: 21px;
-}
-
 .icon-button:hover {
   background: var(--white);
-  border-color: var(--primary);
+  border-color: transparent;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(182, 28, 47, 0.15);
+  box-shadow: none;
 }
 
-.icon-button:hover img {
+.icon-button:hover svg {
   opacity: 1;
 }
 

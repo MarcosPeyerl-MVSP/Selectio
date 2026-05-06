@@ -1,0 +1,187 @@
+.vagas-page {
+  padding: 60px 20px;
+}
+
+/* HEADER */
+
+.vagas-header {
+  max-width: 900px;
+  margin-bottom: 40px;
+}
+
+.vagas-header h1 {
+  font-size: 42px;
+  margin: 10px 0;
+}
+
+.vagas-header p {
+  color: #666;
+  max-width: 600px;
+}
+
+/* FILTROS */
+
+.filtros {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: 16px;
+  margin-bottom: 40px;
+  background: #f7f7f7;
+  padding: 16px;
+  border-radius: 10px;
+}
+
+.filtro-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.filtro-input input {
+  border: none;
+  outline: none;
+  width: 100%;
+}
+
+.filtro-select {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  color: #333;
+  cursor: pointer;
+}
+
+.btn-filtrar {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 0 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-filtrar:hover {
+  transform: translateY(-2px);
+  background: var(--primary-dark);
+}
+
+/* GRID */
+
+.vagas-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+/* CARD */
+
+.vaga-card {
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.05);
+  transition: 0.3s;
+}
+
+.vaga-card:hover {
+  transform: translateY(-4px);
+}
+
+.vaga-card > a {
+  display: block;
+}
+
+.vaga-img {
+  height: 160px;
+  background-size: cover;
+  background-position: center;
+}
+
+.vaga-content {
+  padding: 18px;
+}
+
+.vaga-area {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+}
+
+.vaga-content h3 {
+  margin: 10px 0;
+  font-size: 18px;
+}
+
+.vaga-salario {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.vaga-content p {
+  margin-top: 8px;
+  color: #666;
+  font-size: 13px;
+}
+
+.vaga-actions {
+  padding: 0 18px 18px;
+}
+
+.vaga-action-primary,
+.btn-criar-vaga {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 800;
+}
+
+.vaga-action-primary {
+  width: 100%;
+}
+
+.empresa-vagas-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+
+.empty-vagas {
+  margin-top: 28px;
+  padding: 28px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  background: #fff;
+}
+
+/* RESPONSIVO */
+
+@media (max-width: 900px) {
+  .vagas-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filtros {
+    grid-template-columns: 1fr;
+  }
+
+  .empresa-vagas-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -1,5 +1,5 @@
 import './Cadastro.css'
-import Navbar from '../../components/Navbar/Navbar'
+import Navbar from '../../components/Navbar/Navbar/Navbar'
 import Footer from '../../components/Footer/Footer'
 import { Link } from 'react-router-dom'
 

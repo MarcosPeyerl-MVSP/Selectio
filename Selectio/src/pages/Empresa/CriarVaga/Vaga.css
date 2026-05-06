@@ -1,0 +1,369 @@
+.empresa-vaga-page {
+  min-height: 100vh;
+  background: #f6f6f7;
+}
+
+.empresa-vaga-layout {
+  display: grid;
+  grid-template-columns: 255px 1fr;
+  min-height: calc(100vh - 86px);
+}
+
+.empresa-vaga-sidebar {
+  background: #eeeeef;
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.empresa-vaga-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border-radius: 4px;
+  padding: 14px;
+  color: #c51d32;
+}
+
+.empresa-vaga-user div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.empresa-vaga-user strong {
+  color: #c51d32;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.empresa-vaga-user span {
+  color: #777;
+  font-size: 11px;
+}
+
+.empresa-vaga-sidebar nav {
+  display: grid;
+  gap: 8px;
+}
+
+.empresa-vaga-sidebar nav a,
+.nova-vaga-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  color: #555;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.empresa-vaga-sidebar nav a.active {
+  background: #fff;
+  color: #c51d32;
+}
+
+.nova-vaga-btn {
+  margin-top: auto;
+  background: #fff;
+  color: #c51d32;
+  justify-content: center;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.14);
+  text-transform: none;
+}
+
+.empresa-vaga-content {
+  display: grid;
+  grid-template-columns: minmax(220px, 330px) minmax(520px, 720px);
+  gap: 72px;
+  align-items: start;
+  padding: 56px 56px 72px;
+  background: #fff;
+}
+
+.empresa-vaga-intro {
+  position: sticky;
+  top: 28px;
+}
+
+.empresa-vaga-intro > span {
+  font-size: 10px;
+  color: #b7b7b7;
+  font-weight: 800;
+}
+
+.empresa-vaga-intro h1 {
+  margin: 12px 0;
+  color: #252525;
+  font-size: 42px;
+  line-height: 1.15;
+}
+
+.empresa-vaga-intro h1 strong {
+  color: #c51d32;
+}
+
+.empresa-vaga-intro p {
+  max-width: 270px;
+  color: #777;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.empresa-vaga-form {
+  display: grid;
+  gap: 28px;
+}
+
+.vaga-step {
+  background: #fff;
+  border: 1px solid #dedede;
+  border-radius: 6px;
+  padding: 30px;
+}
+
+.step-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.step-header h2 {
+  color: #222;
+  font-size: 18px;
+}
+
+.step-header p {
+  margin-top: 12px;
+  color: #777;
+  font-size: 12px;
+}
+
+.step-header > span {
+  align-self: start;
+  background: #fde9ec;
+  color: #c51d32;
+  padding: 6px 8px;
+  border-radius: 2px;
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.empresa-vaga-form label {
+  display: block;
+  margin-bottom: 8px;
+  color: #777;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.empresa-vaga-form input,
+.empresa-vaga-form textarea {
+  width: 100%;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  background: #f7f7f8;
+  color: #222;
+  font: inherit;
+  font-size: 13px;
+  padding: 16px;
+  outline: none;
+}
+
+.empresa-vaga-form input:focus,
+.empresa-vaga-form textarea:focus {
+  border-color: #c51d32;
+  background: #fff;
+}
+
+.empresa-vaga-form textarea {
+  min-height: 190px;
+  resize: vertical;
+}
+
+.empresa-vaga-form textarea.small {
+  min-height: 110px;
+}
+
+.inline-textarea,
+.inline-input,
+.reward-value-input {
+  margin-top: 12px;
+}
+
+.form-grid {
+  display: grid;
+  gap: 20px;
+  margin-top: 22px;
+}
+
+.form-grid.two {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.form-grid.three {
+  grid-template-columns: 2fr 1fr 1fr;
+}
+
+.option-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.option-grid button,
+.reward-grid button {
+  min-height: 44px;
+  border: 1px solid #dedede;
+  border-radius: 4px;
+  background: #fff;
+  color: #222;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.option-grid button.selected {
+  background: #c51d32;
+  border-color: #c51d32;
+  color: #fff;
+}
+
+.option-grid button.selected.outline {
+  background: #fff;
+  color: #c51d32;
+}
+
+.reward-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.reward-grid button {
+  min-height: 72px;
+  padding: 14px;
+  text-align: left;
+}
+
+.reward-grid button span {
+  display: block;
+  color: #999;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.reward-grid button strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 14px;
+}
+
+.reward-grid button.selected {
+  border: 2px solid #c51d32;
+}
+
+.token-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.token-preview label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 7px 9px;
+  border: 1px solid #ead0d4;
+  border-radius: 999px;
+  background: #fff7f8;
+  color: #333;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.token-preview input {
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  accent-color: #c51d32;
+}
+
+.empresa-vaga-message {
+  color: #c51d32;
+  font-weight: 700;
+  text-align: right;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 24px;
+}
+
+.draft-btn,
+.finish-btn {
+  border: none;
+  background: transparent;
+  color: #555;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.finish-btn {
+  min-width: 220px;
+  min-height: 46px;
+  border-radius: 6px;
+  background: #b41427;
+  color: #fff;
+}
+
+.finish-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+@media (max-width: 1100px) {
+  .empresa-vaga-layout,
+  .empresa-vaga-content {
+    grid-template-columns: 1fr;
+  }
+
+  .empresa-vaga-sidebar {
+    display: none;
+  }
+
+  .empresa-vaga-layout .app-sidebar {
+    display: none;
+  }
+
+  .empresa-vaga-intro {
+    position: static;
+  }
+}
+
+@media (max-width: 720px) {
+  .empresa-vaga-content {
+    padding: 32px 18px;
+  }
+
+  .form-grid.two,
+  .form-grid.three,
+  .reward-grid {
+    grid-template-columns: 1fr;
+  }
+
+}

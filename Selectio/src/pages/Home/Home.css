@@ -49,6 +49,7 @@
 }
 
 .hero-actions button,
+.hero-actions .hero-indication,
 .solution-card button {
   background: var(--primary);
   color: var(--white) !important;
@@ -60,6 +61,7 @@
 }
 
 .hero-actions button:hover,
+.hero-actions .hero-indication:hover,
 .solution-card button:hover {
   background: var(--white);
   color: var(--primary) !important;
@@ -571,6 +573,11 @@
   transition: var(--transition);
 }
 
+.hero-actions .home-button-primary {
+  margin-top: 0;
+  width: auto;
+}
+
 .home-button-primary:hover {
   background: var(--white);
   color: var(--primary) !important;
@@ -598,4 +605,4 @@
 .carousel-btn svg {
   width: 26px;
   height: 26px;
-}
+} 

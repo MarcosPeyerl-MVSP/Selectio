@@ -2,24 +2,23 @@
   min-height: calc(100vh - 140px);
   display: grid;
   place-items: center;
-  padding: 30px 20px;
-  background: #ffffff;
+  padding: 34px 20px;
 }
 
 .indicador-cadastro-card {
   width: 100%;
-  max-width: 520px;
+  max-width: 560px;
   background: var(--white);
   padding: 42px 40px;
-  border-radius: 18px;
+  border: 1px solid rgba(182, 28, 47, 0.08);
+  border-radius: 12px;
   text-align: center;
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 26px 58px rgba(23, 23, 23, 0.12);
 }
 
 .indicador-cadastro-card h1 {
   font-size: 28px;
   margin-bottom: 10px;
-  letter-spacing: -0.5px;
 }
 
 .indicador-cadastro-card .subtitle {
@@ -33,14 +32,17 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 14px;
-  margin-bottom: 40px;
+  margin-bottom: 24px;
 }
 
 .form-grid input {
   width: 100%;
+  min-height: 48px;
   padding: 13px 14px;
   border-radius: 8px;
   border: 1px solid #ddd;
+  background: #fff;
+  color: var(--text);
   font-size: 14px;
   transition: 0.2s ease;
 }
@@ -48,11 +50,189 @@
 .form-grid input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(182, 28, 47, 0.12);
+  box-shadow: 0 0 0 3px rgba(182, 28, 47, 0.12);
+}
+
+.form-grid input::placeholder {
+  color: #888;
+}
+
+.error {
+  color: var(--danger);
+  font-size: 12px;
+  margin-top: -8px;
+  display: block;
+  text-align: left;
+}
+
+.password-field,
+.confirm-password-field {
+  position: relative;
+}
+
+.password-field input,
+.confirm-password-field input {
+  padding-right: 48px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 8px;
+  background: #f7f7f7;
+  color: #555;
+  cursor: pointer;
+}
+
+.password-toggle:hover {
+  background: rgba(182, 28, 47, 0.1);
+  color: var(--primary);
+}
+
+.password-strength {
+  padding: 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  background: #ffffff;
+  text-align: left;
+}
+
+.strength-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.strength-header strong {
+  display: block;
+  color: #333333;
+  font-size: 13px;
+  text-transform: capitalize;
+}
+
+.strength-header p {
+  margin-top: 2px;
+  color: #666;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.strength-score {
+  min-width: 38px;
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: #f5f5f5;
+  color: #555;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.strength-meter {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+  margin: 10px 0 10px;
+}
+
+.strength-meter span {
+  height: 4px;
+  border-radius: 999px;
+  background: #e5e5e5;
+}
+
+.strength-fraca .strength-meter span.active {
+  background: #b42318;
+}
+
+.strength-media .strength-meter span.active {
+  background: #9a5b00;
+}
+
+.strength-forte .strength-meter span.active {
+  background: #16803a;
+}
+
+.strength-fraca .strength-score {
+  background: #fff1f1;
+  color: #b42318;
+}
+
+.strength-media .strength-score {
+  background: #fff7e8;
+  color: #92400e;
+}
+
+.strength-forte .strength-score {
+  background: #eef8f1;
+  color: #166534;
+}
+
+.criteria-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.criteria-list li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 22px;
+  color: #696969;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.criteria-list li svg {
+  flex: 0 0 auto;
+  color: #b9b9b9;
+  font-size: 10px;
+}
+
+.criteria-list li.met {
+  color: #166534;
+}
+
+.criteria-list li.met svg {
+  color: #16803a;
+}
+
+.confirm-password-field.match input {
+  border-color: #16803a;
+}
+
+.confirm-password-field.mismatch input {
+  border-color: var(--danger);
+}
+
+.confirm-password-message {
+  display: block;
+  margin-top: 7px;
+  color: #666;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.confirm-password-field.match .confirm-password-message {
+  color: #16803a;
+}
+
+.confirm-password-field.mismatch .confirm-password-message {
+  color: var(--danger);
 }
 
 .btn-primary {
-  margin-top: 20px;
   width: 100%;
   background: var(--primary);
   color: var(--white);
@@ -70,4 +250,32 @@
   color: var(--primary);
   transform: translateY(-2px);
   box-shadow: 0 12px 28px rgba(182, 28, 47, 0.25);
+}
+
+.btn-primary:disabled,
+.btn-primary:disabled:hover {
+  background: #d6d6d6;
+  border-color: #d6d6d6;
+  color: #747474;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+@media (max-width: 560px) {
+  .indicador-cadastro-card {
+    padding: 32px 22px;
+  }
+
+  .criteria-list {
+    grid-template-columns: 1fr;
+  }
+
+  .strength-header {
+    grid-template-columns: 1fr;
+  }
+
+  .strength-score {
+    justify-self: start;
+  }
 }

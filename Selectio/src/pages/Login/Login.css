@@ -74,6 +74,27 @@ html, body, #root {
   padding-left: 40px;
 }
 
+.input-group input[name="senha"] {
+  padding-right: 44px;
+}
+
+.password-visibility {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  transform: translateY(-50%);
+  background: transparent;
+  color: #555;
+}
+
+.password-visibility:hover {
+  color: var(--primary);
+}
+
 .login-form input:focus {
   outline: none;
   border-color: var(--primary);

@@ -1,5 +1,5 @@
 import './Home.css'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   FiBriefcase,
@@ -11,50 +11,43 @@ import {
   FiChevronLeft,
   FiChevronRight
 } from 'react-icons/fi'
-import Navbar from '../../components/Navbar/Navbar'
+import Navbar from '../../components/Navbar/Navbar/Navbar'
 import Footer from '../../components/Footer/Footer'
 
 function Home() {
   const [currentVaga, setCurrentVaga] = useState(0)
   const [direction, setDirection] = useState('next')
+  const [vagas, setVagas] = useState([])
 
-  const vagas = [
-    {
-      id: 1,
-      titulo: 'Cargo em Destaque',
-      area: '(Área Estratégica)',
-      descricao: 'Descrição breve da vaga em destaque. Aqui ficará o resumo da vaga e a recompensa oferecida por uma indicação bem-sucedida.',
-      taxa: '85%'
-    },
-    {
-      id: 2,
-      titulo: 'Desenvolvedor Senior',
-      area: '(Tecnologia)',
-      descricao: 'Procuramos um desenvolvedor experiente para liderar nossos projetos inovadores. Oferecemos benefícios competitivos e oportunidades de crescimento.',
-      taxa: '92%'
-    },
-    {
-      id: 3,
-      titulo: 'Analista de Dados',
-      area: '(Análise)',
-      descricao: 'Buscamos um profissional com experiência em análise de dados e business intelligence. Será responsável por insights estratégicos.',
-      taxa: '78%'
-    },
-    {
-      id: 4,
-      titulo: 'Gerente de Projetos',
-      area: '(Gestão)',
-      descricao: 'Oportunidade para gerenciar projetos estratégicos. Experiência em metodologias ágeis é essencial.',
-      taxa: '88%'
+  useEffect(() => {
+    const fetchVagas = async () => {
+      try {
+        const response = await fetch('http://localhost:3333/vagas/banner')
+
+        if (!response.ok) {
+          throw new Error('Erro ao buscar vagas')
+        }
+
+        const data = await response.json()
+        setVagas(data)
+      } catch {
+        setVagas([])
+      }
     }
-  ]
+
+    fetchVagas()
+  }, [])
 
   const proximaVaga = () => {
+    if (!vagas.length) return
+
     setDirection('next')
     setCurrentVaga((prev) => (prev + 1) % vagas.length)
   }
 
   const vagaAnterior = () => {
+    if (!vagas.length) return
+
     setDirection('prev')
     setCurrentVaga((prev) => (prev - 1 + vagas.length) % vagas.length)
   }
@@ -71,27 +64,38 @@ function Home() {
             <span className="tag">VAGA DO MOMENTO</span>
 
             <h1>
-              {vaga.titulo}
+              {vaga?.titulo || 'Vagas em destaque'}
               <br />
-              <strong>{vaga.area}</strong>
+              <strong>{vaga?.area ? `(${vaga.area})` : '(Selectio)'}</strong>
             </h1>
 
-            <p>{vaga.descricao}</p>
+            <p>
+              {vaga?.descricaoCurta ||
+                'Confira as oportunidades cadastradas no banco de dados da Selectio.'}
+            </p>
 
             <div className="hero-actions">
-              <button>Fazer Indicação</button>
-              <a href="#">Ver Detalhes da Vaga</a>
+              <Link
+                className="home-button-primary hero-indication"
+                to={vaga ? `/login?redirect=/vaga/${vaga.id}` : '/login'}
+              >
+                Fazer Indicacao
+              </Link>
+              <Link to={vaga ? `/vaga/${vaga.id}` : '/vagas'}>Ver Detalhes da Vaga</Link>
             </div>
           </div>
 
           <div className={`hero-card glass-effect slide-animation slide-${direction}`}>
-            <div className="profile-photo placeholder-photo">
-              <span>Imagem da vaga</span>
+            <div
+              className="profile-photo placeholder-photo"
+              style={vaga?.imagem ? { backgroundImage: `url(${vaga.imagem})` } : undefined}
+            >
+              {!vaga?.imagem && <span>Imagem da vaga</span>}
             </div>
 
             <div className="info-box glass-effect">
-              <strong>Taxa de assertividade</strong>
-              <span>{vaga.taxa}</span>
+              <strong>Recompensa</strong>
+              <span>{vaga?.recompensa || 'A combinar'}</span>
             </div>
           </div>
 
@@ -99,7 +103,7 @@ function Home() {
             <FiChevronLeft />
           </button>
 
-          <button className="carousel-btn carousel-next" onClick={proximaVaga} aria-label="Próxima vaga">
+          <button className="carousel-btn carousel-next" onClick={proximaVaga} aria-label="Proxima vaga">
             <FiChevronRight />
           </button>
 
@@ -117,7 +121,7 @@ function Home() {
 
         <section className="ecosystem">
           <span className="tag center">O ECOSSISTEMA</span>
-          <h2>Soluções para os dois lados da elite.</h2>
+          <h2>Solucoes para os dois lados da elite.</h2>
 
           <div className="ecosystem-grid">
             <div className="solution-card">
@@ -127,11 +131,11 @@ function Home() {
 
               <h3>Para Empresas</h3>
               <p>Acesso a talentos qualificados fora do mercado comum.</p>
-              <p>Filtragem inteligente para apoiar a tomada de decisão.</p>
-              <p>Processo focado em eficiência, curadoria e resultado.</p>
+              <p>Filtragem inteligente para apoiar a tomada de decisao.</p>
+              <p>Processo focado em eficiencia, curadoria e resultado.</p>
 
               <Link className="home-button-primary" to="/cadastro/empresa">
-              Cadastrar Empresa
+                Cadastrar Empresa
               </Link>
             </div>
 
@@ -142,11 +146,11 @@ function Home() {
 
               <h3>Para Indicadores</h3>
               <p>Transforme sua rede profissional em oportunidades reais.</p>
-              <p>Acompanhe suas indicações em um painel transparente.</p>
-              <p>Receba recompensas por indicações bem-sucedidas.</p>
+              <p>Acompanhe suas indicacoes em um painel transparente.</p>
+              <p>Receba recompensas por indicacoes bem-sucedidas.</p>
 
               <Link className="home-button-primary" to="/cadastro/indicador">
-              Tornar-se Indicador
+                Tornar-se Indicador
               </Link>
             </div>
           </div>
@@ -165,68 +169,68 @@ function Home() {
             </h2>
 
             <p className="section-text">
-              A plataforma organiza conexões profissionais, indicações e vagas
+              A plataforma organiza conexoes profissionais, indicacoes e vagas
               por meio de curadoria e tecnologia.
             </p>
 
             <div className="steps">
-            <div>
-              <span>
-                <FiTarget />
-              </span>
               <div>
-                <h3>Curadoria da Vaga</h3>
-                <p>As vagas passam por análise antes da publicação.</p>
-             </div>
-            </div>
+                <span>
+                  <FiTarget />
+                </span>
+                <div>
+                  <h3>Curadoria da Vaga</h3>
+                  <p>As vagas passam por analise antes da publicacao.</p>
+                </div>
+              </div>
 
-            <div>
-             <span>
-              <FiShare2 />
-            </span>
-            <div>
-              <h3>Ativação da Rede</h3>
-              <p>Indicadores recebem vagas compatíveis com sua rede.</p>
-            </div>
-            </div>
+              <div>
+                <span>
+                  <FiShare2 />
+                </span>
+                <div>
+                  <h3>Ativacao da Rede</h3>
+                  <p>Indicadores recebem vagas compativeis com sua rede.</p>
+                </div>
+              </div>
 
-            <div>
-              <span>
-                <FiFilter />
-              </span>
-             <div>
-              <h3>Filtragem de Precisão</h3>
-              <p>Dados de perfil e indicação ajudam a montar uma lista qualificada.</p>
-             </div>
+              <div>
+                <span>
+                  <FiFilter />
+                </span>
+                <div>
+                  <h3>Filtragem de Precisao</h3>
+                  <p>Dados de perfil e indicacao ajudam a montar uma lista qualificada.</p>
+                </div>
+              </div>
             </div>
           </div>
-         </div>
 
-         <div className="matching-card">
-  <div className="matching-icon">
-    <FiCpu />
-  </div>
+          <div className="matching-card">
+            <div className="matching-icon">
+              <FiCpu />
+            </div>
 
-  <span>ALGORITMO DE MATCHING</span>
-  <div className="bar large"></div>
-  <div className="bar medium"></div>
-  <div className="bar small"></div>
-  <strong>Indicador de compatibilidade</strong>
-</div>
+            <span>ALGORITMO DE MATCHING</span>
+            <div className="bar large"></div>
+            <div className="bar medium"></div>
+            <div className="bar small"></div>
+            <strong>Indicador de compatibilidade</strong>
+          </div>
         </section>
 
         <section className="cta">
-          <h2>
-            Pronto para enviar ou procurar seu talento?
-          </h2>
-        
+          <h2>Pronto para enviar ou procurar seu talento?</h2>
+
           <p>
-            Junte-se à nossa rede de indicadores transforme
+            Junte-se a nossa rede de indicadores transforme
             <br />
             o futuro da sua equipe ou a sua carreira como indicador.
           </p>
-        
-          <button>Procurar Vagas</button>
+
+          <Link className="home-button-primary" to="/vagas">
+            Procurar Vagas
+          </Link>
         </section>
       </main>
 
