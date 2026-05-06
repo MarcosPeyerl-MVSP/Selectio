@@ -1,0 +1,22 @@
+.editar-vaga-content .empresa-vaga-intro {
+  top: 0;
+}
+
+.editar-vaga-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  margin-top: 22px;
+  padding: 0 14px;
+  border: 1px solid #ead0d4;
+  border-radius: 6px;
+  background: #fff7f8;
+  color: #b41427;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.editar-vaga-content .vaga-step > p {
+  color: #777;
+  font-weight: 700;
+}

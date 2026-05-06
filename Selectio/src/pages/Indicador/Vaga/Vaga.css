@@ -251,6 +251,7 @@
 }
 
 .reward-card,
+.edit-vaga-card,
 .benefits-card {
   background: #fff;
   border-radius: 20px;
@@ -259,18 +260,21 @@
   box-shadow: 0 22px 48px rgba(23, 23, 23, 0.06);
 }
 
-.reward-card .tag {
+.reward-card .tag,
+.edit-vaga-card .tag {
   display: inline-flex;
   margin-bottom: 18px;
 }
 
-.reward-card strong {
+.reward-card strong,
+.edit-vaga-card strong {
   display: block;
   font-size: 32px;
   margin-bottom: 16px;
 }
 
-.reward-card p {
+.reward-card p,
+.edit-vaga-card p {
   color: #555;
   line-height: 1.7;
   margin-bottom: 22px;
@@ -288,6 +292,17 @@
   color: white;
   font-weight: 700;
   cursor: pointer;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.edit-tag {
+  background: #e9f0ff;
+  color: #1d4ed8;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 12px;
 }
 
 .benefits-card h3 {

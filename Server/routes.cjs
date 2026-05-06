@@ -510,4 +510,96 @@ router.post('/vagas', (req, res) => {
   })
 })
 
+router.put('/vagas/:id', (req, res) => {
+  const { id } = req.params
+  const {
+    titulo,
+    localizacao,
+    salario,
+    tipo,
+    recompensa,
+    descricaoCurta,
+    descricaoLonga,
+    beneficios,
+    requisitos,
+    imagem,
+    area,
+    empresaId
+  } = req.body
+
+  if (!titulo || !area || !empresaId) {
+    return res.status(400).json({
+      erro: 'Titulo, area e empresaId sao obrigatorios'
+    })
+  }
+
+  db.get('SELECT empresa_id FROM vagas WHERE id = ?', [id], (findErr, vaga) => {
+    if (findErr) {
+      return res.status(500).json({
+        erro: 'Erro ao buscar vaga'
+      })
+    }
+
+    if (!vaga) {
+      return res.status(404).json({
+        erro: 'Vaga nao encontrada'
+      })
+    }
+
+    if (Number(vaga.empresa_id) !== Number(empresaId)) {
+      return res.status(403).json({
+        erro: 'Esta empresa nao pode editar esta vaga'
+      })
+    }
+
+    const sql = `
+      UPDATE vagas
+      SET
+        titulo = ?,
+        localizacao = ?,
+        salario = ?,
+        tipo = ?,
+        recompensa = ?,
+        descricao_curta = ?,
+        descricao_longa = ?,
+        beneficios = ?,
+        requisitos = ?,
+        imagem = ?,
+        area = ?
+      WHERE id = ? AND empresa_id = ?
+    `
+
+    db.run(
+      sql,
+      [
+        titulo,
+        localizacao,
+        salario,
+        tipo,
+        recompensa,
+        descricaoCurta,
+        descricaoLonga,
+        JSON.stringify(beneficios || []),
+        JSON.stringify(requisitos || []),
+        imagem,
+        area,
+        id,
+        empresaId
+      ],
+      function (updateErr) {
+        if (updateErr) {
+          return res.status(500).json({
+            erro: 'Erro ao atualizar vaga'
+          })
+        }
+
+        res.json({
+          sucesso: true,
+          alteracoes: this.changes
+        })
+      }
+    )
+  })
+})
+
 module.exports = router

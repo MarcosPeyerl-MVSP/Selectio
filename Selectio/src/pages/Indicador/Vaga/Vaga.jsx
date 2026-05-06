@@ -7,6 +7,7 @@ import Footer from '../../../components/Footer/Footer'
 import {
   FaRegClock,
   FaCheck,
+  FaEdit,
 } from 'react-icons/fa'
 
 const getPerfil = () => {
@@ -174,20 +175,27 @@ function Vaga() {
             </section>
 
             <aside className="detail-aside">
-              <div className="reward-card">
-                <span className="tag reward-tag">RECOMPENSA POR INDICACAO</span>
-                <strong>{recompensa}</strong>
-                <p>
-                  Indique um profissional qualificado. Se ele for contratado, voce recebe o premio direto na sua conta.
-                </p>
-                {perfil.tipo === 'indicador' ? (
-                  <button className="btn-primary">Fazer Indicacao</button>
-                ) : (
-                  <Link className="btn-primary" to={`/login?redirect=/vaga/${id}`}>
-                    Fazer Indicacao
+              {perfil.tipo === 'empresa' ? (
+                <div className="edit-vaga-card">
+                  <span className="tag edit-tag">MINHA VAGA</span>
+                  <strong>Gerenciar vaga</strong>
+                  <p>
+                    Atualize as informacoes, requisitos, beneficios e recompensa desta oportunidade.
+                  </p>
+                  <Link className="btn-primary" to={`/editar-vaga/empresa/${id}`}>
+                    <FaEdit /> Editar vaga
                   </Link>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="reward-card">
+                  <span className="tag reward-tag">RECOMPENSA POR INDICACAO</span>
+                  <strong>{recompensa}</strong>
+                  <p>
+                    Indique um profissional qualificado. Se ele for contratado, voce recebe o premio direto na sua conta.
+                  </p>
+                  <button className="btn-primary">Fazer Indicacao</button>
+                </div>
+              )}
 
               <div className="benefits-card">
                 <h3>Beneficios</h3>

@@ -12,6 +12,7 @@ import PainelEmpresa from './pages/Empresa/Painel/Painel'
 // VAGAS
 import Vagas from './pages/Vagas/Vagas'
 import CriarVagaEmpresa from './pages/Empresa/CriarVaga/Vaga'
+import EditarVagaEmpresa from './pages/Empresa/EditarVaga/Vaga'
 
 // VAGA
 import Vaga from './pages/Indicador/Vaga/Vaga'
@@ -36,6 +37,7 @@ function App() {
         <Route path="/vagas/indicador" element={<Navigate to="/vagas" replace />} />
         <Route path="/vagas/empresa" element={<Navigate to="/vagas" replace />} />
         <Route path="/criar-vaga/empresa" element={<CriarVagaEmpresa />} />
+        <Route path="/editar-vaga/empresa/:id" element={<EditarVagaEmpresa />} />
         {/* ROTA VAGA */}
         <Route path="/vaga/:id" element={<Vaga />} />
         {/* ROTA PAGE NOT FOUND */}

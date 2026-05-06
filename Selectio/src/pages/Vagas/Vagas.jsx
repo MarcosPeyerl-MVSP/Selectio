@@ -183,6 +183,9 @@ function Vagas() {
             const detailPath = session.type === 'publico'
               ? `/login?redirect=/vaga/${vaga.id}`
               : `/vaga/${vaga.id}`
+            const empresaActionPath = isOwnCompanyJob
+              ? `/editar-vaga/empresa/${vaga.id}`
+              : `/vaga/${vaga.id}`
 
             return (
               <article key={vaga.id} className="vaga-card">
@@ -208,7 +211,7 @@ function Vagas() {
                   )}
 
                   {session.type === 'empresa' && (
-                    <Link to={`/vaga/${vaga.id}`} className="vaga-action-primary">
+                    <Link to={empresaActionPath} className="vaga-action-primary">
                       {empresaActionLabel}
                     </Link>
                   )}
