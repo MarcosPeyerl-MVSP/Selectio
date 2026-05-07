@@ -17,8 +17,8 @@ const sidebarConfig = {
     action: { to: '/vagas', label: 'Candidato', icon: FaPlus },
     items: [
       { to: '/vagas', label: 'Vagas', icon: FaBriefcase, activeOn: ['/vagas'] },
+      { to: '/candidatos/indicador', label: 'Candidatos', icon: FaUserFriends, activeOn: ['/candidatos/indicador', '/indicar'] },
       { to: '/painel/indicador', label: 'Dashboard', icon: FaChartBar, activeOn: ['/painel/indicador'] },
-      { to: '/painel/indicador', label: 'Candidatos', icon: FaUserFriends, activeOn: [] },
       { to: '/painel/indicador', label: 'Perfil', icon: FaUserTie, activeOn: [] },
       { to: '/painel/indicador', label: 'Configuracoes', icon: FaCog, activeOn: [] },
     ],
@@ -29,6 +29,7 @@ const sidebarConfig = {
     action: { to: '/criar-vaga/empresa', label: 'Nova vaga', icon: FaPlus },
     items: [
       { to: '/vagas', label: 'Vagas', icon: FaBriefcase, activeOn: ['/vagas'] },
+      { to: '/candidatos/empresa', label: 'Candidatos', icon: FaUserFriends, activeOn: ['/candidatos/empresa'] },
       { to: '/painel/empresa', label: 'Dashboard', icon: FaChartBar, activeOn: ['/painel/empresa'] },
       { to: '/painel/empresa', label: 'Perfil', icon: FaUserTie, activeOn: [] },
       { to: '/painel/empresa', label: 'Configuracoes', icon: FaCog, activeOn: [] },
@@ -70,7 +71,7 @@ function Sidebar({ type, user }) {
               key={`${item.to}-${item.label}`}
               to={item.to}
               className={({ isActive }) =>
-                isActive && item.activeOn?.includes(pathname) ? 'active' : ''
+                (isActive || item.activeOn?.some((path) => pathname.startsWith(path))) ? 'active' : ''
               }
             >
               <Icon /> {item.label}

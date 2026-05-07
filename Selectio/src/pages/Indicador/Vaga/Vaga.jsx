@@ -193,7 +193,7 @@ function Vaga() {
                   <p>
                     Indique um profissional qualificado. Se ele for contratado, voce recebe o premio direto na sua conta.
                   </p>
-                  <button className="btn-primary">Fazer Indicacao</button>
+                  <Link className="btn-primary" to={`/indicar/${id}`}>Fazer Indicacao</Link>
                 </div>
               )}
 

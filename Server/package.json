@@ -6,7 +6,8 @@
   "type": "commonjs",
   "scripts": {
     "dev": "node index.cjs",
-    "start": "node index.cjs"
+    "start": "node index.cjs",
+    "seed": "node seed-demo.cjs"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

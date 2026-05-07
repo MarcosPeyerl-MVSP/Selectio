@@ -97,6 +97,43 @@ db.serialize(() => {
   db.run(`CREATE INDEX IF NOT EXISTS idx_vagas_banner ON vagas (banner_ativo, destaque_banner)`)
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS candidatos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      indicador_id INTEGER NOT NULL,
+      vaga_id INTEGER NOT NULL,
+      nome TEXT NOT NULL,
+      email TEXT NOT NULL,
+      data_nascimento TEXT,
+      genero TEXT,
+      telefone TEXT,
+      cargo_atual TEXT,
+      anos_experiencia TEXT,
+      escolaridade TEXT,
+      proficiencia_idiomas TEXT,
+      linkedin TEXT,
+      portfolio TEXT,
+      github TEXT,
+      pontos_fortes TEXT,
+      fit_cultural TEXT,
+      destaques_projetos TEXT,
+      narrativa TEXT,
+      hard_skills TEXT,
+      soft_skills TEXT,
+      expectativa_salarial TEXT,
+      modelo_trabalho TEXT,
+      aviso_previo TEXT,
+      curriculo_nome TEXT,
+      status TEXT DEFAULT 'indicado',
+      criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (indicador_id) REFERENCES indicadores (id),
+      FOREIGN KEY (vaga_id) REFERENCES vagas (id)
+    )
+  `)
+
+  db.run(`CREATE INDEX IF NOT EXISTS idx_candidatos_indicador_id ON candidatos (indicador_id)`)
+  db.run(`CREATE INDEX IF NOT EXISTS idx_candidatos_vaga_id ON candidatos (vaga_id)`)
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS statusIndicador (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       indicador_id INTEGER NOT NULL UNIQUE,

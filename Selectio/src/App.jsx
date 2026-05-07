@@ -9,6 +9,7 @@ import CadastroEmpresa from './pages/Empresa/Cadastro/Cadastro'
 //PAINEIS
 import PainelIndicado from './pages/Indicador/Painel/Painel'
 import PainelEmpresa from './pages/Empresa/Painel/Painel'
+import CandidatosEmpresa from './pages/Empresa/Candidatos/Candidatos'
 // VAGAS
 import Vagas from './pages/Vagas/Vagas'
 import CriarVagaEmpresa from './pages/Empresa/CriarVaga/Vaga'
@@ -16,6 +17,8 @@ import EditarVagaEmpresa from './pages/Empresa/EditarVaga/Vaga'
 
 // VAGA
 import Vaga from './pages/Indicador/Vaga/Vaga'
+import Indicar from './pages/Indicador/Indicar/Indicar'
+import Candidatos from './pages/Indicador/Candidatos/Candidatos'
 
 function App() {
   return (
@@ -32,6 +35,7 @@ function App() {
         {/* ROTA PAINEIS */}
         <Route path="/painel/indicador" element={<PainelIndicado />} />
         <Route path="/painel/empresa" element={<PainelEmpresa />} />
+        <Route path="/candidatos/empresa" element={<CandidatosEmpresa />} />
         {/* ROTA VAGAS */}
         <Route path="/vagas" element={<Vagas />} />
         <Route path="/vagas/indicador" element={<Navigate to="/vagas" replace />} />
@@ -40,6 +44,8 @@ function App() {
         <Route path="/editar-vaga/empresa/:id" element={<EditarVagaEmpresa />} />
         {/* ROTA VAGA */}
         <Route path="/vaga/:id" element={<Vaga />} />
+        <Route path="/indicar/:vagaId" element={<Indicar />} />
+        <Route path="/candidatos/indicador" element={<Candidatos />} />
         {/* ROTA PAGE NOT FOUND */}
         <Route path="*" element={<h1>PAGE NOT FOUND</h1>} />
       </Routes>

@@ -61,7 +61,7 @@ function PainelEmpresa() {
               <FaUserFriends className="card-icon" />
               <h3>Candidatos</h3>
               <p>Veja os candidatos disponiveis para suas vagas publicadas.</p>
-              <Link to="/vagas">Ver Candidatos {'->'}</Link>
+              <Link to="/candidatos/empresa">Ver Candidatos {'->'}</Link>
             </div>
 
             <div className="card">

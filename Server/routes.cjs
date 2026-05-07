@@ -357,6 +357,15 @@ const vagasBaseSelect = `
   LEFT JOIN empresas ON empresas.id = vagas.empresa_id
 `
 
+const parseMoneyValue = (value) => {
+  const normalized = String(value || '')
+    .replace(/[^\d,.-]/g, '')
+    .replace(/\./g, '')
+    .replace(',', '.')
+
+  return Number(normalized || 0)
+}
+
 router.get('/vagas', (req, res) => {
   const sql = `${vagasBaseSelect} ORDER BY vagas.criado_em DESC`
 
@@ -599,6 +608,341 @@ router.put('/vagas/:id', (req, res) => {
         })
       }
     )
+  })
+})
+
+router.post('/candidatos', (req, res) => {
+  const {
+    indicadorId,
+    vagaId,
+    nome,
+    email,
+    dataNascimento,
+    genero,
+    telefone,
+    cargoAtual,
+    anosExperiencia,
+    escolaridade,
+    proficienciaIdiomas,
+    linkedin,
+    portfolio,
+    github,
+    pontosFortes,
+    fitCultural,
+    destaquesProjetos,
+    narrativa,
+    hardSkills,
+    softSkills,
+    expectativaSalarial,
+    modeloTrabalho,
+    avisoPrevio,
+    curriculoNome
+  } = req.body
+
+  if (!indicadorId || !vagaId || !nome || !email) {
+    return res.status(400).json({
+      erro: 'Indicador, vaga, nome e e-mail do candidato sao obrigatorios'
+    })
+  }
+
+  db.get('SELECT id FROM indicadores WHERE id = ?', [indicadorId], (indicadorErr, indicador) => {
+    if (indicadorErr) {
+      return res.status(500).json({
+        erro: 'Erro ao validar indicador'
+      })
+    }
+
+    if (!indicador) {
+      return res.status(404).json({
+        erro: 'Indicador nao encontrado'
+      })
+    }
+
+    db.get('SELECT id FROM vagas WHERE id = ?', [vagaId], (vagaErr, vaga) => {
+      if (vagaErr) {
+        return res.status(500).json({
+          erro: 'Erro ao validar vaga'
+        })
+      }
+
+      if (!vaga) {
+        return res.status(404).json({
+          erro: 'Vaga nao encontrada'
+        })
+      }
+
+      const sql = `
+        INSERT INTO candidatos (
+          indicador_id,
+          vaga_id,
+          nome,
+          email,
+          data_nascimento,
+          genero,
+          telefone,
+          cargo_atual,
+          anos_experiencia,
+          escolaridade,
+          proficiencia_idiomas,
+          linkedin,
+          portfolio,
+          github,
+          pontos_fortes,
+          fit_cultural,
+          destaques_projetos,
+          narrativa,
+          hard_skills,
+          soft_skills,
+          expectativa_salarial,
+          modelo_trabalho,
+          aviso_previo,
+          curriculo_nome
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `
+
+      db.run(
+        sql,
+        [
+          indicadorId,
+          vagaId,
+          nome,
+          email,
+          dataNascimento,
+          genero,
+          telefone,
+          cargoAtual,
+          anosExperiencia,
+          escolaridade,
+          proficienciaIdiomas,
+          linkedin,
+          portfolio,
+          github,
+          pontosFortes,
+          fitCultural,
+          destaquesProjetos,
+          narrativa,
+          JSON.stringify(hardSkills || []),
+          JSON.stringify(softSkills || []),
+          expectativaSalarial,
+          modeloTrabalho,
+          avisoPrevio,
+          curriculoNome
+        ],
+        function (insertErr) {
+          if (insertErr) {
+            return res.status(500).json({
+              erro: 'Erro ao salvar candidato'
+            })
+          }
+
+          db.run(`
+            INSERT INTO statusIndicador (indicador_id, total_indicacoes, vagas_ativas, updated_at)
+            VALUES (?, 1, 1, CURRENT_TIMESTAMP)
+            ON CONFLICT(indicador_id) DO UPDATE SET
+              total_indicacoes = total_indicacoes + 1,
+              vagas_ativas = vagas_ativas + 1,
+              updated_at = CURRENT_TIMESTAMP
+          `, [indicadorId])
+
+          res.json({
+            sucesso: true,
+            id: this.lastID
+          })
+        }
+      )
+    })
+  })
+})
+
+router.get('/indicador/:id/candidatos', (req, res) => {
+  const { id } = req.params
+
+  const sql = `
+    SELECT
+      candidatos.*,
+      vagas.titulo AS vaga_titulo,
+      vagas.empresa AS vaga_empresa
+    FROM candidatos
+    LEFT JOIN vagas ON vagas.id = candidatos.vaga_id
+    WHERE candidatos.indicador_id = ?
+    ORDER BY candidatos.criado_em DESC
+  `
+
+  db.all(sql, [id], (err, rows) => {
+    if (err) {
+      return res.status(500).json({
+        erro: 'Erro ao buscar candidatos'
+      })
+    }
+
+    res.json(rows.map((row) => ({
+      id: row.id,
+      indicadorId: row.indicador_id,
+      vagaId: row.vaga_id,
+      vagaTitulo: row.vaga_titulo,
+      vagaEmpresa: row.vaga_empresa,
+      nome: row.nome,
+      email: row.email,
+      telefone: row.telefone,
+      cargoAtual: row.cargo_atual,
+      linkedin: row.linkedin,
+      portfolio: row.portfolio,
+      github: row.github,
+      status: row.status,
+      origem: row.linkedin ? 'LinkedIn' : row.portfolio ? 'Portfolio' : row.github ? 'GitHub' : 'Indicacao',
+      aplicadoEm: row.criado_em
+    })))
+  })
+})
+
+router.get('/empresa/:id/candidatos', (req, res) => {
+  const { id } = req.params
+
+  const sql = `
+    SELECT
+      candidatos.*,
+      vagas.titulo AS vaga_titulo,
+      vagas.empresa AS vaga_empresa,
+      vagas.recompensa AS vaga_recompensa,
+      vagas.empresa_id AS empresa_id,
+      indicadores.nome AS indicador_nome
+    FROM candidatos
+    INNER JOIN vagas ON vagas.id = candidatos.vaga_id
+    LEFT JOIN indicadores ON indicadores.id = candidatos.indicador_id
+    WHERE vagas.empresa_id = ?
+    ORDER BY candidatos.criado_em DESC
+  `
+
+  db.all(sql, [id], (err, rows) => {
+    if (err) {
+      return res.status(500).json({
+        erro: 'Erro ao buscar candidatos da empresa'
+      })
+    }
+
+    res.json(rows.map((row) => ({
+      id: row.id,
+      indicadorId: row.indicador_id,
+      indicadorNome: row.indicador_nome,
+      vagaId: row.vaga_id,
+      vagaTitulo: row.vaga_titulo,
+      vagaEmpresa: row.vaga_empresa,
+      recompensa: row.vaga_recompensa,
+      nome: row.nome,
+      email: row.email,
+      telefone: row.telefone,
+      cargoAtual: row.cargo_atual,
+      linkedin: row.linkedin,
+      portfolio: row.portfolio,
+      github: row.github,
+      status: row.status,
+      origem: row.linkedin ? 'LinkedIn' : row.portfolio ? 'Portfolio' : row.github ? 'GitHub' : 'Indicacao',
+      aplicadoEm: row.criado_em
+    })))
+  })
+})
+
+router.patch('/candidatos/:id/status', (req, res) => {
+  const { id } = req.params
+  const { status, empresaId } = req.body
+  const validStatus = ['indicado', 'entrevista', 'contratado', 'cancelado']
+
+  if (!empresaId || !validStatus.includes(status)) {
+    return res.status(400).json({
+      erro: 'Empresa e status valido sao obrigatorios'
+    })
+  }
+
+  const sql = `
+    SELECT
+      candidatos.id,
+      candidatos.status,
+      candidatos.indicador_id,
+      vagas.empresa_id,
+      vagas.recompensa
+    FROM candidatos
+    INNER JOIN vagas ON vagas.id = candidatos.vaga_id
+    WHERE candidatos.id = ?
+  `
+
+  db.get(sql, [id], (findErr, candidato) => {
+    if (findErr) {
+      return res.status(500).json({
+        erro: 'Erro ao buscar candidato'
+      })
+    }
+
+    if (!candidato) {
+      return res.status(404).json({
+        erro: 'Candidato nao encontrado'
+      })
+    }
+
+    if (Number(candidato.empresa_id) !== Number(empresaId)) {
+      return res.status(403).json({
+        erro: 'Esta empresa nao pode alterar este candidato'
+      })
+    }
+
+    const previousStatus = candidato.status || 'indicado'
+    const rewardValue = parseMoneyValue(candidato.recompensa)
+
+    db.run('UPDATE candidatos SET status = ? WHERE id = ?', [status, id], function (updateErr) {
+      if (updateErr) {
+        return res.status(500).json({
+          erro: 'Erro ao atualizar status do candidato'
+        })
+      }
+
+      const statusDelta = {
+        vagas_sucesso: status === 'contratado' && previousStatus !== 'contratado' ? 1 : previousStatus === 'contratado' && status !== 'contratado' ? -1 : 0,
+        vagas_canceladas: status === 'cancelado' && previousStatus !== 'cancelado' ? 1 : previousStatus === 'cancelado' && status !== 'cancelado' ? -1 : 0,
+        vagas_ativas: ['contratado', 'cancelado'].includes(status) && !['contratado', 'cancelado'].includes(previousStatus)
+          ? -1
+          : !['contratado', 'cancelado'].includes(status) && ['contratado', 'cancelado'].includes(previousStatus)
+            ? 1
+            : 0,
+        valor_recebido: status === 'contratado' && previousStatus !== 'contratado' ? rewardValue : previousStatus === 'contratado' && status !== 'contratado' ? -rewardValue : 0,
+        valor_pendente: status === 'contratado' && previousStatus !== 'contratado' ? -rewardValue : previousStatus === 'contratado' && status !== 'contratado' ? rewardValue : 0,
+      }
+
+      db.run(`
+        INSERT INTO statusIndicador (indicador_id, total_indicacoes, vagas_ativas, valor_recebido, valor_pendente, updated_at)
+        VALUES (?, 0, 0, 0, 0, CURRENT_TIMESTAMP)
+        ON CONFLICT(indicador_id) DO NOTHING
+      `, [candidato.indicador_id], () => {
+        db.run(`
+          UPDATE statusIndicador
+          SET
+            vagas_sucesso = MAX(0, vagas_sucesso + ?),
+            vagas_canceladas = MAX(0, vagas_canceladas + ?),
+            vagas_ativas = MAX(0, vagas_ativas + ?),
+            valor_recebido = MAX(0, valor_recebido + ?),
+            valor_pendente = MAX(0, valor_pendente + ?),
+            taxa_sucesso = CASE
+              WHEN total_indicacoes > 0 THEN ROUND(((vagas_sucesso + ?) * 100.0) / total_indicacoes, 1)
+              ELSE 0
+            END,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE indicador_id = ?
+        `, [
+          statusDelta.vagas_sucesso,
+          statusDelta.vagas_canceladas,
+          statusDelta.vagas_ativas,
+          statusDelta.valor_recebido,
+          statusDelta.valor_pendente,
+          statusDelta.vagas_sucesso,
+          candidato.indicador_id
+        ])
+      })
+
+      res.json({
+        sucesso: true,
+        id: Number(id),
+        status
+      })
+    })
   })
 })
 

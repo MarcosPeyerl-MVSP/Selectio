@@ -1,0 +1,306 @@
+.empresa-candidatos-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 28px;
+  min-height: calc(100vh - 80px);
+  padding: 28px 28px 80px;
+  background: #f4f4f5;
+}
+
+.empresa-candidatos-page {
+  width: 100%;
+  max-width: 1220px;
+}
+
+.empresa-candidatos-header {
+  margin-bottom: 34px;
+}
+
+.empresa-candidatos-header span {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.empresa-candidatos-header h1 {
+  margin: 0 0 8px;
+  color: #202024;
+  font-size: 38px;
+  line-height: 1;
+}
+
+.empresa-candidatos-header p {
+  max-width: 660px;
+  margin: 0 0 8px;
+  color: #62666f;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.empresa-candidatos-header a {
+  color: #444;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.empresa-candidatos-header a::before {
+  content: "< ";
+}
+
+.empresa-candidatos-toolbar {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) 1fr;
+  gap: 28px;
+  align-items: start;
+  margin-bottom: 42px;
+}
+
+.empresa-candidate-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 8px;
+  background: #e1e1e3;
+  color: #7a7f88;
+}
+
+.empresa-candidate-search input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #111;
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+}
+
+.empresa-candidate-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.empresa-candidate-tabs button {
+  min-width: 86px;
+  height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: #ececef;
+  color: #666b75;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.empresa-candidate-tabs button.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.empresa-candidate-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.empresa-candidate-card,
+.empresa-load-more {
+  min-height: 246px;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.empresa-candidate-card {
+  display: grid;
+  padding: 22px;
+}
+
+.empresa-candidate-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.empresa-candidate-top img {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.empresa-status-select {
+  position: relative;
+  display: inline-flex;
+}
+
+.empresa-status-select select {
+  min-width: 116px;
+  height: 28px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 24px 0 10px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+}
+
+.empresa-status-select::after {
+  content: "⌄";
+  position: absolute;
+  right: 9px;
+  top: 3px;
+  color: #fff;
+  pointer-events: none;
+}
+
+.empresa-status-select.indicado select {
+  background: #2563eb;
+}
+
+.empresa-status-select.entrevista select {
+  background: #d97706;
+}
+
+.empresa-status-select.contratado select {
+  background: #16a34a;
+}
+
+.empresa-status-select.cancelado select {
+  background: #dc2626;
+}
+
+.empresa-candidate-card h2 {
+  margin: 0 0 6px;
+  color: #202024;
+  font-size: 18px;
+}
+
+.empresa-candidate-card p {
+  margin: 0 0 28px;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.empresa-candidate-details {
+  display: grid;
+  gap: 10px;
+  margin-top: auto;
+  margin-bottom: 18px;
+  color: #777d88;
+  font-size: 11px;
+}
+
+.empresa-candidate-details span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.empresa-candidate-actions {
+  display: grid;
+  grid-template-columns: 1fr 36px;
+  gap: 8px;
+}
+
+.empresa-candidate-actions button {
+  height: 36px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.empresa-candidate-actions button:last-child {
+  background: #ececef;
+  color: #777d88;
+}
+
+.empresa-load-more {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 12px;
+  border: 0;
+  color: #555b66;
+  cursor: pointer;
+  text-align: center;
+}
+
+.empresa-load-more span {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  background: #f6dfe4;
+  color: var(--primary);
+}
+
+.empresa-load-more strong {
+  max-width: 180px;
+  font-size: 16px;
+}
+
+.empresa-load-more small {
+  max-width: 190px;
+  color: #777d88;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.empresa-candidate-feedback {
+  color: #555;
+  font-weight: 700;
+}
+
+.empresa-candidate-feedback.error {
+  color: var(--primary);
+}
+
+@media (max-width: 1100px) {
+  .empresa-candidatos-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .empresa-candidatos-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .empresa-candidate-tabs {
+    justify-content: flex-start;
+  }
+
+  .empresa-candidate-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .empresa-candidatos-layout {
+    padding: 22px 16px 56px;
+  }
+
+  .empresa-candidatos-header h1 {
+    font-size: 32px;
+  }
+
+  .empresa-candidate-grid {
+    grid-template-columns: 1fr;
+  }
+}
