@@ -1,3 +1,7 @@
+// Objetivo do arquivo: renderizar a página de detalhes de uma vaga.
+// A página identifica o perfil autenticado, busca a vaga pela API,
+// redireciona usuários públicos para login e exibe ações diferentes para empresa e indicador.
+
 import './Vaga.css'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
@@ -10,6 +14,7 @@ import {
   FaEdit,
 } from 'react-icons/fa'
 
+// Responsabilidade: identificar o perfil atual com base nos dados salvos no localStorage.
 const getPerfil = () => {
   const indicador = localStorage.getItem('indicadorUser')
   const empresa = localStorage.getItem('empresaUser')
@@ -43,20 +48,30 @@ const getPerfil = () => {
 }
 
 function Vaga() {
+  // Identificador da vaga recebido pela rota.
   const { id } = useParams()
+
+  // Armazena os dados da vaga carregada.
   const [vaga, setVaga] = useState(null)
+
+  // Controla o estado de carregamento da busca da vaga.
   const [loading, setLoading] = useState(true)
+
+  // Armazena mensagem de erro quando a vaga não é encontrada.
   const [error, setError] = useState(null)
+
+  // Guarda o perfil do usuário atual para definir acesso, layout e ações.
   const [perfil] = useState(getPerfil)
 
   useEffect(() => {
+    // Responsabilidade: buscar os detalhes da vaga na API.
     const fetchVaga = async () => {
       if (perfil.tipo === 'publico') return
 
       try {
         const response = await fetch(`http://localhost:3333/vagas/${id}`)
         if (!response.ok) {
-          throw new Error('Vaga nao encontrada')
+          throw new Error('Vaga não encontrada')
         }
         const data = await response.json()
         setVaga(data)
@@ -70,10 +85,12 @@ function Vaga() {
     fetchVaga()
   }, [id, perfil])
 
+  // Regra de acesso: usuário público precisa fazer login antes de ver a vaga.
   if (perfil.tipo === 'publico') {
     return <Navigate to={`/login?redirect=/vaga/${id}`} replace />
   }
 
+  // Estado visual enquanto a vaga está sendo carregada.
   if (loading) {
     return (
       <>
@@ -88,15 +105,16 @@ function Vaga() {
     )
   }
 
+  // Estado visual quando ocorre erro ou a vaga não existe.
   if (error || !vaga) {
     return (
       <>
         <Navbar />
         <main className="vaga-detail-content">
           <div className="not-found-message">
-            <h2>Vaga nao encontrada</h2>
-            <p>Verifique se a vaga existe ou retorne a lista de vagas.</p>
-            <Link to={perfil.vagasPath}>Voltar a lista</Link>
+            <h2>Vaga não encontrada</h2>
+            <p>Verifique se a vaga existe ou retorne à lista de vagas.</p>
+            <Link to={perfil.vagasPath}>Voltar à lista</Link>
           </div>
         </main>
         <Footer />
@@ -104,6 +122,7 @@ function Vaga() {
     )
   }
 
+  // Desestrutura os campos da vaga usados na interface.
   const {
     titulo,
     empresa,
@@ -118,14 +137,17 @@ function Vaga() {
     imagem,
   } = vaga
 
+  // Regras de normalização: benefícios e requisitos podem chegar como array ou JSON serializado.
   const beneficiosArray = Array.isArray(beneficios) ? beneficios : JSON.parse(beneficios || '[]')
   const requisitosArray = Array.isArray(requisitos) ? requisitos : JSON.parse(requisitos || '[]')
 
   return (
     <>
+      {/* Componente de navegação principal. */}
       <Navbar />
 
       <div className={`vaga-detail-page ${perfil.tipo === 'publico' ? 'public-layout' : ''}`}>
+        {/* Menu lateral exibido para usuários autenticados. */}
         {perfil.tipo !== 'publico' && (
           <Sidebar type={perfil.tipo} user={perfil.user} />
         )}
@@ -140,6 +162,7 @@ function Vaga() {
 
           <div className="detail-grid">
             <section className="detail-main">
+              {/* Bloco principal com resumo da vaga. */}
               <div className="vaga-card-top">
                 <div>
                   <h1>{titulo}</h1>
@@ -157,13 +180,15 @@ function Vaga() {
                 <img src={imagem} alt={titulo} />
               </div>
 
+              {/* Descrição detalhada da função. */}
               <section className="section-block">
-                <h2>Descricao da Funcao</h2>
+                <h2>Descrição da Função</h2>
                 <p>{descricaoLonga}</p>
               </section>
 
+              {/* Lista de requisitos da vaga. */}
               <section className="section-block">
-                <h2>Requisitos e Qualificacoes</h2>
+                <h2>Requisitos e Qualificações</h2>
                 <ul>
                   {requisitosArray.map((item) => (
                     <li key={item}>
@@ -176,29 +201,32 @@ function Vaga() {
 
             <aside className="detail-aside">
               {perfil.tipo === 'empresa' ? (
+                // Ação exibida para usuário empresa gerenciar a vaga.
                 <div className="edit-vaga-card">
                   <span className="tag edit-tag">MINHA VAGA</span>
                   <strong>Gerenciar vaga</strong>
                   <p>
-                    Atualize as informacoes, requisitos, beneficios e recompensa desta oportunidade.
+                    Atualize as informações, requisitos, benefícios e recompensa desta oportunidade.
                   </p>
                   <Link className="btn-primary" to={`/editar-vaga/empresa/${id}`}>
                     <FaEdit /> Editar vaga
                   </Link>
                 </div>
               ) : (
+                // Ação exibida para indicador iniciar uma indicação para a vaga.
                 <div className="reward-card">
-                  <span className="tag reward-tag">RECOMPENSA POR INDICACAO</span>
+                  <span className="tag reward-tag">RECOMPENSA POR INDICAÇÃO</span>
                   <strong>{recompensa}</strong>
                   <p>
-                    Indique um profissional qualificado. Se ele for contratado, voce recebe o premio direto na sua conta.
+                    Indique um profissional qualificado. Se ele for contratado, você recebe o prêmio direto na sua conta.
                   </p>
-                  <Link className="btn-primary" to={`/indicar/${id}`}>Fazer Indicacao</Link>
+                  <Link className="btn-primary" to={`/indicar/${id}`}>Fazer Indicação</Link>
                 </div>
               )}
 
+              {/* Lista de benefícios da vaga. */}
               <div className="benefits-card">
-                <h3>Beneficios</h3>
+                <h3>Benefícios</h3>
                 <div className="benefits-grid">
                   {beneficiosArray.map((beneficio) => (
                     <div key={beneficio}>
@@ -213,6 +241,7 @@ function Vaga() {
         </main>
       </div>
 
+      {/* Componente de rodapé. */}
       <Footer />
     </>
   )

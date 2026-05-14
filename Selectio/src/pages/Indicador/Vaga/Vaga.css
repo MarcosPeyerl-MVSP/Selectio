@@ -1,3 +1,8 @@
+/* Objetivo do arquivo: definir os estilos da página de detalhes da vaga,
+   incluindo layout com sidebar, estados de erro, blocos de descrição,
+   card de recompensa/edição, benefícios e responsividade. */
+
+/* Layout principal da página de detalhes com sidebar e conteúdo. */
 .vaga-detail-page {
   padding: 60px 20px;
   display: grid;
@@ -5,10 +10,12 @@
   gap: 24px;
 }
 
+/* Layout alternativo previsto para visualização pública. */
 .vaga-detail-page.public-layout {
   grid-template-columns: 1fr;
 }
 
+/* Estado visual para vaga não encontrada. */
 .not-found-message {
   text-align: center;
   padding: 60px 20px;
@@ -43,6 +50,7 @@
   background: var(--primary-dark);
 }
 
+/* Estilos de sidebar usados nesta página. */
 .sidebar {
   background: #fff;
   border: 1px solid rgba(182, 28, 47, 0.08);
@@ -120,12 +128,14 @@
   color: #fff;
 }
 
+/* Conteúdo principal da vaga. */
 .vaga-detail-content {
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
+/* Cabeçalho com link de retorno e status da vaga. */
 .page-header {
   display: flex;
   align-items: center;
@@ -147,6 +157,7 @@
   color: var(--primary);
 }
 
+/* Etiqueta de status da vaga. */
 .tag.status {
   background: #e9f0ff;
   color: #1d4ed8;
@@ -156,6 +167,7 @@
   font-size: 12px;
 }
 
+/* Grade que separa conteúdo principal e lateral. */
 .detail-grid {
   display: grid;
   grid-template-columns: 1.8fr 1fr;
@@ -167,6 +179,7 @@
   gap: 24px;
 }
 
+/* Card superior com resumo da vaga. */
 .vaga-card-top {
   background: #fff;
   padding: 28px;
@@ -180,6 +193,7 @@
   margin-bottom: 14px;
 }
 
+/* Tags com empresa, localização, salário e tipo. */
 .vaga-tags {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, max-content));
@@ -200,6 +214,7 @@
   line-height: 1.8;
 }
 
+/* Imagem da vaga. */
 .vaga-image img {
   width: 100%;
   border-radius: 20px;
@@ -207,6 +222,7 @@
   aspect-ratio: 16 / 9;
 }
 
+/* Blocos de descrição e requisitos. */
 .section-block {
   background: #fff;
   border-radius: 20px;
@@ -245,11 +261,13 @@
   color: var(--primary);
 }
 
+/* Coluna lateral da página. */
 .detail-aside {
   display: grid;
   gap: 24px;
 }
 
+/* Cards laterais de recompensa, edição e benefícios. */
 .reward-card,
 .edit-vaga-card,
 .benefits-card {
@@ -280,6 +298,7 @@
   margin-bottom: 22px;
 }
 
+/* Botão principal dos cards laterais. */
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -296,6 +315,7 @@
   text-decoration: none;
 }
 
+/* Etiqueta da vaga pertencente à empresa. */
 .edit-tag {
   background: #e9f0ff;
   color: #1d4ed8;
@@ -305,6 +325,7 @@
   font-size: 12px;
 }
 
+/* Card de benefícios. */
 .benefits-card h3 {
   margin-bottom: 18px;
   font-size: 18px;
@@ -328,6 +349,7 @@
   color: var(--primary);
 }
 
+/* Ajustes para telas médias. */
 @media (max-width: 1100px) {
   .vaga-detail-page {
     grid-template-columns: 1fr;
@@ -338,6 +360,7 @@
   }
 }
 
+/* Ajustes para telas pequenas. */
 @media (max-width: 720px) {
   .vaga-detail-page {
     padding: 30px 16px;

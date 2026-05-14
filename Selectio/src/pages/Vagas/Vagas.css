@@ -1,7 +1,12 @@
+/* Objetivo do arquivo: definir os estilos da página de listagem de vagas,
+   incluindo layout com sidebar, cabeçalho, filtros, cards e responsividade. */
+
+/* Espaçamento principal da página de vagas. */
 .vagas-page {
   padding: 60px 20px;
 }
 
+/* Layout com coluna lateral para usuários autenticados e área principal de conteúdo. */
 .vagas-layout {
   display: grid;
   grid-template-columns: 255px minmax(0, 1fr);
@@ -9,6 +14,7 @@
   margin: 0;
 }
 
+/* Layout usado quando o visitante é público e não possui sidebar. */
 .vagas-layout.public-layout {
   display: block;
 }
@@ -21,6 +27,7 @@
 
 /* HEADER */
 
+/* Cabeçalho da listagem de vagas. */
 .vagas-header {
   max-width: 900px;
   margin-bottom: 40px;
@@ -38,6 +45,7 @@
 
 /* FILTROS */
 
+/* Grade de filtros por busca, salário e área. */
 .filtros {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr auto;
@@ -48,6 +56,7 @@
   border-radius: 10px;
 }
 
+/* Container visual de cada campo de filtro. */
 .filtro-input {
   display: flex;
   align-items: center;
@@ -63,6 +72,7 @@
   width: 100%;
 }
 
+/* Estilo previsto para seletor de filtro, caso seja usado na interface. */
 .filtro-select {
   display: flex;
   justify-content: space-between;
@@ -75,6 +85,7 @@
   cursor: pointer;
 }
 
+/* Botão usado para limpar filtros. */
 .btn-filtrar {
   background: var(--primary);
   color: white;
@@ -93,6 +104,7 @@
 
 /* GRID */
 
+/* Grade de cards de vagas. */
 .vagas-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -101,6 +113,7 @@
 
 /* CARD */
 
+/* Card individual de vaga. */
 .vaga-card {
   background: white;
   border-radius: 14px;
@@ -117,12 +130,14 @@
   display: block;
 }
 
+/* Área visual da imagem da vaga. */
 .vaga-img {
   height: 160px;
   background-size: cover;
   background-position: center;
 }
 
+/* Área textual do card de vaga. */
 .vaga-content {
   padding: 18px;
 }
@@ -150,10 +165,12 @@
   font-size: 13px;
 }
 
+/* Área de ações do card de vaga. */
 .vaga-actions {
   padding: 0 18px 18px;
 }
 
+/* Botões/links principais dos cards. */
 .vaga-action-primary,
 .btn-criar-vaga {
   display: inline-flex;
@@ -171,6 +188,7 @@
   width: 100%;
 }
 
+/* Cabeçalho com distribuição horizontal para título e ações. */
 .empresa-vagas-header {
   display: flex;
   justify-content: space-between;
@@ -178,6 +196,7 @@
   gap: 24px;
 }
 
+/* Bloco exibido quando a busca não retorna vagas. */
 .empty-vagas {
   margin-top: 28px;
   padding: 28px;
@@ -188,6 +207,7 @@
 
 /* RESPONSIVO */
 
+/* Ajustes para telas menores. */
 @media (max-width: 900px) {
   .vagas-layout {
     grid-template-columns: 1fr;

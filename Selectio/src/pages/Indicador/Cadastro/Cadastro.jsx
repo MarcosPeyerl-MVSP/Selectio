@@ -1,3 +1,7 @@
+// Objetivo do arquivo: renderizar e controlar o formulário de cadastro de indicador.
+// O componente valida CPF, avalia força da senha, confirma senha, envia os dados
+// para a API e salva a sessão do indicador após cadastro bem-sucedido.
+
 import './Cadastro.css'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -5,6 +9,7 @@ import { FaCheck, FaEye, FaEyeSlash, FaTimes } from 'react-icons/fa'
 import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Footer from '../../../components/Footer/Footer'
 
+// Critérios exibidos e validados para classificar a força da senha.
 const passwordCriteria = [
   { key: 'length', label: '12+ caracteres' },
   { key: 'uppercase', label: 'Maiúscula' },
@@ -14,6 +19,7 @@ const passwordCriteria = [
   { key: 'noSequence', label: 'Sem repetição' }
 ]
 
+// Textos auxiliares exibidos conforme a classificação da senha.
 const strengthCopy = {
   fraca: {
     label: 'fraca',
@@ -30,7 +36,10 @@ const strengthCopy = {
 }
 
 function CadastroIndicador() {
+  // Hook usado para redirecionar o usuário após cadastro bem-sucedido.
   const navigate = useNavigate()
+
+  // Estado central do formulário de cadastro do indicador.
   const [form, setForm] = useState({
     nome: '',
     email: '',
@@ -41,10 +50,17 @@ function CadastroIndicador() {
     confirmarSenha: '',
     cpfError: ''
   })
+
+  // Guarda o resultado da análise de força da senha.
   const [passwordStrength, setPasswordStrength] = useState(null)
+
+  // Controla a visibilidade do campo de senha.
   const [showPassword, setShowPassword] = useState(false)
+
+  // Controla a visibilidade do campo de confirmação de senha.
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
+  // Responsabilidade: aplicar máscara de CPF no formato 000.000.000-00.
   function formatCPF(value) {
     value = value.replace(/\D/g, '')
     value = value.replace(/^(\d{3})(\d)/, '$1.$2')
@@ -53,9 +69,14 @@ function CadastroIndicador() {
     return value.slice(0, 14)
   }
 
+  // Responsabilidade: validar CPF usando tamanho, repetição e dígitos verificadores.
   function validarCPF(cpf) {
     cpf = cpf.replace(/[^\d]/g, '')
+
+    // Regra: CPF precisa ter 11 dígitos numéricos.
     if (cpf.length !== 11) return false
+
+    // Regra: CPFs com todos os dígitos iguais são inválidos.
     if (/^(\d)\1{10}$/.test(cpf)) return false
 
     let soma = 0
@@ -63,6 +84,7 @@ function CadastroIndicador() {
       soma += parseInt(cpf[i]) * (10 - i)
     }
 
+    // Calcula o primeiro dígito verificador.
     const digito1 = soma % 11 < 2 ? 0 : 11 - (soma % 11)
     soma = 0
 
@@ -70,10 +92,12 @@ function CadastroIndicador() {
       soma += parseInt(cpf[i]) * (11 - i)
     }
 
+    // Calcula o segundo dígito verificador e compara com o CPF informado.
     const digito2 = soma % 11 < 2 ? 0 : 11 - (soma % 11)
     return Number(cpf[9]) === digito1 && Number(cpf[10]) === digito2
   }
 
+  // Responsabilidade: verificar os critérios de segurança da senha.
   function validatePasswordStrength(password) {
     const criteria = {
       length: password.length >= 12,
@@ -84,6 +108,7 @@ function CadastroIndicador() {
       noSequence: !/(.)\1{2,}/.test(password)
     }
 
+    // Pontuação baseada na quantidade de critérios atendidos.
     const score = Object.values(criteria).filter(Boolean).length
 
     return {
@@ -93,29 +118,35 @@ function CadastroIndicador() {
     }
   }
 
+  // Define o estado visual da confirmação de senha.
   const confirmPasswordStatus = form.confirmarSenha
     ? form.senha === form.confirmarSenha
       ? 'match'
       : 'mismatch'
     : ''
 
+  // Recupera os textos correspondentes à força atual da senha.
   const currentStrength = passwordStrength
     ? strengthCopy[passwordStrength.strength]
     : null
 
+  // Regra de envio: o botão só fica apto quando a senha informada for forte.
   const isPasswordStrong = passwordStrength?.strength === 'forte'
   const canSubmit = !form.senha || isPasswordStrong
 
+  // Responsabilidade: atualizar campos do formulário e executar formatações/validações em tempo real.
   function handleChange(e) {
     const { name, value } = e.target
     let formattedValue = value
 
+    // Aplica máscara no CPF e limpa erro anterior ao editar o campo.
     if (name === 'cpf') {
       formattedValue = formatCPF(value)
       setForm({ ...form, [name]: formattedValue, cpfError: '' })
       return
     }
 
+    // Atualiza a análise de força sempre que o campo de senha muda.
     if (name === 'senha') {
       setPasswordStrength(validatePasswordStrength(value))
     }
@@ -123,23 +154,28 @@ function CadastroIndicador() {
     setForm({ ...form, [name]: formattedValue })
   }
 
+  // Responsabilidade: validar dados e enviar o cadastro para a API.
   async function handleSubmit(e) {
     e.preventDefault()
 
+    // Validação: senha e confirmação precisam ser iguais.
     if (form.senha !== form.confirmarSenha) {
       alert('As senhas não conferem')
       return
     }
 
+    // Validação: CPF informado precisa ser válido.
     if (form.cpf && !validarCPF(form.cpf)) {
       setForm({ ...form, cpfError: 'CPF inválido' })
       return
     }
 
+    // Remove campos usados apenas na interface antes de enviar à API.
     const payload = { ...form }
     delete payload.confirmarSenha
     delete payload.cpfError
 
+    // Integração: envia os dados do indicador para criação de conta.
     const response = await fetch('http://localhost:3333/indicador/cadastro', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -149,16 +185,21 @@ function CadastroIndicador() {
     const data = await response.json()
 
     if (data.sucesso) {
+      // Regra de sessão: salva indicador autenticado e remove sessão de empresa.
       localStorage.setItem('indicadorUser', JSON.stringify(data.indicador))
       localStorage.removeItem('empresaUser')
+
+      // Redireciona para o painel do indicador após o cadastro.
       navigate('/painel/indicador')
     } else {
+      // Exibe erro retornado pela API ou mensagem padrão.
       alert(data.erro || 'Erro ao cadastrar')
     }
   }
 
   return (
     <>
+      {/* Componente de navegação principal da aplicação. */}
       <Navbar />
 
       <main className="indicador-cadastro-container">
@@ -170,6 +211,7 @@ function CadastroIndicador() {
             recompensado por indicações bem-sucedidas.
           </p>
 
+          {/* Formulário de cadastro do indicador. */}
           <form onSubmit={handleSubmit}>
             <div className="form-grid">
               <input
@@ -208,6 +250,7 @@ function CadastroIndicador() {
                 onChange={handleChange}
               />
 
+              {/* Campo de senha com botão para mostrar ou ocultar o valor digitado. */}
               <div className="password-field">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -227,6 +270,7 @@ function CadastroIndicador() {
                 </button>
               </div>
 
+              {/* Painel de análise da força da senha, exibido após digitação. */}
               {passwordStrength && (
                 <div className={`password-strength strength-${passwordStrength.strength}`}>
                   <div className="strength-header">
@@ -239,6 +283,7 @@ function CadastroIndicador() {
                     </span>
                   </div>
 
+                  {/* Medidor visual baseado na pontuação da senha. */}
                   <div className="strength-meter" aria-hidden="true">
                     {passwordCriteria.map((item, index) => (
                       <span
@@ -248,6 +293,7 @@ function CadastroIndicador() {
                     ))}
                   </div>
 
+                  {/* Lista os critérios atendidos e não atendidos pela senha. */}
                   <ul className="criteria-list">
                     {passwordCriteria.map((item) => {
                       const isMet = passwordStrength.criteria[item.key]
@@ -263,6 +309,7 @@ function CadastroIndicador() {
                 </div>
               )}
 
+              {/* Campo de confirmação de senha com estado visual de compatibilidade. */}
               <div className={`confirm-password-field ${confirmPasswordStatus}`}>
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
@@ -290,6 +337,7 @@ function CadastroIndicador() {
               </div>
             </div>
 
+            {/* Botão de envio bloqueado quando a senha ainda não é forte. */}
             <button type="submit" className="btn-primary" disabled={!canSubmit}>
               {isPasswordStrong ? 'Criar conta →' : 'Complete a senha forte'}
             </button>
@@ -297,6 +345,7 @@ function CadastroIndicador() {
         </div>
       </main>
 
+      {/* Componente de rodapé da aplicação. */}
       <Footer />
     </>
   )

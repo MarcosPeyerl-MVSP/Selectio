@@ -1,3 +1,7 @@
+// Objetivo do arquivo: renderizar e controlar a página de edição de vaga da empresa.
+// O componente valida a sessão da empresa, carrega os dados da vaga, verifica se a vaga
+// pertence à empresa autenticada, permite ajustes no formulário e envia a atualização para a API.
+
 import '../CriarVaga/Vaga.css'
 import './Vaga.css'
 import { useEffect, useState } from 'react'
@@ -6,12 +10,13 @@ import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Sidebar from '../../../components/Sidebar/Sidebar'
 import Footer from '../../../components/Footer/Footer'
 
+// Estado inicial do formulário de edição da vaga.
 const initialForm = {
   titulo: '',
   area: '',
   salarioMin: '',
   salarioMax: '',
-  experiencia: 'Senior',
+  experiencia: 'Sênior',
   experienciaPersonalizada: '',
   tipo: 'Tempo Integral',
   tipoDataInicio: '',
@@ -28,6 +33,7 @@ const initialForm = {
   imagem: '',
 }
 
+// Responsabilidade: formatar valores numéricos como moeda brasileira.
 const formatCurrency = (value) => {
   const numbers = String(value || '').replace(/\D/g, '')
   const amount = Number(numbers || 0)
@@ -39,15 +45,19 @@ const formatCurrency = (value) => {
   })
 }
 
+// Responsabilidade: extrair número de um texto monetário.
 const getNumberFromCurrency = (value) => Number(String(value || '').replace(/\D/g, ''))
 
+// Responsabilidade: transformar texto separado por vírgulas em lista.
 const parseList = (value) => String(value || '')
   .split(',')
   .map((item) => item.trim())
   .filter(Boolean)
 
+// Responsabilidade: transformar uma lista em texto separado por vírgulas para preencher o formulário.
 const listToText = (value) => Array.isArray(value) ? value.join(', ') : ''
 
+// Responsabilidade: normalizar partes do salário para o formato monetário usado no formulário.
 const formatSalaryPart = (value) => {
   const text = String(value || '').trim()
   if (!text || text === 'A combinar') return ''
@@ -61,6 +71,7 @@ const formatSalaryPart = (value) => {
   return formatCurrency(String(normalizedAmount))
 }
 
+// Responsabilidade: separar salário mínimo e máximo a partir do texto salvo na vaga.
 const getSalaryParts = (value) => {
   if (!value || value === 'A combinar') return ['', '']
 
@@ -76,8 +87,9 @@ const getSalaryParts = (value) => {
   return [formatSalaryPart(parts[0]), '']
 }
 
+// Responsabilidade: converter o texto de recompensa salvo na vaga para os campos do formulário.
 const getRecompensaForm = (value) => {
-  if (value === '10% Salario') {
+  if (value === '10% Salário') {
     return { recompensaTipo: 'percentual', recompensaValor: 'R$ 2.500' }
   }
 
@@ -88,8 +100,10 @@ const getRecompensaForm = (value) => {
   return { recompensaTipo: 'fixo', recompensaValor: value || 'R$ 2.500' }
 }
 
+// Responsabilidade: converter o tipo salvo da vaga para os campos do formulário,
+// incluindo datas quando o tipo for contrato temporário.
 const getTipoForm = (value) => {
-  const temporaryMatch = String(value || '').match(/^Contrato temporario \((\d{2})\/(\d{2})\/(\d{4}) [–-] (\d{2})\/(\d{2})\/(\d{4})\)$/)
+  const temporaryMatch = String(value || '').match(/^Contrato temporário \((\d{2})\/(\d{2})\/(\d{4}) [–-] (\d{2})\/(\d{2})\/(\d{4})\)$/)
 
   if (!temporaryMatch) {
     return { tipo: value || 'Tempo Integral', tipoDataInicio: '', tipoDataFim: '' }
@@ -97,26 +111,42 @@ const getTipoForm = (value) => {
 
   const [, startDay, startMonth, startYear, endDay, endMonth, endYear] = temporaryMatch
   return {
-    tipo: 'Contrato temporario',
+    tipo: 'Contrato temporário',
     tipoDataInicio: `${startYear}-${startMonth}-${startDay}`,
     tipoDataFim: `${endYear}-${endMonth}-${endDay}`,
   }
 }
 
 function EditarVagaEmpresa() {
+  // Identificador da vaga recebido pela rota.
   const { id } = useParams()
+
+  // Hook usado para redirecionar a empresa em fluxos de login e pós-atualização.
   const navigate = useNavigate()
+
+  // Recupera a empresa autenticada salva no localStorage.
   const [empresa] = useState(() => {
     const storedEmpresa = localStorage.getItem('empresaUser')
     return storedEmpresa ? JSON.parse(storedEmpresa) : null
   })
+
+  // Controla os campos do formulário de edição.
   const [form, setForm] = useState(initialForm)
+
+  // Controla o envio da atualização.
   const [loading, setLoading] = useState(false)
+
+  // Controla o carregamento inicial dos dados da vaga.
   const [loadingVaga, setLoadingVaga] = useState(true)
+
+  // Armazena mensagens de erro, bloqueio ou sucesso.
   const [message, setMessage] = useState('')
+
+  // Define se a empresa autenticada pode editar a vaga carregada.
   const [canEdit, setCanEdit] = useState(false)
 
   useEffect(() => {
+    // Regra de acesso: sem empresa autenticada, redireciona para login.
     if (!empresa) {
       navigate(`/login?redirect=/editar-vaga/empresa/${id}`)
     }
@@ -125,18 +155,19 @@ function EditarVagaEmpresa() {
   useEffect(() => {
     if (!empresa) return
 
+    // Responsabilidade: buscar a vaga e validar se ela pertence à empresa autenticada.
     const fetchVaga = async () => {
       try {
         const response = await fetch(`http://localhost:3333/vagas/${id}`)
         const data = await response.json()
 
         if (!response.ok) {
-          setMessage(data.erro || 'Vaga nao encontrada.')
+          setMessage(data.erro || 'Vaga não encontrada.')
           return
         }
 
         if (Number(data.empresaId) !== Number(empresa.id)) {
-          setMessage('Esta vaga nao pertence a sua empresa.')
+          setMessage('Esta vaga não pertence à sua empresa.')
           setCanEdit(false)
           return
         }
@@ -145,6 +176,7 @@ function EditarVagaEmpresa() {
         const recompensa = getRecompensaForm(data.recompensa)
         const tipo = getTipoForm(data.tipo)
 
+        // Preenche o formulário com os dados carregados da vaga.
         setForm({
           ...initialForm,
           titulo: data.titulo || '',
@@ -162,7 +194,7 @@ function EditarVagaEmpresa() {
         })
         setCanEdit(true)
       } catch {
-        setMessage('Nao foi possivel carregar a vaga.')
+        setMessage('Não foi possível carregar a vaga.')
         setCanEdit(false)
       } finally {
         setLoadingVaga(false)
@@ -172,28 +204,33 @@ function EditarVagaEmpresa() {
     fetchVaga()
   }, [empresa, id])
 
+  // Responsabilidade: atualizar campos simples do formulário.
   const handleChange = (event) => {
     const { name, value } = event.target
     setForm((current) => ({ ...current, [name]: value }))
   }
 
+  // Responsabilidade: atualizar campos monetários com formatação de moeda.
   const handleCurrencyChange = (event) => {
     const { name, value } = event.target
     setForm((current) => ({ ...current, [name]: formatCurrency(value) }))
   }
 
+  // Responsabilidade: definir o texto de recompensa conforme o tipo selecionado.
   const getRecompensa = () => {
-    if (form.recompensaTipo === 'percentual') return '10% Salario'
+    if (form.recompensaTipo === 'percentual') return '10% Salário'
     if (form.recompensaTipo === 'personalizado') return 'Consultar'
     return form.recompensaValor
   }
 
+  // Responsabilidade: formatar data ISO para o padrão brasileiro.
   const formatDate = (value) => {
     if (!value) return ''
     const [year, month, day] = value.split('-')
     return `${day}/${month}/${year}`
   }
 
+  // Responsabilidade: validar dados e enviar a atualização da vaga para a API.
   const handleSubmit = async (event) => {
     event.preventDefault()
     setMessage('')
@@ -201,19 +238,19 @@ function EditarVagaEmpresa() {
     if (!empresa) return
 
     if (!form.titulo || !form.area || !form.descricaoLonga || !form.localizacao) {
-      setMessage('Preencha titulo, area, descricao e localizacao.')
+      setMessage('Preencha título, área, descrição e localização.')
       return
     }
 
     const salarioMin = getNumberFromCurrency(form.salarioMin)
     const salarioMax = getNumberFromCurrency(form.salarioMax)
     if (salarioMin && salarioMax && salarioMin > salarioMax) {
-      setMessage('O salario minimo nao pode ser maior que o maximo.')
+      setMessage('O salário mínimo não pode ser maior que o máximo.')
       return
     }
 
-    if (form.tipo === 'Contrato temporario' && (!form.tipoDataInicio || !form.tipoDataFim)) {
-      setMessage('Informe a data de inicio e a data de fim do contrato temporario.')
+    if (form.tipo === 'Contrato temporário' && (!form.tipoDataInicio || !form.tipoDataFim)) {
+      setMessage('Informe a data de início e a data de fim do contrato temporário.')
       return
     }
 
@@ -221,12 +258,13 @@ function EditarVagaEmpresa() {
       ? `${form.salarioMin || 'A combinar'} - ${form.salarioMax || 'A combinar'}`
       : 'A combinar'
 
+    // Payload enviado ao backend com os dados atualizados da vaga.
     const payload = {
       titulo: form.titulo,
       empresaId: empresa.id,
       localizacao: form.localizacao,
       salario,
-      tipo: form.tipo === 'Contrato temporario'
+      tipo: form.tipo === 'Contrato temporário'
         ? `${form.tipo} (${formatDate(form.tipoDataInicio)} - ${formatDate(form.tipoDataFim)})`
         : form.tipo,
       recompensa: getRecompensa(),
@@ -259,12 +297,13 @@ function EditarVagaEmpresa() {
       setMessage('Vaga atualizada com sucesso.')
       navigate(`/vaga/${id}`)
     } catch {
-      setMessage('Nao foi possivel conectar ao servidor.')
+      setMessage('Não foi possível conectar ao servidor.')
     } finally {
       setLoading(false)
     }
   }
 
+  // Evita renderizar a página enquanto não há empresa autenticada.
   if (!empresa) return null
 
   return (
@@ -276,13 +315,13 @@ function EditarVagaEmpresa() {
 
         <main className="empresa-vaga-content editar-vaga-content">
           <section className="empresa-vaga-intro">
-            <span>EDICAO DE VAGA</span>
+            <span>EDIÇÃO DE VAGA</span>
             <h1>
               Ajustar
               <br />
               uma <strong>Vaga.</strong>
             </h1>
-            <p>Atualize informacoes da oportunidade, recompensa, requisitos e detalhes de contratacao.</p>
+            <p>Atualize informações da oportunidade, recompensa, requisitos e detalhes de contratação.</p>
             <Link className="editar-vaga-back" to="/vagas">Voltar para vagas</Link>
           </section>
 
@@ -292,7 +331,7 @@ function EditarVagaEmpresa() {
             </section>
           ) : !canEdit ? (
             <section className="vaga-step">
-              <p>{message || 'Nao foi possivel editar esta vaga.'}</p>
+              <p>{message || 'Não foi possível editar esta vaga.'}</p>
               <Link className="editar-vaga-back" to="/vagas">Voltar para vagas</Link>
             </section>
           ) : (
@@ -303,29 +342,29 @@ function EditarVagaEmpresa() {
                   <span>PASSO 1 DE 4</span>
                 </div>
 
-                <label>Titulo do cargo / funcao</label>
+                <label>Título do cargo / função</label>
                 <input name="titulo" value={form.titulo} onChange={handleChange} />
 
                 <div className="form-grid three">
                   <div>
-                    <label>Industria / Area</label>
+                    <label>Indústria / Área</label>
                     <input name="area" value={form.area} onChange={handleChange} />
                   </div>
                   <div>
                     <label>Faixa salarial</label>
-                    <input name="salarioMin" placeholder="Min" value={form.salarioMin} onChange={handleCurrencyChange} />
+                    <input name="salarioMin" placeholder="Mín." value={form.salarioMin} onChange={handleCurrencyChange} />
                   </div>
                   <div>
                     <label>&nbsp;</label>
-                    <input name="salarioMax" placeholder="Max" value={form.salarioMax} onChange={handleCurrencyChange} />
+                    <input name="salarioMax" placeholder="Máx." value={form.salarioMax} onChange={handleCurrencyChange} />
                   </div>
                 </div>
 
                 <div className="form-grid two">
                   <div>
-                    <label>Experiencia requerida</label>
+                    <label>Experiência requerida</label>
                     <div className="option-grid">
-                      {['Junior', 'Pleno', 'Senior', 'Personalizado'].map((option) => (
+                      {['Júnior', 'Pleno', 'Sênior', 'Personalizado'].map((option) => (
                         <button key={option} type="button" className={form.experiencia === option ? 'selected' : ''} onClick={() => setForm((current) => ({ ...current, experiencia: option }))}>
                           {option}
                         </button>
@@ -337,18 +376,18 @@ function EditarVagaEmpresa() {
                   </div>
 
                   <div>
-                    <label>Tipo de contratacao</label>
+                    <label>Tipo de contratação</label>
                     <div className="option-grid">
-                      {['Tempo Integral', 'Freelance', 'Meio Periodo', 'Remoto', 'Contrato temporario'].map((option) => (
+                      {['Tempo Integral', 'Freelance', 'Meio Período', 'Remoto', 'Contrato temporário'].map((option) => (
                         <button key={option} type="button" className={form.tipo === option ? 'selected outline' : ''} onClick={() => setForm((current) => ({ ...current, tipo: option }))}>
                           {option}
                         </button>
                       ))}
                     </div>
-                    {form.tipo === 'Contrato temporario' && (
+                    {form.tipo === 'Contrato temporário' && (
                       <div className="temporary-contract-grid">
                         <div>
-                          <label>Data de inicio</label>
+                          <label>Data de início</label>
                           <input className="inline-input" name="tipoDataInicio" type="date" value={form.tipoDataInicio} onChange={handleChange} />
                         </div>
                         <div>
@@ -363,14 +402,14 @@ function EditarVagaEmpresa() {
 
               <section className="vaga-step">
                 <div className="step-header">
-                  <h2>Descricao da vaga</h2>
+                  <h2>Descrição da vaga</h2>
                   <span>PASSO 2 DE 4</span>
                 </div>
 
                 <label>Resumo da vaga</label>
                 <input name="descricaoCurta" value={form.descricaoCurta} onChange={handleChange} />
 
-                <label>Descricao da vaga</label>
+                <label>Descrição da vaga</label>
                 <textarea name="descricaoLonga" value={form.descricaoLonga} onChange={handleChange} />
 
                 <div className="form-grid two">
@@ -388,7 +427,7 @@ function EditarVagaEmpresa() {
 
                 <div className="form-grid two">
                   <div>
-                    <label>Beneficios</label>
+                    <label>Benefícios</label>
                     <textarea className="small" name="beneficios" value={form.beneficios} onChange={handleChange} />
                     <TokenPreview items={parseList(form.beneficios)} />
                   </div>
@@ -402,7 +441,7 @@ function EditarVagaEmpresa() {
               <section className="vaga-step">
                 <div className="step-header">
                   <div>
-                    <h2>Premiacao por Indicacao</h2>
+                    <h2>Premiação por Indicação</h2>
                     <p>Ajuste o incentivo exibido para indicadores.</p>
                   </div>
                   <span>PASSO 3 DE 4</span>
@@ -411,7 +450,7 @@ function EditarVagaEmpresa() {
                 <div className="reward-grid">
                   {[
                     ['fixo', 'Valor fixo', form.recompensaValor],
-                    ['percentual', 'Percentual', '10% Salario'],
+                    ['percentual', 'Percentual', '10% Salário'],
                     ['personalizado', 'Personalizado', 'Consultar'],
                   ].map(([value, label, text]) => (
                     <button key={value} type="button" className={form.recompensaTipo === value ? 'selected' : ''} onClick={() => setForm((current) => ({ ...current, recompensaTipo: value }))}>
@@ -427,13 +466,13 @@ function EditarVagaEmpresa() {
 
               <section className="vaga-step">
                 <div className="step-header">
-                  <h2>Logistica e Prazos</h2>
+                  <h2>Logística e Prazos</h2>
                   <span>PASSO 4 DE 4</span>
                 </div>
 
                 <div className="form-grid two">
                   <div>
-                    <label>Localizacao</label>
+                    <label>Localização</label>
                     <input name="localizacao" value={form.localizacao} onChange={handleChange} />
                   </div>
                   <div>
@@ -443,6 +482,7 @@ function EditarVagaEmpresa() {
                 </div>
               </section>
 
+              {/* Exibe mensagens de validação, erro ou sucesso. */}
               {message && <p className="empresa-vaga-message">{message}</p>}
 
               <div className="form-actions">
@@ -461,6 +501,7 @@ function EditarVagaEmpresa() {
   )
 }
 
+// Responsabilidade: exibir uma prévia visual dos itens separados por vírgula.
 function TokenPreview({ items }) {
   if (!items.length) return null
 

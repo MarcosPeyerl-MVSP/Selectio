@@ -1,15 +1,21 @@
+/* Objetivo do arquivo: definir os estilos da página de seleção de cadastro,
+   incluindo layout, cabeçalho, cards de perfil e responsividade. */
+
+/* Container principal da página. */
 .cadastro-container {
   min-height: 100vh;
   padding: 20px 20px 100px;
   background: #ffffff;
 }
 
+/* Área superior com texto introdutório da página. */
 .cadastro-header {
   max-width: 820px;
   margin: 0 auto 60px;
   text-align: center;
 }
 
+/* Marcador textual exibido acima do título. */
 .cadastro-header .tag {
   display: inline-block;
   font-size: 12px;
@@ -19,18 +25,21 @@
   margin-bottom: 14px;
 }
 
+/* Título principal da página. */
 .cadastro-header h1 {
   font-size: 38px;
   margin-bottom: 18px;
   letter-spacing: -1px;
 }
 
+/* Texto descritivo do cabeçalho. */
 .cadastro-header p {
   font-size: 15px;
   color: #666;
   line-height: 1.6;
 }
 
+/* Grade que organiza os cards de cadastro lado a lado. */
 .cadastro-cards {
   max-width: 980px;
   margin: 0 auto;
@@ -39,6 +48,7 @@
   gap: 36px;
 }
 
+/* Card individual de opção de cadastro. */
 .cadastro-card {
   background: #ffffff;
   padding: 36px 34px 40px;
@@ -47,11 +57,13 @@
   transition: var(--transition);
 }
 
+/* Feedback visual ao passar o cursor sobre o card. */
 .cadastro-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 40px 80px rgba(0, 0, 0, 0.18);
 }
 
+/* Estilo para ícone interno do card, caso seja utilizado no JSX. */
 .cadastro-card .icon {
   width: 46px;
   height: 46px;
@@ -63,11 +75,13 @@
   font-size: 20px;
 }
 
+/* Título da opção de cadastro. */
 .cadastro-card h2 {
   font-size: 22px;
   margin-bottom: 14px;
 }
 
+/* Descrição da opção de cadastro. */
 .cadastro-card p {
   font-size: 14px;
   color: #555;
@@ -75,12 +89,14 @@
   margin-bottom: 18px;
 }
 
+/* Lista de benefícios exibida em cada card. */
 .cadastro-card ul {
   list-style: none;
   padding: 0;
   margin-bottom: 26px;
 }
 
+/* Item individual da lista de benefícios. */
 .cadastro-card ul li {
   font-size: 13px;
   color: #666;
@@ -89,13 +105,15 @@
   position: relative;
 }
 
+/* Marcador visual personalizado dos itens da lista. */
 .cadastro-card ul li::before {
-  content: '•';
+  content: 'â€¢';
   color: var(--primary);
   position: absolute;
   left: 0;
 }
 
+/* Botão/link principal usado para acessar o formulário escolhido. */
 .btn-primary {
   display: block;
   width: 100%;
@@ -112,6 +130,7 @@
   transition: 0.3s ease;
 }
 
+/* Feedback visual do botão/link principal. */
 .btn-primary:hover {
   background: #ffffff;
   color: var(--primary);
@@ -119,7 +138,7 @@
   transform: translateY(-2px);
 }
 
-/* Responsivo */
+/* Ajustes responsivos para telas menores. */
 @media (max-width: 900px) {
   .cadastro-cards {
     grid-template-columns: 1fr;

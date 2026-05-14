@@ -1,3 +1,7 @@
+// Objetivo do arquivo: renderizar o formulário de indicação de candidato para uma vaga.
+// A página valida a sessão do indicador, busca os dados da vaga, coleta informações
+// do candidato indicado e envia a indicação para a API.
+
 import './Indicar.css'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
@@ -15,6 +19,8 @@ import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Sidebar from '../../../components/Sidebar/Sidebar'
 import Footer from '../../../components/Footer/Footer'
 
+// Estado inicial do formulário de indicação.
+// Contém dados pessoais, profissionais, links, habilidades, preferências e currículo.
 const initialForm = {
   nome: '',
   email: '',
@@ -33,13 +39,14 @@ const initialForm = {
   destaquesProjetos: '',
   narrativa: '',
   hardSkills: ['Figma', 'React'],
-  softSkills: ['Lideranca', 'Comunicacao'],
+  softSkills: ['Liderança', 'Comunicação'],
   expectativaSalarial: '',
   modeloTrabalho: '',
   avisoPrevio: '',
   curriculoNome: ''
 }
 
+// Responsabilidade: formatar valores monetários como moeda brasileira.
 const formatCurrency = (value) => {
   const numbers = value.replace(/\D/g, '')
   if (!numbers) return ''
@@ -51,6 +58,7 @@ const formatCurrency = (value) => {
   })
 }
 
+// Responsabilidade: formatar telefone brasileiro conforme a quantidade de dígitos informados.
 const formatPhone = (value) => {
   const numbers = value.replace(/\D/g, '').slice(0, 11)
 
@@ -63,6 +71,7 @@ const formatPhone = (value) => {
   return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7)}`
 }
 
+// Responsabilidade: recuperar o indicador autenticado salvo no localStorage.
 function getIndicador() {
   const stored = localStorage.getItem('indicadorUser')
   if (!stored) return null
@@ -70,22 +79,39 @@ function getIndicador() {
   try {
     return JSON.parse(stored)
   } catch {
+    // Fluxo de segurança: remove a sessão caso o JSON salvo esteja inválido.
     localStorage.removeItem('indicadorUser')
     return null
   }
 }
 
 function Indicar() {
+  // Identificador da vaga recebido pela rota.
   const { vagaId } = useParams()
+
+  // Hook usado para redirecionar após envio da indicação.
   const navigate = useNavigate()
+
+  // Mantém os dados do indicador autenticado.
   const [indicador] = useState(getIndicador)
+
+  // Armazena os dados da vaga carregada pela API.
   const [vaga, setVaga] = useState(null)
+
+  // Controla todos os campos do formulário.
   const [form, setForm] = useState(initialForm)
+
+  // Controla o carregamento inicial da vaga.
   const [loading, setLoading] = useState(true)
+
+  // Controla o estado de envio da indicação.
   const [saving, setSaving] = useState(false)
+
+  // Armazena mensagens de erro do carregamento ou envio.
   const [message, setMessage] = useState('')
 
   useEffect(() => {
+    // Responsabilidade: buscar os dados da vaga selecionada antes de exibir o formulário.
     const fetchVaga = async () => {
       if (!indicador) return
 
@@ -94,7 +120,7 @@ function Indicar() {
         const data = await response.json()
 
         if (!response.ok) {
-          throw new Error(data.erro || 'Vaga nao encontrada')
+          throw new Error(data.erro || 'Vaga não encontrada')
         }
 
         setVaga(data)
@@ -108,25 +134,30 @@ function Indicar() {
     fetchVaga()
   }, [indicador, vagaId])
 
+  // Regra de acesso: sem indicador autenticado, redireciona para login.
   if (!indicador) {
     return <Navigate to={`/login?redirect=/indicar/${vagaId}`} replace />
   }
 
+  // Responsabilidade: atualizar campos simples do formulário.
   const updateField = (event) => {
     const { name, value } = event.target
     setForm((current) => ({ ...current, [name]: value }))
   }
 
+  // Responsabilidade: atualizar campos monetários já formatados.
   const updateCurrencyField = (event) => {
     const { name, value } = event.target
     setForm((current) => ({ ...current, [name]: formatCurrency(value) }))
   }
 
+  // Responsabilidade: atualizar o telefone com máscara.
   const updatePhoneField = (event) => {
     const { name, value } = event.target
     setForm((current) => ({ ...current, [name]: formatPhone(value) }))
   }
 
+  // Responsabilidade: remover uma habilidade da lista informada.
   const removeSkill = (type, skill) => {
     setForm((current) => ({
       ...current,
@@ -134,6 +165,8 @@ function Indicar() {
     }))
   }
 
+  // Responsabilidade: adicionar habilidade ao pressionar Enter.
+  // Regra: não adiciona valores vazios nem duplicados.
   const addSkill = (event, type) => {
     if (event.key !== 'Enter') return
     event.preventDefault()
@@ -148,11 +181,13 @@ function Indicar() {
     event.currentTarget.value = ''
   }
 
+  // Responsabilidade: registrar o nome do arquivo de currículo selecionado.
   const handleFile = (event) => {
     const file = event.target.files?.[0]
     setForm((current) => ({ ...current, curriculoNome: file?.name || '' }))
   }
 
+  // Responsabilidade: enviar a indicação do candidato para a API.
   const handleSubmit = async (event) => {
     event.preventDefault()
     setSaving(true)
@@ -171,9 +206,10 @@ function Indicar() {
       const data = await response.json().catch(() => ({}))
 
       if (!response.ok) {
-        throw new Error(data.erro || 'Erro ao finalizar indicacao')
+        throw new Error(data.erro || 'Erro ao finalizar indicação')
       }
 
+      // Após criar a indicação, retorna para a página da vaga.
       navigate(`/vaga/${vagaId}`)
     } catch (err) {
       setMessage(err.message)
@@ -184,14 +220,16 @@ function Indicar() {
 
   return (
     <>
+      {/* Componente de navegação principal. */}
       <Navbar />
 
       <div className="indicar-layout">
+        {/* Menu lateral do painel do indicador. */}
         <Sidebar type="indicador" user={indicador} />
 
         <main className="indicar-page">
           <header className="indicar-header">
-            <span>Fluxo de indicacao</span>
+            <span>Fluxo de indicação</span>
             <h1>Indicar um<br />Novo Candidato</h1>
             <Link to={`/vaga/${vagaId}`}>Voltar para vaga selecionada</Link>
             {vaga && <p>{vaga.titulo} - {vaga.empresa}</p>}
@@ -205,10 +243,10 @@ function Indicar() {
                 <section className="form-section">
                   <h2>Dados Pessoais</h2>
                   <div className="form-grid">
-                    <Field label="Nome completo" name="nome" value={form.nome} onChange={updateField} placeholder="Ex: Joao da Silva" required />
+                    <Field label="Nome completo" name="nome" value={form.nome} onChange={updateField} placeholder="Ex: João da Silva" required />
                     <Field label="E-mail" name="email" type="email" value={form.email} onChange={updateField} placeholder="joao@exemplo.com" required />
                     <Field label="Data de nascimento" name="dataNascimento" type="date" value={form.dataNascimento} onChange={updateField} />
-                    <SelectField label="Genero (opcional)" name="genero" value={form.genero} onChange={updateField} options={['Feminino', 'Masculino', 'Outro', 'Prefiro nao informar']} />
+                    <SelectField label="Gênero (opcional)" name="genero" value={form.genero} onChange={updateField} options={['Feminino', 'Masculino', 'Outro', 'Prefiro não informar']} />
                     <Field
                       label="Telefone"
                       name="telefone"
@@ -224,9 +262,9 @@ function Indicar() {
                   <h2>Perfil Profissional</h2>
                   <div className="form-grid">
                     <Field label="Cargo atual" name="cargoAtual" value={form.cargoAtual} onChange={updateField} placeholder="Ex: Senior UX Designer" />
-                    <Field label="Anos de experiencia" name="anosExperiencia" value={form.anosExperiencia} onChange={updateField} placeholder="Ex: 5" />
-                    <SelectField label="Nivel de escolaridade" name="escolaridade" value={form.escolaridade} onChange={updateField} options={['Ensino medio', 'Tecnico', 'Superior', 'Pos-graduacao', 'Mestrado', 'Doutorado']} />
-                    <Field label="Proficiencia em idiomas" name="proficienciaIdiomas" value={form.proficienciaIdiomas} onChange={updateField} placeholder="Ingles (Avancado), Espanhol (Basico)..." />
+                    <Field label="Anos de experiência" name="anosExperiencia" value={form.anosExperiencia} onChange={updateField} placeholder="Ex: 5" />
+                    <SelectField label="Nível de escolaridade" name="escolaridade" value={form.escolaridade} onChange={updateField} options={['Ensino médio', 'Técnico', 'Superior', 'Pós-graduação', 'Mestrado', 'Doutorado']} />
+                    <Field label="Proficiência em idiomas" name="proficienciaIdiomas" value={form.proficienciaIdiomas} onChange={updateField} placeholder="Inglês (Avançado), Espanhol (Básico)..." />
                   </div>
                 </section>
 
@@ -234,8 +272,8 @@ function Indicar() {
                   <h2>Links & Redes Sociais</h2>
                   <div className="form-grid">
                     <Field label="LinkedIn profile URL" name="linkedin" value={form.linkedin} onChange={updateField} placeholder="linkedin.com/in/perfil" />
-                    <Field label="Portfolio URL" name="portfolio" value={form.portfolio} onChange={updateField} placeholder="behance.net/perfil ou seudominio.com" />
-                    <Field className="full-field" label="Github / Behance (opcional)" name="github" value={form.github} onChange={updateField} placeholder="Links adicionais de repositorios ou portfolios" />
+                    <Field label="Portfólio URL" name="portfolio" value={form.portfolio} onChange={updateField} placeholder="behance.net/perfil ou seudominio.com" />
+                    <Field className="full-field" label="GitHub / Behance (opcional)" name="github" value={form.github} onChange={updateField} placeholder="Links adicionais de repositórios ou portfólios" />
                   </div>
                 </section>
 
@@ -246,7 +284,7 @@ function Indicar() {
                   <Textarea label="Destaques em projetos" name="destaquesProjetos" value={form.destaquesProjetos} onChange={updateField} placeholder="Mencione projetos relevantes que ele entregou..." />
 
                   <label className="field-label full-field">
-                    Narrativa completa da indicacao
+                    Narrativa completa da indicação
                     <div className="editor-toolbar">
                       <FaBold />
                       <FaItalic />
@@ -257,7 +295,7 @@ function Indicar() {
                       name="narrativa"
                       value={form.narrativa}
                       onChange={updateField}
-                      placeholder="Uma visao geral do motivo da indicacao..."
+                      placeholder="Uma visão geral do motivo da indicação..."
                     />
                   </label>
                 </section>
@@ -265,12 +303,12 @@ function Indicar() {
                 <section className="form-section">
                   <h2>Habilidades & Expertise</h2>
                   <p className="skill-help">Digite uma habilidade e pressione Enter para criar tokens.</p>
-                  <SkillInput label="Hard skills (competencias tecnicas)" skills={form.hardSkills} onRemove={(skill) => removeSkill('hardSkills', skill)} onAdd={(event) => addSkill(event, 'hardSkills')} />
-                  <SkillInput label="Soft skills (competencias interpessoais)" skills={form.softSkills} onRemove={(skill) => removeSkill('softSkills', skill)} onAdd={(event) => addSkill(event, 'softSkills')} />
+                  <SkillInput label="Hard skills (competências técnicas)" skills={form.hardSkills} onRemove={(skill) => removeSkill('hardSkills', skill)} onAdd={(event) => addSkill(event, 'hardSkills')} />
+                  <SkillInput label="Soft skills (competências interpessoais)" skills={form.softSkills} onRemove={(skill) => removeSkill('softSkills', skill)} onAdd={(event) => addSkill(event, 'softSkills')} />
                 </section>
 
                 <section className="form-section">
-                  <h2>Preferencias</h2>
+                  <h2>Preferências</h2>
                   <div className="form-grid three-columns">
                     <Field
                       label="Expectativa salarial"
@@ -280,8 +318,8 @@ function Indicar() {
                       placeholder="R$ 8.000"
                       inputMode="numeric"
                     />
-                    <SelectField label="Modelo de trabalho" name="modeloTrabalho" value={form.modeloTrabalho} onChange={updateField} options={['Remoto', 'Hibrido', 'Presencial']} />
-                    <SelectField label="Aviso previo" name="avisoPrevio" value={form.avisoPrevio} onChange={updateField} options={['Imediato', '15 dias', '30 dias', '45 dias', '60 dias']} />
+                    <SelectField label="Modelo de trabalho" name="modeloTrabalho" value={form.modeloTrabalho} onChange={updateField} options={['Remoto', 'Híbrido', 'Presencial']} />
+                    <SelectField label="Aviso prévio" name="avisoPrevio" value={form.avisoPrevio} onChange={updateField} options={['Imediato', '15 dias', '30 dias', '45 dias', '60 dias']} />
                   </div>
 
                   <label className={`upload-box ${form.curriculoNome ? 'has-file' : ''}`}>
@@ -297,7 +335,7 @@ function Indicar() {
                           <FaCheckCircle /> {form.curriculoNome}
                         </>
                       ) : (
-                        'PDF, DOCX ou RTF (Max. 10MB)'
+                        'PDF, DOCX ou RTF (Máx. 10MB)'
                       )}
                     </small>
                     <input type="file" accept=".pdf,.doc,.docx,.rtf" onChange={handleFile} />
@@ -308,7 +346,7 @@ function Indicar() {
                   <div className="indicar-alert" role="alert">
                     <FaExclamationCircle />
                     <div>
-                      <strong>Nao foi possivel finalizar a indicacao</strong>
+                      <strong>Não foi possível finalizar a indicação</strong>
                       <p>{message}</p>
                     </div>
                   </div>
@@ -317,7 +355,7 @@ function Indicar() {
                 <div className="form-actions">
                   <button type="button" className="draft-button">Salvar como Rascunho</button>
                   <button type="submit" className="submit-button" disabled={saving}>
-                    {saving ? 'Finalizando...' : 'Finalizar Indicacao'}
+                    {saving ? 'Finalizando...' : 'Finalizar Indicação'}
                   </button>
                 </div>
               </div>
@@ -326,8 +364,8 @@ function Indicar() {
                 <div className="saved-icon">
                   <FaSearch />
                 </div>
-                <h2>Adicionar candidato ja pre-salvo</h2>
-                <p>Selecione um talento da sua base de indicacoes anteriores para agilizar o processo.</p>
+                <h2>Adicionar candidato já pré-salvo</h2>
+                <p>Selecione um talento da sua base de indicações anteriores para agilizar o processo.</p>
                 <label>
                   Selecionar candidato
                   <select>
@@ -340,11 +378,13 @@ function Indicar() {
         </main>
       </div>
 
+      {/* Componente de rodapé. */}
       <Footer />
     </>
   )
 }
 
+// Responsabilidade: renderizar um campo de texto reutilizável com label.
 function Field({ className = '', label, ...props }) {
   return (
     <label className={`field-label ${className}`}>
@@ -354,6 +394,7 @@ function Field({ className = '', label, ...props }) {
   )
 }
 
+// Responsabilidade: renderizar um campo select reutilizável com opção inicial padrão.
 function SelectField({ label, options, ...props }) {
   return (
     <label className="field-label">
@@ -368,6 +409,7 @@ function SelectField({ label, options, ...props }) {
   )
 }
 
+// Responsabilidade: renderizar uma área de texto reutilizável com label.
 function Textarea({ label, ...props }) {
   return (
     <label className="field-label full-field">
@@ -377,6 +419,7 @@ function Textarea({ label, ...props }) {
   )
 }
 
+// Responsabilidade: renderizar o campo de habilidades com tokens removíveis.
 function SkillInput({ label, skills, onRemove, onAdd }) {
   return (
     <label className="field-label full-field">

@@ -1,7 +1,12 @@
+/* Objetivo do arquivo: complementar os estilos herdados da tela de criação de vaga
+   para a página de edição de vaga da empresa. */
+
+/* Ajusta a posição do bloco introdutório na tela de edição. */
 .editar-vaga-content .empresa-vaga-intro {
   top: 0;
 }
 
+/* Estiliza o link de retorno para a listagem de vagas. */
 .editar-vaga-back {
   display: inline-flex;
   align-items: center;
@@ -16,6 +21,7 @@
   font-weight: 800;
 }
 
+/* Define a aparência das mensagens exibidas dentro de uma etapa da edição. */
 .editar-vaga-content .vaga-step > p {
   color: #777;
   font-weight: 700;

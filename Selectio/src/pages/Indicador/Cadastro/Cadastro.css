@@ -1,3 +1,7 @@
+/* Objetivo do arquivo: definir os estilos da tela de cadastro de indicador,
+   incluindo layout do formulário, validações visuais de senha, CPF e responsividade. */
+
+/* Container principal centralizado da página de cadastro. */
 .indicador-cadastro-container {
   min-height: calc(100vh - 140px);
   display: grid;
@@ -5,6 +9,7 @@
   padding: 34px 20px;
 }
 
+/* Card que envolve título, descrição e formulário. */
 .indicador-cadastro-card {
   width: 100%;
   max-width: 560px;
@@ -16,11 +21,13 @@
   box-shadow: 0 26px 58px rgba(23, 23, 23, 0.12);
 }
 
+/* Título principal do card. */
 .indicador-cadastro-card h1 {
   font-size: 28px;
   margin-bottom: 10px;
 }
 
+/* Texto auxiliar abaixo do título. */
 .indicador-cadastro-card .subtitle {
   font-size: 14px;
   color: #666;
@@ -28,6 +35,7 @@
   line-height: 1.5;
 }
 
+/* Grade vertical dos campos do formulário. */
 .form-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -35,6 +43,7 @@
   margin-bottom: 24px;
 }
 
+/* Estilo base dos campos de entrada. */
 .form-grid input {
   width: 100%;
   min-height: 48px;
@@ -47,6 +56,7 @@
   transition: 0.2s ease;
 }
 
+/* Estado visual quando o campo está em foco. */
 .form-grid input:focus {
   outline: none;
   border-color: var(--primary);
@@ -57,6 +67,7 @@
   color: #888;
 }
 
+/* Mensagem de erro usada na validação de CPF. */
 .error {
   color: var(--danger);
   font-size: 12px;
@@ -65,16 +76,19 @@
   text-align: left;
 }
 
+/* Campos de senha usam posição relativa para posicionar o botão de visibilidade. */
 .password-field,
 .confirm-password-field {
   position: relative;
 }
 
+/* Cria espaço interno para o botão de mostrar/ocultar senha. */
 .password-field input,
 .confirm-password-field input {
   padding-right: 52px;
 }
 
+/* Botão visual para alternar visibilidade da senha. */
 .password-toggle {
   position: absolute;
   top: 24px;
@@ -96,6 +110,7 @@
   color: var(--primary);
 }
 
+/* Painel com resultado da análise de força da senha. */
 .password-strength {
   padding: 12px;
   border: 1px solid #e8e8e8;
@@ -104,6 +119,7 @@
   text-align: left;
 }
 
+/* Cabeçalho do painel de força da senha. */
 .strength-header {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -125,6 +141,7 @@
   line-height: 1.35;
 }
 
+/* Pontuação numérica da senha. */
 .strength-score {
   min-width: 38px;
   padding: 4px 7px;
@@ -136,6 +153,7 @@
   text-align: center;
 }
 
+/* Medidor visual dividido em seis partes, uma por critério. */
 .strength-meter {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -149,6 +167,7 @@
   background: #e5e5e5;
 }
 
+/* Cores do medidor para senha fraca, média e forte. */
 .strength-fraca .strength-meter span.active {
   background: #b42318;
 }
@@ -176,6 +195,7 @@
   color: #166534;
 }
 
+/* Lista de critérios usados para validar a força da senha. */
 .criteria-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -185,6 +205,7 @@
   margin: 0;
 }
 
+/* Item individual de critério da senha. */
 .criteria-list li {
   display: flex;
   align-items: center;
@@ -201,6 +222,7 @@
   font-size: 10px;
 }
 
+/* Estado visual para critério de senha atendido. */
 .criteria-list li.met {
   color: #166534;
 }
@@ -209,14 +231,17 @@
   color: #16803a;
 }
 
+/* Estado visual quando a confirmação de senha corresponde à senha. */
 .confirm-password-field.match input {
   border-color: #16803a;
 }
 
+/* Estado visual quando a confirmação de senha não corresponde à senha. */
 .confirm-password-field.mismatch input {
   border-color: var(--danger);
 }
 
+/* Mensagem exibida abaixo do campo de confirmação de senha. */
 .confirm-password-message {
   display: block;
   margin-top: 7px;
@@ -234,6 +259,7 @@
   color: var(--danger);
 }
 
+/* Botão principal de envio do formulário. */
 .btn-primary {
   width: 100%;
   background: var(--primary);
@@ -254,6 +280,7 @@
   box-shadow: 0 12px 28px rgba(182, 28, 47, 0.25);
 }
 
+/* Estado bloqueado do botão quando a senha não atende à regra de força. */
 .btn-primary:disabled,
 .btn-primary:disabled:hover {
   background: #d6d6d6;
@@ -264,6 +291,7 @@
   box-shadow: none;
 }
 
+/* Ajustes para telas pequenas. */
 @media (max-width: 560px) {
   .indicador-cadastro-card {
     padding: 32px 22px;

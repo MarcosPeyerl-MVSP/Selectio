@@ -1,3 +1,7 @@
+/* Objetivo do arquivo: definir a aparência da página de login,
+   incluindo centralização do formulário, campos, botões e links auxiliares. */
+
+/* Define base visual da página e garante ocupação total da tela. */
 html, body, #root {
   width: 100%;
   height: 100%;
@@ -6,6 +10,7 @@ html, body, #root {
   background: #ffffff;
 }
 
+/* Container principal que centraliza o card de login na tela. */
 .login-container {
   min-height: 100vh; 
   width: 100%;
@@ -15,6 +20,7 @@ html, body, #root {
   background: #ffffff; 
 }
 
+/* Card que agrupa título, formulário, login social e link de cadastro. */
 .login-card {
   width: 100%;
   max-width: 420px;
@@ -25,18 +31,21 @@ html, body, #root {
   text-align: center;
 }
 
+/* Título principal do formulário de login. */
 .login-card h1 {
   font-size: 28px;
   margin-bottom: 28px;
   letter-spacing: -0.5px;
 }
 
+/* Organiza os campos do formulário em coluna. */
 .login-form {
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
+/* Estiliza os rótulos dos campos. */
 .login-form label {
   text-align: left;
   font-size: 13px;
@@ -47,6 +56,7 @@ html, body, #root {
   gap: 6px;
 }
 
+/* Estilo base dos campos de entrada. */
 .login-form input {
   padding: 12px 14px;
   border-radius: 8px;
@@ -56,10 +66,12 @@ html, body, #root {
   transition: var(--transition);
 }
 
+/* Agrupa input e ícones posicionados dentro do campo. */
 .input-group {
   position: relative;
 }
 
+/* Ícone à esquerda dos campos de login e senha. */
 .input-icon {
   position: absolute;
   left: 14px;
@@ -70,14 +82,17 @@ html, body, #root {
   pointer-events: none;
 }
 
+/* Cria espaço para o ícone à esquerda do input. */
 .input-group input {
   padding-left: 40px;
 }
 
+/* Cria espaço para o botão de visibilidade no campo de senha. */
 .input-group input[name="senha"] {
   padding-right: 44px;
 }
 
+/* Botão interno que alterna entre mostrar e ocultar senha. */
 .password-visibility {
   position: absolute;
   right: 10px;
@@ -95,12 +110,14 @@ html, body, #root {
   color: var(--primary);
 }
 
+/* Destaque visual quando o input está em foco. */
 .login-form input:focus {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(182, 28, 47, 0.12);
 }
 
+/* Link visual de recuperação de senha. */
 .forgot-password {
   margin-top: 6px;
   font-size: 12px;
@@ -109,6 +126,7 @@ html, body, #root {
   font-weight: 600;
 }
 
+/* Botão principal de envio do formulário. */
 .login-button {
   margin-top: 14px;
   background: var(--primary);
@@ -120,6 +138,7 @@ html, body, #root {
   box-shadow: 0 8px 20px rgba(182, 28, 47, 0.18);
 }
 
+/* Feedback visual do botão principal ao passar o cursor. */
 .login-button:hover {
   background: var(--white);
   color: var(--primary);
@@ -127,6 +146,7 @@ html, body, #root {
   box-shadow: 0 12px 28px rgba(182, 28, 47, 0.25);
 }
 
+/* Separador visual entre login tradicional e login social. */
 .login-divider {
   margin: 26px 0;
   position: relative;
@@ -152,12 +172,14 @@ html, body, #root {
   background: #e0e0e0;
 }
 
+/* Grade dos botões de login social. */
 .social-login {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
 }
 
+/* Estilo visual dos botões Google e Apple. */
 .social-login button {
   display: inline-flex;
   align-items: center;
@@ -177,6 +199,7 @@ html, body, #root {
   color: var(--primary);
 }
 
+/* Texto inferior com link para cadastro. */
 .register-link {
   margin-top: 22px;
   font-size: 13px;

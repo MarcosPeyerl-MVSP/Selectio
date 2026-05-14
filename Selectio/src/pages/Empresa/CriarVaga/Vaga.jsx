@@ -1,3 +1,7 @@
+// Objetivo do arquivo: renderizar e controlar a página de criação de vaga da empresa.
+// O componente valida a sessão da empresa, coleta dados da vaga, aplica formatação
+// em valores monetários, valida regras do formulário e envia a nova vaga para a API.
+
 import './Vaga.css'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -5,12 +9,13 @@ import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Sidebar from '../../../components/Sidebar/Sidebar'
 import Footer from '../../../components/Footer/Footer'
 
+// Estado inicial do formulário de criação de vaga.
 const initialForm = {
   titulo: '',
   area: '',
   salarioMin: '',
   salarioMax: '',
-  experiencia: 'Senior',
+  experiencia: 'Sênior',
   experienciaPersonalizada: '',
   tipo: 'Tempo Integral',
   tipoDataInicio: '',
@@ -27,37 +32,51 @@ const initialForm = {
 }
 
 function CriarVagaEmpresa() {
+  // Hook usado para redirecionar a empresa após criação da vaga ou ausência de sessão.
   const navigate = useNavigate()
+
+  // Recupera a empresa autenticada salva no localStorage.
   const [empresa] = useState(() => {
     const storedEmpresa = localStorage.getItem('empresaUser')
     return storedEmpresa ? JSON.parse(storedEmpresa) : null
   })
+
+  // Controla os campos do formulário de vaga.
   const [form, setForm] = useState(initialForm)
+
+  // Controla o estado de envio da vaga.
   const [loading, setLoading] = useState(false)
+
+  // Armazena mensagens de erro ou sucesso do formulário.
   const [message, setMessage] = useState('')
 
   useEffect(() => {
+    // Regra de acesso: sem empresa autenticada, redireciona para login.
     if (!empresa) {
       navigate('/login')
     }
   }, [empresa, navigate])
 
+  // Responsabilidade: atualizar campos simples do formulário.
   const handleChange = (event) => {
     const { name, value } = event.target
     setForm((current) => ({ ...current, [name]: value }))
   }
 
+  // Responsabilidade: transformar texto separado por vírgulas em lista.
   const parseList = (value) => value
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean)
 
+  // Responsabilidade: definir o texto da recompensa conforme o tipo selecionado.
   const getRecompensa = () => {
-    if (form.recompensaTipo === 'percentual') return '10% Salario'
+    if (form.recompensaTipo === 'percentual') return '10% Salário'
     if (form.recompensaTipo === 'personalizado') return 'Consultar'
     return form.recompensaValor
   }
 
+  // Responsabilidade: formatar valores numéricos como moeda brasileira.
   const formatCurrency = (value) => {
     const numbers = value.replace(/\D/g, '')
     const amount = Number(numbers || 0)
@@ -69,62 +88,72 @@ function CriarVagaEmpresa() {
     })
   }
 
+  // Responsabilidade: atualizar campos monetários já formatados.
   const handleCurrencyChange = (event) => {
     const { name, value } = event.target
     setForm((current) => ({ ...current, [name]: formatCurrency(value) }))
   }
 
+  // Responsabilidade: extrair o valor numérico de um texto monetário.
   const getNumberFromCurrency = (value) => Number(value.replace(/\D/g, ''))
 
+  // Responsabilidade: formatar data ISO para exibição no padrão brasileiro.
   const formatDate = (value) => {
     if (!value) return ''
     const [year, month, day] = value.split('-')
     return `${day}/${month}/${year}`
   }
 
+  // Responsabilidade: validar o formulário e enviar a vaga para a API.
   const handleSubmit = async (event) => {
     event.preventDefault()
     setMessage('')
 
     if (!empresa) return
 
+    // Validação: campos principais obrigatórios da vaga.
     if (!form.titulo || !form.area || !form.descricaoLonga || !form.localizacao) {
-      setMessage('Preencha titulo, area, descricao e localizacao.')
+      setMessage('Preencha título, área, descrição e localização.')
       return
     }
 
+    // Validação: salário mínimo não pode ser maior que o salário máximo.
     const salarioMin = getNumberFromCurrency(form.salarioMin)
     const salarioMax = getNumberFromCurrency(form.salarioMax)
     if (salarioMin && salarioMax && salarioMin > salarioMax) {
-      setMessage('O salario minimo nao pode ser maior que o maximo.')
+      setMessage('O salário mínimo não pode ser maior que o máximo.')
       return
     }
 
-    if (form.tipo === 'Contrato temporario' && (!form.tipoDataInicio || !form.tipoDataFim)) {
-      setMessage('Informe a data de inicio e a data de fim do contrato temporario.')
+    // Validação: contrato temporário exige datas de início e fim.
+    if (form.tipo === 'Contrato temporário' && (!form.tipoDataInicio || !form.tipoDataFim)) {
+      setMessage('Informe a data de início e a data de fim do contrato temporário.')
       return
     }
 
+    // Validação: data de início não pode ser posterior à data de fim.
     if (
-      form.tipo === 'Contrato temporario'
+      form.tipo === 'Contrato temporário'
       && form.tipoDataInicio
       && form.tipoDataFim
       && form.tipoDataInicio > form.tipoDataFim
     ) {
-      setMessage('A data de inicio nao pode ser posterior a data de fim.')
+      setMessage('A data de início não pode ser posterior à data de fim.')
       return
     }
 
+    // Monta o texto de salário exibido na vaga.
     const salario = form.salarioMin || form.salarioMax
       ? `${form.salarioMin || 'A combinar'} – ${form.salarioMax || 'A combinar'}`
       : 'A combinar'
 
+    // Payload enviado para o backend com os dados da vaga.
     const payload = {
       titulo: form.titulo,
       empresaId: empresa.id,
       localizacao: form.localizacao,
       salario,
-      tipo: form.tipo === 'Contrato temporario'
+      tipo: form.tipo === 'Contrato temporário'
         ? `${form.tipo} (${formatDate(form.tipoDataInicio)} – ${formatDate(form.tipoDataFim)})`
         : form.tipo,
       recompensa: getRecompensa(),
@@ -142,6 +171,8 @@ function CriarVagaEmpresa() {
 
     try {
       setLoading(true)
+
+      // Integração: envia a nova vaga para cadastro na API.
       const response = await fetch('http://localhost:3333/vagas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -159,21 +190,24 @@ function CriarVagaEmpresa() {
       setForm(initialForm)
       navigate('/vagas')
     } catch {
-      setMessage('Nao foi possivel conectar ao servidor.')
+      setMessage('Não foi possível conectar ao servidor.')
     } finally {
       setLoading(false)
     }
   }
 
+  // Evita renderizar o formulário enquanto não há empresa autenticada.
   if (!empresa) {
     return null
   }
 
   return (
     <div className="empresa-vaga-page">
+      {/* Componente de navegação principal. */}
       <Navbar />
 
       <div className="empresa-vaga-layout">
+        {/* Menu lateral do painel da empresa. */}
         <Sidebar type="empresa" user={empresa} />
 
         <main className="empresa-vaga-content">
@@ -184,7 +218,7 @@ function CriarVagaEmpresa() {
               <br />
               nova <strong>Vaga.</strong>
             </h1>
-            <p>Crie anuncios de alto impacto que atraem os melhores talentos do mundo.</p>
+            <p>Crie anúncios de alto impacto que atraem os melhores talentos do mundo.</p>
           </section>
 
           <form className="empresa-vaga-form" onSubmit={handleSubmit}>
@@ -194,34 +228,34 @@ function CriarVagaEmpresa() {
                 <span>PASSO 1 DE 4</span>
               </div>
 
-              <label>Titulo do cargo / funcao</label>
+              <label>Título do cargo / função</label>
               <input
                 name="titulo"
-                placeholder="ex. Diretor de Criacao Senior"
+                placeholder="ex. Diretor de Criação Sênior"
                 value={form.titulo}
                 onChange={handleChange}
               />
 
               <div className="form-grid three">
                 <div>
-                  <label>Industria / Area</label>
+                  <label>Indústria / Área</label>
                   <input name="area" placeholder="Design & Criativo" value={form.area} onChange={handleChange} />
                 </div>
                 <div>
                   <label>Faixa salarial</label>
-                  <input name="salarioMin" placeholder="Min" value={form.salarioMin} onChange={handleCurrencyChange} />
+                  <input name="salarioMin" placeholder="Mín." value={form.salarioMin} onChange={handleCurrencyChange} />
                 </div>
                 <div>
                   <label>&nbsp;</label>
-                  <input name="salarioMax" placeholder="Max" value={form.salarioMax} onChange={handleCurrencyChange} />
+                  <input name="salarioMax" placeholder="Máx." value={form.salarioMax} onChange={handleCurrencyChange} />
                 </div>
               </div>
 
               <div className="form-grid two">
                 <div>
-                  <label>Experiencia requerida</label>
+                  <label>Experiência requerida</label>
                   <div className="option-grid">
-                    {['Junior', 'Pleno', 'Senior', 'Personalizado'].map((option) => (
+                    {['Júnior', 'Pleno', 'Sênior', 'Personalizado'].map((option) => (
                       <button
                         key={option}
                         type="button"
@@ -236,7 +270,7 @@ function CriarVagaEmpresa() {
                     <textarea
                       className="small inline-textarea"
                       name="experienciaPersonalizada"
-                      placeholder="Descreva a experiencia requerida"
+                      placeholder="Descreva a experiência requerida"
                       value={form.experienciaPersonalizada}
                       onChange={handleChange}
                     />
@@ -244,9 +278,9 @@ function CriarVagaEmpresa() {
                 </div>
 
                 <div>
-                  <label>Tipo de contratacao</label>
+                  <label>Tipo de contratação</label>
                   <div className="option-grid">
-                    {['Tempo Integral', 'Freelance', 'Meio Periodo', 'Remoto', 'Contrato temporario'].map((option) => (
+                    {['Tempo Integral', 'Freelance', 'Meio Período', 'Remoto', 'Contrato temporário'].map((option) => (
                       <button
                         key={option}
                         type="button"
@@ -257,10 +291,10 @@ function CriarVagaEmpresa() {
                       </button>
                     ))}
                   </div>
-                  {form.tipo === 'Contrato temporario' && (
+                  {form.tipo === 'Contrato temporário' && (
                     <div className="temporary-contract-grid">
                       <div>
-                        <label>Data de inicio</label>
+                        <label>Data de início</label>
                         <input
                           className="inline-input"
                           name="tipoDataInicio"
@@ -289,7 +323,7 @@ function CriarVagaEmpresa() {
 
             <section className="vaga-step">
               <div className="step-header">
-                <h2>Descricao da vaga</h2>
+                <h2>Descrição da vaga</h2>
                 <span>PASSO 2 DE 4</span>
               </div>
 
@@ -301,10 +335,10 @@ function CriarVagaEmpresa() {
                 onChange={handleChange}
               />
 
-              <label>Descricao da vaga</label>
+              <label>Descrição da vaga</label>
               <textarea
                 name="descricaoLonga"
-                placeholder="Descreva as necessidades da vaga, qual o profissional necessario..."
+                placeholder="Descreva as necessidades da vaga, qual o profissional necessário..."
                 value={form.descricaoLonga}
                 onChange={handleChange}
               />
@@ -315,7 +349,7 @@ function CriarVagaEmpresa() {
                   <textarea
                     className="small"
                     name="requisitos"
-                    placeholder="Separe os requisitos por virgula"
+                    placeholder="Separe os requisitos por vírgula"
                     value={form.requisitos}
                     onChange={handleChange}
                   />
@@ -326,7 +360,7 @@ function CriarVagaEmpresa() {
                   <textarea
                     className="small"
                     name="habilidades"
-                    placeholder="Separe as habilidades por virgula"
+                    placeholder="Separe as habilidades por vírgula"
                     value={form.habilidades}
                     onChange={handleChange}
                   />
@@ -336,11 +370,11 @@ function CriarVagaEmpresa() {
 
               <div className="form-grid two">
                 <div>
-                  <label>Beneficios</label>
+                  <label>Benefícios</label>
                   <textarea
                     className="small"
                     name="beneficios"
-                    placeholder="Separe os beneficios por virgula"
+                    placeholder="Separe os benefícios por vírgula"
                     value={form.beneficios}
                     onChange={handleChange}
                   />
@@ -352,7 +386,7 @@ function CriarVagaEmpresa() {
             <section className="vaga-step">
               <div className="step-header">
                 <div>
-                  <h2>Premiacao por Indicacao</h2>
+                  <h2>Premiação por Indicação</h2>
                   <p>Incentive sua rede a indicar talentos de alta performance.</p>
                 </div>
                 <span>PASSO 3 DE 4</span>
@@ -361,7 +395,7 @@ function CriarVagaEmpresa() {
               <div className="reward-grid">
                 {[
                   ['fixo', 'Valor fixo', form.recompensaValor],
-                  ['percentual', 'Percentual', '10% Salario'],
+                  ['percentual', 'Percentual', '10% Salário'],
                   ['personalizado', 'Personalizado', 'Consultar'],
                 ].map(([value, label, text]) => (
                   <button
@@ -381,23 +415,23 @@ function CriarVagaEmpresa() {
                   name="recompensaValor"
                   value={form.recompensaValor}
                   onChange={handleCurrencyChange}
-                  placeholder="Valor da premiacao"
+                  placeholder="Valor da premiação"
                 />
               )}
             </section>
 
             <section className="vaga-step">
               <div className="step-header">
-                <h2>Logistica e Prazos</h2>
+                <h2>Logística e Prazos</h2>
                 <span>PASSO 4 DE 4</span>
               </div>
 
               <div className="form-grid two">
                 <div>
-                  <label>Localizacao</label>
+                  <label>Localização</label>
                   <input
                     name="localizacao"
-                    placeholder="ex. Sao Paulo, London, ou Global"
+                    placeholder="ex. São Paulo, London, ou Global"
                     value={form.localizacao}
                     onChange={handleChange}
                   />
@@ -414,6 +448,7 @@ function CriarVagaEmpresa() {
               </div>
             </section>
 
+            {/* Exibe mensagens de validação, erro ou sucesso do formulário. */}
             {message && <p className="empresa-vaga-message">{message}</p>}
 
             <div className="form-actions">
@@ -426,11 +461,13 @@ function CriarVagaEmpresa() {
         </main>
       </div>
 
+      {/* Componente de rodapé. */}
       <Footer />
     </div>
   )
 }
 
+// Responsabilidade: exibir uma prévia visual dos itens separados por vírgula.
 function TokenPreview({ items }) {
   if (!items.length) return null
 

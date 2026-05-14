@@ -1,3 +1,7 @@
+/* Objetivo do arquivo: definir os estilos da página de candidatos do indicador,
+   incluindo layout com sidebar, cabeçalho, filtros, cards e responsividade. */
+
+/* Layout principal com sidebar e área de conteúdo. */
 .candidatos-layout {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -7,11 +11,13 @@
   background: #f4f4f5;
 }
 
+/* Área principal da página. */
 .candidatos-page {
   width: 100%;
   max-width: 1220px;
 }
 
+/* Cabeçalho com contexto, título e descrição. */
 .candidatos-header {
   margin-bottom: 48px;
 }
@@ -41,6 +47,7 @@
   line-height: 1.6;
 }
 
+/* Barra com campo de busca e abas de status. */
 .candidatos-toolbar {
   display: grid;
   grid-template-columns: minmax(260px, 1fr) auto;
@@ -48,6 +55,7 @@
   margin-bottom: 28px;
 }
 
+/* Campo de busca por candidato. */
 .candidate-search {
   display: flex;
   align-items: center;
@@ -73,6 +81,7 @@
   color: #7a7f88;
 }
 
+/* Abas de filtro por status. */
 .candidate-tabs {
   display: flex;
   align-items: center;
@@ -92,17 +101,20 @@
   cursor: pointer;
 }
 
+/* Estado visual da aba selecionada. */
 .candidate-tabs button.active {
   background: #fff;
   color: #2563eb;
 }
 
+/* Grade de cards de candidatos. */
 .candidate-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 22px;
 }
 
+/* Estilo base dos cards de candidato e do card de adicionar. */
 .candidate-card,
 .candidate-add-card {
   min-height: 174px;
@@ -110,11 +122,13 @@
   background: #fff;
 }
 
+/* Card individual do candidato. */
 .candidate-card {
   padding: 22px;
   color: #202024;
 }
 
+/* Topo do card com avatar e status. */
 .candidate-card-top {
   display: flex;
   align-items: flex-start;
@@ -123,6 +137,7 @@
   margin-bottom: 24px;
 }
 
+/* Área do avatar e indicador visual de status. */
 .candidate-avatar-wrap {
   position: relative;
   width: 54px;
@@ -147,6 +162,7 @@
   background: #22c55e;
 }
 
+/* Cores do indicador visual conforme status. */
 .candidate-card.entrevista .candidate-avatar-wrap span {
   background: #f59e0b;
 }
@@ -155,6 +171,7 @@
   background: #dc2626;
 }
 
+/* Etiqueta de status do candidato. */
 .candidate-status {
   padding: 6px 10px;
   border-radius: 999px;
@@ -169,6 +186,7 @@
   color: #d97706;
 }
 
+/* Estado visual específico para candidato contratado. */
 .candidate-card.contratado {
   background: #16a34a;
   color: #fff;
@@ -179,6 +197,7 @@
   color: #fff;
 }
 
+/* Estado visual específico para candidato cancelado. */
 .candidate-card.cancelado .candidate-status {
   background: #fee2e2;
   color: #dc2626;
@@ -199,6 +218,7 @@
   color: rgba(255, 255, 255, 0.78);
 }
 
+/* Metadados do candidato, como origem e data. */
 .candidate-meta {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -228,6 +248,7 @@
   font-size: 11px;
 }
 
+/* Card de ação para adicionar candidato. */
 .candidate-add-card {
   display: grid;
   place-items: center;
@@ -258,6 +279,7 @@
   font-size: 9px;
 }
 
+/* Feedback textual de carregamento ou erro. */
 .candidate-feedback {
   color: #555;
   font-weight: 700;
@@ -267,6 +289,7 @@
   color: var(--primary);
 }
 
+/* Ajustes para telas médias. */
 @media (max-width: 1100px) {
   .candidatos-layout {
     grid-template-columns: 1fr;
@@ -285,6 +308,7 @@
   }
 }
 
+/* Ajustes para telas pequenas. */
 @media (max-width: 720px) {
   .candidatos-layout {
     padding: 22px 16px 56px;

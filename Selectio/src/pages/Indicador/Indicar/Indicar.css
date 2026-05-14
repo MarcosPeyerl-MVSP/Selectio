@@ -1,3 +1,8 @@
+/* Objetivo do arquivo: definir os estilos da página de indicação de candidato,
+   incluindo layout com sidebar, formulário, upload de currículo, card lateral,
+   alertas e responsividade. */
+
+/* Layout principal com menu lateral e área de formulário. */
 .indicar-layout {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -7,11 +12,13 @@
   min-height: calc(100vh - 80px);
 }
 
+/* Área principal da página. */
 .indicar-page {
   width: 100%;
   max-width: 1180px;
 }
 
+/* Cabeçalho com contexto, título, link de retorno e vaga selecionada. */
 .indicar-header {
   margin-bottom: 52px;
 }
@@ -49,6 +56,7 @@
   font-weight: 700;
 }
 
+/* Formulário dividido entre conteúdo principal e card lateral. */
 .indicar-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 230px;
@@ -56,11 +64,13 @@
   align-items: start;
 }
 
+/* Coluna principal do formulário. */
 .indicar-main {
   display: grid;
   gap: 44px;
 }
 
+/* Seção de campos do formulário. */
 .form-section {
   display: grid;
   gap: 20px;
@@ -74,16 +84,19 @@
   font-size: 18px;
 }
 
+/* Grade padrão dos campos. */
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px 24px;
 }
 
+/* Variação de grade para três campos na mesma linha. */
 .form-grid.three-columns {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+/* Label base dos campos. */
 .field-label {
   display: grid;
   gap: 9px;
@@ -94,6 +107,7 @@
   text-transform: uppercase;
 }
 
+/* Estilo compartilhado dos inputs, selects e textareas. */
 .field-label input,
 .field-label select,
 .field-label textarea,
@@ -117,6 +131,7 @@
   color: #7b8088;
 }
 
+/* Destaque visual no foco dos campos. */
 .field-label input:focus,
 .field-label select:focus,
 .field-label textarea:focus,
@@ -138,10 +153,12 @@
   text-transform: none;
 }
 
+/* Campo que ocupa toda a largura da grade. */
 .full-field {
   grid-column: 1 / -1;
 }
 
+/* Barra visual de ferramentas do campo de narrativa. */
 .editor-toolbar {
   display: flex;
   align-items: center;
@@ -158,6 +175,7 @@
   border-radius: 0 0 6px 6px;
 }
 
+/* Texto auxiliar do campo de habilidades. */
 .skill-help {
   margin: -6px 0 0;
   color: #555;
@@ -165,6 +183,7 @@
   line-height: 1.5;
 }
 
+/* Campo de habilidades com tokens. */
 .skill-input {
   display: flex;
   align-items: center;
@@ -176,6 +195,7 @@
   background: #e4e4e5;
 }
 
+/* Token removível de habilidade. */
 .skill-input button {
   border: 0;
   border-radius: 4px;
@@ -196,6 +216,7 @@
   color: #111;
 }
 
+/* Área de upload de currículo. */
 .upload-box {
   display: grid;
   place-items: center;
@@ -236,6 +257,7 @@
   background: #fff8f9;
 }
 
+/* Estado visual quando há arquivo anexado. */
 .upload-box.has-file {
   border-color: #22965f;
   background: #f3fff8;
@@ -257,6 +279,7 @@
   display: none;
 }
 
+/* Ações finais do formulário. */
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -289,6 +312,7 @@
   cursor: wait;
 }
 
+/* Card lateral para seleção de candidato pré-salvo. */
 .saved-candidate-card {
   position: sticky;
   top: 24px;
@@ -334,11 +358,13 @@
   text-transform: uppercase;
 }
 
+/* Feedback textual de carregamento. */
 .indicar-feedback {
   color: #555;
   font-weight: 700;
 }
 
+/* Alerta de erro no envio ou carregamento. */
 .indicar-alert {
   display: flex;
   align-items: flex-start;
@@ -369,6 +395,7 @@
   line-height: 1.5;
 }
 
+/* Animação aplicada quando um arquivo é anexado. */
 @keyframes upload-confirm {
   0% {
     transform: scale(0.985);
@@ -383,6 +410,7 @@
   }
 }
 
+/* Ajustes para telas médias. */
 @media (max-width: 1100px) {
   .indicar-layout {
     grid-template-columns: 1fr;
@@ -399,6 +427,7 @@
   }
 }
 
+/* Ajustes para telas pequenas. */
 @media (max-width: 720px) {
   .indicar-layout {
     padding: 22px 16px 44px;

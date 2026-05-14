@@ -1,3 +1,7 @@
+// Objetivo do arquivo: renderizar a página de candidatos do indicador.
+// A página valida a sessão do indicador, busca candidatos na API, aplica filtros
+// por status e busca textual, e exibe os candidatos em cards.
+
 import './Candidatos.css'
 import { Link, Navigate } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
@@ -9,8 +13,10 @@ import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Sidebar from '../../../components/Sidebar/Sidebar'
 import Footer from '../../../components/Footer/Footer'
 
+// Status disponíveis para filtro na interface.
 const statusTabs = ['Todos', 'Indicado', 'Entrevista', 'Contratado', 'Cancelado']
 
+// Mapeia os status recebidos da API para os textos exibidos ao usuário.
 const statusLabels = {
   indicado: 'Indicado',
   entrevista: 'Entrevista',
@@ -19,6 +25,7 @@ const statusLabels = {
   recusado: 'Cancelado',
 }
 
+// Mapeia os status exibidos para classes CSS usadas nos cards.
 const statusClass = {
   Indicado: 'indicado',
   Entrevista: 'entrevista',
@@ -26,6 +33,7 @@ const statusClass = {
   Cancelado: 'cancelado',
 }
 
+// Lista de imagens usadas como avatares visuais dos candidatos.
 const avatars = [
   'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80',
   'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=80',
@@ -34,6 +42,7 @@ const avatars = [
   'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=160&q=80',
 ]
 
+// Responsabilidade: recuperar o indicador autenticado no localStorage.
 function getIndicador() {
   const stored = localStorage.getItem('indicadorUser')
   if (!stored) return null
@@ -41,13 +50,15 @@ function getIndicador() {
   try {
     return JSON.parse(stored)
   } catch {
+    // Fluxo de segurança: remove a sessão se o dado salvo não for um JSON válido.
     localStorage.removeItem('indicadorUser')
     return null
   }
 }
 
+// Responsabilidade: formatar datas para exibição no padrão brasileiro.
 function formatDate(value) {
-  if (!value) return 'Nao informado'
+  if (!value) return 'Não informado'
 
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
@@ -59,6 +70,7 @@ function formatDate(value) {
   }).replace('.', '')
 }
 
+// Responsabilidade: normalizar textos para busca sem considerar acentos ou maiúsculas.
 function normalizeText(value) {
   return String(value || '')
     .normalize('NFD')
@@ -67,14 +79,26 @@ function normalizeText(value) {
 }
 
 function Candidatos() {
+  // Mantém os dados do indicador autenticado durante a renderização da página.
   const [indicador] = useState(getIndicador)
+
+  // Armazena candidatos retornados pela API.
   const [candidatos, setCandidatos] = useState([])
+
+  // Armazena o termo digitado no campo de busca.
   const [busca, setBusca] = useState('')
+
+  // Controla o status ativo nos filtros.
   const [activeStatus, setActiveStatus] = useState('Todos')
+
+  // Controla o estado de carregamento da busca inicial.
   const [loading, setLoading] = useState(true)
+
+  // Armazena mensagem de erro caso a busca de candidatos falhe.
   const [error, setError] = useState('')
 
   useEffect(() => {
+    // Responsabilidade: buscar candidatos vinculados ao indicador autenticado.
     const fetchCandidatos = async () => {
       if (!indicador) return
 
@@ -97,6 +121,7 @@ function Candidatos() {
     fetchCandidatos()
   }, [indicador])
 
+  // Filtra candidatos por status selecionado e termo de busca.
   const candidatosFiltrados = useMemo(() => {
     const termo = normalizeText(busca)
 
@@ -114,24 +139,28 @@ function Candidatos() {
     })
   }, [activeStatus, busca, candidatos])
 
+  // Regra de acesso: sem indicador autenticado, redireciona para login.
   if (!indicador) {
     return <Navigate to="/login?redirect=/candidatos/indicador" replace />
   }
 
   return (
     <>
+      {/* Componente de navegação principal. */}
       <Navbar />
 
       <div className="candidatos-layout">
+        {/* Menu lateral do painel do indicador. */}
         <Sidebar type="indicador" user={indicador} />
 
         <main className="candidatos-page">
           <header className="candidatos-header">
             <span>Recrutamento ativo - Maio 2026</span>
             <h1>Candidatos</h1>
-            <p>Gerencie o fluxo de talentos e acompanhe o progresso das suas vagas abertas com precisao editorial.</p>
+            <p>Gerencie o fluxo de talentos e acompanhe o progresso das suas vagas abertas com precisão editorial.</p>
           </header>
 
+          {/* Barra de busca e filtros por status. */}
           <section className="candidatos-toolbar">
             <label className="candidate-search">
               <FaSearch />
@@ -156,6 +185,7 @@ function Candidatos() {
             </div>
           </section>
 
+          {/* Mensagens de carregamento e erro da busca de candidatos. */}
           {loading && <p className="candidate-feedback">Carregando candidatos...</p>}
           {error && <p className="candidate-feedback error">{error}</p>}
 
@@ -192,6 +222,7 @@ function Candidatos() {
                 )
               })}
 
+              {/* Link para a página de vagas, usada como entrada para adicionar candidato. */}
               <Link className="candidate-add-card" to="/vagas">
                 <span>
                   <FaPlus />
@@ -204,6 +235,7 @@ function Candidatos() {
         </main>
       </div>
 
+      {/* Componente de rodapé. */}
       <Footer />
     </>
   )

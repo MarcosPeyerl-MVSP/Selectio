@@ -1,3 +1,7 @@
+/* Objetivo do arquivo: definir os estilos da página Home, incluindo layout,
+   carrossel de vagas, cards, seções informativas, CTA e responsividade. */
+
+/* Estrutura principal do banner da home com duas colunas: texto e card da vaga. */
 .hero-modelo {
   min-height: 520px;
   display: grid;
@@ -9,6 +13,7 @@
   perspective: 1200px;
 }
 
+/* Marcadores textuais usados como rótulos de seção. */
 .tag {
   display: inline-block;
   font-size: 12px;
@@ -22,6 +27,7 @@
   text-align: center;
 }
 
+/* Tipografia principal do banner. */
 .hero-text h1 {
   font-size: 58px;
   line-height: 1;
@@ -42,12 +48,14 @@
   transition: opacity 0.6s ease, transform 0.6s ease;
 }
 
+/* Agrupa os links de ação do banner. */
 .hero-actions {
   display: flex;
   align-items: center;
   gap: 22px;
 }
 
+/* Estilo compartilhado entre botões e links principais. */
 .hero-actions button,
 .hero-actions .hero-indication,
 .solution-card button {
@@ -60,6 +68,7 @@
   box-shadow: 0 8px 20px rgba(182, 28, 47, 0.18);
 }
 
+/* Feedback visual de hover nos botões principais. */
 .hero-actions button:hover,
 .hero-actions .hero-indication:hover,
 .solution-card button:hover {
@@ -80,6 +89,7 @@
   transform: translateX(4px);
 }
 
+/* Card que exibe imagem e recompensa da vaga em destaque. */
 .hero-card {
   position: relative;
   background: var(--white);
@@ -88,6 +98,7 @@
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.08);
 }
 
+/* Efeito visual translúcido aplicado ao card da vaga. */
 .hero-card.glass-effect {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(10px);
@@ -95,6 +106,7 @@
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
+/* Transições compartilhadas entre cards interativos. */
 .hero-card,
 .solution-card,
 .matching-card {
@@ -108,6 +120,7 @@
   box-shadow: 0 22px 50px rgba(0, 0, 0, 0.09);
 }
 
+/* Classes de animação usadas na troca de vagas do carrossel. */
 .slide-animation {
   animation: fadeInSlide 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
@@ -120,6 +133,7 @@
   animation: slideInLeft 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
+/* Entrada animada pela direita. */
 @keyframes slideInRight {
   0% {
     opacity: 0;
@@ -131,6 +145,7 @@
   }
 }
 
+/* Entrada animada pela esquerda. */
 @keyframes slideInLeft {
   0% {
     opacity: 0;
@@ -142,6 +157,7 @@
   }
 }
 
+/* Animação genérica de entrada com deslocamento vertical. */
 @keyframes fadeInSlide {
   0% {
     opacity: 0;
@@ -153,6 +169,7 @@
   }
 }
 
+/* Área de imagem da vaga. */
 .profile-photo {
   height: 300px;
   border-radius: 14px;
@@ -161,6 +178,7 @@
   background-position: center;
 }
 
+/* Estilo exibido quando não há imagem da vaga. */
 .placeholder-photo {
   display: grid;
   place-items: center;
@@ -170,6 +188,7 @@
   font-weight: 700;
 }
 
+/* Caixa sobreposta com informação de recompensa. */
 .info-box {
   position: absolute;
   left: -28px;
@@ -203,6 +222,7 @@
   color: #444444;
 }
 
+/* Botões laterais de navegação do carrossel. */
 .carousel-btn {
   position: absolute;
   top: 50%;
@@ -260,6 +280,7 @@
   transform: translateX(2px) scale(1.1);
 }
 
+/* Indicadores inferiores do carrossel. */
 .carousel-indicators {
   position: absolute;
   bottom: 20px;
@@ -292,6 +313,7 @@
   transform: scale(1.2);
 }
 
+/* Seção de apresentação dos dois perfis atendidos pela plataforma. */
 .ecosystem {
   padding: 70px 20px;
   text-align: center;
@@ -308,6 +330,7 @@
   gap: 28px;
 }
 
+/* Cards de solução para empresas e indicadores. */
 .solution-card {
   text-align: left;
   background: var(--white);
@@ -315,8 +338,6 @@
   border-radius: 16px;
   box-shadow: 0 14px 35px rgba(0, 0, 0, 0.05);
 }
-
-
 
 .solution-card h3 {
   font-size: 24px;
@@ -334,6 +355,7 @@
   width: 100%;
 }
 
+/* Seção que descreve o funcionamento da plataforma. */
 .how-it-works {
   padding: 80px 20px;
   display: grid;
@@ -359,6 +381,7 @@
   max-width: 520px;
 }
 
+/* Lista visual das etapas do processo. */
 .steps {
   display: flex;
   flex-direction: column;
@@ -393,6 +416,7 @@
   line-height: 1.5;
 }
 
+/* Card visual do indicador de compatibilidade. */
 .matching-card {
   background: var(--white);
   border-radius: 18px;
@@ -409,6 +433,7 @@
   margin-bottom: 26px;
 }
 
+/* Barras usadas como representação visual de compatibilidade. */
 .bar {
   height: 18px;
   background: #f0d1d8;
@@ -437,6 +462,7 @@
   text-align: center;
 }
 
+/* Estilos para uma seção de empresas, caso seja utilizada no JSX. */
 .companies {
   padding: 60px 20px;
   text-align: center;
@@ -469,6 +495,7 @@
   transform: translateY(-2px);
 }
 
+/* Chamada final da página para navegação até vagas. */
 .cta {
   max-width: 880px;
   margin: 45px auto 90px;
@@ -515,6 +542,7 @@
   transform: translateY(-2px);
 }
 
+/* Ajustes responsivos para telas menores. */
 @media (max-width: 900px) {
   .hero-modelo,
   .how-it-works,
@@ -545,6 +573,7 @@
   }
 }
 
+/* Ícones circulares dos cards de solução. */
 .solution-icon {
   width: 46px;
   height: 46px;
@@ -557,6 +586,7 @@
   margin-bottom: 18px;
 }
 
+/* Link/botão primário reutilizado na Home. */
 .home-button-primary {
   margin-top: 20px;
   width: 100%;
@@ -573,6 +603,7 @@
   transition: var(--transition);
 }
 
+/* Ajuste específico para o botão principal dentro do banner. */
 .hero-actions .home-button-primary {
   margin-top: 0;
   width: auto;
@@ -590,6 +621,7 @@
   height: 16px;
 }
 
+/* Ícone do card de matching. */
 .matching-icon {
   width: 48px;
   height: 48px;
@@ -605,4 +637,4 @@
 .carousel-btn svg {
   width: 26px;
   height: 26px;
-} 
+}

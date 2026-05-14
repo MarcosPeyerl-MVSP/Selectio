@@ -1,3 +1,7 @@
+// Objetivo do arquivo: renderizar o painel central do indicador.
+// A página valida a sessão do indicador, atualiza os dados do usuário,
+// busca indicadores de status e exibe atalhos e métricas principais.
+
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import './Painel.css'
@@ -6,6 +10,7 @@ import Sidebar from '../../../components/Sidebar/Sidebar'
 import Footer from '../../../components/Footer/Footer'
 import { FaChartBar, FaSuitcase, FaUserFriends, FaUserTie } from 'react-icons/fa'
 
+// Responsabilidade: formatar valores numéricos como moeda brasileira.
 const formatCurrency = (value) => Number(value || 0).toLocaleString('pt-BR', {
   style: 'currency',
   currency: 'BRL',
@@ -13,6 +18,7 @@ const formatCurrency = (value) => Number(value || 0).toLocaleString('pt-BR', {
 })
 
 function Painel() {
+  // Recupera o indicador autenticado salvo no localStorage ao iniciar o componente.
   const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem('indicadorUser')
     if (!storedUser) return null
@@ -20,14 +26,20 @@ function Painel() {
     try {
       return JSON.parse(storedUser)
     } catch {
+      // Fluxo de segurança: remove a sessão caso o JSON salvo esteja inválido.
       localStorage.removeItem('indicadorUser')
       return null
     }
   })
+
+  // Hook usado para redirecionar o usuário quando não há sessão válida.
   const navigate = useNavigate()
+
+  // Armazena os dados estatísticos do indicador.
   const [status, setStatus] = useState(null)
 
   useEffect(() => {
+    // Regra de acesso: sem indicador autenticado, redireciona para login.
     if (!user) {
       navigate('/login')
     }
@@ -36,10 +48,13 @@ function Painel() {
   useEffect(() => {
     if (!user?.id) return
 
+    // Responsabilidade: buscar os dados atualizados do indicador autenticado.
     const fetchCurrentUser = async () => {
       try {
         const response = await fetch(`http://localhost:3333/indicador/${user.id}`)
         if (!response.ok) {
+          // Se o usuário não for encontrado ou a sessão estiver inválida,
+          // remove o dado local e redireciona para login.
           localStorage.removeItem('indicadorUser')
           navigate('/login')
           return
@@ -49,7 +64,7 @@ function Painel() {
         setUser(data)
         localStorage.setItem('indicadorUser', JSON.stringify(data))
       } catch (error) {
-        console.error('Erro ao buscar usuario:', error)
+        console.error('Erro ao buscar usuário:', error)
       }
     }
 
@@ -59,6 +74,7 @@ function Painel() {
   useEffect(() => {
     if (!user?.id) return
 
+    // Responsabilidade: buscar as métricas do painel do indicador.
     const fetchStatus = async () => {
       try {
         const response = await fetch(`http://localhost:3333/indicador/${user.id}/status`)
@@ -74,27 +90,31 @@ function Painel() {
     fetchStatus()
   }, [user?.id])
 
+  // Evita renderizar o painel enquanto não há usuário autenticado.
   if (!user) return null
 
   return (
     <>
+      {/* Componente de navegação principal. */}
       <Navbar />
 
       <div className="painel-container">
+        {/* Menu lateral do painel do indicador. */}
         <Sidebar type="indicador" user={user} />
 
         <main className="painel-content">
           <p className="breadcrumb">BOAS-VINDAS - Painel Central</p>
 
           <h1>
-            Ola, <span>{user.nome}</span>.
+            Olá, <span>{user.nome}</span>.
           </h1>
 
           <p className="subtitle">
-            Gerencie suas indicacoes, explore novas oportunidades e acompanhe seu
-            crescimento editorial em um so lugar.
+            Gerencie suas indicações, explore novas oportunidades e acompanhe seu
+            crescimento editorial em um só lugar.
           </p>
 
+          {/* Cards de atalho para áreas principais do painel. */}
           <section className="cards">
             <div className="card">
               <FaSuitcase className="card-icon" />
@@ -106,7 +126,7 @@ function Painel() {
             <div className="card">
               <FaUserFriends className="card-icon" />
               <h3>Candidatos</h3>
-              <p>Inicie uma nova indicacao de talento e impulsione a carreira da sua rede.</p>
+              <p>Inicie uma nova indicação de talento e impulsione a carreira da sua rede.</p>
               <Link to="/vagas">Indicar Agora {'->'}</Link>
             </div>
 
@@ -120,19 +140,20 @@ function Painel() {
             <div className="card">
               <FaChartBar className="card-icon" />
               <h3>Dashboard</h3>
-              <p>Acompanhe status, ganhos e o impacto de cada indicacao em tempo real.</p>
+              <p>Acompanhe status, ganhos e o impacto de cada indicação em tempo real.</p>
               <Link to="/painel/indicador">Acompanhar {'->'}</Link>
             </div>
           </section>
 
+          {/* Métricas resumidas do indicador. */}
           <section className="stats">
             <div>
-              <span>Total de Indicacoes</span>
+              <span>Total de Indicações</span>
               <h2>{status?.totalIndicacoes ?? 0}</h2>
             </div>
 
             <div>
-              <span>Taxa de Conversao</span>
+              <span>Taxa de Conversão</span>
               <h2 className="red">{status?.taxaSucesso ?? 0}%</h2>
             </div>
 
@@ -142,10 +163,12 @@ function Painel() {
             </div>
           </section>
 
+          {/* Atalho flutuante para a listagem de vagas. */}
           <Link className="floating-btn" to="/vagas">+</Link>
         </main>
       </div>
 
+      {/* Componente de rodapé. */}
       <Footer />
     </>
   )
