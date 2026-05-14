@@ -16,7 +16,7 @@ function Cadastro() {
       <main className="cadastro-container">
         {/* Cabeçalho com título e descrição da finalidade da página. */}
         <div className="cadastro-header">
-          <span className="tag center">BEM-VINDO A SELECTIO · NOVA CONTA</span>
+          <span className="tag center">BEM-VINDO À SELECTIO · NOVA CONTA</span>
           <h1>Qual cadastro irá fazer?</h1>
           <p>
             Escolha o perfil que melhor se adapta às suas necessidades e

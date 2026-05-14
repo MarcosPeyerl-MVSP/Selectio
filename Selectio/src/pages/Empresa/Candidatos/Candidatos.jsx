@@ -1,3 +1,7 @@
+// Objetivo do arquivo: renderizar a página de candidatos da empresa.
+// A página valida a sessão da empresa, busca candidatos vinculados às vagas da empresa,
+// permite filtro por status e busca textual, e atualiza o status dos candidatos pela API.
+
 import './Candidatos.css'
 import { Navigate } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
@@ -12,8 +16,10 @@ import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Sidebar from '../../../components/Sidebar/Sidebar'
 import Footer from '../../../components/Footer/Footer'
 
+// Abas de filtro exibidas na interface.
 const tabs = ['Todos', 'Indicado', 'Entrevista', 'Contratado', 'Cancelado']
 
+// Opções disponíveis para alteração de status do candidato.
 const statusOptions = [
   { value: 'indicado', label: 'Indicado' },
   { value: 'entrevista', label: 'Entrevista' },
@@ -21,6 +27,7 @@ const statusOptions = [
   { value: 'cancelado', label: 'Cancelado' },
 ]
 
+// Mapeia status retornados pela API para os textos exibidos na interface.
 const statusLabels = {
   indicado: 'Indicado',
   entrevista: 'Entrevista',
@@ -29,6 +36,7 @@ const statusLabels = {
   recusado: 'Cancelado',
 }
 
+// Lista de imagens usadas como avatares visuais dos candidatos.
 const avatars = [
   'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80',
   'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=80',
@@ -37,6 +45,7 @@ const avatars = [
   'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=160&q=80',
 ]
 
+// Responsabilidade: recuperar a empresa autenticada salva no localStorage.
 function getEmpresa() {
   const stored = localStorage.getItem('empresaUser')
   if (!stored) return null
@@ -44,11 +53,13 @@ function getEmpresa() {
   try {
     return JSON.parse(stored)
   } catch {
+    // Fluxo de segurança: remove a sessão se o dado salvo não for um JSON válido.
     localStorage.removeItem('empresaUser')
     return null
   }
 }
 
+// Responsabilidade: normalizar textos para busca sem considerar acentos ou maiúsculas.
 function normalizeText(value) {
   return String(value || '')
     .normalize('NFD')
@@ -56,8 +67,9 @@ function normalizeText(value) {
     .toLowerCase()
 }
 
+// Responsabilidade: formatar datas para exibição no padrão brasileiro.
 function formatDate(value) {
-  if (!value) return 'Nao informado'
+  if (!value) return 'Não informado'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
 
@@ -69,15 +81,29 @@ function formatDate(value) {
 }
 
 function CandidatosEmpresa() {
+  // Mantém os dados da empresa autenticada durante a renderização da página.
   const [empresa] = useState(getEmpresa)
+
+  // Armazena candidatos retornados pela API.
   const [candidatos, setCandidatos] = useState([])
+
+  // Armazena o termo digitado no campo de busca.
   const [busca, setBusca] = useState('')
+
+  // Controla a aba de status ativa.
   const [activeTab, setActiveTab] = useState('Todos')
+
+  // Controla o carregamento inicial da lista.
   const [loading, setLoading] = useState(true)
+
+  // Armazena mensagens de erro de busca ou atualização.
   const [error, setError] = useState('')
+
+  // Controla qual candidato está com status em atualização.
   const [updatingId, setUpdatingId] = useState(null)
 
   useEffect(() => {
+    // Responsabilidade: buscar candidatos vinculados às vagas da empresa autenticada.
     const fetchCandidatos = async () => {
       if (!empresa) return
 
@@ -100,6 +126,7 @@ function CandidatosEmpresa() {
     fetchCandidatos()
   }, [empresa])
 
+  // Filtra candidatos por status selecionado e termo de busca.
   const candidatosFiltrados = useMemo(() => {
     const termo = normalizeText(busca)
 
@@ -117,10 +144,12 @@ function CandidatosEmpresa() {
     })
   }, [activeTab, busca, candidatos])
 
+  // Regra de acesso: sem empresa autenticada, redireciona para login.
   if (!empresa) {
     return <Navigate to="/login?redirect=/candidatos/empresa" replace />
   }
 
+  // Responsabilidade: atualizar o status de um candidato pela API.
   const updateStatus = async (candidatoId, status) => {
     setUpdatingId(candidatoId)
     setError('')
@@ -137,6 +166,7 @@ function CandidatosEmpresa() {
         throw new Error(data.erro || 'Erro ao atualizar status')
       }
 
+      // Atualiza localmente o status do candidato alterado.
       setCandidatos((current) => current.map((candidato) => (
         candidato.id === candidatoId ? { ...candidato, status } : candidato
       )))
@@ -149,19 +179,22 @@ function CandidatosEmpresa() {
 
   return (
     <>
+      {/* Componente de navegação principal. */}
       <Navbar />
 
       <div className="empresa-candidatos-layout">
+        {/* Menu lateral do painel da empresa. */}
         <Sidebar type="empresa" user={empresa} />
 
         <main className="empresa-candidatos-page">
           <header className="empresa-candidatos-header">
-            <span>Gestao de talentos - Q3 pipeline</span>
-            <h1>Visualizacao de Candidatos</h1>
-            <p>Curadoria estrategica de profissionais em processo seletivo. Analise o progresso das candidaturas atraves do pipeline editorial da Selectio.</p>
+            <span>Gestão de talentos - Q3 pipeline</span>
+            <h1>Visualização de Candidatos</h1>
+            <p>Curadoria estratégica de profissionais em processo seletivo. Analise o progresso das candidaturas através do pipeline editorial da Selectio.</p>
             <a href="/vagas">Voltar para minhas vagas</a>
           </header>
 
+          {/* Barra de busca e filtros por status. */}
           <section className="empresa-candidatos-toolbar">
             <label className="empresa-candidate-search">
               <FaSearch />
@@ -186,12 +219,14 @@ function CandidatosEmpresa() {
             </div>
           </section>
 
+          {/* Mensagens de carregamento e erro. */}
           {loading && <p className="empresa-candidate-feedback">Carregando candidatos...</p>}
           {error && <p className="empresa-candidate-feedback error">{error}</p>}
 
           {!loading && !error && (
             <section className="empresa-candidate-grid">
               {candidatosFiltrados.map((candidato, index) => {
+                // Regra de normalização: status "recusado" é tratado visualmente como "cancelado".
                 const status = candidato.status === 'recusado' ? 'cancelado' : candidato.status || 'indicado'
 
                 return (
@@ -216,13 +251,13 @@ function CandidatosEmpresa() {
                     <p>{candidato.cargoAtual || candidato.vagaTitulo || 'Candidato indicado'}</p>
 
                     <div className="empresa-candidate-details">
-                      <span><FaUser /> {candidato.indicadorNome ? `Indicacao de ${candidato.indicadorNome}` : candidato.origem}</span>
+                      <span><FaUser /> {candidato.indicadorNome ? `Indicação de ${candidato.indicadorNome}` : candidato.origem}</span>
                       <span><FaCalendarAlt /> Aplicado em {formatDate(candidato.aplicadoEm)}</span>
                     </div>
 
                     <div className="empresa-candidate-actions">
                       <button type="button">Ver Perfil</button>
-                      <button type="button" aria-label="Mais opcoes">
+                      <button type="button" aria-label="Mais opções">
                         <FaEllipsisH />
                       </button>
                     </div>
@@ -240,6 +275,7 @@ function CandidatosEmpresa() {
         </main>
       </div>
 
+      {/* Componente de rodapé. */}
       <Footer />
     </>
   )

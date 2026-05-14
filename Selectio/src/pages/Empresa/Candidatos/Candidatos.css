@@ -1,3 +1,8 @@
+/* Objetivo do arquivo: definir os estilos da página de candidatos da empresa,
+   incluindo layout com sidebar, cabeçalho, busca, abas, cards, seletor de status
+   e responsividade. */
+
+/* Layout principal com sidebar e área de conteúdo. */
 .empresa-candidatos-layout {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -7,11 +12,13 @@
   background: #f4f4f5;
 }
 
+/* Área principal da página. */
 .empresa-candidatos-page {
   width: 100%;
   max-width: 1220px;
 }
 
+/* Cabeçalho com contexto, título, descrição e link de retorno. */
 .empresa-candidatos-header {
   margin-bottom: 34px;
 }
@@ -51,6 +58,7 @@
   content: "< ";
 }
 
+/* Barra com busca e filtros por status. */
 .empresa-candidatos-toolbar {
   display: grid;
   grid-template-columns: minmax(260px, 360px) 1fr;
@@ -59,6 +67,7 @@
   margin-bottom: 42px;
 }
 
+/* Campo de busca de candidatos. */
 .empresa-candidate-search {
   display: flex;
   align-items: center;
@@ -80,6 +89,7 @@
   outline: none;
 }
 
+/* Abas de status. */
 .empresa-candidate-tabs {
   display: flex;
   align-items: center;
@@ -99,17 +109,20 @@
   cursor: pointer;
 }
 
+/* Estado visual da aba ativa. */
 .empresa-candidate-tabs button.active {
   background: var(--primary);
   color: #fff;
 }
 
+/* Grade de cards de candidatos. */
 .empresa-candidate-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 22px;
 }
 
+/* Base visual dos cards e do botão de carregar mais. */
 .empresa-candidate-card,
 .empresa-load-more {
   min-height: 246px;
@@ -117,11 +130,13 @@
   background: #fff;
 }
 
+/* Card individual de candidato. */
 .empresa-candidate-card {
   display: grid;
   padding: 22px;
 }
 
+/* Topo do card com avatar e seletor de status. */
 .empresa-candidate-top {
   display: flex;
   align-items: flex-start;
@@ -137,6 +152,7 @@
   object-fit: cover;
 }
 
+/* Seletor visual de status do candidato. */
 .empresa-status-select {
   position: relative;
   display: inline-flex;
@@ -166,6 +182,7 @@
   pointer-events: none;
 }
 
+/* Cores do seletor conforme status. */
 .empresa-status-select.indicado select {
   background: #2563eb;
 }
@@ -195,6 +212,7 @@
   font-weight: 800;
 }
 
+/* Detalhes do candidato, como indicador e data de aplicação. */
 .empresa-candidate-details {
   display: grid;
   gap: 10px;
@@ -210,6 +228,7 @@
   gap: 8px;
 }
 
+/* Ações do card de candidato. */
 .empresa-candidate-actions {
   display: grid;
   grid-template-columns: 1fr 36px;
@@ -231,6 +250,7 @@
   color: #777d88;
 }
 
+/* Botão visual para carregar mais candidatos. */
 .empresa-load-more {
   display: grid;
   place-items: center;
@@ -264,6 +284,7 @@
   line-height: 1.5;
 }
 
+/* Feedback textual de carregamento e erro. */
 .empresa-candidate-feedback {
   color: #555;
   font-weight: 700;
@@ -273,6 +294,7 @@
   color: var(--primary);
 }
 
+/* Ajustes para telas médias. */
 @media (max-width: 1100px) {
   .empresa-candidatos-layout {
     grid-template-columns: 1fr;
@@ -291,6 +313,7 @@
   }
 }
 
+/* Ajustes para telas pequenas. */
 @media (max-width: 720px) {
   .empresa-candidatos-layout {
     padding: 22px 16px 56px;

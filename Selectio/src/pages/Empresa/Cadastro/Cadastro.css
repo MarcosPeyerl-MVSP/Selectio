@@ -1,329 +1,557 @@
-/* Objetivo do arquivo: definir os estilos da página de candidatos da empresa,
-   incluindo layout com sidebar, cabeçalho, busca, abas, cards, seletor de status
-   e responsividade. */
+/* Objetivo do arquivo: definir os estilos da página de cadastro de empresa,
+   incluindo layout do formulário, card de plano, consulta de CNPJ,
+   validação visual de senha e responsividade. */
 
-/* Layout principal com sidebar e área de conteúdo. */
-.empresa-candidatos-layout {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 28px;
-  min-height: calc(100vh - 80px);
-  padding: 28px 28px 80px;
-  background: #f4f4f5;
+/* Container principal da página. */
+.empresa-container {
+  min-height: calc(100vh - 140px);
+  padding: 48px 20px;
+  background: #ffffff;
 }
 
-/* Área principal da página. */
-.empresa-candidatos-page {
+/* Layout com formulário principal e card lateral de plano. */
+.empresa-wrapper {
   width: 100%;
-  max-width: 1220px;
-}
-
-/* Cabeçalho com contexto, título, descrição e link de retorno. */
-.empresa-candidatos-header {
-  margin-bottom: 34px;
-}
-
-.empresa-candidatos-header span {
-  display: block;
-  margin-bottom: 10px;
-  color: var(--primary);
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.empresa-candidatos-header h1 {
-  margin: 0 0 8px;
-  color: #202024;
-  font-size: 38px;
-  line-height: 1;
-}
-
-.empresa-candidatos-header p {
-  max-width: 660px;
-  margin: 0 0 8px;
-  color: #62666f;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.empresa-candidatos-header a {
-  color: #444;
-  font-size: 13px;
-  text-decoration: none;
-}
-
-.empresa-candidatos-header a::before {
-  content: "< ";
-}
-
-/* Barra com busca e filtros por status. */
-.empresa-candidatos-toolbar {
+  max-width: 1120px;
+  margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(260px, 360px) 1fr;
-  gap: 28px;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 24px;
   align-items: start;
-  margin-bottom: 42px;
 }
 
-/* Campo de busca de candidatos. */
-.empresa-candidate-search {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 44px;
-  padding: 0 18px;
-  border-radius: 8px;
-  background: #e1e1e3;
-  color: #7a7f88;
-}
-
-.empresa-candidate-search input {
-  width: 100%;
-  border: 0;
-  background: transparent;
-  color: #111;
-  font: inherit;
-  font-size: 14px;
-  outline: none;
-}
-
-/* Abas de status. */
-.empresa-candidate-tabs {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.empresa-candidate-tabs button {
-  min-width: 86px;
-  height: 34px;
-  border: 0;
-  border-radius: 999px;
-  background: #ececef;
-  color: #666b75;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-/* Estado visual da aba ativa. */
-.empresa-candidate-tabs button.active {
-  background: var(--primary);
-  color: #fff;
-}
-
-/* Grade de cards de candidatos. */
-.empresa-candidate-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 22px;
-}
-
-/* Base visual dos cards e do botão de carregar mais. */
-.empresa-candidate-card,
-.empresa-load-more {
-  min-height: 246px;
+/* Blocos visuais principais da tela. */
+.empresa-form,
+.plano-box {
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
   border-radius: 10px;
-  background: #fff;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.06);
 }
 
-/* Card individual de candidato. */
-.empresa-candidate-card {
-  display: grid;
-  padding: 22px;
+.empresa-form {
+  padding: 34px;
 }
 
-/* Topo do card com avatar e seletor de status. */
-.empresa-candidate-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 18px;
+/* Cabeçalho do formulário. */
+.form-header {
+  padding-bottom: 22px;
+  border-bottom: 1px solid #eeeeee;
 }
 
-.empresa-candidate-top img {
-  width: 64px;
-  height: 64px;
-  border-radius: 8px;
-  object-fit: cover;
-}
-
-/* Seletor visual de status do candidato. */
-.empresa-status-select {
-  position: relative;
-  display: inline-flex;
-}
-
-.empresa-status-select select {
-  min-width: 116px;
-  height: 28px;
-  border: 0;
-  border-radius: 999px;
-  padding: 0 24px 0 10px;
-  color: #fff;
-  font-size: 10px;
-  font-weight: 900;
-  text-transform: uppercase;
-  outline: none;
-  cursor: pointer;
-  appearance: none;
-}
-
-.empresa-status-select::after {
-  content: "⌄";
-  position: absolute;
-  right: 9px;
-  top: 3px;
-  color: #fff;
-  pointer-events: none;
-}
-
-/* Cores do seletor conforme status. */
-.empresa-status-select.indicado select {
-  background: #2563eb;
-}
-
-.empresa-status-select.entrevista select {
-  background: #d97706;
-}
-
-.empresa-status-select.contratado select {
-  background: #16a34a;
-}
-
-.empresa-status-select.cancelado select {
-  background: #dc2626;
-}
-
-.empresa-candidate-card h2 {
-  margin: 0 0 6px;
-  color: #202024;
-  font-size: 18px;
-}
-
-.empresa-candidate-card p {
-  margin: 0 0 28px;
-  color: var(--primary);
+.form-header span,
+.plano-title {
+  display: block;
+  margin-bottom: 8px;
+  color: #b61c2f;
   font-size: 12px;
   font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
 }
 
-/* Detalhes do candidato, como indicador e data de aplicação. */
-.empresa-candidate-details {
-  display: grid;
-  gap: 10px;
-  margin-top: auto;
-  margin-bottom: 18px;
-  color: #777d88;
-  font-size: 11px;
+.form-header h1 {
+  margin-bottom: 8px;
+  color: #171717;
+  font-size: 30px;
+  line-height: 1.2;
 }
 
-.empresa-candidate-details span {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Ações do card de candidato. */
-.empresa-candidate-actions {
-  display: grid;
-  grid-template-columns: 1fr 36px;
-  gap: 8px;
-}
-
-.empresa-candidate-actions button {
-  height: 36px;
-  border: 0;
-  border-radius: 6px;
-  background: var(--primary);
-  color: #fff;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.empresa-candidate-actions button:last-child {
-  background: #ececef;
-  color: #777d88;
-}
-
-/* Botão visual para carregar mais candidatos. */
-.empresa-load-more {
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 12px;
-  border: 0;
-  color: #555b66;
-  cursor: pointer;
-  text-align: center;
-}
-
-.empresa-load-more span {
-  display: grid;
-  place-items: center;
-  width: 54px;
-  height: 54px;
-  border-radius: 999px;
-  background: #f6dfe4;
-  color: var(--primary);
-}
-
-.empresa-load-more strong {
-  max-width: 180px;
-  font-size: 16px;
-}
-
-.empresa-load-more small {
-  max-width: 190px;
-  color: #777d88;
-  font-size: 11px;
+.form-header p {
+  max-width: 620px;
+  color: #666666;
+  font-size: 14px;
   line-height: 1.5;
 }
 
-/* Feedback textual de carregamento e erro. */
-.empresa-candidate-feedback {
-  color: #555;
+/* Seções internas do formulário. */
+.form-section {
+  padding: 22px 0 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.form-section h2 {
+  margin-bottom: 18px;
+  color: #171717;
+  font-size: 17px;
+}
+
+/* Labels dos campos. */
+.field-label {
+  display: block;
+  margin-bottom: 7px;
+  color: #333333;
+  font-size: 13px;
   font-weight: 700;
 }
 
-.empresa-candidate-feedback.error {
-  color: var(--primary);
+/* Inputs e selects do formulário. */
+.empresa-form input,
+.empresa-form select {
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 13px;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #222222;
+  font-family: inherit;
+  font-size: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.empresa-form .grid-2 > div,
+.empresa-form .password-field {
+  min-width: 0;
+}
+
+.empresa-form input::placeholder {
+  color: #8a8a8a;
+}
+
+/* Estado visual de foco dos campos. */
+.empresa-form input:focus,
+.empresa-form select:focus {
+  outline: none;
+  border-color: #b61c2f;
+  box-shadow: 0 0 0 3px rgba(182, 28, 47, 0.1);
+}
+
+/* Grade de duas colunas usada nas seções. */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 16px;
+}
+
+.grid-2 + .field-label,
+.grid-2 + input {
+  margin-top: 18px;
+}
+
+/* Área de consulta de CNPJ. */
+.cnpj-lookup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 118px;
+  align-items: start;
+  gap: 11px;
+}
+
+.cnpj-lookup input,
+.cnpj-lookup button {
+  height: 46px;
+  min-height: 46px;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+/* Botões principais da página. */
+.cnpj-lookup button,
+.submit-button,
+.plano-btn {
+  min-height: 46px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.cnpj-lookup button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: start;
+  margin: 0 !important;
+  padding: 0 16px;
+  border: 1px solid #c41d32;
+  background: #c41d32;
+  color: #ffffff;
+  line-height: 1;
+  font-size: 13px;
+  transform: none;
+}
+
+.cnpj-lookup button:hover {
+  border-color: #a91629;
+  background: #a91629;
+}
+
+.cnpj-lookup button:disabled {
+  background: #c9c9c9;
+  cursor: wait;
+}
+
+/* Mensagem de status da consulta de CNPJ. */
+.cnpj-message {
+  margin-top: 9px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.cnpj-message.verified {
+  color: #16803a;
+}
+
+.cnpj-message.error {
+  color: #b42318;
+}
+
+.cnpj-message.loading {
+  color: #6b7280;
+}
+
+/* Campos de senha com botão de mostrar/ocultar. */
+.empresa-container .empresa-form .password-field {
+  position: relative;
+}
+
+.empresa-container .empresa-form .password-field input {
+  margin-bottom: 0;
+  padding-right: 52px;
+}
+
+.empresa-container .empresa-form .password-field .password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  min-height: 28px;
+  display: inline-grid;
+  place-items: center;
+  transform: translateY(-50%);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  color: #1f1f1f;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.empresa-container .empresa-form .password-field .password-toggle:hover {
+  background: transparent;
+  color: #b61c2f;
+  box-shadow: none;
+  transform: translateY(-50%);
+}
+
+.empresa-container .empresa-form .password-field .password-toggle svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Painel de força da senha. */
+.password-strength {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.strength-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.strength-header strong {
+  display: block;
+  color: #333333;
+  font-size: 13px;
+  text-transform: capitalize;
+}
+
+.strength-header p {
+  margin-top: 2px;
+  color: #666666;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.strength-score {
+  min-width: 38px;
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: #f5f5f5;
+  color: #555555;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* Medidor visual da senha. */
+.strength-meter {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+  margin: 10px 0;
+}
+
+.strength-meter span {
+  height: 4px;
+  border-radius: 999px;
+  background: #e5e5e5;
+}
+
+/* Cores por nível de força da senha. */
+.strength-fraca .strength-meter span.active {
+  background: #b42318;
+}
+
+.strength-media .strength-meter span.active {
+  background: #9a5b00;
+}
+
+.strength-forte .strength-meter span.active {
+  background: #16803a;
+}
+
+.strength-fraca .strength-score {
+  background: #fff1f1;
+  color: #b42318;
+}
+
+.strength-media .strength-score {
+  background: #fff7e8;
+  color: #92400e;
+}
+
+.strength-forte .strength-score {
+  background: #eef8f1;
+  color: #166534;
+}
+
+/* Lista de critérios de senha. */
+.criteria-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.criteria-list li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 22px;
+  color: #696969;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.criteria-list li svg {
+  flex: 0 0 auto;
+  color: #b9b9b9;
+  font-size: 10px;
+}
+
+/* Critérios atendidos ficam destacados em verde. */
+.criteria-list li.met,
+.criteria-list li.met svg {
+  color: #16803a;
+}
+
+/* Estados visuais da confirmação de senha. */
+.confirm-password-field.match input {
+  border-color: #16803a;
+}
+
+.confirm-password-field.mismatch input {
+  border-color: #b42318;
+}
+
+.confirm-password-message {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.confirm-password-message.match {
+  color: #16803a;
+}
+
+.confirm-password-message.mismatch {
+  color: #b42318;
+}
+
+/* Lista de opções com checkbox. */
+.choice-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.choice-list label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 44px;
+  padding: 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  background: #fafafa;
+  color: #333333;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.choice-list input[type="checkbox"] {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  accent-color: #b61c2f;
+}
+
+/* Botão de envio do cadastro. */
+.submit-button {
+  width: 100%;
+  margin-top: 22px;
+  background: #b61c2f;
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(182, 28, 47, 0.18);
+}
+
+.submit-button:hover {
+  background: #9f1728;
+  transform: translateY(-1px);
+}
+
+.submit-button:disabled,
+.submit-button:disabled:hover {
+  background: #d6d6d6;
+  color: #747474;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Card lateral do plano selecionado. */
+.plano-box {
+  position: sticky;
+  top: 24px;
+  padding: 22px;
+}
+
+.plano-card {
+  padding: 18px;
+  border: 1px solid #e7d2d6;
+  border-radius: 10px;
+  background: #fffafa;
+}
+
+.plano-card h2 {
+  margin-bottom: 6px;
+  font-size: 19px;
+}
+
+.preco {
+  margin-bottom: 16px;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.preco span {
+  color: #666666;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.plano-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.plano-card li {
+  padding: 9px 0;
+  border-top: 1px solid rgba(182, 28, 47, 0.12);
+  color: #333333;
+  font-size: 13px;
+}
+
+.plano-btn {
+  width: 100%;
+  margin-top: 14px;
+  border: 1px solid #b61c2f;
+  background: #ffffff;
+  color: #b61c2f;
+}
+
+.plano-btn:hover {
+  background: #b61c2f;
+  color: #ffffff;
+}
+
+/* Bloco lateral de ajuda. */
+.help-box {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid #eeeeee;
+}
+
+.help-box h3 {
+  margin-bottom: 7px;
+  font-size: 16px;
+}
+
+.help-box p {
+  margin-bottom: 10px;
+  color: #666666;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.help-link {
+  color: #b61c2f;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 /* Ajustes para telas médias. */
-@media (max-width: 1100px) {
-  .empresa-candidatos-layout {
+@media (max-width: 920px) {
+  .empresa-wrapper {
     grid-template-columns: 1fr;
   }
 
-  .empresa-candidatos-toolbar {
-    grid-template-columns: 1fr;
-  }
-
-  .empresa-candidate-tabs {
-    justify-content: flex-start;
-  }
-
-  .empresa-candidate-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .plano-box {
+    position: static;
   }
 }
 
 /* Ajustes para telas pequenas. */
-@media (max-width: 720px) {
-  .empresa-candidatos-layout {
-    padding: 22px 16px 56px;
+@media (max-width: 640px) {
+  .empresa-container {
+    padding: 28px 14px;
   }
 
-  .empresa-candidatos-header h1 {
-    font-size: 32px;
+  .empresa-form {
+    padding: 26px 18px;
   }
 
-  .empresa-candidate-grid {
+  .form-header h1 {
+    font-size: 25px;
+  }
+
+  .grid-2,
+  .cnpj-lookup {
+    grid-template-columns: 1fr;
+  }
+
+  .criteria-list {
     grid-template-columns: 1fr;
   }
 }

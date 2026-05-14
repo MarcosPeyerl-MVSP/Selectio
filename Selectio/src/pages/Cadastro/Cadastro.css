@@ -107,7 +107,7 @@
 
 /* Marcador visual personalizado dos itens da lista. */
 .cadastro-card ul li::before {
-  content: 'â€¢';
+  content: '•';
   color: var(--primary);
   position: absolute;
   left: 0;
