@@ -8,6 +8,8 @@ import { useNavigate } from 'react-router-dom'
 import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Sidebar from '../../../components/Sidebar/Sidebar'
 import Footer from '../../../components/Footer/Footer'
+import { criarVaga } from '../../../services/firestoreVagas'
+import { getFirebaseUid, getLegacyId } from '../../../services/legacyIds'
 
 // Estado inicial do formulário de criação de vaga.
 const initialForm = {
@@ -147,10 +149,15 @@ function CriarVagaEmpresa() {
       ? `${form.salarioMin || 'A combinar'} – ${form.salarioMax || 'A combinar'}`
       : 'A combinar'
 
-    // Payload enviado para o backend com os dados da vaga.
+    const empresaUid = getFirebaseUid(empresa)
+
+    // Payload enviado ao Firestore com os dados da vaga.
     const payload = {
       titulo: form.titulo,
-      empresaId: empresa.id,
+      empresa: empresa.nomeEmpresa || empresa.nome || 'Empresa Selectio',
+      empresaId: empresaUid,
+      empresaUid,
+      empresaLegacyId: getLegacyId(empresa),
       localizacao: form.localizacao,
       salario,
       tipo: form.tipo === 'Contrato temporário'
@@ -173,24 +180,13 @@ function CriarVagaEmpresa() {
       setLoading(true)
 
       // Integração: envia a nova vaga para cadastro na API.
-      const response = await fetch('http://localhost:3333/vagas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        setMessage(data.erro || 'Erro ao criar vaga.')
-        return
-      }
+      await criarVaga(payload)
 
       setMessage('Vaga criada com sucesso.')
       setForm(initialForm)
       navigate('/vagas')
     } catch {
-      setMessage('Não foi possível conectar ao servidor.')
+      setMessage('Nao foi possivel salvar a vaga no Firestore.')
     } finally {
       setLoading(false)
     }

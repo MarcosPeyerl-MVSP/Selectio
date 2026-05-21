@@ -13,6 +13,8 @@ import {
   FaCheck,
   FaEdit,
 } from 'react-icons/fa'
+import { buscarVagaPorId } from '../../../services/firestoreVagas'
+import { getFirebaseUid } from '../../../services/legacyIds'
 
 // Responsabilidade: identificar o perfil atual com base nos dados salvos no localStorage.
 const getPerfil = () => {
@@ -69,11 +71,10 @@ function Vaga() {
       if (perfil.tipo === 'publico') return
 
       try {
-        const response = await fetch(`http://localhost:3333/vagas/${id}`)
-        if (!response.ok) {
+        const data = await buscarVagaPorId(id)
+        if (!data) {
           throw new Error('Vaga não encontrada')
         }
-        const data = await response.json()
         setVaga(data)
       } catch (err) {
         setError(err.message)
@@ -140,6 +141,8 @@ function Vaga() {
   // Regras de normalização: benefícios e requisitos podem chegar como array ou JSON serializado.
   const beneficiosArray = Array.isArray(beneficios) ? beneficios : JSON.parse(beneficios || '[]')
   const requisitosArray = Array.isArray(requisitos) ? requisitos : JSON.parse(requisitos || '[]')
+  const isOwnCompanyJob = perfil.tipo === 'empresa'
+    && String(vaga.empresaId || vaga.empresaUid || '') === String(getFirebaseUid(perfil.user))
 
   return (
     <>
@@ -200,7 +203,7 @@ function Vaga() {
             </section>
 
             <aside className="detail-aside">
-              {perfil.tipo === 'empresa' ? (
+              {perfil.tipo === 'empresa' && isOwnCompanyJob ? (
                 // Ação exibida para usuário empresa gerenciar a vaga.
                 <div className="edit-vaga-card">
                   <span className="tag edit-tag">MINHA VAGA</span>
@@ -218,9 +221,13 @@ function Vaga() {
                   <span className="tag reward-tag">RECOMPENSA POR INDICAÇÃO</span>
                   <strong>{recompensa}</strong>
                   <p>
-                    Indique um profissional qualificado. Se ele for contratado, você recebe o prêmio direto na sua conta.
+                    {perfil.tipo === 'indicador'
+                      ? 'Indique um profissional qualificado. Se ele for contratado, voce recebe o premio direto na sua conta.'
+                      : 'Esta vaga foi publicada por outra empresa e esta disponivel apenas para visualizacao.'}
                   </p>
-                  <Link className="btn-primary" to={`/indicar/${id}`}>Fazer Indicação</Link>
+                  {perfil.tipo === 'indicador' && (
+                    <Link className="btn-primary" to={`/indicar/${id}`}>Fazer Indicação</Link>
+                  )}
                 </div>
               )}
 

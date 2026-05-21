@@ -15,6 +15,7 @@ import {
 import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Sidebar from '../../../components/Sidebar/Sidebar'
 import Footer from '../../../components/Footer/Footer'
+import { getLegacyId } from '../../../services/legacyIds'
 
 // Abas de filtro exibidas na interface.
 const tabs = ['Todos', 'Indicado', 'Entrevista', 'Contratado', 'Cancelado']
@@ -83,6 +84,7 @@ function formatDate(value) {
 function CandidatosEmpresa() {
   // Mantém os dados da empresa autenticada durante a renderização da página.
   const [empresa] = useState(getEmpresa)
+  const legacyEmpresaId = getLegacyId(empresa)
 
   // Armazena candidatos retornados pela API.
   const [candidatos, setCandidatos] = useState([])
@@ -107,8 +109,14 @@ function CandidatosEmpresa() {
     const fetchCandidatos = async () => {
       if (!empresa) return
 
+      if (!legacyEmpresaId) {
+        setCandidatos([])
+        setLoading(false)
+        return
+      }
+
       try {
-        const response = await fetch(`http://localhost:3333/empresa/${empresa.id}/candidatos`)
+        const response = await fetch(`http://localhost:3333/empresa/${legacyEmpresaId}/candidatos`)
         const data = await response.json()
 
         if (!response.ok) {
@@ -124,7 +132,7 @@ function CandidatosEmpresa() {
     }
 
     fetchCandidatos()
-  }, [empresa])
+  }, [empresa, legacyEmpresaId])
 
   // Filtra candidatos por status selecionado e termo de busca.
   const candidatosFiltrados = useMemo(() => {
@@ -154,11 +162,17 @@ function CandidatosEmpresa() {
     setUpdatingId(candidatoId)
     setError('')
 
+    if (!legacyEmpresaId) {
+      setError('Atualizacao de candidatos ainda depende do perfil legado da empresa.')
+      setUpdatingId(null)
+      return
+    }
+
     try {
       const response = await fetch(`http://localhost:3333/candidatos/${candidatoId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, empresaId: empresa.id })
+        body: JSON.stringify({ status, empresaId: legacyEmpresaId })
       })
       const data = await response.json()
 

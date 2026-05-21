@@ -17,6 +17,7 @@ import {
 } from 'react-icons/fi'
 import Navbar from '../../components/Navbar/Navbar/Navbar'
 import Footer from '../../components/Footer/Footer'
+import { listarVagasBanner } from '../../services/firestoreVagas'
 
 function Home() {
   // Controla o índice da vaga atualmente exibida no banner principal.
@@ -33,16 +34,10 @@ function Home() {
     // Integração: consome o endpoint local GET /vagas/banner.
     const fetchVagas = async () => {
       try {
-        const response = await fetch('http://localhost:3333/vagas/banner')
+        const data = await listarVagasBanner()
 
         // Validação: se a resposta HTTP não for bem-sucedida,
         // o fluxo cai no tratamento de erro.
-        if (!response.ok) {
-          throw new Error('Erro ao buscar vagas')
-        }
-
-        const data = await response.json()
-
         // Atualiza a lista de vagas usadas pelo carrossel.
         setVagas(data)
       } catch {

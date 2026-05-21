@@ -18,6 +18,8 @@ import {
 import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Sidebar from '../../../components/Sidebar/Sidebar'
 import Footer from '../../../components/Footer/Footer'
+import { buscarVagaPorId } from '../../../services/firestoreVagas'
+import { getLegacyId } from '../../../services/legacyIds'
 
 // Estado inicial do formulário de indicação.
 // Contém dados pessoais, profissionais, links, habilidades, preferências e currículo.
@@ -94,6 +96,7 @@ function Indicar() {
 
   // Mantém os dados do indicador autenticado.
   const [indicador] = useState(getIndicador)
+  const legacyIndicadorId = getLegacyId(indicador)
 
   // Armazena os dados da vaga carregada pela API.
   const [vaga, setVaga] = useState(null)
@@ -116,11 +119,10 @@ function Indicar() {
       if (!indicador) return
 
       try {
-        const response = await fetch(`http://localhost:3333/vagas/${vagaId}`)
-        const data = await response.json()
+        const data = await buscarVagaPorId(vagaId)
 
-        if (!response.ok) {
-          throw new Error(data.erro || 'Vaga não encontrada')
+        if (!data) {
+          throw new Error('Vaga não encontrada')
         }
 
         setVaga(data)
@@ -193,14 +195,22 @@ function Indicar() {
     setSaving(true)
     setMessage('')
 
+    const legacyVagaId = getLegacyId(vaga)
+
+    if (!legacyIndicadorId || !legacyVagaId) {
+      setSaving(false)
+      setMessage('O envio de indicacoes ainda depende do backend legado e sera migrado em uma proxima etapa.')
+      return
+    }
+
     try {
       const response = await fetch('http://localhost:3333/candidatos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
-          indicadorId: indicador.id,
-          vagaId
+          indicadorId: legacyIndicadorId,
+          vagaId: legacyVagaId
         })
       })
       const data = await response.json().catch(() => ({}))

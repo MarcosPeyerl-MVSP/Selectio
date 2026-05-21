@@ -9,6 +9,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Sidebar from '../../../components/Sidebar/Sidebar'
 import Footer from '../../../components/Footer/Footer'
+import { buscarVagaPorId, editarVaga } from '../../../services/firestoreVagas'
+import { getFirebaseUid, getLegacyId } from '../../../services/legacyIds'
 
 // Estado inicial do formulário de edição da vaga.
 const initialForm = {
@@ -158,15 +160,14 @@ function EditarVagaEmpresa() {
     // Responsabilidade: buscar a vaga e validar se ela pertence à empresa autenticada.
     const fetchVaga = async () => {
       try {
-        const response = await fetch(`http://localhost:3333/vagas/${id}`)
-        const data = await response.json()
+        const data = await buscarVagaPorId(id)
 
-        if (!response.ok) {
-          setMessage(data.erro || 'Vaga não encontrada.')
+        if (!data) {
+          setMessage('Vaga não encontrada.')
           return
         }
 
-        if (Number(data.empresaId) !== Number(empresa.id)) {
+        if (String(data.empresaId || data.empresaUid || '') !== String(getFirebaseUid(empresa))) {
           setMessage('Esta vaga não pertence à sua empresa.')
           setCanEdit(false)
           return
@@ -258,10 +259,15 @@ function EditarVagaEmpresa() {
       ? `${form.salarioMin || 'A combinar'} - ${form.salarioMax || 'A combinar'}`
       : 'A combinar'
 
-    // Payload enviado ao backend com os dados atualizados da vaga.
+    const empresaUid = getFirebaseUid(empresa)
+
+    // Payload enviado ao Firestore com os dados atualizados da vaga.
     const payload = {
       titulo: form.titulo,
-      empresaId: empresa.id,
+      empresa: empresa.nomeEmpresa || empresa.nome || 'Empresa Selectio',
+      empresaId: empresaUid,
+      empresaUid,
+      empresaLegacyId: getLegacyId(empresa),
       localizacao: form.localizacao,
       salario,
       tipo: form.tipo === 'Contrato temporário'
@@ -282,22 +288,12 @@ function EditarVagaEmpresa() {
 
     try {
       setLoading(true)
-      const response = await fetch(`http://localhost:3333/vagas/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      const data = await response.json()
-
-      if (!response.ok) {
-        setMessage(data.erro || 'Erro ao atualizar vaga.')
-        return
-      }
+      await editarVaga(id, payload)
 
       setMessage('Vaga atualizada com sucesso.')
       navigate(`/vaga/${id}`)
     } catch {
-      setMessage('Não foi possível conectar ao servidor.')
+      setMessage('Nao foi possivel salvar a vaga no Firestore.')
     } finally {
       setLoading(false)
     }

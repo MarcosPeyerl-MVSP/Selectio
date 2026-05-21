@@ -12,6 +12,7 @@ import {
 import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Sidebar from '../../../components/Sidebar/Sidebar'
 import Footer from '../../../components/Footer/Footer'
+import { getLegacyId } from '../../../services/legacyIds'
 
 // Status disponíveis para filtro na interface.
 const statusTabs = ['Todos', 'Indicado', 'Entrevista', 'Contratado', 'Cancelado']
@@ -81,6 +82,7 @@ function normalizeText(value) {
 function Candidatos() {
   // Mantém os dados do indicador autenticado durante a renderização da página.
   const [indicador] = useState(getIndicador)
+  const legacyIndicadorId = getLegacyId(indicador)
 
   // Armazena candidatos retornados pela API.
   const [candidatos, setCandidatos] = useState([])
@@ -102,8 +104,14 @@ function Candidatos() {
     const fetchCandidatos = async () => {
       if (!indicador) return
 
+      if (!legacyIndicadorId) {
+        setCandidatos([])
+        setLoading(false)
+        return
+      }
+
       try {
-        const response = await fetch(`http://localhost:3333/indicador/${indicador.id}/candidatos`)
+        const response = await fetch(`http://localhost:3333/indicador/${legacyIndicadorId}/candidatos`)
         const data = await response.json()
 
         if (!response.ok) {
@@ -119,7 +127,7 @@ function Candidatos() {
     }
 
     fetchCandidatos()
-  }, [indicador])
+  }, [indicador, legacyIndicadorId])
 
   // Filtra candidatos por status selecionado e termo de busca.
   const candidatosFiltrados = useMemo(() => {

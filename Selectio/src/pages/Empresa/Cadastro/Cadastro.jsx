@@ -12,6 +12,7 @@ import Navbar from "../../../components/Navbar/Navbar/Navbar";
 import Footer from "../../../components/Footer/Footer";
 import { auth } from "../../../services/firebase";
 import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from "../../../services/authErrors";
+import { salvarPerfilUsuario } from "../../../services/firestoreUsers";
 
 // Opções fixas de porte/tamanho da empresa.
 const tamanhoOptions = [
@@ -293,29 +294,63 @@ export default function Cadastro() {
       firebaseUser = firebaseCredential.user;
       payload.firebaseUid = firebaseUser.uid;
 
-      const response = await fetch("http://localhost:3333/empresa/cadastro", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      let perfilEmpresa = await salvarPerfilUsuario({
+        uid: firebaseUser.uid,
+        tipo: "empresa",
+        dados: {
+          id: firebaseUser.uid,
+          nomeEmpresa: payload.nomeEmpresa,
+          razaoSocial: payload.razaoSocial,
+          cnpj: payload.cnpj,
+          email: payload.email,
+          telefone: payload.telefone,
+          site: payload.site,
+          endereco: payload.endereco,
+          setor: payload.setor,
+          tamanho: payload.tamanho,
+          formaPagamento: payload.formaPagamento,
+          dadosPagamento: payload.dadosPagamento,
+          curadoriaIA: payload.curadoriaIA,
+          plano: "Plano Electio"
+        }
       });
 
-      const data = await response.json();
+      try {
+        const response = await fetch("http://localhost:3333/empresa/cadastro", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
 
-      if (response.ok && data.sucesso) {
-        localStorage.setItem("empresaUser", JSON.stringify(data.empresa));
-        localStorage.removeItem("indicadorUser");
-        navigate("/painel/empresa");
-      } else {
-        await rollbackFirebaseUser(firebaseUser);
-        alert(data.erro || "Nao foi possivel salvar a empresa no servidor.");
+        const data = await response.json();
+
+        if (response.ok && data.sucesso) {
+          perfilEmpresa = await salvarPerfilUsuario({
+            uid: firebaseUser.uid,
+            tipo: "empresa",
+            dados: {
+              ...perfilEmpresa,
+              ...data.empresa,
+              firebaseUid: firebaseUser.uid
+            }
+          });
+        } else {
+          console.warn("Cadastro salvo no Firestore, mas o backend antigo recusou:", data.erro);
+        }
+      } catch (backendError) {
+        console.warn("Cadastro salvo no Firestore, mas o backend antigo nao respondeu:", backendError);
       }
+
+      localStorage.setItem("empresaUser", JSON.stringify(perfilEmpresa));
+      localStorage.removeItem("indicadorUser");
+      navigate("/painel/empresa");
     } catch (error) {
       await rollbackFirebaseUser(firebaseUser);
 
       if (isFirebaseAuthError(error)) {
         alert(getFirebaseAuthErrorMessage(error));
       } else {
-        alert("Falha de conexao. Verifique se o backend esta rodando em localhost:3333.");
+        alert("Nao foi possivel salvar o perfil da empresa no Firestore. Tente novamente.");
       }
     } finally {
       setSubmitLoading(false);

@@ -11,6 +11,7 @@ import { FaApple, FaEye, FaEyeSlash, FaGoogle, FaLock, FaUser } from 'react-icon
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth'
 import { auth } from '../../services/firebase'
 import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from '../../services/authErrors'
+import { buscarPerfilUsuario } from '../../services/firestoreUsers'
 
 function Login() {
   // Armazena os dados digitados no formulário de login.
@@ -55,23 +56,6 @@ function Login() {
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
-  // Responsabilidade: enviar credenciais para um endpoint de login.
-  // Integração: recebe a URL do endpoint e envia login e senha via POST JSON.
-  const requestLogin = async (url, login, senha, firebaseUid) => {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ login, senha, firebaseUid })
-    })
-
-    // Converte a resposta para JSON e retorna junto com o objeto response
-    // para permitir validação do status HTTP.
-    const data = await response.json()
-    return { response, data }
-  }
-
   // Responsabilidade: validar o formulário e executar o fluxo de autenticação.
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -94,34 +78,38 @@ function Login() {
       // Firebase Auth e a primeira camada de autenticacao do login.
       const firebaseCredential = await signInWithEmailAndPassword(auth, login, senha)
       const firebaseUid = firebaseCredential.user.uid
-      const firebaseEmail = firebaseCredential.user.email || login
       firebaseAuthenticated = true
 
-      // Primeiro tenta autenticar como indicador.
-      const indicadorLogin = await requestLogin('http://localhost:3333/indicador/login', firebaseEmail, senha, firebaseUid)
+      // Busca o perfil do usuario no Firestore apos autenticar no Firebase.
+      const perfil = await buscarPerfilUsuario(firebaseUid)
 
-      if (indicadorLogin.response.ok) {
+      if (!perfil) {
+        await signOut(auth)
+        setError('Sua conta existe no Firebase, mas ainda nao possui perfil no Selectio.')
+        setLoading(false)
+        return
+      }
+
+      if (perfil.tipo === 'indicador') {
         // Regra de sessão: salva indicador autenticado e remove sessão de empresa.
-        localStorage.setItem('indicadorUser', JSON.stringify(indicadorLogin.data))
+        localStorage.setItem('indicadorUser', JSON.stringify(perfil))
         localStorage.removeItem('empresaUser')
         navigate(redirectTo || '/painel/indicador')
         return
       }
 
-      // Caso não autentique como indicador, tenta autenticar como empresa.
-      const empresaLogin = await requestLogin('http://localhost:3333/empresa/login', firebaseEmail, senha, firebaseUid)
-
-      if (!empresaLogin.response.ok) {
+      // Apenas perfis conhecidos entram na aplicacao.
+      if (perfil.tipo !== 'empresa') {
         await signOut(auth)
 
-        // Exibe erro retornado pela API ou mensagem padrão.
-        setError('Conta autenticada, mas nao encontramos seu perfil local no Selectio.')
+        // Exibe uma mensagem amigavel para perfil inconsistente.
+        setError('Perfil de usuario invalido. Entre em contato com o suporte da Selectio.')
         setLoading(false)
         return
       }
 
       // Regra de sessão: salva empresa autenticada e remove sessão de indicador.
-      localStorage.setItem('empresaUser', JSON.stringify(empresaLogin.data))
+      localStorage.setItem('empresaUser', JSON.stringify(perfil))
       localStorage.removeItem('indicadorUser')
       navigate(redirectTo || '/painel/empresa')
     } catch (error) {
@@ -133,7 +121,7 @@ function Login() {
           await signOut(auth).catch(() => {})
         }
 
-        setError('Nao foi possivel conectar ao servidor local. Verifique se o backend esta rodando em localhost:3333.')
+        setError('Nao foi possivel buscar seu perfil no Firestore. Verifique sua conexao e tente novamente.')
       }
 
       setLoading(false)

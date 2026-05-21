@@ -11,6 +11,7 @@ import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Footer from '../../../components/Footer/Footer'
 import { auth } from '../../../services/firebase'
 import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from '../../../services/authErrors'
+import { salvarPerfilUsuario } from '../../../services/firestoreUsers'
 
 // Critérios exibidos e validados para classificar a força da senha.
 const passwordCriteria = [
@@ -209,34 +210,57 @@ function CadastroIndicador() {
       firebaseUser = firebaseCredential.user
       payload.firebaseUid = firebaseUser.uid
 
-      // Integração: envia os dados do indicador para criação de conta.
-      const response = await fetch('http://localhost:3333/indicador/cadastro', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+      let perfilIndicador = await salvarPerfilUsuario({
+        uid: firebaseUser.uid,
+        tipo: 'indicador',
+        dados: {
+          id: firebaseUser.uid,
+          nome: payload.nome,
+          email: payload.email,
+          cpf: payload.cpf,
+          pix: payload.pix,
+          dataNascimento: payload.dataNascimento
+        }
       })
 
-      const data = await response.json()
+      // Mantem o backend antigo sincronizado quando ele estiver disponivel.
+      try {
+        const response = await fetch('http://localhost:3333/indicador/cadastro', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
 
-      if (response.ok && data.sucesso) {
-        // Regra de sessão: salva indicador autenticado e remove sessão de empresa.
-        localStorage.setItem('indicadorUser', JSON.stringify(data.indicador))
-        localStorage.removeItem('empresaUser')
+        const data = await response.json()
 
-        // Redireciona para o painel do indicador após o cadastro.
-        navigate('/painel/indicador')
-      } else {
-        // Exibe erro retornado pela API ou mensagem padrão.
-        await rollbackFirebaseUser(firebaseUser)
-        alert(data.erro || 'Nao foi possivel salvar o indicador no servidor.')
+        if (response.ok && data.sucesso) {
+          perfilIndicador = await salvarPerfilUsuario({
+            uid: firebaseUser.uid,
+            tipo: 'indicador',
+            dados: {
+              ...perfilIndicador,
+              ...data.indicador,
+              firebaseUid: firebaseUser.uid
+            }
+          })
+          console.info('Cadastro sincronizado com o backend antigo.')
+        } else {
+          console.warn('Cadastro salvo no Firestore, mas o backend antigo recusou:', data.erro)
+        }
+      } catch (backendError) {
+        console.warn('Cadastro salvo no Firestore, mas o backend antigo nao respondeu:', backendError)
       }
+
+      localStorage.setItem('indicadorUser', JSON.stringify(perfilIndicador))
+      localStorage.removeItem('empresaUser')
+      navigate('/painel/indicador')
     } catch (error) {
       await rollbackFirebaseUser(firebaseUser)
 
       if (isFirebaseAuthError(error)) {
         alert(getFirebaseAuthErrorMessage(error))
       } else {
-        alert('Falha de conexao. Verifique se o backend esta rodando em localhost:3333.')
+        alert('Nao foi possivel salvar o perfil do indicador no Firestore. Tente novamente.')
       }
     } finally {
       setSubmitLoading(false)

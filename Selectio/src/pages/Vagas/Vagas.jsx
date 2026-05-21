@@ -9,6 +9,8 @@ import Navbar from '../../components/Navbar/Navbar/Navbar'
 import Sidebar from '../../components/Sidebar/Sidebar'
 import Footer from '../../components/Footer/Footer'
 import { FiSearch } from 'react-icons/fi'
+import { listarVagas } from '../../services/firestoreVagas'
+import { getFirebaseUid } from '../../services/legacyIds'
 
 // Responsabilidade: formatar o valor digitado no filtro de salário como moeda brasileira.
 const formatCurrencyFilter = (value) => {
@@ -90,10 +92,7 @@ function Vagas() {
     // Responsabilidade: buscar a lista de vagas cadastradas.
     const fetchVagas = async () => {
       try {
-        const response = await fetch('http://localhost:3333/vagas')
-        if (!response.ok) throw new Error('Erro ao buscar vagas')
-
-        const data = await response.json()
+        const data = await listarVagas()
         setVagas(data)
       } catch (err) {
         setError(err.message)
@@ -209,7 +208,7 @@ function Vagas() {
           {!loading && !error && vagasFiltradas.map((vaga) => {
             // Regra: empresa proprietária da vaga recebe ação de gerenciamento.
             const isOwnCompanyJob = session.type === 'empresa'
-              && Number(vaga.empresaId) === Number(session.user?.id)
+              && String(vaga.empresaId || vaga.empresaUid || '') === String(getFirebaseUid(session.user))
             const empresaActionLabel = isOwnCompanyJob ? 'Gerenciar vaga' : 'Ver vaga'
 
             // Fluxo: usuários públicos são direcionados ao login antes de ver detalhes.
