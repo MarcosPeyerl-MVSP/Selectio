@@ -13,6 +13,7 @@ db.serialize(() => {
       nome TEXT NOT NULL,
       email TEXT UNIQUE NOT NULL,
       senha TEXT NOT NULL,
+      firebase_uid TEXT,
       cpf TEXT,
       pix TEXT,
       data_nascimento TEXT,
@@ -27,6 +28,7 @@ db.serialize(() => {
       razao_social TEXT,
       cnpj TEXT UNIQUE NOT NULL,
       senha TEXT,
+      firebase_uid TEXT,
 
       email TEXT NOT NULL,
       telefone TEXT,
@@ -51,6 +53,30 @@ db.serialize(() => {
       console.error('Erro ao garantir coluna senha em empresas:', err.message)
     }
   })
+
+  db.run(`ALTER TABLE empresas ADD COLUMN firebase_uid TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Erro ao garantir coluna firebase_uid em empresas:', err.message)
+    }
+  })
+
+  db.run(`ALTER TABLE indicadores ADD COLUMN firebase_uid TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Erro ao garantir coluna firebase_uid em indicadores:', err.message)
+    }
+  })
+
+  db.run(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_empresas_firebase_uid
+    ON empresas (firebase_uid)
+    WHERE firebase_uid IS NOT NULL
+  `)
+
+  db.run(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_indicadores_firebase_uid
+    ON indicadores (firebase_uid)
+    WHERE firebase_uid IS NOT NULL
+  `)
 
   db.run(`
     CREATE TABLE IF NOT EXISTS vagas (

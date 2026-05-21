@@ -8,6 +8,9 @@ import Footer from '../../components/Footer/Footer'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { FaApple, FaEye, FaEyeSlash, FaGoogle, FaLock, FaUser } from 'react-icons/fa'
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth'
+import { auth } from '../../services/firebase'
+import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from '../../services/authErrors'
 
 function Login() {
   // Armazena os dados digitados no formulário de login.
@@ -54,13 +57,13 @@ function Login() {
 
   // Responsabilidade: enviar credenciais para um endpoint de login.
   // Integração: recebe a URL do endpoint e envia login e senha via POST JSON.
-  const requestLogin = async (url) => {
+  const requestLogin = async (url, login, senha, firebaseUid) => {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ login: form.login, senha: form.senha })
+      body: JSON.stringify({ login, senha, firebaseUid })
     })
 
     // Converte a resposta para JSON e retorna junto com o objeto response
@@ -74,17 +77,28 @@ function Login() {
     event.preventDefault()
     setError('')
 
+    const login = form.login.trim()
+    const senha = form.senha
+
     // Validação obrigatória: login e senha precisam estar preenchidos.
-    if (!form.login || !form.senha) {
-      setError('Preencha e-mail/usuario e senha.')
+    if (!login || !senha) {
+      setError('Preencha e-mail e senha.')
       return
     }
+
+    let firebaseAuthenticated = false
 
     try {
       setLoading(true)
 
+      // Firebase Auth e a primeira camada de autenticacao do login.
+      const firebaseCredential = await signInWithEmailAndPassword(auth, login, senha)
+      const firebaseUid = firebaseCredential.user.uid
+      const firebaseEmail = firebaseCredential.user.email || login
+      firebaseAuthenticated = true
+
       // Primeiro tenta autenticar como indicador.
-      const indicadorLogin = await requestLogin('http://localhost:3333/indicador/login')
+      const indicadorLogin = await requestLogin('http://localhost:3333/indicador/login', firebaseEmail, senha, firebaseUid)
 
       if (indicadorLogin.response.ok) {
         // Regra de sessão: salva indicador autenticado e remove sessão de empresa.
@@ -95,11 +109,13 @@ function Login() {
       }
 
       // Caso não autentique como indicador, tenta autenticar como empresa.
-      const empresaLogin = await requestLogin('http://localhost:3333/empresa/login')
+      const empresaLogin = await requestLogin('http://localhost:3333/empresa/login', firebaseEmail, senha, firebaseUid)
 
       if (!empresaLogin.response.ok) {
+        await signOut(auth)
+
         // Exibe erro retornado pela API ou mensagem padrão.
-        setError(empresaLogin.data.erro || 'Erro ao entrar. Verifique seus dados.')
+        setError('Conta autenticada, mas nao encontramos seu perfil local no Selectio.')
         setLoading(false)
         return
       }
@@ -108,9 +124,18 @@ function Login() {
       localStorage.setItem('empresaUser', JSON.stringify(empresaLogin.data))
       localStorage.removeItem('indicadorUser')
       navigate(redirectTo || '/painel/empresa')
-    } catch {
+    } catch (error) {
       // Tratamento de erro para falha de conexão com o servidor.
-      setError('Nao foi possivel conectar ao servidor. Tente novamente.')
+      if (isFirebaseAuthError(error)) {
+        setError(getFirebaseAuthErrorMessage(error))
+      } else {
+        if (firebaseAuthenticated) {
+          await signOut(auth).catch(() => {})
+        }
+
+        setError('Nao foi possivel conectar ao servidor local. Verifique se o backend esta rodando em localhost:3333.')
+      }
+
       setLoading(false)
     }
   }
@@ -127,12 +152,12 @@ function Login() {
           {/* Formulário principal de autenticação. */}
           <form className="login-form" onSubmit={handleSubmit}>
             <label>
-              E-mail, usuario ou CNPJ
+              E-mail
               <div className="input-group">
                 <span className="input-icon"><FaUser /></span>
                 <input
                   name="login"
-                  type="text"
+                  type="email"
                   placeholder="seu@email.com"
                   value={form.login}
                   onChange={handleChange}

@@ -6,8 +6,11 @@ import './Cadastro.css'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FaCheck, FaEye, FaEyeSlash, FaTimes } from 'react-icons/fa'
+import { createUserWithEmailAndPassword, deleteUser } from 'firebase/auth'
 import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Footer from '../../../components/Footer/Footer'
+import { auth } from '../../../services/firebase'
+import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from '../../../services/authErrors'
 
 // Critérios exibidos e validados para classificar a força da senha.
 const passwordCriteria = [
@@ -35,6 +38,16 @@ const strengthCopy = {
   }
 }
 
+const rollbackFirebaseUser = async (firebaseUser) => {
+  if (!firebaseUser) return
+
+  try {
+    await deleteUser(firebaseUser)
+  } catch {
+    // O cadastro local nao deve travar se o rollback no Firebase falhar.
+  }
+}
+
 function CadastroIndicador() {
   // Hook usado para redirecionar o usuário após cadastro bem-sucedido.
   const navigate = useNavigate()
@@ -59,6 +72,8 @@ function CadastroIndicador() {
 
   // Controla a visibilidade do campo de confirmação de senha.
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  const [submitLoading, setSubmitLoading] = useState(false)
 
   // Responsabilidade: aplicar máscara de CPF no formato 000.000.000-00.
   function formatCPF(value) {
@@ -132,7 +147,7 @@ function CadastroIndicador() {
 
   // Regra de envio: o botão só fica apto quando a senha informada for forte.
   const isPasswordStrong = passwordStrength?.strength === 'forte'
-  const canSubmit = !form.senha || isPasswordStrong
+  const canSubmit = isPasswordStrong && !submitLoading
 
   // Responsabilidade: atualizar campos do formulário e executar formatações/validações em tempo real.
   function handleChange(e) {
@@ -164,6 +179,11 @@ function CadastroIndicador() {
       return
     }
 
+    if (!isPasswordStrong) {
+      alert('Crie uma senha forte antes de cadastrar.')
+      return
+    }
+
     // Validação: CPF informado precisa ser válido.
     if (form.cpf && !validarCPF(form.cpf)) {
       setForm({ ...form, cpfError: 'CPF inválido' })
@@ -174,26 +194,52 @@ function CadastroIndicador() {
     const payload = { ...form }
     delete payload.confirmarSenha
     delete payload.cpfError
+    payload.email = payload.email.trim()
 
-    // Integração: envia os dados do indicador para criação de conta.
-    const response = await fetch('http://localhost:3333/indicador/cadastro', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
+    let firebaseUser = null
 
-    const data = await response.json()
+    try {
+      setSubmitLoading(true)
 
-    if (data.sucesso) {
-      // Regra de sessão: salva indicador autenticado e remove sessão de empresa.
-      localStorage.setItem('indicadorUser', JSON.stringify(data.indicador))
-      localStorage.removeItem('empresaUser')
+      const firebaseCredential = await createUserWithEmailAndPassword(
+        auth,
+        payload.email,
+        form.senha
+      )
+      firebaseUser = firebaseCredential.user
+      payload.firebaseUid = firebaseUser.uid
 
-      // Redireciona para o painel do indicador após o cadastro.
-      navigate('/painel/indicador')
-    } else {
-      // Exibe erro retornado pela API ou mensagem padrão.
-      alert(data.erro || 'Erro ao cadastrar')
+      // Integração: envia os dados do indicador para criação de conta.
+      const response = await fetch('http://localhost:3333/indicador/cadastro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.sucesso) {
+        // Regra de sessão: salva indicador autenticado e remove sessão de empresa.
+        localStorage.setItem('indicadorUser', JSON.stringify(data.indicador))
+        localStorage.removeItem('empresaUser')
+
+        // Redireciona para o painel do indicador após o cadastro.
+        navigate('/painel/indicador')
+      } else {
+        // Exibe erro retornado pela API ou mensagem padrão.
+        await rollbackFirebaseUser(firebaseUser)
+        alert(data.erro || 'Nao foi possivel salvar o indicador no servidor.')
+      }
+    } catch (error) {
+      await rollbackFirebaseUser(firebaseUser)
+
+      if (isFirebaseAuthError(error)) {
+        alert(getFirebaseAuthErrorMessage(error))
+      } else {
+        alert('Falha de conexao. Verifique se o backend esta rodando em localhost:3333.')
+      }
+    } finally {
+      setSubmitLoading(false)
     }
   }
 
@@ -339,7 +385,7 @@ function CadastroIndicador() {
 
             {/* Botão de envio bloqueado quando a senha ainda não é forte. */}
             <button type="submit" className="btn-primary" disabled={!canSubmit}>
-              {isPasswordStrong ? 'Criar conta →' : 'Complete a senha forte'}
+              {submitLoading ? 'Criando conta...' : isPasswordStrong ? 'Criar conta →' : 'Complete a senha forte'}
             </button>
           </form>
         </div>

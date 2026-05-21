@@ -4,8 +4,22 @@ const db = require('./database.cjs')
 
 const router = express.Router()
 
+const normalizeFirebaseUid = (firebaseUid) => {
+  return typeof firebaseUid === 'string' ? firebaseUid.trim() : ''
+}
+
+const vincularFirebaseUid = (table, id, firebaseUid) => {
+  if (!firebaseUid) return
+
+  db.run(
+    `UPDATE ${table} SET firebase_uid = ? WHERE id = ? AND (firebase_uid IS NULL OR firebase_uid = '')`,
+    [firebaseUid, id]
+  )
+}
+
 router.post('/indicador/cadastro', async (req, res) => {
-  const { nome, email, senha, cpf, pix, dataNascimento } = req.body
+  const { nome, email, senha, firebaseUid, cpf, pix, dataNascimento } = req.body
+  const normalizedFirebaseUid = normalizeFirebaseUid(firebaseUid)
 
   if (!nome || !email || !senha) {
     return res.status(400).json({
@@ -16,13 +30,13 @@ router.post('/indicador/cadastro', async (req, res) => {
   const senhaHash = await bcrypt.hash(senha, 10)
 
   const sql = `
-    INSERT INTO indicadores (nome, email, senha, cpf, pix, data_nascimento)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO indicadores (nome, email, senha, firebase_uid, cpf, pix, data_nascimento)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `
 
   db.run(
     sql,
-    [nome, email, senhaHash, cpf, pix, dataNascimento],
+    [nome, email, senhaHash, normalizedFirebaseUid || null, cpf, pix, dataNascimento],
     function (err) {
       if (err) {
         return res.status(500).json({
@@ -36,6 +50,7 @@ router.post('/indicador/cadastro', async (req, res) => {
           id: this.lastID,
           nome,
           email,
+          firebaseUid: normalizedFirebaseUid || null,
           cpf,
           pix,
           dataNascimento
@@ -51,6 +66,7 @@ router.post('/empresa/cadastro', async (req, res) => {
     razaoSocial,
     cnpj,
     senha,
+    firebaseUid,
     email,
     telefone,
     site,
@@ -61,6 +77,7 @@ router.post('/empresa/cadastro', async (req, res) => {
     dadosPagamento,
     curadoriaIA
   } = req.body
+  const normalizedFirebaseUid = normalizeFirebaseUid(firebaseUid)
 
   if (!nomeEmpresa || !cnpj || !email || !senha) {
     return res.status(400).json({
@@ -87,6 +104,7 @@ router.post('/empresa/cadastro', async (req, res) => {
       razao_social,
       cnpj,
       senha,
+      firebase_uid,
       email,
       telefone,
       site,
@@ -97,7 +115,7 @@ router.post('/empresa/cadastro', async (req, res) => {
       dados_pagamento,
       curadoria_ia
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `
 
   db.run(
@@ -107,6 +125,7 @@ router.post('/empresa/cadastro', async (req, res) => {
       razaoSocial,
       cnpj,
       senhaHash,
+      normalizedFirebaseUid || null,
       email,
       telefone,
       site,
@@ -131,6 +150,7 @@ router.post('/empresa/cadastro', async (req, res) => {
           nomeEmpresa,
           razaoSocial,
           cnpj,
+          firebaseUid: normalizedFirebaseUid || null,
           email,
           telefone,
           site,
@@ -145,36 +165,60 @@ router.post('/empresa/cadastro', async (req, res) => {
 })
 
 router.post('/empresa/login', async (req, res) => {
-  const { login, senha } = req.body
+  const { login, senha, firebaseUid } = req.body
+  const normalizedLogin = String(login || '').trim()
+  const normalizedFirebaseUid = normalizeFirebaseUid(firebaseUid)
 
-  if (!login || !senha) {
+  if ((!normalizedLogin && !normalizedFirebaseUid) || (!senha && !normalizedFirebaseUid)) {
     return res.status(400).json({
       erro: 'E-mail/CNPJ e senha sao obrigatorios'
     })
   }
 
-  const cnpj = String(login).replace(/\D/g, '')
-  const sql = `SELECT * FROM empresas WHERE email = ? OR cnpj = ? OR nome_empresa = ?`
+  const cnpj = String(normalizedLogin).replace(/\D/g, '')
+  const sql = `
+    SELECT * FROM empresas
+    WHERE firebase_uid = ? OR email = ? OR cnpj = ? OR nome_empresa = ?
+  `
 
-  db.get(sql, [login, cnpj || login, login], async (err, row) => {
+  db.get(sql, [normalizedFirebaseUid || null, normalizedLogin, cnpj || normalizedLogin, normalizedLogin], async (err, row) => {
     if (err) {
       return res.status(500).json({
         erro: 'Erro ao buscar empresa no banco'
       })
     }
 
-    if (!row || !row.senha) {
+    if (!row) {
       return res.status(401).json({
         erro: 'Empresa ou senha invalidos'
       })
     }
 
-    const senhaValida = await bcrypt.compare(senha, row.senha)
+    if (normalizedFirebaseUid) {
+      if (row.firebase_uid && row.firebase_uid !== normalizedFirebaseUid) {
+        return res.status(401).json({
+          erro: 'Esta empresa esta vinculada a outra conta Firebase'
+        })
+      }
 
-    if (!senhaValida) {
-      return res.status(401).json({
-        erro: 'Empresa ou senha invalidos'
-      })
+      if (!row.firebase_uid) {
+        vincularFirebaseUid('empresas', row.id, normalizedFirebaseUid)
+        row.firebase_uid = normalizedFirebaseUid
+      }
+    } else {
+      if (!row.senha) {
+        return res.status(401).json({
+          erro: 'Empresa ou senha invalidos'
+        })
+      }
+
+      const senhaValida = await bcrypt.compare(senha, row.senha)
+
+      if (!senhaValida) {
+        return res.status(401).json({
+          erro: 'Empresa ou senha invalidos'
+        })
+      }
     }
 
     res.json({
@@ -182,6 +226,7 @@ router.post('/empresa/login', async (req, res) => {
       nomeEmpresa: row.nome_empresa,
       razaoSocial: row.razao_social,
       cnpj: row.cnpj,
+      firebaseUid: row.firebase_uid || null,
       email: row.email,
       telefone: row.telefone,
       site: row.site,
@@ -195,17 +240,22 @@ router.post('/empresa/login', async (req, res) => {
 })
 
 router.post('/indicador/login', async (req, res) => {
-  const { login, senha } = req.body
+  const { login, senha, firebaseUid } = req.body
+  const normalizedLogin = String(login || '').trim()
+  const normalizedFirebaseUid = normalizeFirebaseUid(firebaseUid)
 
-  if (!login || !senha) {
+  if ((!normalizedLogin && !normalizedFirebaseUid) || (!senha && !normalizedFirebaseUid)) {
     return res.status(400).json({
       erro: 'E-mail/usuario e senha sao obrigatorios'
     })
   }
 
-  const sql = `SELECT * FROM indicadores WHERE email = ? OR nome = ?`
+  const sql = `
+    SELECT * FROM indicadores
+    WHERE firebase_uid = ? OR email = ? OR nome = ?
+  `
 
-  db.get(sql, [login, login], async (err, row) => {
+  db.get(sql, [normalizedFirebaseUid || null, normalizedLogin, normalizedLogin], async (err, row) => {
     if (err) {
       return res.status(500).json({
         erro: 'Erro ao buscar usuario no banco'
@@ -218,18 +268,32 @@ router.post('/indicador/login', async (req, res) => {
       })
     }
 
-    const senhaValida = await bcrypt.compare(senha, row.senha)
+    if (normalizedFirebaseUid) {
+      if (row.firebase_uid && row.firebase_uid !== normalizedFirebaseUid) {
+        return res.status(401).json({
+          erro: 'Este indicador esta vinculado a outra conta Firebase'
+        })
+      }
 
-    if (!senhaValida) {
-      return res.status(401).json({
-        erro: 'E-mail/usuario ou senha invalidos'
-      })
+      if (!row.firebase_uid) {
+        vincularFirebaseUid('indicadores', row.id, normalizedFirebaseUid)
+        row.firebase_uid = normalizedFirebaseUid
+      }
+    } else {
+      const senhaValida = await bcrypt.compare(senha, row.senha)
+
+      if (!senhaValida) {
+        return res.status(401).json({
+          erro: 'E-mail/usuario ou senha invalidos'
+        })
+      }
     }
 
     const user = {
       id: row.id,
       nome: row.nome,
       email: row.email,
+      firebaseUid: row.firebase_uid || null,
       cpf: row.cpf,
       pix: row.pix,
       dataNascimento: row.data_nascimento
@@ -242,7 +306,7 @@ router.post('/indicador/login', async (req, res) => {
 router.get('/indicador/:id', (req, res) => {
   const { id } = req.params
 
-  const sql = `SELECT id, nome, email, cpf, pix, data_nascimento FROM indicadores WHERE id = ?`
+  const sql = `SELECT id, nome, email, firebase_uid, cpf, pix, data_nascimento FROM indicadores WHERE id = ?`
 
   db.get(sql, [id], (err, row) => {
     if (err) {
@@ -261,6 +325,7 @@ router.get('/indicador/:id', (req, res) => {
       id: row.id,
       nome: row.nome,
       email: row.email,
+      firebaseUid: row.firebase_uid || null,
       cpf: row.cpf,
       pix: row.pix,
       dataNascimento: row.data_nascimento

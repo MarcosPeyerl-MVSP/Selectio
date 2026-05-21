@@ -6,9 +6,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Cadastro.css";
 import { FaCheck, FaEye, FaEyeSlash, FaTimes } from "react-icons/fa";
+import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 
 import Navbar from "../../../components/Navbar/Navbar/Navbar";
 import Footer from "../../../components/Footer/Footer";
+import { auth } from "../../../services/firebase";
+import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from "../../../services/authErrors";
 
 // Opções fixas de porte/tamanho da empresa.
 const tamanhoOptions = [
@@ -42,6 +45,16 @@ const strengthCopy = {
     label: "forte",
     hint: "Senha pronta para proteger o acesso da empresa.",
   },
+};
+
+const rollbackFirebaseUser = async (firebaseUser) => {
+  if (!firebaseUser) return;
+
+  try {
+    await deleteUser(firebaseUser);
+  } catch {
+    // O cadastro local nao deve travar se o rollback no Firebase falhar.
+  }
 };
 
 export default function Cadastro() {
@@ -82,6 +95,8 @@ export default function Cadastro() {
   // Controla a visibilidade do campo de confirmação de senha.
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const [submitLoading, setSubmitLoading] = useState(false);
+
   // Mantém opções vindas da API caso o porte retornado não exista na lista fixa.
   const tamanhoSelectOptions = form.tamanho && !tamanhoOptions.includes(form.tamanho)
     ? [form.tamanho, ...tamanhoOptions]
@@ -101,7 +116,7 @@ export default function Cadastro() {
 
   // Regra de envio: o cadastro só pode ser enviado com senha forte.
   const isPasswordStrong = passwordStrength?.strength === "forte";
-  const canSubmit = isPasswordStrong;
+  const canSubmit = isPasswordStrong && !submitLoading;
 
   // Responsabilidade: aplicar máscara de CNPJ no formato 00.000.000/0000-00.
   const formatCNPJ = (value) => {
@@ -253,7 +268,7 @@ export default function Cadastro() {
       nomeEmpresa: form.nome,
       razaoSocial: form.razao,
       cnpj: getCnpjNumbers(form.cnpj),
-      email: form.email,
+      email: form.email.trim(),
       telefone: form.telefone,
       site: form.site,
       endereco: form.endereco,
@@ -265,7 +280,19 @@ export default function Cadastro() {
       curadoriaIA: form.ia,
     };
 
+    let firebaseUser = null;
+
     try {
+      setSubmitLoading(true);
+
+      const firebaseCredential = await createUserWithEmailAndPassword(
+        auth,
+        payload.email,
+        form.senha
+      );
+      firebaseUser = firebaseCredential.user;
+      payload.firebaseUid = firebaseUser.uid;
+
       const response = await fetch("http://localhost:3333/empresa/cadastro", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -274,15 +301,24 @@ export default function Cadastro() {
 
       const data = await response.json();
 
-      if (data.sucesso) {
+      if (response.ok && data.sucesso) {
         localStorage.setItem("empresaUser", JSON.stringify(data.empresa));
         localStorage.removeItem("indicadorUser");
         navigate("/painel/empresa");
       } else {
-        alert(data.erro || "Erro ao cadastrar empresa");
+        await rollbackFirebaseUser(firebaseUser);
+        alert(data.erro || "Nao foi possivel salvar a empresa no servidor.");
       }
-    } catch {
-      alert("Erro de conexão com o servidor");
+    } catch (error) {
+      await rollbackFirebaseUser(firebaseUser);
+
+      if (isFirebaseAuthError(error)) {
+        alert(getFirebaseAuthErrorMessage(error));
+      } else {
+        alert("Falha de conexao. Verifique se o backend esta rodando em localhost:3333.");
+      }
+    } finally {
+      setSubmitLoading(false);
     }
   };
 
@@ -614,7 +650,7 @@ export default function Cadastro() {
             </div>
 
             <button type="submit" className="submit-button" disabled={!canSubmit}>
-              {isPasswordStrong ? "Cadastrar empresa" : "Complete a senha forte"}
+              {submitLoading ? "Cadastrando..." : isPasswordStrong ? "Cadastrar empresa" : "Complete a senha forte"}
             </button>
           </form>
 
