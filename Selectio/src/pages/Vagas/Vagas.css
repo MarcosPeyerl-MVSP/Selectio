@@ -31,6 +31,7 @@
 .vagas-header {
   max-width: 900px;
   margin-bottom: 40px;
+  animation: selectioSlideUp 0.48s var(--ease-premium) both;
 }
 
 .vagas-header h1 {
@@ -54,6 +55,7 @@
   background: #f7f7f7;
   padding: 16px;
   border-radius: 10px;
+  animation: selectioSlideUp 0.48s var(--ease-premium) 0.08s both;
 }
 
 /* Container visual de cada campo de filtro. */
@@ -64,6 +66,8 @@
   background: white;
   padding: 12px;
   border-radius: 8px;
+  border: 1px solid transparent;
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast);
 }
 
 .filtro-input input {
@@ -83,6 +87,14 @@
   border: none;
   color: #333;
   cursor: pointer;
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast);
+}
+
+.filtro-input:focus-within,
+.filtro-select:focus {
+  border-color: rgba(182, 28, 47, 0.28);
+  box-shadow: 0 0 0 3px rgba(182, 28, 47, 0.1);
+  transform: translateY(-1px);
 }
 
 /* Botão usado para limpar filtros. */
@@ -94,12 +106,13 @@
   border-radius: 8px;
   font-weight: 700;
   cursor: pointer;
-  transition: 0.3s;
+  transition: background var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast);
 }
 
 .btn-filtrar:hover {
   transform: translateY(-2px);
   background: var(--primary-dark);
+  box-shadow: 0 14px 28px rgba(182, 28, 47, 0.18);
 }
 
 /* GRID */
@@ -119,11 +132,27 @@
   border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 12px 30px rgba(0,0,0,0.05);
-  transition: 0.3s;
+  animation: selectioSlideUp 0.44s var(--ease-premium) both;
+  transition: transform var(--motion-base), box-shadow var(--motion-base);
 }
 
 .vaga-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-hover);
+}
+
+.vagas-grid .vaga-card:nth-child(2) {
+  animation-delay: 0.06s;
+}
+
+.vagas-grid .vaga-card:nth-child(3) {
+  animation-delay: 0.12s;
+}
+
+.vagas-grid .vaga-card:nth-child(4),
+.vagas-grid .vaga-card:nth-child(5),
+.vagas-grid .vaga-card:nth-child(6) {
+  animation-delay: 0.16s;
 }
 
 .vaga-card > a {
@@ -135,6 +164,12 @@
   height: 160px;
   background-size: cover;
   background-position: center;
+  transition: transform var(--motion-base), filter var(--motion-base);
+}
+
+.vaga-card:hover .vaga-img {
+  transform: scale(1.025);
+  filter: saturate(1.04);
 }
 
 /* Área textual do card de vaga. */
@@ -182,10 +217,18 @@
   background: var(--primary);
   color: #fff;
   font-weight: 800;
+  transition: background var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast);
 }
 
 .vaga-action-primary {
   width: 100%;
+}
+
+.vaga-action-primary:hover,
+.btn-criar-vaga:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(182, 28, 47, 0.18);
 }
 
 /* Cabeçalho com distribuição horizontal para título e ações. */
@@ -203,6 +246,7 @@
   border: 1px solid #eee;
   border-radius: 10px;
   background: #fff;
+  animation: selectioFadeIn 0.32s ease both;
 }
 
 /* RESPONSIVO */

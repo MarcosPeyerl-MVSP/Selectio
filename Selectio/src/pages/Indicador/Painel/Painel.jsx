@@ -9,7 +9,9 @@ import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Sidebar from '../../../components/Sidebar/Sidebar'
 import Footer from '../../../components/Footer/Footer'
 import { FaChartBar, FaSuitcase, FaUserFriends, FaUserTie } from 'react-icons/fa'
-import { getLegacyId } from '../../../services/legacyIds'
+import { buscarStatusIndicador } from '../../../services/firestoreIndicacoes'
+import { buscarPerfilUsuario } from '../../../services/firestoreUsers'
+import { getFirebaseUid } from '../../../services/legacyIds'
 
 // Responsabilidade: formatar valores numéricos como moeda brasileira.
 const formatCurrency = (value) => Number(value || 0).toLocaleString('pt-BR', {
@@ -44,7 +46,7 @@ function Painel() {
 
   // Armazena os dados estatísticos do indicador.
   const [status, setStatus] = useState(emptyStatus)
-  const legacyIndicadorId = getLegacyId(user)
+  const indicadorUid = getFirebaseUid(user)
 
   useEffect(() => {
     // Regra de acesso: sem indicador autenticado, redireciona para login.
@@ -54,28 +56,21 @@ function Painel() {
   }, [navigate, user])
 
   useEffect(() => {
-    if (!user?.id || !legacyIndicadorId) return
+    if (!indicadorUid) return
 
     // Responsabilidade: buscar os dados atualizados do indicador autenticado.
     const fetchCurrentUser = async () => {
       try {
-        const response = await fetch(`http://localhost:3333/indicador/${legacyIndicadorId}`)
-        if (!response.ok) {
-          // Se o usuário não for encontrado ou a sessão estiver inválida,
-          // remove o dado local e redireciona para login.
-          return
-        }
+        const perfil = await buscarPerfilUsuario(indicadorUid)
+        if (!perfil) return
 
-        const data = await response.json()
         setUser((currentUser) => {
           const mergedUser = {
             ...currentUser,
-            ...data,
-            id: data.id,
-            legacyId: data.id,
-            sqliteId: data.id,
-            uid: currentUser.uid,
-            firebaseUid: currentUser.firebaseUid || currentUser.uid
+            ...perfil,
+            id: perfil.id || indicadorUid,
+            uid: indicadorUid,
+            firebaseUid: indicadorUid
           }
 
           localStorage.setItem('indicadorUser', JSON.stringify(mergedUser))
@@ -87,20 +82,15 @@ function Painel() {
     }
 
     fetchCurrentUser()
-  }, [user?.id, user?.uid, user?.firebaseUid, legacyIndicadorId])
+  }, [indicadorUid])
 
   useEffect(() => {
-    if (!user?.id) return
-
-    if (!legacyIndicadorId) return
+    if (!indicadorUid) return
 
     // Responsabilidade: buscar as métricas do painel do indicador.
     const fetchStatus = async () => {
       try {
-        const response = await fetch(`http://localhost:3333/indicador/${legacyIndicadorId}/status`)
-        if (!response.ok) return
-
-        const data = await response.json()
+        const data = await buscarStatusIndicador(indicadorUid)
         setStatus(data)
       } catch (error) {
         console.error('Erro ao buscar status do indicador:', error)
@@ -108,7 +98,7 @@ function Painel() {
     }
 
     fetchStatus()
-  }, [user?.id, legacyIndicadorId])
+  }, [indicadorUid])
 
   // Evita renderizar o painel enquanto não há usuário autenticado.
   if (!user) return null

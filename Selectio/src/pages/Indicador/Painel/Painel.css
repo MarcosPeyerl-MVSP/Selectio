@@ -162,6 +162,7 @@
      flex: 1;
      padding: 38px;
      background: #FEFEFE;
+     animation: selectioFadeIn 0.36s ease both;
    }
    
    .breadcrumb {
@@ -171,6 +172,7 @@
      text-transform: uppercase;
      letter-spacing: 1px;
      margin-bottom: 10px;
+     animation: selectioSlideUp 0.44s var(--ease-premium) both;
    }
    
    .painel-content h1 {
@@ -178,6 +180,7 @@
      font-weight: 800;
      color: #000000;
      margin-bottom: 12px;
+     animation: selectioSlideUp 0.44s var(--ease-premium) 0.04s both;
    }
    
    .painel-content h1 span {
@@ -190,6 +193,7 @@
      max-width: 620px;
      line-height: 1.6;
      margin-bottom: 34px;
+     animation: selectioSlideUp 0.44s var(--ease-premium) 0.08s both;
    }
    
    /* =========================
@@ -210,12 +214,26 @@
      border-radius: 18px;
      padding: 24px;
      min-height: 230px;
-     transition: 0.25s ease;
+     animation: selectioSlideUp 0.42s var(--ease-premium) both;
+     transition: transform var(--motion-base), box-shadow var(--motion-base), border-color var(--motion-fast), background var(--motion-fast);
    }
    
    .card:hover {
-     transform: translateY(-4px);
-     box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+     transform: translateY(-6px);
+     box-shadow: var(--shadow-hover);
+   }
+
+   .cards .card:nth-child(2) {
+     animation-delay: 0.05s;
+   }
+
+   .cards .card:nth-child(3) {
+     animation-delay: 0.1s;
+   }
+
+   .cards .card:nth-child(4),
+   .cards .card:nth-child(5) {
+     animation-delay: 0.14s;
    }
    
    .card.active {
@@ -248,10 +266,12 @@
      font-size: 13px;
      font-weight: 700;
      color: #C3383D;
+     transition: color var(--motion-fast), transform var(--motion-fast);
    }
    
    .card a:hover {
      color: #580A14;
+     transform: translateX(3px);
    }
    
    /* =========================
@@ -266,6 +286,7 @@
      display: flex;
      justify-content: space-between;
      gap: 20px;
+     animation: selectioSlideUp 0.44s var(--ease-premium) 0.16s both;
    }
    
    .stats span {
@@ -307,13 +328,15 @@
      font-weight: 700;
      cursor: pointer;
      box-shadow: 0 10px 20px rgba(0,0,0,0.14);
-     transition: 0.25s ease;
+     animation: selectioScaleIn 0.34s var(--ease-premium) 0.18s both;
+     transition: background var(--motion-fast), color var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast);
    }
    
    .floating-btn:hover {
      background: #E34963;
      color: #FEFEFE;
-     transform: scale(1.06);
+     transform: translateY(-2px) scale(1.06);
+     box-shadow: 0 18px 36px rgba(182, 28, 47, 0.2);
    }
    
    /* =========================

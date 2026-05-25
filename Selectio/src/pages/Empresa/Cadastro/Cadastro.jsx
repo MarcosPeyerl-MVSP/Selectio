@@ -277,7 +277,6 @@ export default function Cadastro() {
       tamanho: form.tamanho,
       formaPagamento: form.pagamento,
       dadosPagamento: form.dadosPagamento,
-      senha: form.senha,
       curadoriaIA: form.ia,
     };
 
@@ -294,7 +293,7 @@ export default function Cadastro() {
       firebaseUser = firebaseCredential.user;
       payload.firebaseUid = firebaseUser.uid;
 
-      let perfilEmpresa = await salvarPerfilUsuario({
+      const perfilEmpresa = await salvarPerfilUsuario({
         uid: firebaseUser.uid,
         tipo: "empresa",
         dados: {
@@ -314,32 +313,6 @@ export default function Cadastro() {
           plano: "Plano Electio"
         }
       });
-
-      try {
-        const response = await fetch("http://localhost:3333/empresa/cadastro", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.sucesso) {
-          perfilEmpresa = await salvarPerfilUsuario({
-            uid: firebaseUser.uid,
-            tipo: "empresa",
-            dados: {
-              ...perfilEmpresa,
-              ...data.empresa,
-              firebaseUid: firebaseUser.uid
-            }
-          });
-        } else {
-          console.warn("Cadastro salvo no Firestore, mas o backend antigo recusou:", data.erro);
-        }
-      } catch (backendError) {
-        console.warn("Cadastro salvo no Firestore, mas o backend antigo nao respondeu:", backendError);
-      }
 
       localStorage.setItem("empresaUser", JSON.stringify(perfilEmpresa));
       localStorage.removeItem("indicadorUser");

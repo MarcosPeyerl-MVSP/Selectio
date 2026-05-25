@@ -18,6 +18,7 @@
   grid-template-columns: minmax(0, 1fr) 300px;
   gap: 24px;
   align-items: start;
+  animation: selectioFadeIn 0.38s ease both;
 }
 
 /* Blocos visuais principais da tela. */
@@ -31,12 +32,14 @@
 
 .empresa-form {
   padding: 34px;
+  animation: selectioSlideUp 0.46s var(--ease-premium) both;
 }
 
 /* Cabeçalho do formulário. */
 .form-header {
   padding-bottom: 22px;
   border-bottom: 1px solid #eeeeee;
+  animation: selectioSlideUp 0.42s var(--ease-premium) 0.04s both;
 }
 
 .form-header span,
@@ -68,6 +71,21 @@
 .form-section {
   padding: 22px 0 8px;
   border-bottom: 1px solid #f0f0f0;
+  animation: selectioSlideUp 0.38s var(--ease-premium) both;
+}
+
+.empresa-form .form-section:nth-of-type(2) {
+  animation-delay: 0.04s;
+}
+
+.empresa-form .form-section:nth-of-type(3) {
+  animation-delay: 0.08s;
+}
+
+.empresa-form .form-section:nth-of-type(4),
+.empresa-form .form-section:nth-of-type(5),
+.empresa-form .form-section:nth-of-type(6) {
+  animation-delay: 0.12s;
 }
 
 .form-section h2 {
@@ -97,7 +115,7 @@
   color: #222222;
   font-family: inherit;
   font-size: 14px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast), background var(--motion-fast);
 }
 
 .empresa-form .grid-2 > div,
@@ -115,6 +133,7 @@
   outline: none;
   border-color: #b61c2f;
   box-shadow: 0 0 0 3px rgba(182, 28, 47, 0.1);
+  transform: translateY(-1px);
 }
 
 /* Grade de duas colunas usada nas seções. */
@@ -154,6 +173,7 @@
   font-family: inherit;
   font-weight: 800;
   cursor: pointer;
+  transition: background var(--motion-fast), color var(--motion-fast), border-color var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast);
 }
 
 .cnpj-lookup button {
@@ -174,6 +194,8 @@
 .cnpj-lookup button:hover {
   border-color: #a91629;
   background: #a91629;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(182, 28, 47, 0.16);
 }
 
 .cnpj-lookup button:disabled {
@@ -251,6 +273,7 @@
   border: 1px solid #e8e8e8;
   border-radius: 8px;
   background: #ffffff;
+  animation: selectioScaleIn 0.28s var(--ease-premium) both;
 }
 
 .strength-header {
@@ -404,6 +427,13 @@
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
+  transition: border-color var(--motion-fast), background var(--motion-fast), transform var(--motion-fast);
+}
+
+.choice-list label:hover {
+  border-color: rgba(182, 28, 47, 0.24);
+  background: #fff;
+  transform: translateY(-1px);
 }
 
 .choice-list input[type="checkbox"] {
@@ -427,6 +457,7 @@
 .submit-button:hover {
   background: #9f1728;
   transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(182, 28, 47, 0.22);
 }
 
 .submit-button:disabled,
@@ -443,6 +474,7 @@
   position: sticky;
   top: 24px;
   padding: 22px;
+  animation: selectioSlideUp 0.46s var(--ease-premium) 0.1s both;
 }
 
 .plano-card {
@@ -450,6 +482,13 @@
   border: 1px solid #e7d2d6;
   border-radius: 10px;
   background: #fffafa;
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast);
+}
+
+.plano-card:hover {
+  border-color: rgba(182, 28, 47, 0.32);
+  box-shadow: 0 18px 34px rgba(182, 28, 47, 0.08);
+  transform: translateY(-2px);
 }
 
 .plano-card h2 {

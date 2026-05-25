@@ -16,11 +16,13 @@
 .indicar-page {
   width: 100%;
   max-width: 1180px;
+  animation: selectioFadeIn 0.36s ease both;
 }
 
 /* Cabeçalho com contexto, título, link de retorno e vaga selecionada. */
 .indicar-header {
   margin-bottom: 52px;
+  animation: selectioSlideUp 0.44s var(--ease-premium) both;
 }
 
 .indicar-header span {
@@ -62,6 +64,7 @@
   grid-template-columns: minmax(0, 1fr) 230px;
   gap: 70px;
   align-items: start;
+  animation: selectioFadeIn 0.34s ease 0.05s both;
 }
 
 /* Coluna principal do formulário. */
@@ -76,6 +79,24 @@
   gap: 20px;
   padding-bottom: 6px;
   border-bottom: 1px solid #e5e5e5;
+}
+
+.indicar-main .form-section {
+  animation: selectioSlideUp 0.42s var(--ease-premium) both;
+}
+
+.indicar-main .form-section:nth-child(2) {
+  animation-delay: 0.05s;
+}
+
+.indicar-main .form-section:nth-child(3) {
+  animation-delay: 0.1s;
+}
+
+.indicar-main .form-section:nth-child(4),
+.indicar-main .form-section:nth-child(5),
+.indicar-main .form-section:nth-child(6) {
+  animation-delay: 0.14s;
 }
 
 .form-section h2 {
@@ -123,6 +144,7 @@
   letter-spacing: 0;
   outline: none;
   text-transform: none;
+  transition: background var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast);
 }
 
 .field-label input::placeholder,
@@ -137,6 +159,8 @@
 .field-label textarea:focus,
 .saved-candidate-card select:focus {
   box-shadow: 0 0 0 2px rgba(182, 28, 47, 0.18);
+  background: #fff;
+  transform: translateY(-1px);
 }
 
 .field-label input,
@@ -193,6 +217,12 @@
   padding: 8px 12px;
   border-radius: 6px;
   background: #e4e4e5;
+  transition: background var(--motion-fast), box-shadow var(--motion-fast);
+}
+
+.skill-input:focus-within {
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(182, 28, 47, 0.18);
 }
 
 /* Token removível de habilidade. */
@@ -205,6 +235,12 @@
   font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
+  transition: background var(--motion-fast), transform var(--motion-fast);
+}
+
+.skill-input button:hover {
+  background: #f0cbd2;
+  transform: translateY(-1px);
 }
 
 .skill-input input {
@@ -255,6 +291,8 @@
 .upload-box:hover {
   border-color: var(--primary);
   background: #fff8f9;
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px rgba(182, 28, 47, 0.08);
 }
 
 /* Estado visual quando há arquivo anexado. */
@@ -295,6 +333,7 @@
   border-radius: 8px;
   font-weight: 800;
   cursor: pointer;
+  transition: background var(--motion-fast), color var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast);
 }
 
 .draft-button {
@@ -302,14 +341,27 @@
   color: var(--primary);
 }
 
+.draft-button:hover {
+  background: #f8e7ea;
+  transform: translateY(-1px);
+}
+
 .submit-button {
   background: var(--primary);
   color: #fff;
 }
 
+.submit-button:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(182, 28, 47, 0.18);
+}
+
 .submit-button:disabled {
   opacity: 0.7;
   cursor: wait;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Card lateral para seleção de candidato pré-salvo. */
@@ -323,6 +375,13 @@
   border-radius: 8px;
   background: #fff;
   box-shadow: 0 6px 0 rgba(0, 0, 0, 0.25), 0 20px 48px rgba(23, 23, 23, 0.08);
+  animation: selectioSlideUp 0.44s var(--ease-premium) 0.12s both;
+  transition: transform var(--motion-base), box-shadow var(--motion-base);
+}
+
+.saved-candidate-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.2), 0 24px 54px rgba(23, 23, 23, 0.12);
 }
 
 .saved-icon {
@@ -374,6 +433,7 @@
   border-radius: 10px;
   background: #fff5f6;
   color: #6f111f;
+  animation: selectioScaleIn 0.28s var(--ease-premium) both;
 }
 
 .indicar-alert > svg {

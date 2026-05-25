@@ -15,11 +15,13 @@
 .candidatos-page {
   width: 100%;
   max-width: 1220px;
+  animation: selectioFadeIn 0.36s ease both;
 }
 
 /* Cabeçalho com contexto, título e descrição. */
 .candidatos-header {
   margin-bottom: 48px;
+  animation: selectioSlideUp 0.44s var(--ease-premium) both;
 }
 
 .candidatos-header span {
@@ -53,6 +55,7 @@
   grid-template-columns: minmax(260px, 1fr) auto;
   gap: 18px;
   margin-bottom: 28px;
+  animation: selectioSlideUp 0.44s var(--ease-premium) 0.06s both;
 }
 
 /* Campo de busca por candidato. */
@@ -65,6 +68,8 @@
   border-radius: 8px;
   background: #e6e6e8;
   color: #7a7f88;
+  border: 1px solid transparent;
+  transition: background var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast);
 }
 
 .candidate-search input {
@@ -79,6 +84,13 @@
 
 .candidate-search input::placeholder {
   color: #7a7f88;
+}
+
+.candidate-search:focus-within {
+  background: #fff;
+  border-color: rgba(182, 28, 47, 0.24);
+  box-shadow: 0 0 0 3px rgba(182, 28, 47, 0.1);
+  transform: translateY(-1px);
 }
 
 /* Abas de filtro por status. */
@@ -99,6 +111,13 @@
   color: #666b75;
   font-weight: 800;
   cursor: pointer;
+  transition: background var(--motion-fast), color var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast);
+}
+
+.candidate-tabs button:hover {
+  transform: translateY(-1px);
+  background: #fff;
+  color: var(--primary);
 }
 
 /* Estado visual da aba selecionada. */
@@ -120,12 +139,34 @@
   min-height: 174px;
   border-radius: 10px;
   background: #fff;
+  animation: selectioSlideUp 0.42s var(--ease-premium) both;
+  transition: transform var(--motion-base), box-shadow var(--motion-base), border-color var(--motion-fast), background var(--motion-fast);
 }
 
 /* Card individual do candidato. */
 .candidate-card {
   padding: 22px;
   color: #202024;
+}
+
+.candidate-card:hover,
+.candidate-add-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-hover);
+}
+
+.candidate-grid .candidate-card:nth-child(2) {
+  animation-delay: 0.05s;
+}
+
+.candidate-grid .candidate-card:nth-child(3) {
+  animation-delay: 0.1s;
+}
+
+.candidate-grid .candidate-card:nth-child(4),
+.candidate-grid .candidate-card:nth-child(5),
+.candidate-grid .candidate-card:nth-child(6) {
+  animation-delay: 0.14s;
 }
 
 /* Topo do card com avatar e status. */
@@ -149,6 +190,12 @@
   height: 54px;
   border-radius: 10px;
   object-fit: cover;
+  transition: transform var(--motion-fast), filter var(--motion-fast);
+}
+
+.candidate-card:hover .candidate-avatar-wrap img {
+  transform: scale(1.04);
+  filter: saturate(1.04);
 }
 
 .candidate-avatar-wrap span {
@@ -261,6 +308,11 @@
   text-transform: uppercase;
 }
 
+.candidate-add-card:hover {
+  border-color: rgba(182, 28, 47, 0.35);
+  color: var(--primary);
+}
+
 .candidate-add-card span {
   display: grid;
   place-items: center;
@@ -269,6 +321,13 @@
   border-radius: 999px;
   background: #ececef;
   color: #9aa0aa;
+  transition: background var(--motion-fast), color var(--motion-fast), transform var(--motion-fast);
+}
+
+.candidate-add-card:hover span {
+  background: #f6dfe4;
+  color: var(--primary);
+  transform: scale(1.04);
 }
 
 .candidate-add-card strong {

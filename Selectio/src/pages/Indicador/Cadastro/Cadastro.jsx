@@ -210,7 +210,7 @@ function CadastroIndicador() {
       firebaseUser = firebaseCredential.user
       payload.firebaseUid = firebaseUser.uid
 
-      let perfilIndicador = await salvarPerfilUsuario({
+      const perfilIndicador = await salvarPerfilUsuario({
         uid: firebaseUser.uid,
         tipo: 'indicador',
         dados: {
@@ -222,34 +222,6 @@ function CadastroIndicador() {
           dataNascimento: payload.dataNascimento
         }
       })
-
-      // Mantem o backend antigo sincronizado quando ele estiver disponivel.
-      try {
-        const response = await fetch('http://localhost:3333/indicador/cadastro', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        })
-
-        const data = await response.json()
-
-        if (response.ok && data.sucesso) {
-          perfilIndicador = await salvarPerfilUsuario({
-            uid: firebaseUser.uid,
-            tipo: 'indicador',
-            dados: {
-              ...perfilIndicador,
-              ...data.indicador,
-              firebaseUid: firebaseUser.uid
-            }
-          })
-          console.info('Cadastro sincronizado com o backend antigo.')
-        } else {
-          console.warn('Cadastro salvo no Firestore, mas o backend antigo recusou:', data.erro)
-        }
-      } catch (backendError) {
-        console.warn('Cadastro salvo no Firestore, mas o backend antigo nao respondeu:', backendError)
-      }
 
       localStorage.setItem('indicadorUser', JSON.stringify(perfilIndicador))
       localStorage.removeItem('empresaUser')

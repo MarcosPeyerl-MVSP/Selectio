@@ -15,7 +15,8 @@ import {
 import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Sidebar from '../../../components/Sidebar/Sidebar'
 import Footer from '../../../components/Footer/Footer'
-import { getLegacyId } from '../../../services/legacyIds'
+import { atualizarStatusCandidato, listarCandidatosPorEmpresa } from '../../../services/firestoreCandidatos'
+import { getFirebaseUid } from '../../../services/legacyIds'
 
 // Abas de filtro exibidas na interface.
 const tabs = ['Todos', 'Indicado', 'Entrevista', 'Contratado', 'Cancelado']
@@ -84,7 +85,7 @@ function formatDate(value) {
 function CandidatosEmpresa() {
   // Mantém os dados da empresa autenticada durante a renderização da página.
   const [empresa] = useState(getEmpresa)
-  const legacyEmpresaId = getLegacyId(empresa)
+  const empresaUid = getFirebaseUid(empresa)
 
   // Armazena candidatos retornados pela API.
   const [candidatos, setCandidatos] = useState([])
@@ -107,22 +108,20 @@ function CandidatosEmpresa() {
   useEffect(() => {
     // Responsabilidade: buscar candidatos vinculados às vagas da empresa autenticada.
     const fetchCandidatos = async () => {
-      if (!empresa) return
+      if (!empresa) {
+        setLoading(false)
+        return
+      }
 
-      if (!legacyEmpresaId) {
+      if (!empresaUid) {
         setCandidatos([])
+        setError('Perfil da empresa sem UID do Firebase.')
         setLoading(false)
         return
       }
 
       try {
-        const response = await fetch(`http://localhost:3333/empresa/${legacyEmpresaId}/candidatos`)
-        const data = await response.json()
-
-        if (!response.ok) {
-          throw new Error(data.erro || 'Erro ao buscar candidatos')
-        }
-
+        const data = await listarCandidatosPorEmpresa(empresaUid)
         setCandidatos(data)
       } catch (err) {
         setError(err.message)
@@ -132,7 +131,7 @@ function CandidatosEmpresa() {
     }
 
     fetchCandidatos()
-  }, [empresa, legacyEmpresaId])
+  }, [empresa, empresaUid])
 
   // Filtra candidatos por status selecionado e termo de busca.
   const candidatosFiltrados = useMemo(() => {
@@ -162,23 +161,14 @@ function CandidatosEmpresa() {
     setUpdatingId(candidatoId)
     setError('')
 
-    if (!legacyEmpresaId) {
-      setError('Atualizacao de candidatos ainda depende do perfil legado da empresa.')
+    if (!empresaUid) {
+      setError('Perfil da empresa sem UID do Firebase.')
       setUpdatingId(null)
       return
     }
 
     try {
-      const response = await fetch(`http://localhost:3333/candidatos/${candidatoId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, empresaId: legacyEmpresaId })
-      })
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.erro || 'Erro ao atualizar status')
-      }
+      await atualizarStatusCandidato({ candidatoId, status, empresaId: empresaUid })
 
       // Atualiza localmente o status do candidato alterado.
       setCandidatos((current) => current.map((candidato) => (

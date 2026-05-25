@@ -16,11 +16,13 @@
 .empresa-candidatos-page {
   width: 100%;
   max-width: 1220px;
+  animation: selectioFadeIn 0.36s ease both;
 }
 
 /* Cabeçalho com contexto, título, descrição e link de retorno. */
 .empresa-candidatos-header {
   margin-bottom: 34px;
+  animation: selectioSlideUp 0.44s var(--ease-premium) both;
 }
 
 .empresa-candidatos-header span {
@@ -65,6 +67,7 @@
   gap: 28px;
   align-items: start;
   margin-bottom: 42px;
+  animation: selectioSlideUp 0.44s var(--ease-premium) 0.06s both;
 }
 
 /* Campo de busca de candidatos. */
@@ -77,6 +80,8 @@
   border-radius: 8px;
   background: #e1e1e3;
   color: #7a7f88;
+  border: 1px solid transparent;
+  transition: background var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast);
 }
 
 .empresa-candidate-search input {
@@ -87,6 +92,13 @@
   font: inherit;
   font-size: 14px;
   outline: none;
+}
+
+.empresa-candidate-search:focus-within {
+  background: #fff;
+  border-color: rgba(182, 28, 47, 0.24);
+  box-shadow: 0 0 0 3px rgba(182, 28, 47, 0.1);
+  transform: translateY(-1px);
 }
 
 /* Abas de status. */
@@ -107,6 +119,13 @@
   color: #666b75;
   font-weight: 800;
   cursor: pointer;
+  transition: background var(--motion-fast), color var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast);
+}
+
+.empresa-candidate-tabs button:hover {
+  transform: translateY(-1px);
+  background: #fff;
+  color: var(--primary);
 }
 
 /* Estado visual da aba ativa. */
@@ -128,12 +147,34 @@
   min-height: 246px;
   border-radius: 10px;
   background: #fff;
+  animation: selectioSlideUp 0.42s var(--ease-premium) both;
+  transition: transform var(--motion-base), box-shadow var(--motion-base);
 }
 
 /* Card individual de candidato. */
 .empresa-candidate-card {
   display: grid;
   padding: 22px;
+}
+
+.empresa-candidate-card:hover,
+.empresa-load-more:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-hover);
+}
+
+.empresa-candidate-grid .empresa-candidate-card:nth-child(2) {
+  animation-delay: 0.05s;
+}
+
+.empresa-candidate-grid .empresa-candidate-card:nth-child(3) {
+  animation-delay: 0.1s;
+}
+
+.empresa-candidate-grid .empresa-candidate-card:nth-child(4),
+.empresa-candidate-grid .empresa-candidate-card:nth-child(5),
+.empresa-candidate-grid .empresa-candidate-card:nth-child(6) {
+  animation-delay: 0.14s;
 }
 
 /* Topo do card com avatar e seletor de status. */
@@ -150,6 +191,12 @@
   height: 64px;
   border-radius: 8px;
   object-fit: cover;
+  transition: transform var(--motion-fast), filter var(--motion-fast);
+}
+
+.empresa-candidate-card:hover .empresa-candidate-top img {
+  transform: scale(1.04);
+  filter: saturate(1.04);
 }
 
 /* Seletor visual de status do candidato. */
@@ -171,6 +218,11 @@
   outline: none;
   cursor: pointer;
   appearance: none;
+  transition: box-shadow var(--motion-fast), transform var(--motion-fast);
+}
+
+.empresa-status-select select:focus {
+  box-shadow: 0 0 0 3px rgba(182, 28, 47, 0.12);
 }
 
 .empresa-status-select::after {
@@ -243,6 +295,12 @@
   color: #fff;
   font-weight: 800;
   cursor: pointer;
+  transition: background var(--motion-fast), color var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast);
+}
+
+.empresa-candidate-actions button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px rgba(182, 28, 47, 0.14);
 }
 
 .empresa-candidate-actions button:last-child {
@@ -260,6 +318,7 @@
   color: #555b66;
   cursor: pointer;
   text-align: center;
+  transition: transform var(--motion-base), box-shadow var(--motion-base), background var(--motion-fast);
 }
 
 .empresa-load-more span {

@@ -1,0 +1,156 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function isEmpresa() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/empresas/$(request.auth.uid));
+    }
+
+    function isIndicador() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/indicadores/$(request.auth.uid));
+    }
+
+    function validUserTipo(tipo) {
+      return tipo in ['empresa', 'indicador'];
+    }
+
+    function ownUserPayload(uid) {
+      return isOwner(uid)
+        && request.resource.data.uid == uid
+        && validUserTipo(request.resource.data.tipo);
+    }
+
+    function ownEmpresaPayload(uid) {
+      return isOwner(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.firebaseUid == uid
+        && request.resource.data.tipo == 'empresa';
+    }
+
+    function ownIndicadorPayload(uid) {
+      return isOwner(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.firebaseUid == uid
+        && request.resource.data.tipo == 'indicador';
+    }
+
+    function hasValidStatus(status) {
+      return status in ['indicado', 'entrevista', 'contratado', 'cancelado', 'recusado'];
+    }
+
+    function statusUpdateOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        'status',
+        'atualizadoEm'
+      ]);
+    }
+
+    function sameCandidateOwnership() {
+      return request.resource.data.empresaId == resource.data.empresaId
+        && request.resource.data.indicadorId == resource.data.indicadorId
+        && request.resource.data.vagaId == resource.data.vagaId;
+    }
+
+    function sameIndicacaoOwnership() {
+      return request.resource.data.empresaId == resource.data.empresaId
+        && request.resource.data.indicadorId == resource.data.indicadorId
+        && request.resource.data.candidatoId == resource.data.candidatoId
+        && request.resource.data.vagaId == resource.data.vagaId;
+    }
+
+    function isEmpresaOrIndicadorOwner(data) {
+      return signedIn()
+        && (
+          data.empresaId == request.auth.uid
+          || data.indicadorId == request.auth.uid
+        );
+    }
+
+    function vagaEmpresaMatches(data) {
+      return data.vagaId is string
+        && data.empresaId is string
+        && exists(/databases/$(database)/documents/vagas/$(data.vagaId))
+        && get(/databases/$(database)/documents/vagas/$(data.vagaId)).data.empresaId == data.empresaId;
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+      allow create, update: if ownUserPayload(uid);
+      allow delete: if false;
+    }
+
+    match /empresas/{uid} {
+      allow read: if isOwner(uid);
+      allow create, update: if ownEmpresaPayload(uid);
+      allow delete: if false;
+    }
+
+    match /indicadores/{uid} {
+      allow read: if isOwner(uid);
+      allow create, update: if ownIndicadorPayload(uid);
+      allow delete: if false;
+    }
+
+    match /vagas/{vagaId} {
+      allow read: if true;
+
+      allow create: if isEmpresa()
+        && request.resource.data.empresaId == request.auth.uid
+        && (!('empresaUid' in request.resource.data) || request.resource.data.empresaUid == request.auth.uid);
+
+      allow update: if isEmpresa()
+        && resource.data.empresaId == request.auth.uid
+        && request.resource.data.empresaId == resource.data.empresaId
+        && (!('empresaUid' in resource.data) || request.resource.data.empresaUid == resource.data.empresaUid);
+
+      allow delete: if isEmpresa()
+        && resource.data.empresaId == request.auth.uid;
+    }
+
+    match /candidatos/{candidatoId} {
+      allow create: if isIndicador()
+        && request.resource.data.indicadorId == request.auth.uid
+        && request.resource.data.status == 'indicado'
+        && vagaEmpresaMatches(request.resource.data);
+
+      allow read: if isEmpresaOrIndicadorOwner(resource.data);
+
+      allow update: if isEmpresaOrIndicadorOwner(resource.data)
+        && sameCandidateOwnership()
+        && statusUpdateOnly()
+        && hasValidStatus(request.resource.data.status);
+
+      allow delete: if false;
+    }
+
+    match /indicacoes/{indicacaoId} {
+      allow create: if isIndicador()
+        && request.resource.data.indicadorId == request.auth.uid
+        && request.resource.data.status == 'indicado'
+        && vagaEmpresaMatches(request.resource.data);
+
+      allow read: if isEmpresaOrIndicadorOwner(resource.data);
+
+      allow update: if isEmpresaOrIndicadorOwner(resource.data)
+        && sameIndicacaoOwnership()
+        && statusUpdateOnly()
+        && hasValidStatus(request.resource.data.status);
+
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

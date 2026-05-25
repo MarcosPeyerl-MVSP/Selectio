@@ -29,6 +29,7 @@ html, body, #root {
   border-radius: 18px;
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
   text-align: center;
+  animation: selectioScaleIn 0.42s var(--ease-premium) both;
 }
 
 /* Título principal do formulário de login. */
@@ -36,6 +37,7 @@ html, body, #root {
   font-size: 28px;
   margin-bottom: 28px;
   letter-spacing: -0.5px;
+  animation: selectioSlideUp 0.44s var(--ease-premium) 0.06s both;
 }
 
 /* Organiza os campos do formulário em coluna. */
@@ -54,6 +56,11 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  animation: selectioSlideUp 0.36s var(--ease-premium) both;
+}
+
+.login-form label:nth-child(2) {
+  animation-delay: 0.05s;
 }
 
 /* Estilo base dos campos de entrada. */
@@ -63,7 +70,7 @@ html, body, #root {
   width: 100%;
   border: 1px solid #ddd;
   font-size: 14px;
-  transition: var(--transition);
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast);
 }
 
 /* Agrupa input e ícones posicionados dentro do campo. */
@@ -108,13 +115,15 @@ html, body, #root {
 
 .password-visibility:hover {
   color: var(--primary);
+  transform: translateY(-50%) scale(1.06);
 }
 
 /* Destaque visual quando o input está em foco. */
 .login-form input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(182, 28, 47, 0.12);
+  box-shadow: 0 0 0 3px rgba(182, 28, 47, 0.12);
+  transform: translateY(-1px);
 }
 
 /* Link visual de recuperação de senha. */
@@ -136,6 +145,7 @@ html, body, #root {
   font-weight: 800;
   border: 1px solid var(--primary);
   box-shadow: 0 8px 20px rgba(182, 28, 47, 0.18);
+  transition: background var(--motion-fast), color var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast);
 }
 
 /* Feedback visual do botão principal ao passar o cursor. */
@@ -151,6 +161,7 @@ html, body, #root {
   margin: 26px 0;
   position: relative;
   text-align: center;
+  animation: selectioFadeIn 0.36s ease 0.12s both;
 }
 
 .login-divider span {
@@ -190,13 +201,15 @@ html, body, #root {
   font-weight: 700;
   border: 1px solid #ddd;
   background: #fafafa;
-  transition: var(--transition);
+  transition: border-color var(--motion-fast), background var(--motion-fast), color var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast);
 }
 
 .social-login button:hover {
   background: #fff;
   border-color: var(--primary);
   color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(23, 23, 23, 0.08);
 }
 
 /* Texto inferior com link para cadastro. */
