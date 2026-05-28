@@ -1,0 +1,632 @@
+.painel-entrevistas {
+  width: 100%;
+  color: var(--text);
+  animation: selectioFadeIn 0.32s ease both;
+}
+
+.entrevistas-cabecalho {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.entrevistas-cabecalho span,
+.entrevistas-titulo-secao span,
+.entrevistas-modal-agendamento header span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary-dark);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.entrevistas-cabecalho h1 {
+  margin: 10px 0 12px;
+  color: var(--text-heading);
+  font-size: 44px;
+  line-height: 1.08;
+}
+
+.entrevistas-cabecalho p {
+  max-width: 700px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.entrevistas-acao-principal,
+.entrevistas-aguardando-item button,
+.entrevistas-modal-acoes button[type='submit'] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 8px;
+  background: var(--primary);
+  color: var(--white);
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 16px 30px rgba(182, 28, 47, 0.18);
+}
+
+.entrevistas-acao-principal:hover:not(:disabled),
+.entrevistas-aguardando-item button:hover,
+.entrevistas-modal-acoes button[type='submit']:hover:not(:disabled) {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.entrevistas-acao-principal:disabled,
+.entrevistas-modal-acoes button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+  transform: none;
+}
+
+.entrevistas-metricas {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.entrevistas-metrica-card,
+.entrevistas-calendario-card,
+.entrevistas-agenda-card,
+.entrevistas-aguardando-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.entrevistas-metrica-card {
+  padding: 18px;
+}
+
+.entrevistas-metrica-card span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+.entrevistas-metrica-card strong {
+  color: var(--text-heading);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.entrevistas-filtros {
+  display: grid;
+  grid-template-columns: minmax(180px, 230px) minmax(220px, 320px);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.entrevistas-filtros label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--muted);
+}
+
+.entrevistas-filtros select,
+.entrevistas-modal-agendamento input,
+.entrevistas-modal-agendamento select,
+.entrevistas-modal-agendamento textarea {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+}
+
+.entrevistas-grade-principal {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(340px, 0.8fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.entrevistas-calendario-card,
+.entrevistas-agenda-card,
+.entrevistas-aguardando-card {
+  padding: 22px;
+}
+
+.entrevistas-calendario-cabecalho,
+.entrevistas-titulo-secao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.entrevistas-calendario-cabecalho strong,
+.entrevistas-titulo-secao strong {
+  color: var(--text-heading);
+  font-size: 18px;
+  text-transform: capitalize;
+}
+
+.entrevistas-calendario-cabecalho button {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+.entrevistas-calendario-cabecalho button:hover {
+  border-color: rgba(182, 28, 47, 0.28);
+  color: var(--primary);
+}
+
+.entrevistas-dias-semana,
+.entrevistas-calendario-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.entrevistas-dias-semana {
+  margin-bottom: 8px;
+}
+
+.entrevistas-dias-semana span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.entrevistas-calendario-dia {
+  position: relative;
+  min-height: 72px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--text);
+  text-align: left;
+}
+
+.entrevistas-calendario-dia.vazio {
+  background: transparent;
+  border-color: transparent;
+}
+
+.entrevistas-calendario-dia:not(.vazio):hover {
+  border-color: rgba(182, 28, 47, 0.26);
+  transform: translateY(-1px);
+}
+
+.entrevistas-calendario-dia strong {
+  color: var(--text-heading);
+  font-size: 14px;
+}
+
+.entrevistas-calendario-dia span {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(182, 28, 47, 0.12);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.entrevistas-calendario-dia.hoje {
+  border-color: rgba(182, 28, 47, 0.38);
+}
+
+.entrevistas-calendario-dia.selecionado {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--white);
+  box-shadow: 0 18px 34px rgba(182, 28, 47, 0.18);
+}
+
+.entrevistas-calendario-dia.selecionado strong,
+.entrevistas-calendario-dia.selecionado span {
+  color: var(--white);
+}
+
+.entrevistas-calendario-dia.selecionado span {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.entrevistas-agenda-lista,
+.entrevistas-aguardando-lista {
+  display: grid;
+  gap: 12px;
+}
+
+.entrevistas-card {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.entrevistas-card.cancelada {
+  opacity: 0.72;
+}
+
+.entrevistas-card-horario {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  min-height: 74px;
+  border-radius: 8px;
+  background: rgba(182, 28, 47, 0.09);
+  color: var(--primary);
+}
+
+.entrevistas-card-horario strong {
+  font-size: 18px;
+}
+
+.entrevistas-card-horario span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.entrevistas-card-conteudo strong {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--text-heading);
+  font-size: 15px;
+}
+
+.entrevistas-card-conteudo p {
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.entrevistas-card-conteudo span {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(182, 28, 47, 0.1);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.entrevistas-card.realizada .entrevistas-card-conteudo span {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.entrevistas-card.cancelada .entrevistas-card-conteudo span {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.entrevistas-card-acoes {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.entrevistas-card-acoes button,
+.entrevistas-modal-acoes button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.entrevistas-card-acoes button:first-child,
+.entrevistas-modal-acoes .calendario {
+  border-color: rgba(182, 28, 47, 0.2);
+  color: var(--primary);
+}
+
+.entrevistas-card-acoes button:hover:not(:disabled),
+.entrevistas-modal-acoes button:hover:not(:disabled) {
+  border-color: rgba(182, 28, 47, 0.28);
+  transform: translateY(-1px);
+}
+
+.entrevistas-card-acoes .perigo {
+  border-color: rgba(229, 62, 62, 0.22);
+  color: var(--danger);
+}
+
+.entrevistas-card-acoes .secundario,
+.entrevistas-modal-acoes .secundario {
+  color: var(--muted);
+}
+
+.entrevistas-aguardando-card {
+  margin-top: 18px;
+}
+
+.entrevistas-aguardando-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.entrevistas-aguardando-item strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-heading);
+}
+
+.entrevistas-aguardando-item span,
+.entrevistas-aguardando-item small {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.entrevistas-estado-vazio {
+  display: grid;
+  place-items: center;
+  min-height: 190px;
+  padding: 24px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  text-align: center;
+}
+
+.entrevistas-estado-vazio svg {
+  margin-bottom: 12px;
+  color: var(--primary);
+  font-size: 24px;
+}
+
+.entrevistas-estado-vazio strong {
+  color: var(--text-heading);
+  font-size: 16px;
+}
+
+.entrevistas-estado-vazio p {
+  max-width: 360px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.entrevistas-carregando-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.entrevistas-modal-fundo {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.54);
+  animation: selectioFadeIn 0.2s ease both;
+}
+
+.entrevistas-modal-agendamento {
+  position: relative;
+  width: min(640px, 100%);
+  max-height: calc(100vh - 36px);
+  overflow: auto;
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  animation: selectioSlideUp 0.28s var(--ease-premium) both;
+}
+
+.entrevistas-modal-fechar {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--muted);
+}
+
+.entrevistas-modal-agendamento header h2 {
+  margin: 10px 0 8px;
+  color: var(--text-heading);
+  font-size: 28px;
+}
+
+.entrevistas-modal-agendamento header p {
+  margin-bottom: 22px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.entrevistas-candidato-resumo,
+.entrevistas-titulo-preview {
+  margin-bottom: 16px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.entrevistas-candidato-resumo strong,
+.entrevistas-titulo-preview strong {
+  display: block;
+  color: var(--text-heading);
+}
+
+.entrevistas-candidato-resumo span,
+.entrevistas-titulo-preview span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.entrevistas-formulario-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.entrevistas-formulario-grid label,
+.entrevistas-campo-inteiro {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.entrevistas-formulario-grid input,
+.entrevistas-formulario-grid select,
+.entrevistas-campo-inteiro textarea {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text);
+  text-transform: none;
+}
+
+.entrevistas-campo-inteiro textarea {
+  min-height: 108px;
+  padding: 12px;
+  resize: vertical;
+}
+
+.entrevistas-titulo-preview {
+  margin-top: 16px;
+}
+
+.entrevistas-modal-acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+:root[data-theme='dark'] .entrevistas-modal-fundo {
+  background: rgba(0, 0, 0, 0.72);
+}
+
+@media (max-width: 1120px) {
+  .entrevistas-grade-principal {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .entrevistas-cabecalho {
+    flex-direction: column;
+  }
+
+  .entrevistas-cabecalho h1 {
+    font-size: 34px;
+  }
+
+  .entrevistas-metricas,
+  .entrevistas-filtros,
+  .entrevistas-formulario-grid,
+  .entrevistas-carregando-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .entrevistas-calendario-card,
+  .entrevistas-agenda-card,
+  .entrevistas-aguardando-card,
+  .entrevistas-modal-agendamento {
+    padding: 18px;
+  }
+
+  .entrevistas-dias-semana,
+  .entrevistas-calendario-grid {
+    gap: 5px;
+  }
+
+  .entrevistas-calendario-dia {
+    min-height: 58px;
+    padding: 8px;
+  }
+
+  .entrevistas-aguardando-item,
+  .entrevistas-modal-acoes {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .entrevistas-card {
+    grid-template-columns: 1fr;
+  }
+
+  .entrevistas-card-horario {
+    place-items: start;
+    align-content: center;
+    min-height: 58px;
+    padding: 12px;
+  }
+}

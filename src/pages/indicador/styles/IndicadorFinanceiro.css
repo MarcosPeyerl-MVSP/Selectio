@@ -1,0 +1,237 @@
+.indicador-financeiro {
+  color: var(--text);
+  animation: selectioFadeIn 0.32s ease both;
+}
+
+.indicador-financeiro-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.indicador-financeiro-header span,
+.indicador-financeiro-card-title span,
+.saque-modal header span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary-dark);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.indicador-financeiro-header h1 {
+  margin: 10px 0 12px;
+  color: var(--text-heading);
+  font-size: 44px;
+  line-height: 1.08;
+}
+
+.indicador-financeiro-header p {
+  max-width: 700px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.indicador-financeiro-header button,
+.saque-modal-actions button[type='submit'] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 8px;
+  background: var(--primary);
+  color: var(--white);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.indicador-financeiro-header button:disabled,
+.saque-modal-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.indicador-saldo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.indicador-financeiro-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.7fr);
+  gap: 18px;
+}
+
+.indicador-financeiro-card {
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.indicador-financeiro-card-title,
+.indicador-movimentacao-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.indicador-financeiro-card-title {
+  margin-bottom: 16px;
+}
+
+.indicador-financeiro-card-title strong {
+  color: var(--text-heading);
+}
+
+.indicador-movimentacao-item,
+.indicador-notificacao-financeira {
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+}
+
+.indicador-movimentacao-item strong,
+.indicador-notificacao-financeira strong {
+  color: var(--text-heading);
+}
+
+.indicador-movimentacao-item span,
+.indicador-notificacao-financeira p,
+.indicador-financeiro-vazio p {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.indicador-financeiro-vazio {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  padding: 24px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  text-align: center;
+}
+
+.indicador-financeiro-vazio strong {
+  color: var(--text-heading);
+}
+
+.saque-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.saque-modal {
+  width: min(520px, 100%);
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.saque-modal h2 {
+  margin: 10px 0 8px;
+  color: var(--text-heading);
+  font-size: 28px;
+}
+
+.saque-modal p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.saque-modal form {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.saque-modal label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.saque-modal input {
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text);
+  font: inherit;
+  text-transform: none;
+}
+
+.saque-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.saque-modal-actions .secondary {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+:root[data-theme='dark'] .saque-modal-backdrop {
+  background: rgba(0, 0, 0, 0.72);
+}
+
+@media (max-width: 1000px) {
+  .indicador-saldo-grid,
+  .indicador-financeiro-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .indicador-financeiro-header {
+    flex-direction: column;
+  }
+
+  .indicador-financeiro-header h1 {
+    font-size: 34px;
+  }
+
+  .indicador-movimentacao-item,
+  .saque-modal-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .saque-modal-actions button {
+    width: 100%;
+  }
+}

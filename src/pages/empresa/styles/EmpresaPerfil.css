@@ -1,0 +1,306 @@
+.empresa-profile {
+  display: grid;
+  gap: 24px;
+  animation: selectioFadeIn 0.36s ease both;
+}
+
+.profile-page-header {
+  max-width: 820px;
+}
+
+.profile-page-header span,
+.empresa-profile-hero span {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.profile-page-header h1 {
+  margin: 0 0 10px;
+  color: var(--text-heading);
+  font-size: 44px;
+  line-height: 1.05;
+}
+
+.profile-page-header p,
+.empresa-profile-hero p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.empresa-profile-hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: center;
+  padding: 26px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.empresa-profile-avatar {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 14px;
+  background: var(--primary);
+  color: var(--white);
+  font-size: 32px;
+  font-weight: 900;
+}
+
+.empresa-profile-hero h2 {
+  margin: 0 0 6px;
+  color: var(--text-heading);
+  font-size: 30px;
+}
+
+.empresa-profile-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.empresa-profile-actions button,
+.empresa-profile-form button {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: var(--primary);
+  color: var(--white);
+  font-weight: 800;
+}
+
+.empresa-profile-actions button.ghost {
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--muted);
+}
+
+.empresa-profile-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.empresa-profile-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.empresa-profile-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.empresa-profile-form input {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.empresa-profile-form button {
+  align-self: end;
+}
+
+.empresa-profile-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.empresa-profile-metrics article,
+.empresa-info-card,
+.empresa-recent-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.empresa-profile-metrics article {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+}
+
+.empresa-profile-metrics svg {
+  color: var(--primary);
+  font-size: 20px;
+}
+
+.empresa-profile-metrics span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.empresa-profile-metrics strong {
+  color: var(--text-heading);
+  font-size: 28px;
+}
+
+.empresa-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.empresa-info-card {
+  padding: 22px;
+}
+
+.empresa-info-card > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.empresa-info-card svg {
+  color: var(--primary);
+}
+
+.empresa-info-card h3,
+.empresa-recent-card h3 {
+  margin: 0;
+  color: var(--text-heading);
+  font-size: 18px;
+}
+
+.empresa-info-card dl {
+  display: grid;
+  gap: 12px;
+}
+
+.empresa-info-card dl div {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr);
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.empresa-info-card dt {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.empresa-info-card dd {
+  margin: 0;
+  color: var(--text);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.empresa-profile-lists {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.empresa-recent-card {
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+}
+
+.empresa-recent-card > div {
+  display: grid;
+  gap: 10px;
+}
+
+.empresa-recent-card a,
+.empresa-recent-card > div > div {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.empresa-recent-card strong {
+  color: var(--text-heading);
+}
+
+.empresa-recent-card span,
+.empresa-recent-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.empresa-recent-card em {
+  justify-self: start;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--danger-bg);
+  color: var(--primary);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+@media (max-width: 1180px) {
+  .empresa-profile-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .empresa-profile-hero,
+  .empresa-profile-form,
+  .empresa-profile-grid,
+  .empresa-profile-lists {
+    grid-template-columns: 1fr;
+  }
+
+  .empresa-profile-actions {
+    justify-content: flex-start;
+  }
+
+  .empresa-profile-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .profile-page-header h1 {
+    font-size: 34px;
+  }
+
+  .empresa-profile-metrics {
+    grid-template-columns: 1fr;
+  }
+}

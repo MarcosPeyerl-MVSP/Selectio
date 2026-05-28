@@ -1,0 +1,308 @@
+import './styles/IndicadorPerfil.css'
+
+import { useEffect, useMemo, useState } from 'react'
+import {
+  FaAward,
+  FaBriefcase,
+  FaCheckCircle,
+  FaExternalLinkAlt,
+  FaIdCard,
+  FaLinkedin,
+  FaSave,
+  FaUserTie
+} from 'react-icons/fa'
+
+import PageLoader from '../../components/ui/PageLoader'
+import { auth } from '../../services/firebase'
+import { listarCandidatosPorIndicador } from '../../services/firestoreCandidatos'
+import { getFirebaseUid } from '../../services/firebaseIdentity'
+import { listarIndicacoesPorIndicador } from '../../services/firestoreIndicacoes'
+import { atualizarPerfilUsuario } from '../../services/firestoreUsers'
+import { useToast } from '../../hooks/useToast'
+
+const emptyValue = 'Nao informado'
+
+const getInitialForm = (indicador) => ({
+  nome: indicador?.nome || '',
+  telefone: indicador?.telefone || '',
+  pix: indicador?.pix || '',
+  linkedin: indicador?.linkedin || '',
+  portfolio: indicador?.portfolio || '',
+  especialidades: Array.isArray(indicador?.especialidades)
+    ? indicador.especialidades.join(', ')
+    : indicador?.especialidades || ''
+})
+
+const formatDate = (value) => {
+  if (!value) return emptyValue
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return emptyValue
+
+  return date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  }).replace('.', '')
+}
+
+const splitSpecialties = (value) => String(value || '')
+  .split(',')
+  .map((item) => item.trim())
+  .filter(Boolean)
+
+function IndicadorPerfil({ user, onUserUpdate }) {
+  const toast = useToast()
+  const indicadorUid = getFirebaseUid(user)
+  const [indicacoes, setIndicacoes] = useState([])
+  const [candidatos, setCandidatos] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState(() => getInitialForm(user))
+  const emailVerified = Boolean(auth.currentUser?.emailVerified)
+
+  useEffect(() => {
+    let active = true
+
+    const fetchProfileData = async () => {
+      if (!indicadorUid) {
+        setLoading(false)
+        return
+      }
+
+      try {
+        const [indicacoesData, candidatosData] = await Promise.all([
+          listarIndicacoesPorIndicador(indicadorUid),
+          listarCandidatosPorIndicador(indicadorUid)
+        ])
+
+        if (!active) return
+        setIndicacoes(indicacoesData)
+        setCandidatos(candidatosData)
+      } catch {
+        toast.error('Nao foi possivel carregar os dados do perfil do indicador.')
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+
+    fetchProfileData()
+
+    return () => {
+      active = false
+    }
+  }, [indicadorUid, toast])
+
+  const metrics = useMemo(() => {
+    const total = indicacoes.length || candidatos.length
+    const source = indicacoes.length ? indicacoes : candidatos
+    const contratados = source.filter((item) => item.status === 'contratado').length
+    const entrevistas = source.filter((item) => item.status === 'entrevista').length
+    const canceladas = source.filter((item) => ['cancelado', 'recusado'].includes(item.status)).length
+    const andamento = source.filter((item) => !['contratado', 'cancelado', 'recusado'].includes(item.status)).length
+
+    return {
+      totalIndicacoes: total,
+      contratados,
+      entrevistas,
+      canceladas,
+      andamento,
+      taxaConversao: total ? Number(((contratados * 100) / total).toFixed(1)) : 0
+    }
+  }, [candidatos, indicacoes])
+
+  const specialties = Array.isArray(user?.especialidades)
+    ? user.especialidades
+    : splitSpecialties(user?.especialidades)
+
+  const handleChange = (event) => {
+    const { name, value } = event.target
+    setForm((current) => ({ ...current, [name]: value }))
+  }
+
+  const handleSave = async (event) => {
+    event.preventDefault()
+
+    if (!indicadorUid) {
+      toast.warning('Perfil sem UID do Firebase. Entre novamente antes de salvar.')
+      return
+    }
+
+    const payload = {
+      ...form,
+      especialidades: splitSpecialties(form.especialidades)
+    }
+
+    try {
+      setSaving(true)
+      const updatedFields = await atualizarPerfilUsuario({
+        uid: indicadorUid,
+        tipo: 'indicador',
+        dados: payload
+      })
+      const updatedUser = {
+        ...user,
+        ...updatedFields,
+        id: user?.id || indicadorUid,
+        uid: indicadorUid,
+        firebaseUid: indicadorUid
+      }
+
+      localStorage.setItem('indicadorUser', JSON.stringify(updatedUser))
+      onUserUpdate?.(updatedUser)
+      setEditing(false)
+      toast.success('Perfil do indicador atualizado.')
+    } catch {
+      toast.error('Nao foi possivel salvar o perfil do indicador.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return <PageLoader label="Carregando perfil do indicador..." />
+  }
+
+  const initial = (user?.nome || 'I').charAt(0).toUpperCase()
+  const recentIndications = (indicacoes.length ? indicacoes : candidatos).slice(0, 5)
+
+  return (
+    <section className="indicador-profile">
+      <header className="profile-page-header">
+        <span>PERFIL PROFISSIONAL</span>
+        <h1>Meu Perfil</h1>
+        <p>Gerencie suas informacoes profissionais e visualize o impacto das suas indicacoes na rede Selectio.</p>
+      </header>
+
+      <div className="indicador-profile-layout">
+        <aside className="indicador-profile-card">
+          <div className="indicador-avatar">{initial}</div>
+          <h2>{user?.nome || emptyValue}</h2>
+          <p>{user?.tituloProfissional || 'Indicador Selectio'}</p>
+          {emailVerified && <span className="verified-badge"><FaCheckCircle /> Conta verificada</span>}
+          <div className="indicador-links">
+            {user?.linkedin && <a href={formatExternalLink(user.linkedin)} target="_blank" rel="noreferrer"><FaLinkedin /> LinkedIn</a>}
+            {user?.portfolio && <a href={formatExternalLink(user.portfolio)} target="_blank" rel="noreferrer"><FaExternalLinkAlt /> Portfolio</a>}
+          </div>
+          <button type="button" onClick={() => setEditing((current) => !current)}>
+            <FaUserTie /> {editing ? 'Cancelar edicao' : 'Editar perfil'}
+          </button>
+        </aside>
+
+        <main className="indicador-profile-main">
+          {editing && (
+            <form className="indicador-profile-form" onSubmit={handleSave}>
+              <ProfileField label="Nome" name="nome" value={form.nome} onChange={handleChange} />
+              <ProfileField label="Telefone" name="telefone" value={form.telefone} onChange={handleChange} />
+              <ProfileField label="Pix" name="pix" value={form.pix} onChange={handleChange} />
+              <ProfileField label="LinkedIn" name="linkedin" value={form.linkedin} onChange={handleChange} />
+              <ProfileField label="Portfolio" name="portfolio" value={form.portfolio} onChange={handleChange} />
+              <ProfileField label="Especialidades" name="especialidades" value={form.especialidades} onChange={handleChange} placeholder="Separe por virgula" />
+              <button type="submit" disabled={saving}>
+                <FaSave /> {saving ? 'Salvando...' : 'Salvar perfil'}
+              </button>
+            </form>
+          )}
+
+          <section className="indicador-profile-metrics">
+            <MetricCard icon={FaAward} label="Total de indicacoes" value={metrics.totalIndicacoes} />
+            <MetricCard icon={FaCheckCircle} label="Contratados" value={metrics.contratados} />
+            <MetricCard icon={FaBriefcase} label="Taxa de conversao" value={`${metrics.taxaConversao}%`} />
+            <MetricCard icon={FaUserTie} label="Em andamento" value={metrics.andamento} />
+            <MetricCard icon={FaIdCard} label="Em entrevista" value={metrics.entrevistas} />
+          </section>
+
+          <section className="indicador-profile-grid">
+            <InfoCard title="Dados pessoais" items={[
+              ['E-mail', user?.email],
+              ['Telefone', user?.telefone],
+              ['CPF', user?.cpf],
+              ['Nascimento', user?.dataNascimento]
+            ]} />
+            <InfoCard title="Pagamento e links" items={[
+              ['Pix', user?.pix],
+              ['LinkedIn', user?.linkedin],
+              ['Portfolio', user?.portfolio],
+              ['Atualizado em', formatDate(user?.atualizadoEm)]
+            ]} />
+          </section>
+
+          <section className="indicador-specialties-card">
+            <h3>Especialidades</h3>
+            {specialties.length ? (
+              <div>
+                {specialties.map((item) => <span key={item}>{item}</span>)}
+              </div>
+            ) : (
+              <p>Especialidades ainda nao informadas.</p>
+            )}
+          </section>
+
+          <section className="indicador-empty-card">
+            <h3>Experiencia profissional</h3>
+            <p>Experiencia profissional ainda nao cadastrada.</p>
+          </section>
+
+          <section className="indicador-recent-card">
+            <h3>Ultimas indicacoes</h3>
+            {recentIndications.length ? (
+              <div>
+                {recentIndications.map((item) => (
+                  <article key={item.id}>
+                    <strong>{item.candidatoNome || item.nome || 'Candidato sem nome'}</strong>
+                    <span>{item.vagaTitulo || emptyValue}</span>
+                    <em>{item.status || 'indicado'}</em>
+                    <small>{formatDate(item.criadoEm || item.aplicadoEm)}</small>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p>Nenhuma indicacao registrada ainda.</p>
+            )}
+          </section>
+        </main>
+      </div>
+    </section>
+  )
+}
+
+function formatExternalLink(value) {
+  return String(value).startsWith('http') ? value : `https://${value}`
+}
+
+function ProfileField({ label, ...props }) {
+  return (
+    <label>
+      {label}
+      <input {...props} />
+    </label>
+  )
+}
+
+function MetricCard({ icon: Icon, label, value }) {
+  return (
+    <article>
+      <Icon />
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </article>
+  )
+}
+
+function InfoCard({ title, items }) {
+  return (
+    <article className="indicador-info-card">
+      <h3>{title}</h3>
+      <dl>
+        {items.map(([label, value]) => (
+          <div key={label}>
+            <dt>{label}</dt>
+            <dd>{value || emptyValue}</dd>
+          </div>
+        ))}
+      </dl>
+    </article>
+  )
+}
+
+export default IndicadorPerfil

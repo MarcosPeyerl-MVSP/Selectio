@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   FaCalendarAlt,
   FaChevronDown,
+  FaCreditCard,
   FaEllipsisH,
   FaSearch,
   FaUser,
@@ -15,21 +16,17 @@ import {
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import Footer from '../../components/layout/Footer'
+import PaymentRewardModal from '../../components/payments/PaymentRewardModal'
+import CandidateProfileModal from '../../components/ui/CandidateProfileModal'
+import CandidateStatusTimeline from '../../components/ui/CandidateStatusTimeline'
 import SkeletonCard from '../../components/ui/SkeletonCard'
 import { atualizarStatusCandidato, listarCandidatosPorEmpresa } from '../../services/firestoreCandidatos'
 import { getFirebaseUid } from '../../services/firebaseIdentity'
+import { listarPagamentosPorEmpresa } from '../../services/firestorePagamentos'
 import { useToast } from '../../hooks/useToast'
 
 // Abas de filtro exibidas na interface.
 const tabs = ['Todos', 'Indicado', 'Entrevista', 'Contratado', 'Cancelado']
-
-// Opções disponíveis para alteração de status do candidato.
-const statusOptions = [
-  { value: 'indicado', label: 'Indicado' },
-  { value: 'entrevista', label: 'Entrevista' },
-  { value: 'contratado', label: 'Contratado' },
-  { value: 'cancelado', label: 'Cancelado' },
-]
 
 // Mapeia status retornados pelo Firestore para os textos exibidos na interface.
 const statusLabels = {
@@ -108,6 +105,15 @@ function CandidatosEmpresa() {
   // Controla qual candidato está com status em atualização.
   const [updatingId, setUpdatingId] = useState(null)
 
+  // Controla o candidato exibido no painel de perfil.
+  const [selectedCandidate, setSelectedCandidate] = useState(null)
+
+  // Armazena pagamentos de recompensas da empresa.
+  const [pagamentos, setPagamentos] = useState([])
+
+  // Controla o candidato escolhido para pagamento de recompensa.
+  const [paymentCandidate, setPaymentCandidate] = useState(null)
+
   useEffect(() => {
     // Responsabilidade: buscar candidatos vinculados às vagas da empresa autenticada.
     const fetchCandidatos = async () => {
@@ -124,13 +130,21 @@ function CandidatosEmpresa() {
       }
 
       try {
-        const data = await listarCandidatosPorEmpresa(empresaUid)
-        setCandidatos(data)
+        const candidatosData = await listarCandidatosPorEmpresa(empresaUid)
+        setCandidatos(candidatosData)
       } catch (err) {
         setError(err.message)
         toast.error('Nao foi possivel carregar os candidatos.')
       } finally {
         setLoading(false)
+      }
+
+      try {
+        const pagamentosData = await listarPagamentosPorEmpresa(empresaUid)
+        setPagamentos(pagamentosData)
+      } catch (err) {
+        console.warn('Nao foi possivel carregar pagamentos da empresa:', err)
+        setPagamentos([])
       }
     }
 
@@ -154,6 +168,22 @@ function CandidatosEmpresa() {
       return matchesStatus && matchesBusca
     })
   }, [activeTab, busca, candidatos])
+
+  const pagamentosPorCandidato = useMemo(() => {
+    const mapa = new Map()
+
+    pagamentos.forEach((pagamento) => {
+      const atual = mapa.get(pagamento.candidatoId)
+      const dataAtual = new Date(atual?.criadoEm || 0).getTime()
+      const dataNova = new Date(pagamento.criadoEm || 0).getTime()
+
+      if (!atual || dataNova >= dataAtual) {
+        mapa.set(pagamento.candidatoId, pagamento)
+      }
+    })
+
+    return mapa
+  }, [pagamentos])
 
   // Regra de acesso: sem empresa autenticada, redireciona para login.
   if (!empresa) {
@@ -179,6 +209,9 @@ function CandidatosEmpresa() {
       setCandidatos((current) => current.map((candidato) => (
         candidato.id === candidatoId ? { ...candidato, status } : candidato
       )))
+      setSelectedCandidate((current) => (
+        current?.id === candidatoId ? { ...current, status } : current
+      ))
       toast.success('Status atualizado com sucesso.')
     } catch (err) {
       setError(err.message)
@@ -186,6 +219,30 @@ function CandidatosEmpresa() {
     } finally {
       setUpdatingId(null)
     }
+  }
+
+  const handleTimelineChange = (candidato, status) => {
+    updateStatus(candidato.id, status)
+  }
+
+  const handlePaymentCreated = (pagamento) => {
+    if (!paymentCandidate) return
+
+    setPagamentos((current) => [
+      {
+        id: pagamento.pagamentoId,
+        mercadoPagoPreferenceId: pagamento.preferenceId,
+        status: 'pending',
+        candidatoId: paymentCandidate.id,
+        candidatoNome: paymentCandidate.nome,
+        vagaTitulo: paymentCandidate.vagaTitulo,
+        indicadorNome: paymentCandidate.indicadorNome,
+        checkoutUrl: pagamento.initPoint,
+        sandboxCheckoutUrl: pagamento.sandboxInitPoint,
+        criadoEm: new Date().toISOString()
+      },
+      ...current
+    ])
   }
 
   return (
@@ -243,23 +300,20 @@ function CandidatosEmpresa() {
               {candidatosFiltrados.map((candidato, index) => {
                 // Regra de normalização: status "recusado" é tratado visualmente como "cancelado".
                 const status = candidato.status === 'recusado' ? 'cancelado' : candidato.status || 'indicado'
+                const pagamento = pagamentosPorCandidato.get(candidato.id)
+                const temIndicador = Boolean(candidato.indicadorId || candidato.indicadorUid)
+                const podePagar = status === 'contratado' && temIndicador
+                const recompensaPaga = pagamento?.status === 'approved'
+                const pagamentoPendente = pagamento?.status === 'pending'
 
                 return (
                   <article className="empresa-candidate-card" key={candidato.id}>
                     <div className="empresa-candidate-top">
                       <img src={avatars[index % avatars.length]} alt={candidato.nome} />
 
-                      <label className={`empresa-status-select ${status}`}>
-                        <select
-                          value={status}
-                          onChange={(event) => updateStatus(candidato.id, event.target.value)}
-                          disabled={updatingId === candidato.id}
-                        >
-                          {statusOptions.map((option) => (
-                            <option key={option.value} value={option.value}>{option.label}</option>
-                          ))}
-                        </select>
-                      </label>
+                      <strong className={`empresa-status-badge ${status}`}>
+                        {statusLabels[status] || 'Indicado'}
+                      </strong>
                     </div>
 
                     <h2>{candidato.nome}</h2>
@@ -270,8 +324,29 @@ function CandidatosEmpresa() {
                       <span><FaCalendarAlt /> Aplicado em {formatDate(candidato.aplicadoEm)}</span>
                     </div>
 
+                    <CandidateStatusTimeline
+                      status={status}
+                      editable
+                      loading={updatingId === candidato.id}
+                      onChangeStatus={(nextStatus) => handleTimelineChange(candidato, nextStatus)}
+                      variant="compact"
+                    />
+
                     <div className="empresa-candidate-actions">
-                      <button type="button">Ver Perfil</button>
+                      <button type="button" onClick={() => setSelectedCandidate(candidato)}>
+                        Ver Perfil
+                      </button>
+                      {podePagar && (
+                        <button
+                          type="button"
+                          className={`empresa-payment-action ${recompensaPaga ? 'paid' : ''}`}
+                          onClick={() => !recompensaPaga && setPaymentCandidate(candidato)}
+                          disabled={recompensaPaga}
+                        >
+                          <FaCreditCard />
+                          {recompensaPaga ? 'Recompensa paga' : pagamentoPendente ? 'Pagamento pendente' : 'Pagar recompensa'}
+                        </button>
+                      )}
                       <button type="button" aria-label="Mais opções">
                         <FaEllipsisH />
                       </button>
@@ -290,7 +365,27 @@ function CandidatosEmpresa() {
         </main>
       </div>
 
+      {selectedCandidate && (
+        <CandidateProfileModal
+          candidato={selectedCandidate}
+          onClose={() => setSelectedCandidate(null)}
+          editableStatus
+          loadingStatus={updatingId === selectedCandidate.id}
+          onChangeStatus={(nextStatus) => handleTimelineChange(selectedCandidate, nextStatus)}
+        />
+      )}
+
       {/* Componente de rodapé. */}
+      {paymentCandidate && (
+        <PaymentRewardModal
+          candidato={paymentCandidate}
+          empresa={empresa}
+          pagamentoExistente={pagamentosPorCandidato.get(paymentCandidate.id)}
+          onClose={() => setPaymentCandidate(null)}
+          onCreated={handlePaymentCreated}
+        />
+      )}
+
       <Footer />
     </>
   )

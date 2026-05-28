@@ -7,6 +7,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   FaCalendarAlt,
   FaChartBar,
+  FaCreditCard,
   FaSuitcase,
   FaUserFriends,
   FaUserTie
@@ -16,8 +17,10 @@ import AccountSettings from '../../components/AccountSettings/AccountSettings'
 import DashboardActionCard from '../../components/dashboard/DashboardActionCard'
 import DashboardHeader from '../../components/dashboard/DashboardHeader'
 import DashboardLayout from '../../components/dashboard/DashboardLayout'
-import PanelPlaceholder from '../../components/dashboard/PanelPlaceholder'
 import PageLoader from '../../components/ui/PageLoader'
+import EmpresaEntrevistas from './EmpresaEntrevistas'
+import EmpresaPagamentos from './EmpresaPagamentos'
+import EmpresaPerfil from './EmpresaPerfil'
 
 const empresaCards = [
   {
@@ -54,6 +57,13 @@ const empresaCards = [
     description: 'Organize e acompanhe entrevistas com candidatos de forma simples.',
     to: '/painel/empresa?secao=entrevistas',
     action: 'Minhas Entrevistas'
+  },
+  {
+    icon: FaCreditCard,
+    title: 'Pagamentos',
+    description: 'Acompanhe recompensas pagas aos indicadores por contratacoes.',
+    to: '/painel/empresa?secao=pagamentos',
+    action: 'Ver Pagamentos'
   }
 ]
 
@@ -80,15 +90,11 @@ function PainelEmpresa() {
       {activeSection === 'configuracoes' ? (
         <AccountSettings user={empresa} tipo="empresa" onUserUpdate={setEmpresa} />
       ) : activeSection === 'perfil' ? (
-        <PanelPlaceholder
-          title="Perfil da empresa"
-          description="Esta area sera liberada em uma proxima etapa. Por enquanto, os dados de acesso ficam em Configuracoes."
-        />
+        <EmpresaPerfil empresa={empresa} onUserUpdate={setEmpresa} />
       ) : activeSection === 'entrevistas' ? (
-        <PanelPlaceholder
-          title="Entrevistas"
-          description="A organizacao de entrevistas continuara dentro deste painel quando a funcionalidade estiver pronta."
-        />
+        <EmpresaEntrevistas empresa={empresa} />
+      ) : activeSection === 'pagamentos' ? (
+        <EmpresaPagamentos empresa={empresa} />
       ) : (
         <>
           <DashboardHeader

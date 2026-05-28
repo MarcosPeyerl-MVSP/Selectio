@@ -180,7 +180,7 @@
   animation-delay: 0.14s;
 }
 
-/* Topo do card com avatar e seletor de status. */
+/* Topo do card com avatar e status. */
 .empresa-candidate-top {
   display: flex;
   align-items: flex-start;
@@ -202,105 +202,32 @@
   filter: saturate(1.04);
 }
 
-/* Seletor visual de status do candidato. */
-.empresa-status-select {
-  position: relative;
+.empresa-status-badge {
   display: inline-flex;
-  --status-color: #2563eb;
-  --status-bg: #eff6ff;
-  --status-border: #bfdbfe;
-}
-
-.empresa-status-select select {
-  min-width: 136px;
-  height: 36px;
-  border: 1px solid var(--status-border);
+  align-items: center;
+  min-height: 32px;
+  padding: 0 11px;
   border-radius: 999px;
-  padding: 0 30px 0 30px;
-  background: linear-gradient(180deg, var(--surface) 0%, var(--status-bg) 100%);
-  color: var(--text-heading);
-  font-size: 11px;
+  background: var(--danger-bg);
+  color: var(--primary);
+  font-size: 10px;
   font-weight: 900;
   text-transform: uppercase;
-  outline: none;
-  cursor: pointer;
-  appearance: none;
-  box-shadow: 0 8px 18px rgba(20, 20, 24, 0.06);
-  transition: border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast), opacity var(--motion-fast);
 }
 
-.empresa-status-select select:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 22px rgba(20, 20, 24, 0.08);
+.empresa-status-badge.entrevista {
+  background: var(--warning-bg);
+  color: var(--warning);
 }
 
-.empresa-status-select select:focus {
-  border-color: var(--status-color);
-  box-shadow: 0 0 0 3px rgba(182, 28, 47, 0.12), 0 12px 22px rgba(20, 20, 24, 0.08);
+.empresa-status-badge.contratado {
+  background: var(--success-bg);
+  color: var(--success);
 }
 
-.empresa-status-select select:disabled {
-  cursor: wait;
-  opacity: 0.7;
-}
-
-.empresa-status-select select option {
-  color: var(--text-heading);
-  background: var(--surface);
-  font-weight: 700;
-  text-transform: none;
-}
-
-.empresa-status-select::before {
-  content: "";
-  position: absolute;
-  left: 13px;
-  top: 50%;
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--status-color);
-  transform: translateY(-50%);
-  pointer-events: none;
-  box-shadow: 0 0 0 3px var(--status-bg);
-}
-
-.empresa-status-select::after {
-  content: "";
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  width: 7px;
-  height: 7px;
-  border-right: 2px solid #777d88;
-  border-bottom: 2px solid #777d88;
-  transform: translateY(-65%) rotate(45deg);
-  pointer-events: none;
-}
-
-/* Cores do seletor conforme status. */
-.empresa-status-select.indicado {
-  --status-color: #2563eb;
-  --status-bg: #eff6ff;
-  --status-border: #bfdbfe;
-}
-
-.empresa-status-select.entrevista {
-  --status-color: #d97706;
-  --status-bg: #fff7ed;
-  --status-border: #fed7aa;
-}
-
-.empresa-status-select.contratado {
-  --status-color: #16a34a;
-  --status-bg: #f0fdf4;
-  --status-border: #bbf7d0;
-}
-
-.empresa-status-select.cancelado {
-  --status-color: #dc2626;
-  --status-bg: #fef2f2;
-  --status-border: #fecaca;
+.empresa-status-badge.cancelado {
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .empresa-candidate-card h2 {
@@ -332,14 +259,18 @@
   gap: 8px;
 }
 
+.empresa-candidate-card .candidate-status-timeline {
+  margin: 2px 0 18px;
+}
+
 /* Ações do card de candidato. */
 .empresa-candidate-actions {
-  display: grid;
-  grid-template-columns: 1fr 36px;
+  display: flex;
   gap: 8px;
 }
 
 .empresa-candidate-actions button {
+  flex: 1;
   height: 36px;
   border: 0;
   border-radius: 6px;
@@ -356,8 +287,32 @@
 }
 
 .empresa-candidate-actions button:last-child {
+  flex: 0 0 36px;
   background: var(--surface-soft);
   color: var(--muted);
+}
+
+.empresa-candidate-actions .empresa-payment-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(182, 28, 47, 0.22);
+  background: var(--surface);
+  color: var(--primary);
+  font-size: 12px;
+}
+
+.empresa-candidate-actions .empresa-payment-action.paid {
+  border-color: rgba(22, 101, 52, 0.24);
+  background: var(--success-bg);
+  color: var(--success);
+  cursor: default;
+}
+
+.empresa-candidate-actions .empresa-payment-action:disabled:hover {
+  box-shadow: none;
+  transform: none;
 }
 
 /* Botão visual para carregar mais candidatos. */

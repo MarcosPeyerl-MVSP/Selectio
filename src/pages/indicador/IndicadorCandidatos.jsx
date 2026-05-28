@@ -12,6 +12,8 @@ import {
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import Footer from '../../components/layout/Footer'
+import CandidateProfileModal from '../../components/ui/CandidateProfileModal'
+import CandidateStatusTimeline from '../../components/ui/CandidateStatusTimeline'
 import SkeletonCard from '../../components/ui/SkeletonCard'
 import { listarCandidatosPorIndicador } from '../../services/firestoreCandidatos'
 import { getFirebaseUid } from '../../services/firebaseIdentity'
@@ -102,6 +104,9 @@ function Candidatos() {
 
   // Armazena mensagem de erro caso a busca de candidatos falhe.
   const [error, setError] = useState('')
+
+  // Controla o candidato exibido no painel de perfil.
+  const [selectedCandidate, setSelectedCandidate] = useState(null)
 
   useEffect(() => {
     // Responsabilidade: buscar candidatos vinculados ao indicador autenticado.
@@ -234,6 +239,14 @@ function Candidatos() {
                         <strong>{formatDate(candidato.aplicadoEm)}</strong>
                       </div>
                     </div>
+
+                    <CandidateStatusTimeline status={candidato.status || 'indicado'} variant="compact" />
+
+                    <div className="candidate-card-actions">
+                      <button type="button" onClick={() => setSelectedCandidate(candidato)}>
+                        Ver Perfil
+                      </button>
+                    </div>
                   </article>
                 )
               })}
@@ -250,6 +263,13 @@ function Candidatos() {
           )}
         </main>
       </div>
+
+      {selectedCandidate && (
+        <CandidateProfileModal
+          candidato={selectedCandidate}
+          onClose={() => setSelectedCandidate(null)}
+        />
+      )}
 
       {/* Componente de rodapé. */}
       <Footer />

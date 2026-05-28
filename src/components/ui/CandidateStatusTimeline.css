@@ -1,0 +1,168 @@
+.candidate-status-timeline {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+}
+
+.timeline-track {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  position: relative;
+  gap: 8px;
+}
+
+.timeline-track::before {
+  content: "";
+  position: absolute;
+  left: 16%;
+  right: 16%;
+  top: 18px;
+  height: 2px;
+  background: var(--border);
+}
+
+.timeline-step {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--muted);
+  text-align: center;
+}
+
+.timeline-step:not(:disabled) {
+  cursor: pointer;
+}
+
+.timeline-step:disabled {
+  cursor: default;
+}
+
+.timeline-node {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--muted);
+  box-shadow: 0 0 0 5px var(--surface);
+  transition: background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast), transform var(--motion-fast);
+}
+
+.timeline-label {
+  color: currentColor;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.timeline-step.completed,
+.timeline-step.active {
+  color: var(--primary);
+}
+
+.timeline-step.completed .timeline-node,
+.timeline-step.active .timeline-node {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--white);
+}
+
+.timeline-step.active .timeline-node {
+  transform: scale(1.08);
+  box-shadow: 0 0 0 5px var(--surface), 0 10px 24px rgba(182, 28, 47, 0.22);
+}
+
+.timeline-step:not(:disabled):hover .timeline-node {
+  transform: translateY(-2px);
+}
+
+.timeline-negative-badge,
+.timeline-cancel-button {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.timeline-negative-badge {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.timeline-cancel-button {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+}
+
+.timeline-cancel-button:hover:not(:disabled) {
+  border-color: rgba(182, 28, 47, 0.32);
+  color: var(--primary);
+}
+
+.timeline-cancel-button:disabled {
+  opacity: 0.64;
+  cursor: wait;
+}
+
+.candidate-status-timeline.compact .timeline-node {
+  width: 32px;
+  height: 32px;
+}
+
+.candidate-status-timeline.compact .timeline-track::before {
+  top: 15px;
+}
+
+.candidate-status-timeline.compact .timeline-label {
+  font-size: 10px;
+}
+
+:root[data-theme='dark'] .timeline-step.completed,
+:root[data-theme='dark'] .timeline-step.active {
+  color: var(--primary-dark);
+}
+
+:root[data-theme='dark'] .timeline-step.completed .timeline-node,
+:root[data-theme='dark'] .timeline-step.active .timeline-node {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--white);
+}
+
+:root[data-theme='dark'] .timeline-node {
+  box-shadow: 0 0 0 5px var(--surface);
+}
+
+:root[data-theme='dark'] .timeline-step.active .timeline-node {
+  box-shadow: 0 0 0 5px var(--surface), 0 10px 24px rgba(182, 28, 47, 0.3);
+}
+
+@media (max-width: 640px) {
+  .timeline-track {
+    gap: 4px;
+  }
+
+  .timeline-track::before {
+    left: 18%;
+    right: 18%;
+  }
+
+  .timeline-label {
+    font-size: 10px;
+  }
+}

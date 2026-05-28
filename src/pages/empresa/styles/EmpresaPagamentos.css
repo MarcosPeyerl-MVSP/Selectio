@@ -1,0 +1,183 @@
+.empresa-pagamentos {
+  color: var(--text);
+  animation: selectioFadeIn 0.32s ease both;
+}
+
+.empresa-pagamentos-header span,
+.empresa-pagamentos-lista-header span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary-dark);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.empresa-pagamentos-header h1 {
+  margin: 10px 0 12px;
+  color: var(--text-heading);
+  font-size: 44px;
+  line-height: 1.08;
+}
+
+.empresa-pagamentos-header p {
+  max-width: 720px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.empresa-pagamentos-metricas {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 24px 0 18px;
+}
+
+.empresa-pagamentos-metrica,
+.empresa-pagamentos-lista {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.empresa-pagamentos-metrica {
+  padding: 20px;
+}
+
+.empresa-pagamentos-metrica span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.empresa-pagamentos-metrica strong {
+  color: var(--text-heading);
+  font-size: 28px;
+}
+
+.empresa-pagamentos-lista {
+  padding: 22px;
+}
+
+.empresa-pagamentos-lista-header,
+.empresa-pagamento-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.empresa-pagamentos-lista-header {
+  margin-bottom: 16px;
+}
+
+.empresa-pagamento-item {
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+}
+
+.empresa-pagamento-item strong {
+  display: block;
+  color: var(--text-heading);
+}
+
+.empresa-pagamento-item span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.empresa-pagamento-meta {
+  text-align: right;
+}
+
+.empresa-pagamento-status {
+  display: inline-flex;
+  margin-top: 5px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.empresa-pagamento-status.approved {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.empresa-pagamento-status.pending {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.empresa-pagamento-status.rejected,
+.empresa-pagamento-status.failed,
+.empresa-pagamento-status.cancelled,
+.empresa-pagamento-status.refunded {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.empresa-pagamento-item a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid rgba(182, 28, 47, 0.22);
+  border-radius: 8px;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.empresa-pagamentos-vazio {
+  display: grid;
+  place-items: center;
+  min-height: 240px;
+  padding: 28px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  text-align: center;
+}
+
+.empresa-pagamentos-vazio svg {
+  margin-bottom: 12px;
+  color: var(--primary);
+  font-size: 28px;
+}
+
+.empresa-pagamentos-vazio p {
+  max-width: 360px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+@media (max-width: 760px) {
+  .empresa-pagamentos-header h1 {
+    font-size: 34px;
+  }
+
+  .empresa-pagamentos-metricas {
+    grid-template-columns: 1fr;
+  }
+
+  .empresa-pagamento-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .empresa-pagamento-meta {
+    text-align: left;
+  }
+}

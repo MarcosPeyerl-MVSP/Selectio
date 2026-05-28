@@ -4,14 +4,15 @@
 
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { FaChartBar, FaSuitcase, FaUserFriends, FaUserTie } from 'react-icons/fa'
+import { FaChartBar, FaMoneyBillWave, FaSuitcase, FaUserFriends, FaUserTie } from 'react-icons/fa'
 
 import AccountSettings from '../../components/AccountSettings/AccountSettings'
 import DashboardActionCard from '../../components/dashboard/DashboardActionCard'
 import DashboardHeader from '../../components/dashboard/DashboardHeader'
 import DashboardLayout from '../../components/dashboard/DashboardLayout'
-import PanelPlaceholder from '../../components/dashboard/PanelPlaceholder'
 import PageLoader from '../../components/ui/PageLoader'
+import IndicadorFinanceiro from './IndicadorFinanceiro'
+import IndicadorPerfil from './IndicadorPerfil'
 import { buscarStatusIndicador } from '../../services/firestoreIndicacoes'
 import { buscarPerfilUsuario } from '../../services/firestoreUsers'
 import { getFirebaseUid } from '../../services/firebaseIdentity'
@@ -56,6 +57,13 @@ const indicadorCards = [
     description: 'Acompanhe status, ganhos e o impacto de cada indicacao em tempo real.',
     to: '/painel/indicador',
     action: 'Acompanhar'
+  },
+  {
+    icon: FaMoneyBillWave,
+    title: 'Financeiro',
+    description: 'Veja seu saldo, movimentacoes e solicite saques manuais.',
+    to: '/painel/indicador?secao=financeiro',
+    action: 'Abrir Carteira'
   }
 ]
 
@@ -138,10 +146,9 @@ function Painel() {
       {activeSection === 'configuracoes' ? (
         <AccountSettings user={user} tipo="indicador" onUserUpdate={setUser} />
       ) : activeSection === 'perfil' ? (
-        <PanelPlaceholder
-          title="Perfil do indicador"
-          description="Esta area sera liberada em uma proxima etapa. Por enquanto, os dados de acesso ficam em Configuracoes."
-        />
+        <IndicadorPerfil user={user} onUserUpdate={setUser} />
+      ) : activeSection === 'financeiro' ? (
+        <IndicadorFinanceiro user={user} />
       ) : (
         <>
           <DashboardHeader

@@ -83,6 +83,17 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/vagas/$(data.vagaId)).data.empresaId == data.empresaId;
     }
 
+    function isNotificationOwner() {
+      return signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    function notificationReadUpdateOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        'lida',
+        'lidaEm'
+      ]);
+    }
+
     match /users/{uid} {
       allow read: if isOwner(uid);
       allow create, update: if ownUserPayload(uid);
@@ -147,6 +158,34 @@ service cloud.firestore {
         && hasValidStatus(request.resource.data.status);
 
       allow delete: if false;
+    }
+
+    match /pagamentos/{pagamentoId} {
+      allow read: if isEmpresaOrIndicadorOwner(resource.data);
+      allow create, update, delete: if false;
+    }
+
+    match /indicadorSaldos/{indicadorId} {
+      allow read: if isOwner(indicadorId);
+      allow create, update, delete: if false;
+    }
+
+    match /movimentacoesFinanceiras/{movimentacaoId} {
+      allow read: if signedIn() && resource.data.indicadorId == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
+    match /notificacoes/{notificacaoId} {
+      allow read: if isNotificationOwner();
+      allow update: if isNotificationOwner()
+        && request.resource.data.userId == resource.data.userId
+        && notificationReadUpdateOnly();
+      allow create, delete: if false;
+    }
+
+    match /saques/{saqueId} {
+      allow read: if signedIn() && resource.data.indicadorId == request.auth.uid;
+      allow create, update, delete: if false;
     }
 
     match /{document=**} {

@@ -1,0 +1,98 @@
+.notifications-dropdown {
+  position: relative;
+}
+
+.notification-trigger {
+  position: relative;
+}
+
+.notification-trigger span {
+  position: absolute;
+  top: -4px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--white);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.notifications-menu {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 70;
+  width: min(340px, calc(100vw - 28px));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  animation: selectioSlideUp 0.22s var(--ease-premium) both;
+}
+
+.notifications-menu header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.notifications-menu header strong {
+  color: var(--text-heading);
+  font-size: 14px;
+}
+
+.notifications-menu header span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.notifications-list {
+  display: grid;
+  max-height: 360px;
+  overflow: auto;
+}
+
+.notification-item {
+  display: block;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(182, 28, 47, 0.06);
+}
+
+.notification-item.read {
+  background: var(--surface);
+}
+
+.notification-item strong {
+  display: block;
+  color: var(--text-heading);
+  font-size: 13px;
+}
+
+.notification-item p,
+.notifications-empty p {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.notifications-empty {
+  padding: 18px;
+  text-align: center;
+}
+
+.notifications-empty strong {
+  color: var(--text-heading);
+}

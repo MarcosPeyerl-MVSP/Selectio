@@ -300,6 +300,56 @@
   font-size: 11px;
 }
 
+.candidate-card .candidate-status-timeline {
+  margin-top: 18px;
+}
+
+.candidate-card.contratado .timeline-track::before {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+.candidate-card.contratado .timeline-node {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.32);
+  color: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 0 0 5px transparent;
+}
+
+.candidate-card.contratado .timeline-step.completed,
+.candidate-card.contratado .timeline-step.active {
+  color: var(--white);
+}
+
+.candidate-card.contratado .timeline-step.completed .timeline-node,
+.candidate-card.contratado .timeline-step.active .timeline-node {
+  background: var(--white);
+  border-color: var(--white);
+  color: #15803d;
+}
+
+.candidate-card-actions {
+  margin-top: 18px;
+}
+
+.candidate-card-actions button {
+  width: 100%;
+  height: 36px;
+  border-radius: 6px;
+  background: var(--primary);
+  color: var(--white);
+  font-weight: 800;
+}
+
+.candidate-card-actions button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px rgba(182, 28, 47, 0.14);
+}
+
+.candidate-card.contratado .candidate-card-actions button {
+  background: var(--white);
+  color: #15803d;
+}
+
 /* Card de ação para adicionar candidato. */
 .candidate-add-card {
   display: grid;

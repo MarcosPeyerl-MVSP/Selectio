@@ -1,0 +1,41 @@
+.balance-card {
+  min-height: 138px;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.balance-card span {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.balance-card strong {
+  display: block;
+  color: var(--text-heading);
+  font-size: 30px;
+  line-height: 1.1;
+}
+
+.balance-card p {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.balance-card.primary {
+  border-color: rgba(182, 28, 47, 0.24);
+  background: linear-gradient(135deg, rgba(182, 28, 47, 0.1), var(--surface) 58%);
+}
+
+.balance-card.primary strong {
+  color: var(--primary);
+}

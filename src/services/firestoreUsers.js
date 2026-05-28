@@ -48,8 +48,8 @@ export const salvarPerfilUsuario = async ({ uid, tipo, dados }) => {
 }
 
 const editableFieldsByTipo = {
-  empresa: ['nomeEmpresa', 'telefone', 'site', 'setor', 'tamanho'],
-  indicador: ['nome', 'telefone', 'pix', 'linkedin']
+  empresa: ['nomeEmpresa', 'telefone', 'site', 'setor', 'tamanho', 'endereco'],
+  indicador: ['nome', 'telefone', 'pix', 'linkedin', 'portfolio', 'especialidades']
 }
 
 const pickEditableFields = ({ tipo, dados }) => {
