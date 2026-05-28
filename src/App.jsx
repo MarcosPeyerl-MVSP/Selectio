@@ -1,24 +1,24 @@
 import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom'
 
-import Home from './pages/Home/Home'
-import Login from './pages/Login/Login'
+import Home from './pages/public/Home'
+import Login from './pages/public/Login'
 // CADASTRO:
-import Cadastro from './pages/Cadastro/Cadastro'
-import CadastroIndicador from './pages/Indicador/Cadastro/Cadastro'
-import CadastroEmpresa from './pages/Empresa/Cadastro/Cadastro'
+import CadastroEscolha from './pages/cadastro/CadastroEscolha'
+import CadastroIndicador from './pages/cadastro/CadastroIndicador'
+import CadastroEmpresa from './pages/cadastro/CadastroEmpresa'
 //PAINEIS
-import PainelIndicado from './pages/Indicador/Painel/Painel'
-import PainelEmpresa from './pages/Empresa/Painel/Painel'
-import CandidatosEmpresa from './pages/Empresa/Candidatos/Candidatos'
+import PainelIndicador from './pages/indicador/IndicadorPainel'
+import PainelEmpresa from './pages/empresa/EmpresaPainel'
+import CandidatosEmpresa from './pages/empresa/EmpresaCandidatos'
 // VAGAS
-import Vagas from './pages/Vagas/Vagas'
-import CriarVagaEmpresa from './pages/Empresa/CriarVaga/Vaga'
-import EditarVagaEmpresa from './pages/Empresa/EditarVaga/Vaga'
+import Vagas from './pages/public/Vagas'
+import CriarVagaEmpresa from './pages/empresa/EmpresaCriarVaga'
+import EditarVagaEmpresa from './pages/empresa/EmpresaEditarVaga'
 
 // VAGA
-import Vaga from './pages/Indicador/Vaga/Vaga'
-import Indicar from './pages/Indicador/Indicar/Indicar'
-import Candidatos from './pages/Indicador/Candidatos/Candidatos'
+import VagaDetalhe from './pages/public/VagaDetalhe'
+import Indicar from './pages/indicador/IndicadorIndicar'
+import CandidatosIndicador from './pages/indicador/IndicadorCandidatos'
 
 function App() {
   return (
@@ -29,11 +29,11 @@ function App() {
         {/* ROTA LOGIN */}
         <Route path="/login" element={<Login />} />
         {/* ROTA CADASTROS */}
-        <Route path="/cadastro" element={<Cadastro />} />
+        <Route path="/cadastro" element={<CadastroEscolha />} />
         <Route path="/cadastro/indicador" element={<CadastroIndicador />} />
         <Route path="/cadastro/empresa" element={<CadastroEmpresa />} />
         {/* ROTA PAINEIS */}
-        <Route path="/painel/indicador" element={<PainelIndicado />} />
+        <Route path="/painel/indicador" element={<PainelIndicador />} />
         <Route path="/painel/empresa" element={<PainelEmpresa />} />
         <Route path="/candidatos/empresa" element={<CandidatosEmpresa />} />
         {/* ROTA VAGAS */}
@@ -43,9 +43,9 @@ function App() {
         <Route path="/criar-vaga/empresa" element={<CriarVagaEmpresa />} />
         <Route path="/editar-vaga/empresa/:id" element={<EditarVagaEmpresa />} />
         {/* ROTA VAGA */}
-        <Route path="/vaga/:id" element={<Vaga />} />
+        <Route path="/vaga/:id" element={<VagaDetalhe />} />
         <Route path="/indicar/:vagaId" element={<Indicar />} />
-        <Route path="/candidatos/indicador" element={<Candidatos />} />
+        <Route path="/candidatos/indicador" element={<CandidatosIndicador />} />
         {/* ROTA PAGE NOT FOUND */}
         <Route path="*" element={<h1>PAGE NOT FOUND</h1>} />
       </Routes>

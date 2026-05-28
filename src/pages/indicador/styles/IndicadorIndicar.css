@@ -1,0 +1,558 @@
+/* Objetivo do arquivo: definir os estilos da página de indicação de candidato,
+   incluindo layout com sidebar, formulário, upload de currículo, card lateral,
+   alertas e responsividade. */
+
+/* Layout principal com menu lateral e área de formulário. */
+.indicar-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 28px;
+  padding: 28px 24px 60px;
+  background: var(--background);
+  min-height: calc(100vh - 80px);
+}
+
+/* Área principal da página. */
+.indicar-page {
+  width: 100%;
+  max-width: 1180px;
+  animation: selectioFadeIn 0.36s ease both;
+}
+
+/* Cabeçalho com contexto, título, link de retorno e vaga selecionada. */
+.indicar-header {
+  margin-bottom: 52px;
+  animation: selectioSlideUp 0.44s var(--ease-premium) both;
+}
+
+.indicar-header span {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.indicar-header h1 {
+  margin: 0 0 10px;
+  color: var(--text-heading);
+  font-size: 42px;
+  line-height: 0.92;
+}
+
+.indicar-header a {
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.indicar-header a::before {
+  content: "< ";
+}
+
+.indicar-header p {
+  margin-top: 12px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+/* Formulário dividido entre conteúdo principal e card lateral. */
+.indicar-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  gap: 70px;
+  align-items: start;
+  animation: selectioFadeIn 0.34s ease 0.05s both;
+}
+
+/* Coluna principal do formulário. */
+.indicar-main {
+  display: grid;
+  gap: 44px;
+}
+
+/* Seção de campos do formulário. */
+.form-section {
+  display: grid;
+  gap: 20px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.indicar-main .form-section {
+  animation: selectioSlideUp 0.42s var(--ease-premium) both;
+}
+
+.indicar-main .form-section:nth-child(2) {
+  animation-delay: 0.05s;
+}
+
+.indicar-main .form-section:nth-child(3) {
+  animation-delay: 0.1s;
+}
+
+.indicar-main .form-section:nth-child(4),
+.indicar-main .form-section:nth-child(5),
+.indicar-main .form-section:nth-child(6) {
+  animation-delay: 0.14s;
+}
+
+.form-section h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 18px;
+}
+
+/* Grade padrão dos campos. */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 24px;
+}
+
+/* Variação de grade para três campos na mesma linha. */
+.form-grid.three-columns {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* Label base dos campos. */
+.field-label {
+  display: grid;
+  gap: 9px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Estilo compartilhado dos inputs, selects e textareas. */
+.field-label input,
+.field-label select,
+.field-label textarea,
+.saved-candidate-card select {
+  width: 100%;
+  border: 0;
+  border-radius: 6px;
+  background: var(--surface-soft);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  outline: none;
+  text-transform: none;
+  transition: background var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast);
+}
+
+.field-label input::placeholder,
+.field-label textarea::placeholder,
+.skill-input input::placeholder {
+  color: #7b8088;
+}
+
+/* Destaque visual no foco dos campos. */
+.field-label input:focus,
+.field-label select:focus,
+.field-label textarea:focus,
+.saved-candidate-card select:focus {
+  box-shadow: 0 0 0 2px rgba(182, 28, 47, 0.18);
+  background: var(--surface);
+  transform: translateY(-1px);
+}
+
+.field-label input,
+.field-label select,
+.saved-candidate-card select {
+  height: 42px;
+  padding: 0 14px;
+}
+
+.field-label textarea {
+  min-height: 72px;
+  padding: 16px;
+  resize: vertical;
+  text-transform: none;
+}
+
+/* Campo que ocupa toda a largura da grade. */
+.full-field {
+  grid-column: 1 / -1;
+}
+
+/* Barra visual de ferramentas do campo de narrativa. */
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 6px 6px 0 0;
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+.large-textarea {
+  min-height: 160px;
+  border-radius: 0 0 6px 6px;
+}
+
+/* Texto auxiliar do campo de habilidades. */
+.skill-help {
+  margin: -6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Campo de habilidades com tokens. */
+.skill-input {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 42px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--surface-soft);
+  transition: background var(--motion-fast), box-shadow var(--motion-fast);
+}
+
+.skill-input:focus-within {
+  background: var(--surface);
+  box-shadow: 0 0 0 2px rgba(182, 28, 47, 0.18);
+}
+
+/* Token removível de habilidade. */
+.skill-input button {
+  border: 0;
+  border-radius: 4px;
+  padding: 6px 8px;
+  background: #f4dde2;
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  transition: background var(--motion-fast), transform var(--motion-fast);
+}
+
+.skill-input button:hover {
+  background: #f0cbd2;
+  transform: translateY(-1px);
+}
+
+.skill-input input {
+  flex: 1;
+  min-width: 220px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  color: var(--text);
+}
+
+/* Área de upload de currículo. */
+.upload-box {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  min-height: 110px;
+  border: 1px dashed color-mix(in srgb, var(--primary) 42%, var(--border));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface) 76%, transparent);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.upload-box svg {
+  color: var(--primary);
+  font-size: 24px;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.upload-box strong {
+  color: var(--text-heading);
+  font-size: 13px;
+}
+
+.upload-box span {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.upload-box small {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.upload-box:hover {
+  border-color: var(--primary);
+  background: var(--surface-soft);
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px rgba(182, 28, 47, 0.08);
+}
+
+/* Estado visual quando há arquivo anexado. */
+.upload-box.has-file {
+  border-color: var(--success);
+  background: var(--success-bg);
+  color: var(--text);
+  box-shadow: 0 10px 26px rgba(34, 150, 95, 0.12);
+  animation: upload-confirm 0.32s ease;
+}
+
+.upload-box.has-file svg {
+  color: var(--success);
+  transform: scale(1.08);
+}
+
+.upload-box.has-file small {
+  color: var(--success);
+  font-weight: 800;
+}
+
+:root[data-theme='dark'] .upload-box {
+  border-color: color-mix(in srgb, var(--primary-dark) 46%, var(--border));
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  color: var(--text);
+}
+
+:root[data-theme='dark'] .upload-box strong {
+  color: var(--text-heading);
+}
+
+:root[data-theme='dark'] .upload-box small {
+  color: var(--muted);
+}
+
+:root[data-theme='dark'] .upload-box svg,
+:root[data-theme='dark'] .upload-box span {
+  color: var(--primary-dark);
+}
+
+:root[data-theme='dark'] .upload-box:hover {
+  border-color: var(--primary-dark);
+  background: var(--surface-soft);
+}
+
+:root[data-theme='dark'] .upload-box.has-file {
+  border-color: var(--success);
+  background: var(--success-bg);
+}
+
+:root[data-theme='dark'] .upload-box.has-file strong {
+  color: var(--text-heading);
+}
+
+:root[data-theme='dark'] .upload-box.has-file small,
+:root[data-theme='dark'] .upload-box.has-file svg {
+  color: var(--success);
+}
+
+.upload-box input {
+  display: none;
+}
+
+/* Ações finais do formulário. */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 24px;
+  padding-top: 4px;
+}
+
+.draft-button,
+.submit-button {
+  min-width: 170px;
+  height: 42px;
+  border: 0;
+  border-radius: 8px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background var(--motion-fast), color var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast);
+}
+
+.draft-button {
+  background: transparent;
+  color: var(--primary);
+}
+
+.draft-button:hover {
+  background: #f8e7ea;
+  transform: translateY(-1px);
+}
+
+.submit-button {
+  background: var(--primary);
+  color: #fff;
+}
+
+.submit-button:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(182, 28, 47, 0.18);
+}
+
+.submit-button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Card lateral para seleção de candidato pré-salvo. */
+.saved-candidate-card {
+  position: sticky;
+  top: 24px;
+  display: grid;
+  gap: 16px;
+  margin-top: 96px;
+  padding: 28px;
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.25), 0 20px 48px rgba(23, 23, 23, 0.08);
+  animation: selectioSlideUp 0.44s var(--ease-premium) 0.12s both;
+  transition: transform var(--motion-base), box-shadow var(--motion-base);
+}
+
+.saved-candidate-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.2), 0 24px 54px rgba(23, 23, 23, 0.12);
+}
+
+.saved-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 6px;
+  background: #f8e7ea;
+  color: var(--primary);
+}
+
+.saved-candidate-card h2 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.saved-candidate-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.saved-candidate-card label {
+  display: grid;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Feedback textual de carregamento. */
+.indicar-feedback {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+/* Alerta de erro no envio ou carregamento. */
+.indicar-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 1px solid rgba(182, 28, 47, 0.18);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  color: #6f111f;
+  animation: selectioScaleIn 0.28s var(--ease-premium) both;
+}
+
+.indicar-alert > svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--primary);
+}
+
+.indicar-alert strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.indicar-alert p {
+  margin: 0;
+  color: #6f111f;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Animação aplicada quando um arquivo é anexado. */
+@keyframes upload-confirm {
+  0% {
+    transform: scale(0.985);
+  }
+
+  60% {
+    transform: scale(1.01);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Ajustes para telas médias. */
+@media (max-width: 1100px) {
+  .indicar-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .indicar-form {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .saved-candidate-card {
+    position: static;
+    margin-top: 0;
+  }
+}
+
+/* Ajustes para telas pequenas. */
+@media (max-width: 720px) {
+  .indicar-layout {
+    padding: 22px 16px 44px;
+  }
+
+  .indicar-header {
+    margin-bottom: 32px;
+  }
+
+  .indicar-header h1 {
+    font-size: 34px;
+  }
+
+  .form-grid,
+  .form-grid.three-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .draft-button,
+  .submit-button {
+    width: 100%;
+  }
+}

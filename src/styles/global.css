@@ -164,10 +164,15 @@ main {
 :root[data-theme='dark'] .empresa-candidate-search,
 :root[data-theme='dark'] .candidate-tabs,
 :root[data-theme='dark'] .empresa-candidate-tabs button,
-:root[data-theme='dark'] .profile-photo,
 :root[data-theme='dark'] .placeholder-photo,
 :root[data-theme='dark'] .bar {
   background: var(--surface-soft);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+:root[data-theme='dark'] .profile-photo {
+  background-color: var(--surface-soft);
   border-color: var(--border);
   color: var(--text);
 }

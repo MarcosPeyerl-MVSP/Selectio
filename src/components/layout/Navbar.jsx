@@ -6,10 +6,14 @@ import { FaBell, FaMoon, FaSignOutAlt, FaSun, FaUserCircle } from 'react-icons/f
 import { signOut } from 'firebase/auth'
 import { auth } from '../../services/firebase'
 import { useTheme } from '../../hooks/useTheme'
+import { useConfirm } from '../../hooks/useConfirm'
+import { useToast } from '../../hooks/useToast'
 
 function Navbar() {
   const navigate = useNavigate()
   const { isDark, toggleTheme } = useTheme()
+  const confirm = useConfirm()
+  const toast = useToast()
   const empresa = getStoredUser('empresaUser')
   const indicador = getStoredUser('indicadorUser')
   const session = empresa
@@ -21,9 +25,18 @@ function Navbar() {
   const handleLogout = async () => {
     if (session.type === 'publico') return
 
+    const confirmed = await confirm({
+      title: 'Sair da conta?',
+      description: 'Sua sessao local sera encerrada neste navegador.',
+      confirmLabel: 'Sair'
+    })
+
+    if (!confirmed) return
+
     await signOut(auth).catch(() => {})
     localStorage.removeItem('empresaUser')
     localStorage.removeItem('indicadorUser')
+    toast.info('Sessao encerrada.')
     navigate('/login')
   }
 

@@ -47,6 +47,53 @@ export const salvarPerfilUsuario = async ({ uid, tipo, dados }) => {
   }
 }
 
+const editableFieldsByTipo = {
+  empresa: ['nomeEmpresa', 'telefone', 'site', 'setor', 'tamanho'],
+  indicador: ['nome', 'telefone', 'pix', 'linkedin']
+}
+
+const pickEditableFields = ({ tipo, dados }) => {
+  const allowedFields = editableFieldsByTipo[tipo] || []
+
+  return allowedFields.reduce((payload, field) => {
+    if (Object.prototype.hasOwnProperty.call(dados, field)) {
+      payload[field] = dados[field]
+    }
+
+    return payload
+  }, {})
+}
+
+export const atualizarPerfilUsuario = async ({ uid, tipo, dados }) => {
+  if (!uid) {
+    throw new Error('UID do Firebase e obrigatorio para atualizar o perfil.')
+  }
+
+  const collectionName = getCollectionByTipo(tipo)
+  const payload = pickEditableFields({ tipo, dados })
+
+  await setDoc(doc(db, collectionName, uid), {
+    ...payload,
+    atualizadoEm: serverTimestamp()
+  }, { merge: true })
+
+  const userPayload = {}
+  if (tipo === 'empresa' && payload.nomeEmpresa) userPayload.nome = payload.nomeEmpresa
+  if (tipo === 'indicador' && payload.nome) userPayload.nome = payload.nome
+
+  if (Object.keys(userPayload).length) {
+    await setDoc(doc(db, 'users', uid), {
+      ...userPayload,
+      atualizadoEm: serverTimestamp()
+    }, { merge: true })
+  }
+
+  return {
+    ...payload,
+    atualizadoEm: new Date().toISOString()
+  }
+}
+
 export const buscarPerfilUsuario = async (uid) => {
   if (!uid) return null
 
