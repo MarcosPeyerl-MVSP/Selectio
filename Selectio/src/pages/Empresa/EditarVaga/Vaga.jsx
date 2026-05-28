@@ -1,6 +1,6 @@
 // Objetivo do arquivo: renderizar e controlar a página de edição de vaga da empresa.
 // O componente valida a sessão da empresa, carrega os dados da vaga, verifica se a vaga
-// pertence à empresa autenticada, permite ajustes no formulário e envia a atualização para a API.
+// pertence à empresa autenticada, permite ajustes no formulário e envia a atualização para o Firestore.
 
 import '../CriarVaga/Vaga.css'
 import './Vaga.css'
@@ -10,7 +10,7 @@ import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Sidebar from '../../../components/Sidebar/Sidebar'
 import Footer from '../../../components/Footer/Footer'
 import { buscarVagaPorId, editarVaga } from '../../../services/firestoreVagas'
-import { getFirebaseUid, getLegacyId } from '../../../services/legacyIds'
+import { getFirebaseUid } from '../../../services/firebaseIdentity'
 
 // Estado inicial do formulário de edição da vaga.
 const initialForm = {
@@ -231,7 +231,7 @@ function EditarVagaEmpresa() {
     return `${day}/${month}/${year}`
   }
 
-  // Responsabilidade: validar dados e enviar a atualização da vaga para a API.
+  // Responsabilidade: validar dados e enviar a atualização da vaga para o Firestore.
   const handleSubmit = async (event) => {
     event.preventDefault()
     setMessage('')
@@ -265,9 +265,9 @@ function EditarVagaEmpresa() {
     const payload = {
       titulo: form.titulo,
       empresa: empresa.nomeEmpresa || empresa.nome || 'Empresa Selectio',
+      empresaNome: empresa.nomeEmpresa || empresa.nome || 'Empresa Selectio',
       empresaId: empresaUid,
       empresaUid,
-      empresaLegacyId: getLegacyId(empresa),
       localizacao: form.localizacao,
       salario,
       tipo: form.tipo === 'Contrato temporário'

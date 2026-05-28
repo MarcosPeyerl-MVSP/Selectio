@@ -1,6 +1,6 @@
 // Objetivo do arquivo: renderizar o formulário de indicação de candidato para uma vaga.
 // A página valida a sessão do indicador, busca os dados da vaga, coleta informações
-// do candidato indicado e envia a indicação para a API.
+// do candidato indicado e envia a indicação para o Firestore.
 
 import './Indicar.css'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
@@ -97,7 +97,7 @@ function Indicar() {
   // Mantém os dados do indicador autenticado.
   const [indicador] = useState(getIndicador)
 
-  // Armazena os dados da vaga carregada pela API.
+  // Armazena os dados da vaga carregada pelo Firestore.
   const [vaga, setVaga] = useState(null)
 
   // Controla todos os campos do formulário.
@@ -188,7 +188,7 @@ function Indicar() {
     setForm((current) => ({ ...current, curriculoNome: file?.name || '' }))
   }
 
-  // Responsabilidade: enviar a indicação do candidato para a API.
+  // Responsabilidade: enviar a indicação do candidato para o Firestore.
   const handleSubmit = async (event) => {
     event.preventDefault()
     setSaving(true)

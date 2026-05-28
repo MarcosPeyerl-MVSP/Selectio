@@ -22,14 +22,11 @@ export const salvarPerfilUsuario = async ({ uid, tipo, dados }) => {
   }
 
   const collectionName = getCollectionByTipo(tipo)
-  const legacyId = /^\d+$/.test(String(dados?.id ?? '')) ? Number(dados.id) : dados?.legacyId || dados?.sqliteId || null
   const perfil = {
     ...dados,
     id: dados?.id || uid,
     uid,
     firebaseUid: uid,
-    legacyId,
-    sqliteId: legacyId,
     tipo,
     atualizadoEm: serverTimestamp()
   }

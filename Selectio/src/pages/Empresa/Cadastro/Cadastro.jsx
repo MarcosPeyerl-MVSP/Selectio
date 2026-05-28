@@ -1,6 +1,6 @@
 // Objetivo do arquivo: renderizar e controlar o formulário de cadastro de empresa.
 // O componente consulta CNPJ em API externa, valida senha forte, confirma senha,
-// valida aceite dos termos, envia o cadastro para a API local e salva a sessão da empresa.
+// valida aceite dos termos, salva o perfil no Firebase/Firestore e salva a sessão da empresa.
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -231,7 +231,7 @@ export default function Cadastro() {
     }
   };
 
-  // Responsabilidade: validar dados obrigatórios e enviar o cadastro para a API.
+  // Responsabilidade: validar dados obrigatórios e salvar o cadastro no Firebase/Firestore.
   const handleSubmit = async (e) => {
     e.preventDefault();
 

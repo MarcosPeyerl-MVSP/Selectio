@@ -1,5 +1,5 @@
 // Objetivo do arquivo: renderizar a página de candidatos do indicador.
-// A página valida a sessão do indicador, busca candidatos na API, aplica filtros
+// A página valida a sessão do indicador, busca candidatos no Firestore, aplica filtros
 // por status e busca textual, e exibe os candidatos em cards.
 
 import './Candidatos.css'
@@ -13,12 +13,12 @@ import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Sidebar from '../../../components/Sidebar/Sidebar'
 import Footer from '../../../components/Footer/Footer'
 import { listarCandidatosPorIndicador } from '../../../services/firestoreCandidatos'
-import { getFirebaseUid } from '../../../services/legacyIds'
+import { getFirebaseUid } from '../../../services/firebaseIdentity'
 
 // Status disponíveis para filtro na interface.
 const statusTabs = ['Todos', 'Indicado', 'Entrevista', 'Contratado', 'Cancelado']
 
-// Mapeia os status recebidos da API para os textos exibidos ao usuário.
+// Mapeia os status recebidos do Firestore para os textos exibidos ao usuário.
 const statusLabels = {
   indicado: 'Indicado',
   entrevista: 'Entrevista',
@@ -85,7 +85,7 @@ function Candidatos() {
   const [indicador] = useState(getIndicador)
   const indicadorUid = getFirebaseUid(indicador)
 
-  // Armazena candidatos retornados pela API.
+  // Armazena candidatos retornados pelo Firestore.
   const [candidatos, setCandidatos] = useState([])
 
   // Armazena o termo digitado no campo de busca.

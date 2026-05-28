@@ -1,5 +1,5 @@
 // Objetivo do arquivo: renderizar a página de detalhes de uma vaga.
-// A página identifica o perfil autenticado, busca a vaga pela API,
+// A página identifica o perfil autenticado, busca a vaga no Firestore,
 // redireciona usuários públicos para login e exibe ações diferentes para empresa e indicador.
 
 import './Vaga.css'
@@ -14,7 +14,7 @@ import {
   FaEdit,
 } from 'react-icons/fa'
 import { buscarVagaPorId } from '../../../services/firestoreVagas'
-import { getFirebaseUid } from '../../../services/legacyIds'
+import { getFirebaseUid } from '../../../services/firebaseIdentity'
 
 // Responsabilidade: identificar o perfil atual com base nos dados salvos no localStorage.
 const getPerfil = () => {
@@ -66,7 +66,7 @@ function Vaga() {
   const [perfil] = useState(getPerfil)
 
   useEffect(() => {
-    // Responsabilidade: buscar os detalhes da vaga na API.
+    // Responsabilidade: buscar os detalhes da vaga no Firestore.
     const fetchVaga = async () => {
       if (perfil.tipo === 'publico') return
 

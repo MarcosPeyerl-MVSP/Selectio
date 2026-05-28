@@ -1,6 +1,6 @@
 // Objetivo do arquivo: renderizar a página de candidatos da empresa.
 // A página valida a sessão da empresa, busca candidatos vinculados às vagas da empresa,
-// permite filtro por status e busca textual, e atualiza o status dos candidatos pela API.
+// permite filtro por status e busca textual, e atualiza o status dos candidatos no Firestore.
 
 import './Candidatos.css'
 import { Navigate } from 'react-router-dom'
@@ -16,7 +16,7 @@ import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Sidebar from '../../../components/Sidebar/Sidebar'
 import Footer from '../../../components/Footer/Footer'
 import { atualizarStatusCandidato, listarCandidatosPorEmpresa } from '../../../services/firestoreCandidatos'
-import { getFirebaseUid } from '../../../services/legacyIds'
+import { getFirebaseUid } from '../../../services/firebaseIdentity'
 
 // Abas de filtro exibidas na interface.
 const tabs = ['Todos', 'Indicado', 'Entrevista', 'Contratado', 'Cancelado']
@@ -29,7 +29,7 @@ const statusOptions = [
   { value: 'cancelado', label: 'Cancelado' },
 ]
 
-// Mapeia status retornados pela API para os textos exibidos na interface.
+// Mapeia status retornados pelo Firestore para os textos exibidos na interface.
 const statusLabels = {
   indicado: 'Indicado',
   entrevista: 'Entrevista',
@@ -87,7 +87,7 @@ function CandidatosEmpresa() {
   const [empresa] = useState(getEmpresa)
   const empresaUid = getFirebaseUid(empresa)
 
-  // Armazena candidatos retornados pela API.
+  // Armazena candidatos retornados pelo Firestore.
   const [candidatos, setCandidatos] = useState([])
 
   // Armazena o termo digitado no campo de busca.
@@ -156,7 +156,7 @@ function CandidatosEmpresa() {
     return <Navigate to="/login?redirect=/candidatos/empresa" replace />
   }
 
-  // Responsabilidade: atualizar o status de um candidato pela API.
+  // Responsabilidade: atualizar o status de um candidato no Firestore.
   const updateStatus = async (candidatoId, status) => {
     setUpdatingId(candidatoId)
     setError('')

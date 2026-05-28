@@ -1,6 +1,6 @@
 // Objetivo do arquivo: renderizar e controlar o formulário de cadastro de indicador.
 // O componente valida CPF, avalia força da senha, confirma senha, envia os dados
-// para a API e salva a sessão do indicador após cadastro bem-sucedido.
+// no Firebase/Firestore e salva a sessão do indicador após cadastro bem-sucedido.
 
 import './Cadastro.css'
 import { useState } from 'react'
@@ -170,7 +170,7 @@ function CadastroIndicador() {
     setForm({ ...form, [name]: formattedValue })
   }
 
-  // Responsabilidade: validar dados e enviar o cadastro para a API.
+  // Responsabilidade: validar dados e salvar o cadastro no Firebase/Firestore.
   async function handleSubmit(e) {
     e.preventDefault()
 
@@ -191,7 +191,7 @@ function CadastroIndicador() {
       return
     }
 
-    // Remove campos usados apenas na interface antes de enviar à API.
+    // Remove campos usados apenas na interface antes de salvar no Firestore.
     const payload = { ...form }
     delete payload.confirmarSenha
     delete payload.cpfError

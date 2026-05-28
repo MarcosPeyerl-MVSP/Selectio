@@ -4,23 +4,24 @@
 /* Layout principal com sidebar e área de conteúdo. */
 .candidatos-layout {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 28px;
+  grid-template-columns: 255px minmax(0, 1fr);
   min-height: calc(100vh - 80px);
-  padding: 28px 28px 80px;
-  background: #f4f4f5;
+  background: #f5f5f5;
 }
 
 /* Área principal da página. */
 .candidatos-page {
   width: 100%;
-  max-width: 1220px;
+  min-width: 0;
+  padding: 38px 38px 80px;
+  background: #fefefe;
   animation: selectioFadeIn 0.36s ease both;
 }
 
 /* Cabeçalho com contexto, título e descrição. */
 .candidatos-header {
-  margin-bottom: 48px;
+  max-width: 900px;
+  margin-bottom: 34px;
   animation: selectioSlideUp 0.44s var(--ease-premium) both;
 }
 
@@ -37,8 +38,8 @@
 .candidatos-header h1 {
   margin: 0 0 6px;
   color: #202024;
-  font-size: 42px;
-  line-height: 1;
+  font-size: 40px;
+  line-height: 1.05;
 }
 
 .candidatos-header p {
@@ -54,7 +55,7 @@
   display: grid;
   grid-template-columns: minmax(260px, 1fr) auto;
   gap: 18px;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
   animation: selectioSlideUp 0.44s var(--ease-premium) 0.06s both;
 }
 
@@ -66,9 +67,9 @@
   min-height: 44px;
   padding: 0 18px;
   border-radius: 8px;
-  background: #e6e6e8;
+  background: #f7f7f8;
   color: #7a7f88;
-  border: 1px solid transparent;
+  border: 1px solid #ececf0;
   transition: background var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast);
 }
 
@@ -99,7 +100,7 @@
   align-items: center;
   padding: 4px;
   border-radius: 8px;
-  background: #ececef;
+  background: #f0f0f2;
 }
 
 .candidate-tabs button {
@@ -123,7 +124,8 @@
 /* Estado visual da aba selecionada. */
 .candidate-tabs button.active {
   background: #fff;
-  color: #2563eb;
+  color: var(--primary);
+  box-shadow: 0 8px 16px rgba(20, 20, 24, 0.06);
 }
 
 /* Grade de cards de candidatos. */
@@ -139,6 +141,7 @@
   min-height: 174px;
   border-radius: 10px;
   background: #fff;
+  border: 1px solid #ececf0;
   animation: selectioSlideUp 0.42s var(--ease-premium) both;
   transition: transform var(--motion-base), box-shadow var(--motion-base), border-color var(--motion-fast), background var(--motion-fast);
 }
@@ -153,6 +156,7 @@
 .candidate-add-card:hover {
   transform: translateY(-5px);
   box-shadow: var(--shadow-hover);
+  border-color: rgba(182, 28, 47, 0.18);
 }
 
 .candidate-grid .candidate-card:nth-child(2) {
@@ -235,8 +239,9 @@
 
 /* Estado visual específico para candidato contratado. */
 .candidate-card.contratado {
-  background: #16a34a;
+  background: linear-gradient(135deg, #15803d 0%, #16a34a 100%);
   color: #fff;
+  border-color: transparent;
 }
 
 .candidate-card.contratado .candidate-status {
@@ -301,7 +306,8 @@
   place-items: center;
   align-content: center;
   gap: 10px;
-  border: 1px dashed #d5d5da;
+  border-style: dashed;
+  border-color: #d5d5da;
   color: #777d88;
   text-align: center;
   text-decoration: none;
@@ -354,6 +360,10 @@
     grid-template-columns: 1fr;
   }
 
+  .candidatos-page {
+    padding: 32px 24px 64px;
+  }
+
   .candidatos-toolbar {
     grid-template-columns: 1fr;
   }
@@ -369,8 +379,8 @@
 
 /* Ajustes para telas pequenas. */
 @media (max-width: 720px) {
-  .candidatos-layout {
-    padding: 22px 16px 56px;
+  .candidatos-page {
+    padding: 28px 16px 56px;
   }
 
   .candidatos-header h1 {

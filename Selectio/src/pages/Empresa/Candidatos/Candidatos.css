@@ -5,22 +5,23 @@
 /* Layout principal com sidebar e área de conteúdo. */
 .empresa-candidatos-layout {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 28px;
+  grid-template-columns: 255px minmax(0, 1fr);
   min-height: calc(100vh - 80px);
-  padding: 28px 28px 80px;
-  background: #f4f4f5;
+  background: #f5f5f5;
 }
 
 /* Área principal da página. */
 .empresa-candidatos-page {
   width: 100%;
-  max-width: 1220px;
+  min-width: 0;
+  padding: 38px 38px 80px;
+  background: #fefefe;
   animation: selectioFadeIn 0.36s ease both;
 }
 
 /* Cabeçalho com contexto, título, descrição e link de retorno. */
 .empresa-candidatos-header {
+  max-width: 920px;
   margin-bottom: 34px;
   animation: selectioSlideUp 0.44s var(--ease-premium) both;
 }
@@ -38,8 +39,8 @@
 .empresa-candidatos-header h1 {
   margin: 0 0 8px;
   color: #202024;
-  font-size: 38px;
-  line-height: 1;
+  font-size: 40px;
+  line-height: 1.05;
 }
 
 .empresa-candidatos-header p {
@@ -66,7 +67,7 @@
   grid-template-columns: minmax(260px, 360px) 1fr;
   gap: 28px;
   align-items: start;
-  margin-bottom: 42px;
+  margin-bottom: 32px;
   animation: selectioSlideUp 0.44s var(--ease-premium) 0.06s both;
 }
 
@@ -78,9 +79,9 @@
   min-height: 44px;
   padding: 0 18px;
   border-radius: 8px;
-  background: #e1e1e3;
+  background: #f7f7f8;
   color: #7a7f88;
-  border: 1px solid transparent;
+  border: 1px solid #ececf0;
   transition: background var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast);
 }
 
@@ -115,7 +116,7 @@
   height: 34px;
   border: 0;
   border-radius: 999px;
-  background: #ececef;
+  background: #f0f0f2;
   color: #666b75;
   font-weight: 800;
   cursor: pointer;
@@ -147,8 +148,9 @@
   min-height: 246px;
   border-radius: 10px;
   background: #fff;
+  border: 1px solid #ececf0;
   animation: selectioSlideUp 0.42s var(--ease-premium) both;
-  transition: transform var(--motion-base), box-shadow var(--motion-base);
+  transition: transform var(--motion-base), box-shadow var(--motion-base), border-color var(--motion-fast);
 }
 
 /* Card individual de candidato. */
@@ -161,6 +163,7 @@
 .empresa-load-more:hover {
   transform: translateY(-5px);
   box-shadow: var(--shadow-hover);
+  border-color: rgba(182, 28, 47, 0.18);
 }
 
 .empresa-candidate-grid .empresa-candidate-card:nth-child(2) {
@@ -203,52 +206,101 @@
 .empresa-status-select {
   position: relative;
   display: inline-flex;
+  --status-color: #2563eb;
+  --status-bg: #eff6ff;
+  --status-border: #bfdbfe;
 }
 
 .empresa-status-select select {
-  min-width: 116px;
-  height: 28px;
-  border: 0;
+  min-width: 136px;
+  height: 36px;
+  border: 1px solid var(--status-border);
   border-radius: 999px;
-  padding: 0 24px 0 10px;
-  color: #fff;
-  font-size: 10px;
+  padding: 0 30px 0 30px;
+  background: linear-gradient(180deg, #fff 0%, var(--status-bg) 100%);
+  color: #202024;
+  font-size: 11px;
   font-weight: 900;
   text-transform: uppercase;
   outline: none;
   cursor: pointer;
   appearance: none;
-  transition: box-shadow var(--motion-fast), transform var(--motion-fast);
+  box-shadow: 0 8px 18px rgba(20, 20, 24, 0.06);
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast), opacity var(--motion-fast);
+}
+
+.empresa-status-select select:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px rgba(20, 20, 24, 0.08);
 }
 
 .empresa-status-select select:focus {
-  box-shadow: 0 0 0 3px rgba(182, 28, 47, 0.12);
+  border-color: var(--status-color);
+  box-shadow: 0 0 0 3px rgba(182, 28, 47, 0.12), 0 12px 22px rgba(20, 20, 24, 0.08);
+}
+
+.empresa-status-select select:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.empresa-status-select select option {
+  color: #202024;
+  background: #fff;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.empresa-status-select::before {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--status-color);
+  transform: translateY(-50%);
+  pointer-events: none;
+  box-shadow: 0 0 0 3px var(--status-bg);
 }
 
 .empresa-status-select::after {
-  content: "⌄";
+  content: "";
   position: absolute;
-  right: 9px;
-  top: 3px;
-  color: #fff;
+  right: 14px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid #777d88;
+  border-bottom: 2px solid #777d88;
+  transform: translateY(-65%) rotate(45deg);
   pointer-events: none;
 }
 
 /* Cores do seletor conforme status. */
-.empresa-status-select.indicado select {
-  background: #2563eb;
+.empresa-status-select.indicado {
+  --status-color: #2563eb;
+  --status-bg: #eff6ff;
+  --status-border: #bfdbfe;
 }
 
-.empresa-status-select.entrevista select {
-  background: #d97706;
+.empresa-status-select.entrevista {
+  --status-color: #d97706;
+  --status-bg: #fff7ed;
+  --status-border: #fed7aa;
 }
 
-.empresa-status-select.contratado select {
-  background: #16a34a;
+.empresa-status-select.contratado {
+  --status-color: #16a34a;
+  --status-bg: #f0fdf4;
+  --status-border: #bbf7d0;
 }
 
-.empresa-status-select.cancelado select {
-  background: #dc2626;
+.empresa-status-select.cancelado {
+  --status-color: #dc2626;
+  --status-bg: #fef2f2;
+  --status-border: #fecaca;
 }
 
 .empresa-candidate-card h2 {
@@ -359,6 +411,10 @@
     grid-template-columns: 1fr;
   }
 
+  .empresa-candidatos-page {
+    padding: 32px 24px 64px;
+  }
+
   .empresa-candidatos-toolbar {
     grid-template-columns: 1fr;
   }
@@ -374,8 +430,8 @@
 
 /* Ajustes para telas pequenas. */
 @media (max-width: 720px) {
-  .empresa-candidatos-layout {
-    padding: 22px 16px 56px;
+  .empresa-candidatos-page {
+    padding: 28px 16px 56px;
   }
 
   .empresa-candidatos-header h1 {

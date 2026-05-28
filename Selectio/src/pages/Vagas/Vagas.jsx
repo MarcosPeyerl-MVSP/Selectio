@@ -1,5 +1,5 @@
 // Objetivo do arquivo: renderizar a página de listagem de vagas.
-// A página busca vagas na API, aplica filtros locais, identifica o tipo de sessão
+// A página busca vagas no Firestore, aplica filtros locais, identifica o tipo de sessão
 // do usuário e ajusta ações exibidas para público, indicador ou empresa.
 
 import './Vagas.css'
@@ -10,7 +10,7 @@ import Sidebar from '../../components/Sidebar/Sidebar'
 import Footer from '../../components/Footer/Footer'
 import { FiSearch } from 'react-icons/fi'
 import { listarVagas } from '../../services/firestoreVagas'
-import { getFirebaseUid } from '../../services/legacyIds'
+import { getFirebaseUid } from '../../services/firebaseIdentity'
 
 // Responsabilidade: formatar o valor digitado no filtro de salário como moeda brasileira.
 const formatCurrencyFilter = (value) => {
@@ -76,7 +76,7 @@ function Vagas() {
   // Estado dos filtros aplicados à listagem.
   const [filtro, setFiltro] = useState({ busca: '', salario: '', area: '' })
 
-  // Estado com as vagas retornadas pela API.
+  // Estado com as vagas retornadas pelo Firestore.
   const [vagas, setVagas] = useState([])
 
   // Controla o carregamento inicial da listagem.

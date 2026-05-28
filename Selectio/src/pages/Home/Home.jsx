@@ -26,7 +26,7 @@ function Home() {
   // Controla a direção da animação do carrossel ao trocar de vaga.
   const [direction, setDirection] = useState('next')
 
-  // Armazena as vagas retornadas pela API de vagas em destaque.
+  // Armazena as vagas em destaque retornadas pelo Firestore.
   const [vagas, setVagas] = useState([])
 
   useEffect(() => {

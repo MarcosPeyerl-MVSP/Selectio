@@ -1,6 +1,6 @@
 // Objetivo do arquivo: renderizar e controlar a página de criação de vaga da empresa.
 // O componente valida a sessão da empresa, coleta dados da vaga, aplica formatação
-// em valores monetários, valida regras do formulário e envia a nova vaga para a API.
+// em valores monetários, valida regras do formulário e envia a nova vaga para o Firestore.
 
 import './Vaga.css'
 import { useEffect, useState } from 'react'
@@ -9,7 +9,7 @@ import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Sidebar from '../../../components/Sidebar/Sidebar'
 import Footer from '../../../components/Footer/Footer'
 import { criarVaga } from '../../../services/firestoreVagas'
-import { getFirebaseUid, getLegacyId } from '../../../services/legacyIds'
+import { getFirebaseUid } from '../../../services/firebaseIdentity'
 
 // Estado inicial do formulário de criação de vaga.
 const initialForm = {
@@ -106,7 +106,7 @@ function CriarVagaEmpresa() {
     return `${day}/${month}/${year}`
   }
 
-  // Responsabilidade: validar o formulário e enviar a vaga para a API.
+  // Responsabilidade: validar o formulário e enviar a vaga para o Firestore.
   const handleSubmit = async (event) => {
     event.preventDefault()
     setMessage('')
@@ -155,9 +155,9 @@ function CriarVagaEmpresa() {
     const payload = {
       titulo: form.titulo,
       empresa: empresa.nomeEmpresa || empresa.nome || 'Empresa Selectio',
+      empresaNome: empresa.nomeEmpresa || empresa.nome || 'Empresa Selectio',
       empresaId: empresaUid,
       empresaUid,
-      empresaLegacyId: getLegacyId(empresa),
       localizacao: form.localizacao,
       salario,
       tipo: form.tipo === 'Contrato temporário'
@@ -179,7 +179,7 @@ function CriarVagaEmpresa() {
     try {
       setLoading(true)
 
-      // Integração: envia a nova vaga para cadastro na API.
+      // Integração: envia a nova vaga para cadastro no Firestore.
       await criarVaga(payload)
 
       setMessage('Vaga criada com sucesso.')

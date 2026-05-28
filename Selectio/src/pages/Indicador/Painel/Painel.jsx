@@ -11,7 +11,7 @@ import Footer from '../../../components/Footer/Footer'
 import { FaChartBar, FaSuitcase, FaUserFriends, FaUserTie } from 'react-icons/fa'
 import { buscarStatusIndicador } from '../../../services/firestoreIndicacoes'
 import { buscarPerfilUsuario } from '../../../services/firestoreUsers'
-import { getFirebaseUid } from '../../../services/legacyIds'
+import { getFirebaseUid } from '../../../services/firebaseIdentity'
 
 // Responsabilidade: formatar valores numéricos como moeda brasileira.
 const formatCurrency = (value) => Number(value || 0).toLocaleString('pt-BR', {
