@@ -3,15 +3,21 @@
 // no Firebase/Firestore e salva a sessão do indicador após cadastro bem-sucedido.
 
 import './Cadastro.css'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FaCheck, FaEye, FaEyeSlash, FaTimes } from 'react-icons/fa'
-import { createUserWithEmailAndPassword, deleteUser } from 'firebase/auth'
+import { FaCheck, FaEye, FaEyeSlash, FaGoogle, FaTimes } from 'react-icons/fa'
+import {
+  createUserWithEmailAndPassword,
+  deleteUser,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut
+} from 'firebase/auth'
 import Navbar from '../../../components/Navbar/Navbar/Navbar'
 import Footer from '../../../components/Footer/Footer'
 import { auth } from '../../../services/firebase'
 import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from '../../../services/authErrors'
-import { salvarPerfilUsuario } from '../../../services/firestoreUsers'
+import { buscarPerfilUsuario, salvarPerfilUsuario } from '../../../services/firestoreUsers'
 
 // Critérios exibidos e validados para classificar a força da senha.
 const passwordCriteria = [
@@ -75,6 +81,12 @@ function CadastroIndicador() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const [submitLoading, setSubmitLoading] = useState(false)
+
+  const [googleSignupUser, setGoogleSignupUser] = useState(null)
+  const [googleLoading, setGoogleLoading] = useState(false)
+  const [googleMessage, setGoogleMessage] = useState('')
+  const pendingGoogleUidRef = useRef('')
+  const keepGoogleSessionRef = useRef(false)
 
   // Responsabilidade: aplicar máscara de CPF no formato 000.000.000-00.
   function formatCPF(value) {
@@ -148,7 +160,45 @@ function CadastroIndicador() {
 
   // Regra de envio: o botão só fica apto quando a senha informada for forte.
   const isPasswordStrong = passwordStrength?.strength === 'forte'
-  const canSubmit = isPasswordStrong && !submitLoading
+  const isGoogleSignup = Boolean(googleSignupUser)
+  const canSubmit = (isGoogleSignup || isPasswordStrong) && !submitLoading
+
+  useEffect(() => {
+    return () => {
+      const pendingUid = pendingGoogleUidRef.current
+
+      if (
+        pendingUid &&
+        !keepGoogleSessionRef.current &&
+        auth.currentUser?.uid === pendingUid
+      ) {
+        signOut(auth).catch(() => {})
+      }
+    }
+  }, [])
+
+  const redirectExistingProfile = (perfil) => {
+    keepGoogleSessionRef.current = true
+
+    if (perfil.tipo === 'indicador') {
+      localStorage.setItem('indicadorUser', JSON.stringify(perfil))
+      localStorage.removeItem('empresaUser')
+      alert('Esta conta Google ja esta cadastrada. Vamos te levar ao painel do indicador.')
+      navigate('/painel/indicador')
+      return
+    }
+
+    if (perfil.tipo === 'empresa') {
+      localStorage.setItem('empresaUser', JSON.stringify(perfil))
+      localStorage.removeItem('indicadorUser')
+      alert('Esta conta Google ja esta cadastrada como empresa. Vamos te levar ao painel correto.')
+      navigate('/painel/empresa')
+      return
+    }
+
+    alert('Esta conta Google ja possui um cadastro no Selectio. Entre pelo login.')
+    navigate('/login')
+  }
 
   // Responsabilidade: atualizar campos do formulário e executar formatações/validações em tempo real.
   function handleChange(e) {
@@ -171,18 +221,68 @@ function CadastroIndicador() {
   }
 
   // Responsabilidade: validar dados e salvar o cadastro no Firebase/Firestore.
+  async function handleGoogleSignup() {
+    setGoogleLoading(true)
+    setGoogleMessage('')
+
+    try {
+      const provider = new GoogleAuthProvider()
+      provider.setCustomParameters({ prompt: 'select_account' })
+
+      const credential = await signInWithPopup(auth, provider)
+      const googleUser = credential.user
+      pendingGoogleUidRef.current = googleUser.uid
+
+      const existingProfile = await buscarPerfilUsuario(googleUser.uid)
+
+      if (existingProfile) {
+        redirectExistingProfile(existingProfile)
+        return
+      }
+
+      setGoogleSignupUser({
+        uid: googleUser.uid,
+        email: googleUser.email || '',
+        nome: googleUser.displayName || ''
+      })
+      setPasswordStrength(null)
+      setForm((currentForm) => ({
+        ...currentForm,
+        nome: currentForm.nome || googleUser.displayName || '',
+        email: googleUser.email || currentForm.email,
+        senha: '',
+        confirmarSenha: ''
+      }))
+      setGoogleMessage('Google vinculado temporariamente. Complete os dados e finalize o cadastro.')
+    } catch (error) {
+      if (pendingGoogleUidRef.current && auth.currentUser?.uid === pendingGoogleUidRef.current) {
+        await signOut(auth).catch(() => {})
+      }
+
+      if (isFirebaseAuthError(error)) {
+        setGoogleMessage(getFirebaseAuthErrorMessage(error))
+      } else {
+        setGoogleMessage('Nao foi possivel continuar com Google. Tente novamente.')
+      }
+    } finally {
+      setGoogleLoading(false)
+    }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
 
     // Validação: senha e confirmação precisam ser iguais.
-    if (form.senha !== form.confirmarSenha) {
-      alert('As senhas não conferem')
-      return
-    }
+    if (!isGoogleSignup) {
+      if (form.senha !== form.confirmarSenha) {
+        alert('As senhas não conferem')
+        return
+      }
 
-    if (!isPasswordStrong) {
-      alert('Crie uma senha forte antes de cadastrar.')
-      return
+      if (!isPasswordStrong) {
+        alert('Crie uma senha forte antes de cadastrar.')
+        return
+      }
     }
 
     // Validação: CPF informado precisa ser válido.
@@ -202,19 +302,37 @@ function CadastroIndicador() {
     try {
       setSubmitLoading(true)
 
-      const firebaseCredential = await createUserWithEmailAndPassword(
-        auth,
-        payload.email,
-        form.senha
-      )
-      firebaseUser = firebaseCredential.user
-      payload.firebaseUid = firebaseUser.uid
+      let profileUid = googleSignupUser?.uid
+
+      if (isGoogleSignup) {
+        if (!profileUid || auth.currentUser?.uid !== profileUid) {
+          alert('Entre com Google novamente para concluir este cadastro.')
+          return
+        }
+
+        const existingProfile = await buscarPerfilUsuario(profileUid)
+
+        if (existingProfile) {
+          redirectExistingProfile(existingProfile)
+          return
+        }
+      } else {
+        const firebaseCredential = await createUserWithEmailAndPassword(
+          auth,
+          payload.email,
+          form.senha
+        )
+        firebaseUser = firebaseCredential.user
+        profileUid = firebaseUser.uid
+      }
+
+      payload.firebaseUid = profileUid
 
       const perfilIndicador = await salvarPerfilUsuario({
-        uid: firebaseUser.uid,
+        uid: profileUid,
         tipo: 'indicador',
         dados: {
-          id: firebaseUser.uid,
+          id: profileUid,
           nome: payload.nome,
           email: payload.email,
           cpf: payload.cpf,
@@ -223,6 +341,7 @@ function CadastroIndicador() {
         }
       })
 
+      keepGoogleSessionRef.current = true
       localStorage.setItem('indicadorUser', JSON.stringify(perfilIndicador))
       localStorage.removeItem('empresaUser')
       navigate('/painel/indicador')
@@ -255,10 +374,21 @@ function CadastroIndicador() {
 
           {/* Formulário de cadastro do indicador. */}
           <form onSubmit={handleSubmit}>
+            {isGoogleSignup && (
+              <div className="google-linked-card">
+                <FaGoogle />
+                <div>
+                  <strong>Google vinculado ao cadastro</strong>
+                  <p>{googleSignupUser.email || 'Conta Google selecionada'}</p>
+                </div>
+              </div>
+            )}
+
             <div className="form-grid">
               <input
                 name="nome"
                 placeholder="Nome completo"
+                value={form.nome}
                 onChange={handleChange}
                 required
               />
@@ -267,6 +397,7 @@ function CadastroIndicador() {
                 name="email"
                 type="email"
                 placeholder="E-mail"
+                value={form.email}
                 onChange={handleChange}
                 required
               />
@@ -297,23 +428,25 @@ function CadastroIndicador() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   name="senha"
-                  placeholder="Senha"
+                  placeholder={isGoogleSignup ? 'Acesso via Google vinculado' : 'Senha'}
                   value={form.senha}
                   onChange={handleChange}
-                  required
+                  required={!isGoogleSignup}
+                  disabled={isGoogleSignup}
                 />
                 <button
                   type="button"
                   className="password-toggle"
                   onClick={() => setShowPassword((visible) => !visible)}
                   aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  disabled={isGoogleSignup}
                 >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
               </div>
 
               {/* Painel de análise da força da senha, exibido após digitação. */}
-              {passwordStrength && (
+              {!isGoogleSignup && passwordStrength && (
                 <div className={`password-strength strength-${passwordStrength.strength}`}>
                   <div className="strength-header">
                     <div>
@@ -356,10 +489,11 @@ function CadastroIndicador() {
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
                   name="confirmarSenha"
-                  placeholder="Confirmar senha"
+                  placeholder={isGoogleSignup ? 'Acesso via Google vinculado' : 'Confirmar senha'}
                   value={form.confirmarSenha}
                   onChange={handleChange}
-                  required
+                  required={!isGoogleSignup}
+                  disabled={isGoogleSignup}
                 />
                 <button
                   type="button"
@@ -369,7 +503,7 @@ function CadastroIndicador() {
                 >
                   {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
-                {confirmPasswordStatus && (
+                {!isGoogleSignup && confirmPasswordStatus && (
                   <span className="confirm-password-message">
                     {confirmPasswordStatus === 'match'
                       ? 'Senhas conferem'
@@ -381,8 +515,29 @@ function CadastroIndicador() {
 
             {/* Botão de envio bloqueado quando a senha ainda não é forte. */}
             <button type="submit" className="btn-primary" disabled={!canSubmit}>
-              {submitLoading ? 'Criando conta...' : isPasswordStrong ? 'Criar conta →' : 'Complete a senha forte'}
+              {submitLoading ? 'Criando conta...' : isGoogleSignup || isPasswordStrong ? 'Criar conta ->' : 'Complete a senha forte'}
             </button>
+            <div className="google-signup-area">
+              <div className="google-divider">
+                <span>ou</span>
+              </div>
+
+              {googleMessage && (
+                <p className={`google-signup-message ${isGoogleSignup ? 'success' : 'warning'}`}>
+                  {googleMessage}
+                </p>
+              )}
+
+              <button
+                type="button"
+                className="google-signup-button"
+                onClick={handleGoogleSignup}
+                disabled={googleLoading || submitLoading || isGoogleSignup}
+              >
+                <FaGoogle />
+                {googleLoading ? 'Conectando...' : isGoogleSignup ? 'Google vinculado' : 'Continuar com Google'}
+              </button>
+            </div>
           </form>
         </div>
       </main>

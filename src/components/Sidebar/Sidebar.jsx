@@ -18,9 +18,9 @@ const sidebarConfig = {
     items: [
       { to: '/vagas', label: 'Vagas', icon: FaBriefcase, activeOn: ['/vagas'] },
       { to: '/candidatos/indicador', label: 'Candidatos', icon: FaUserFriends, activeOn: ['/candidatos/indicador', '/indicar'] },
-      { to: '/painel/indicador', label: 'Dashboard', icon: FaChartBar, activeOn: ['/painel/indicador'] },
-      { to: '/painel/indicador', label: 'Perfil', icon: FaUserTie, activeOn: [] },
-      { to: '/painel/indicador', label: 'Configuracoes', icon: FaCog, activeOn: [] },
+      { to: '/painel/indicador', label: 'Dashboard', icon: FaChartBar, exact: true },
+      { to: '/painel/indicador?secao=perfil', label: 'Perfil', icon: FaUserTie },
+      { to: '/painel/indicador?secao=configuracoes', label: 'Configuracoes', icon: FaCog },
     ],
   },
   empresa: {
@@ -30,17 +30,17 @@ const sidebarConfig = {
     items: [
       { to: '/vagas', label: 'Vagas', icon: FaBriefcase, activeOn: ['/vagas'] },
       { to: '/candidatos/empresa', label: 'Candidatos', icon: FaUserFriends, activeOn: ['/candidatos/empresa'] },
-      { to: '/painel/empresa', label: 'Dashboard', icon: FaChartBar, activeOn: ['/painel/empresa'] },
-      { to: '/painel/empresa', label: 'Perfil', icon: FaUserTie, activeOn: [] },
-      { to: '/painel/empresa', label: 'Configuracoes', icon: FaCog, activeOn: [] },
-      { to: '/painel/empresa', label: 'Entrevistas', icon: FaCalendarAlt, activeOn: [] },
+      { to: '/painel/empresa', label: 'Dashboard', icon: FaChartBar, exact: true },
+      { to: '/painel/empresa?secao=perfil', label: 'Perfil', icon: FaUserTie },
+      { to: '/painel/empresa?secao=configuracoes', label: 'Configuracoes', icon: FaCog },
+      { to: '/painel/empresa?secao=entrevistas', label: 'Entrevistas', icon: FaCalendarAlt },
     ],
   },
 }
 
 function Sidebar({ type, user }) {
   const session = getSession()
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
   const activeType = type || session.type
   const activeUser = user || session.user
   if (!activeType || activeType === 'publico') return null
@@ -70,9 +70,7 @@ function Sidebar({ type, user }) {
             <NavLink
               key={`${item.to}-${item.label}`}
               to={item.to}
-              className={({ isActive }) =>
-                (isActive || item.activeOn?.some((path) => pathname.startsWith(path))) ? 'active' : ''
-              }
+              className={() => isItemActive(item, pathname, search) ? 'active' : ''}
             >
               <Icon /> {item.label}
             </NavLink>
@@ -85,6 +83,32 @@ function Sidebar({ type, user }) {
       </NavLink>
     </aside>
   )
+}
+
+function splitTarget(to) {
+  const [path, query] = to.split('?')
+  return {
+    path,
+    search: query ? `?${query}` : ''
+  }
+}
+
+function isItemActive(item, pathname, search) {
+  const target = splitTarget(item.to)
+
+  if (target.search) {
+    return pathname === target.path && search === target.search
+  }
+
+  if (item.exact) {
+    return pathname === target.path && !search
+  }
+
+  if (pathname === target.path && !search) {
+    return true
+  }
+
+  return item.activeOn?.some((path) => pathname.startsWith(path)) || false
 }
 
 function getSession() {

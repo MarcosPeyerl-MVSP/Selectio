@@ -2,17 +2,23 @@
 // O componente consulta CNPJ em API externa, valida senha forte, confirma senha,
 // valida aceite dos termos, salva o perfil no Firebase/Firestore e salva a sessão da empresa.
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Cadastro.css";
-import { FaCheck, FaEye, FaEyeSlash, FaTimes } from "react-icons/fa";
-import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
+import { FaCheck, FaEye, FaEyeSlash, FaGoogle, FaTimes } from "react-icons/fa";
+import {
+  createUserWithEmailAndPassword,
+  deleteUser,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+} from "firebase/auth";
 
 import Navbar from "../../../components/Navbar/Navbar/Navbar";
 import Footer from "../../../components/Footer/Footer";
 import { auth } from "../../../services/firebase";
 import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from "../../../services/authErrors";
-import { salvarPerfilUsuario } from "../../../services/firestoreUsers";
+import { buscarPerfilUsuario, salvarPerfilUsuario } from "../../../services/firestoreUsers";
 
 // Opções fixas de porte/tamanho da empresa.
 const tamanhoOptions = [
@@ -98,6 +104,12 @@ export default function Cadastro() {
 
   const [submitLoading, setSubmitLoading] = useState(false);
 
+  const [googleSignupUser, setGoogleSignupUser] = useState(null);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleMessage, setGoogleMessage] = useState("");
+  const pendingGoogleUidRef = useRef("");
+  const keepGoogleSessionRef = useRef(false);
+
   // Mantém opções vindas da API caso o porte retornado não exista na lista fixa.
   const tamanhoSelectOptions = form.tamanho && !tamanhoOptions.includes(form.tamanho)
     ? [form.tamanho, ...tamanhoOptions]
@@ -117,7 +129,45 @@ export default function Cadastro() {
 
   // Regra de envio: o cadastro só pode ser enviado com senha forte.
   const isPasswordStrong = passwordStrength?.strength === "forte";
-  const canSubmit = isPasswordStrong && !submitLoading;
+  const isGoogleSignup = Boolean(googleSignupUser);
+  const canSubmit = (isGoogleSignup || isPasswordStrong) && !submitLoading;
+
+  useEffect(() => {
+    return () => {
+      const pendingUid = pendingGoogleUidRef.current;
+
+      if (
+        pendingUid &&
+        !keepGoogleSessionRef.current &&
+        auth.currentUser?.uid === pendingUid
+      ) {
+        signOut(auth).catch(() => {});
+      }
+    };
+  }, []);
+
+  const redirectExistingProfile = (perfil) => {
+    keepGoogleSessionRef.current = true;
+
+    if (perfil.tipo === "empresa") {
+      localStorage.setItem("empresaUser", JSON.stringify(perfil));
+      localStorage.removeItem("indicadorUser");
+      alert("Esta conta Google ja esta cadastrada. Vamos te levar ao painel da empresa.");
+      navigate("/painel/empresa");
+      return;
+    }
+
+    if (perfil.tipo === "indicador") {
+      localStorage.setItem("indicadorUser", JSON.stringify(perfil));
+      localStorage.removeItem("empresaUser");
+      alert("Esta conta Google ja esta cadastrada como indicador. Vamos te levar ao painel correto.");
+      navigate("/painel/indicador");
+      return;
+    }
+
+    alert("Esta conta Google ja possui um cadastro no Selectio. Entre pelo login.");
+    navigate("/login");
+  };
 
   // Responsabilidade: aplicar máscara de CNPJ no formato 00.000.000/0000-00.
   const formatCNPJ = (value) => {
@@ -232,6 +282,54 @@ export default function Cadastro() {
   };
 
   // Responsabilidade: validar dados obrigatórios e salvar o cadastro no Firebase/Firestore.
+  const handleGoogleSignup = async () => {
+    setGoogleLoading(true);
+    setGoogleMessage("");
+
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+
+      const credential = await signInWithPopup(auth, provider);
+      const googleUser = credential.user;
+      pendingGoogleUidRef.current = googleUser.uid;
+
+      const existingProfile = await buscarPerfilUsuario(googleUser.uid);
+
+      if (existingProfile) {
+        redirectExistingProfile(existingProfile);
+        return;
+      }
+
+      setGoogleSignupUser({
+        uid: googleUser.uid,
+        email: googleUser.email || "",
+        nome: googleUser.displayName || "",
+      });
+      setPasswordStrength(null);
+      setForm((currentForm) => ({
+        ...currentForm,
+        nome: currentForm.nome || googleUser.displayName || "",
+        email: googleUser.email || currentForm.email,
+        senha: "",
+        confirmarSenha: "",
+      }));
+      setGoogleMessage("Google vinculado temporariamente. Complete os dados e finalize o cadastro.");
+    } catch (error) {
+      if (pendingGoogleUidRef.current && auth.currentUser?.uid === pendingGoogleUidRef.current) {
+        await signOut(auth).catch(() => {});
+      }
+
+      if (isFirebaseAuthError(error)) {
+        setGoogleMessage(getFirebaseAuthErrorMessage(error));
+      } else {
+        setGoogleMessage("Nao foi possivel continuar com Google. Tente novamente.");
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -245,19 +343,21 @@ export default function Cadastro() {
       return;
     }
 
-    if (!form.senha || !form.confirmarSenha) {
-      alert("Informe e confirme a senha da empresa.");
-      return;
-    }
+    if (!isGoogleSignup) {
+      if (!form.senha || !form.confirmarSenha) {
+        alert("Informe e confirme a senha da empresa.");
+        return;
+      }
 
-    if (form.senha !== form.confirmarSenha) {
-      alert("As senhas não conferem.");
-      return;
-    }
+      if (form.senha !== form.confirmarSenha) {
+        alert("As senhas não conferem.");
+        return;
+      }
 
-    if (!isPasswordStrong) {
-      alert("Crie uma senha forte antes de cadastrar a empresa.");
-      return;
+      if (!isPasswordStrong) {
+        alert("Crie uma senha forte antes de cadastrar a empresa.");
+        return;
+      }
     }
 
     if (cnpjStatus !== "verified") {
@@ -285,19 +385,37 @@ export default function Cadastro() {
     try {
       setSubmitLoading(true);
 
-      const firebaseCredential = await createUserWithEmailAndPassword(
-        auth,
-        payload.email,
-        form.senha
-      );
-      firebaseUser = firebaseCredential.user;
-      payload.firebaseUid = firebaseUser.uid;
+      let profileUid = googleSignupUser?.uid;
+
+      if (isGoogleSignup) {
+        if (!profileUid || auth.currentUser?.uid !== profileUid) {
+          alert("Entre com Google novamente para concluir este cadastro.");
+          return;
+        }
+
+        const existingProfile = await buscarPerfilUsuario(profileUid);
+
+        if (existingProfile) {
+          redirectExistingProfile(existingProfile);
+          return;
+        }
+      } else {
+        const firebaseCredential = await createUserWithEmailAndPassword(
+          auth,
+          payload.email,
+          form.senha
+        );
+        firebaseUser = firebaseCredential.user;
+        profileUid = firebaseUser.uid;
+      }
+
+      payload.firebaseUid = profileUid;
 
       const perfilEmpresa = await salvarPerfilUsuario({
-        uid: firebaseUser.uid,
+        uid: profileUid,
         tipo: "empresa",
         dados: {
-          id: firebaseUser.uid,
+          id: profileUid,
           nomeEmpresa: payload.nomeEmpresa,
           razaoSocial: payload.razaoSocial,
           cnpj: payload.cnpj,
@@ -314,6 +432,7 @@ export default function Cadastro() {
         }
       });
 
+      keepGoogleSessionRef.current = true;
       localStorage.setItem("empresaUser", JSON.stringify(perfilEmpresa));
       localStorage.removeItem("indicadorUser");
       navigate("/painel/empresa");
@@ -504,6 +623,16 @@ export default function Cadastro() {
             <section className="form-section">
               <h2>Acesso</h2>
 
+              {isGoogleSignup && (
+                <div className="google-linked-card">
+                  <FaGoogle />
+                  <div>
+                    <strong>Google vinculado ao cadastro</strong>
+                    <p>{googleSignupUser.email || "Conta Google selecionada"}</p>
+                  </div>
+                </div>
+              )}
+
               <div className="grid-2">
                 <div>
                   <label className="field-label" htmlFor="senha">
@@ -514,15 +643,17 @@ export default function Cadastro() {
                       id="senha"
                       name="senha"
                       type={showPassword ? "text" : "password"}
-                      placeholder="Crie uma senha"
+                      placeholder={isGoogleSignup ? "Acesso via Google vinculado" : "Crie uma senha"}
                       value={form.senha}
                       onChange={handleChange}
+                      disabled={isGoogleSignup}
                     />
                     <button
                       type="button"
                       className="password-toggle"
                       onClick={() => setShowPassword((visible) => !visible)}
                       aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                      disabled={isGoogleSignup}
                     >
                       {showPassword ? <FaEyeSlash /> : <FaEye />}
                     </button>
@@ -538,9 +669,10 @@ export default function Cadastro() {
                       id="confirmarSenha"
                       name="confirmarSenha"
                       type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Repita a senha"
+                      placeholder={isGoogleSignup ? "Acesso via Google vinculado" : "Repita a senha"}
                       value={form.confirmarSenha}
                       onChange={handleChange}
+                      disabled={isGoogleSignup}
                     />
                     <button
                       type="button"
@@ -554,7 +686,7 @@ export default function Cadastro() {
                 </div>
               </div>
 
-              {passwordStrength && (
+              {!isGoogleSignup && passwordStrength && (
                 <div className={`password-strength strength-${passwordStrength.strength}`}>
                   <div className="strength-header">
                     <div>
@@ -590,7 +722,7 @@ export default function Cadastro() {
                 </div>
               )}
 
-              {confirmPasswordStatus && (
+              {!isGoogleSignup && confirmPasswordStatus && (
                 <span className={`confirm-password-message ${confirmPasswordStatus}`}>
                   {confirmPasswordStatus === "match"
                     ? "Senhas conferem"
@@ -658,8 +790,30 @@ export default function Cadastro() {
             </div>
 
             <button type="submit" className="submit-button" disabled={!canSubmit}>
-              {submitLoading ? "Cadastrando..." : isPasswordStrong ? "Cadastrar empresa" : "Complete a senha forte"}
+              {submitLoading ? "Cadastrando..." : isGoogleSignup || isPasswordStrong ? "Cadastrar empresa" : "Complete a senha forte"}
             </button>
+
+            <div className="google-signup-area">
+              <div className="google-divider">
+                <span>ou</span>
+              </div>
+
+              {googleMessage && (
+                <p className={`google-signup-message ${isGoogleSignup ? "success" : "warning"}`}>
+                  {googleMessage}
+                </p>
+              )}
+
+              <button
+                type="button"
+                className="google-signup-button"
+                onClick={handleGoogleSignup}
+                disabled={googleLoading || submitLoading || isGoogleSignup}
+              >
+                <FaGoogle />
+                {googleLoading ? "Conectando..." : isGoogleSignup ? "Google vinculado" : "Continuar com Google"}
+              </button>
+            </div>
           </form>
 
           {/* Card lateral com informações do plano selecionado. */}

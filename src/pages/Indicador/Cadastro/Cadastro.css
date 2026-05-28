@@ -270,6 +270,37 @@
   color: var(--danger);
 }
 
+.google-linked-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 13px;
+  border: 1px solid rgba(22, 128, 58, 0.22);
+  border-radius: 8px;
+  background: #f1f8f3;
+  text-align: left;
+}
+
+.google-linked-card svg {
+  flex: 0 0 auto;
+  color: #16803a;
+  font-size: 19px;
+}
+
+.google-linked-card strong {
+  display: block;
+  color: #171717;
+  font-size: 13px;
+}
+
+.google-linked-card p {
+  margin-top: 2px;
+  color: #666666;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
 /* Botão principal de envio do formulário. */
 .btn-primary {
   width: 100%;
@@ -299,6 +330,81 @@
   color: #747474;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
+}
+
+.google-signup-area {
+  margin-top: 18px;
+}
+
+.google-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  color: #777777;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.google-divider::before,
+.google-divider::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: #e8e8e8;
+}
+
+.google-signup-message {
+  margin-bottom: 12px;
+  padding: 11px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.google-signup-message.success {
+  background: #f1f8f3;
+  color: #166534;
+}
+
+.google-signup-message.warning {
+  background: #fff4f4;
+  color: #9f1728;
+}
+
+.google-signup-button {
+  width: 100%;
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #171717;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: border-color var(--motion-fast), color var(--motion-fast), background var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast);
+}
+
+.google-signup-button:hover:not(:disabled) {
+  border-color: rgba(182, 28, 47, 0.38);
+  color: #b61c2f;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(23, 23, 23, 0.08);
+}
+
+.google-signup-button:disabled {
+  background: #f2f2f2;
+  color: #777777;
+  cursor: not-allowed;
   box-shadow: none;
 }
 

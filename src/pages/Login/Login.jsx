@@ -8,7 +8,13 @@ import Footer from '../../components/Footer/Footer'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { FaApple, FaEye, FaEyeSlash, FaGoogle, FaLock, FaUser } from 'react-icons/fa'
-import { signInWithEmailAndPassword, signOut } from 'firebase/auth'
+import {
+  GoogleAuthProvider,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut
+} from 'firebase/auth'
 import { auth } from '../../services/firebase'
 import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from '../../services/authErrors'
 import { buscarPerfilUsuario } from '../../services/firestoreUsers'
@@ -19,6 +25,7 @@ function Login() {
 
   // Armazena mensagens de erro exibidas ao usuário.
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   // Controla o estado de carregamento durante a tentativa de autenticação.
   const [loading, setLoading] = useState(false)
@@ -60,6 +67,7 @@ function Login() {
   const handleSubmit = async (event) => {
     event.preventDefault()
     setError('')
+    setSuccess('')
 
     const login = form.login.trim()
     const senha = form.senha
@@ -128,6 +136,80 @@ function Login() {
     }
   }
 
+  const handleGoogleLogin = async () => {
+    setError('')
+    setSuccess('')
+
+    try {
+      setLoading(true)
+
+      const provider = new GoogleAuthProvider()
+      provider.setCustomParameters({ prompt: 'select_account' })
+
+      const firebaseCredential = await signInWithPopup(auth, provider)
+      const perfil = await buscarPerfilUsuario(firebaseCredential.user.uid)
+
+      if (!perfil) {
+        await signOut(auth)
+        setError('Esta conta Google ainda nao possui perfil no Selectio. Conclua o cadastro primeiro.')
+        setLoading(false)
+        return
+      }
+
+      if (perfil.tipo === 'indicador') {
+        localStorage.setItem('indicadorUser', JSON.stringify(perfil))
+        localStorage.removeItem('empresaUser')
+        navigate(redirectTo || '/painel/indicador')
+        return
+      }
+
+      if (perfil.tipo === 'empresa') {
+        localStorage.setItem('empresaUser', JSON.stringify(perfil))
+        localStorage.removeItem('indicadorUser')
+        navigate(redirectTo || '/painel/empresa')
+        return
+      }
+
+      await signOut(auth)
+      setError('Perfil de usuario invalido. Entre em contato com o suporte da Selectio.')
+      setLoading(false)
+    } catch (error) {
+      if (isFirebaseAuthError(error)) {
+        setError(getFirebaseAuthErrorMessage(error))
+      } else {
+        setError('Nao foi possivel entrar com Google. Verifique sua conexao e tente novamente.')
+      }
+
+      setLoading(false)
+    }
+  }
+
+  const handlePasswordReset = async () => {
+    setError('')
+    setSuccess('')
+
+    const email = form.login.trim()
+
+    if (!email) {
+      setError('Informe seu e-mail para receber o link de redefinicao.')
+      return
+    }
+
+    try {
+      setLoading(true)
+      await sendPasswordResetEmail(auth, email)
+      setSuccess('Se este e-mail estiver cadastrado, enviaremos um link de redefinição.')
+    } catch (error) {
+      if (isFirebaseAuthError(error)) {
+        setError(getFirebaseAuthErrorMessage(error))
+      } else {
+        setError('Nao foi possivel solicitar a redefinicao agora. Verifique sua conexao e tente novamente.')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <>
       {/* Componente de navegação principal da aplicação. */}
@@ -177,13 +259,19 @@ function Login() {
               </div>
 
               {/* Link visual de recuperação de senha, sem rota definida neste código. */}
-              <a href="#" className="forgot-password">
+              <button
+                type="button"
+                className="forgot-password"
+                onClick={handlePasswordReset}
+                disabled={loading}
+              >
                 Esqueceu sua senha?
-              </a>
+              </button>
             </label>
 
             {/* Exibe mensagens de erro de validação, autenticação ou conexão. */}
             {error && <p className="login-error">{error}</p>}
+            {success && <p className="login-success">{success}</p>}
 
             <button type="submit" className="login-button" disabled={loading}>
               {loading ? 'Entrando...' : 'Entrar ->'}
@@ -197,7 +285,9 @@ function Login() {
 
           {/* Botões sociais exibidos na interface; não há integração implementada neste código. */}
           <div className="social-login">
-            <button type="button" className="google"><FaGoogle /> Google</button>
+            <button type="button" className="google" onClick={handleGoogleLogin} disabled={loading}>
+              <FaGoogle /> Google
+            </button>
             <button type="button" className="apple"><FaApple /> Apple</button>
           </div>
 

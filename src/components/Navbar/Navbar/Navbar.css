@@ -1,7 +1,7 @@
 .navbar {
   height: 72px;
   padding: 0 80px;
-  background: var(--white);
+  background: var(--nav-bg);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -31,7 +31,7 @@
 
 .nav-links a {
   position: relative;
-  color: #333333;
+  color: var(--text);
   font-weight: 600;
   transition: var(--transition);
 }
@@ -47,7 +47,7 @@
 .navbar-right {
   display: flex;
   align-items: center;
-  gap: 34px;
+  gap: 16px;
 }
 
 .nav-auth {
@@ -82,7 +82,7 @@
 }
 
 .btn-primary:hover {
-  background: var(--white);
+  background: var(--surface);
   color: var(--primary);
   box-shadow: 0 6px 16px rgba(182, 28, 47, 0.15);
 }
@@ -128,7 +128,7 @@
   border: 1px solid transparent;
   display: grid;
   place-items: center;
-  color: #585858;
+  color: var(--muted);
 }
 
 .icon-button svg,
@@ -140,7 +140,7 @@
 }
 
 .icon-button:hover {
-  background: var(--white);
+  background: var(--surface);
   border-color: var(--primary);
   color: var(--primary);
   transform: translateY(-2px);
@@ -150,6 +150,30 @@
 .icon-button:hover svg,
 .icon-button:hover img {
   opacity: 1;
+}
+
+.theme-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow-soft);
+}
+
+.theme-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.theme-toggle:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(182, 28, 47, 0.15);
 }
 
 @media (max-width: 900px) {

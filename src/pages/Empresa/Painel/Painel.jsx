@@ -1,14 +1,15 @@
 // Objetivo do arquivo: renderizar o painel central da empresa.
-// A página valida a sessão da empresa, redireciona para login quando não há sessão
-// e exibe atalhos para criação de vagas, candidatos, perfil, dashboard e entrevistas.
+// A pagina valida a sessao da empresa, redireciona para login quando nao ha sessao
+// e exibe as secoes internas de dashboard, perfil, configuracoes e entrevistas.
 
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import "./Painel.css";
 
 import Navbar from "../../../components/Navbar/Navbar/Navbar";
 import Sidebar from "../../../components/Sidebar/Sidebar";
 import Footer from "../../../components/Footer/Footer";
+import AccountSettings from "../../../components/AccountSettings/AccountSettings";
 
 import {
   FaUserTie,
@@ -19,8 +20,10 @@ import {
 } from "react-icons/fa";
 
 function PainelEmpresa() {
-  // Hook usado para redirecionar a empresa quando não há sessão válida.
+  // Hook usado para redirecionar a empresa quando nao ha sessao valida.
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const activeSection = searchParams.get("secao") || "dashboard";
 
   // Recupera a empresa autenticada salva no localStorage.
   const [empresa] = useState(() => {
@@ -35,14 +38,14 @@ function PainelEmpresa() {
     }
   }, [empresa, navigate]);
 
-  // Evita renderizar o painel enquanto não há empresa autenticada.
+  // Evita renderizar o painel enquanto nao ha empresa autenticada.
   if (!empresa) {
     return null;
   }
 
   return (
     <>
-      {/* Componente de navegação principal. */}
+      {/* Componente de navegacao principal. */}
       <Navbar />
 
       <div className="painel-container">
@@ -50,62 +53,91 @@ function PainelEmpresa() {
         <Sidebar type="empresa" user={empresa} />
 
         <main className="painel-content">
-          <p className="breadcrumb">BOAS-VINDAS - Painel Central</p>
+          {activeSection === "configuracoes" ? (
+            <AccountSettings user={empresa} tipo="empresa" />
+          ) : activeSection === "perfil" ? (
+            <PanelPlaceholder
+              title="Perfil da empresa"
+              description="Esta area sera liberada em uma proxima etapa. Por enquanto, os dados de acesso ficam em Configuracoes."
+            />
+          ) : activeSection === "entrevistas" ? (
+            <PanelPlaceholder
+              title="Entrevistas"
+              description="A organizacao de entrevistas continuara dentro deste painel quando a funcionalidade estiver pronta."
+            />
+          ) : (
+            <>
+              <p className="breadcrumb">BOAS-VINDAS - Painel Central</p>
 
-          <h1>
-            Bem-vinda, <span>{empresa.nomeEmpresa}.</span>
-          </h1>
+              <h1>
+                Bem-vinda, <span>{empresa.nomeEmpresa}.</span>
+              </h1>
 
-          <p className="subtitle">
-            Gerencie suas vagas, explore novas oportunidades e acompanhe seu crescimento em um só lugar.
-          </p>
+              <p className="subtitle">
+                Gerencie suas vagas, explore novas oportunidades e acompanhe seu crescimento em um so lugar.
+              </p>
 
-          {/* Cards de atalho para funcionalidades principais da empresa. */}
-          <section className="cards">
-            <div className="card">
-              <FaSuitcase className="card-icon" />
-              <h3>Minhas Vagas</h3>
-              <p>Crie sua rede de postagens de vagas, melhore suas conexões e contrate rápido.</p>
-              <Link to="/criar-vaga/empresa">Criar Vagas {'->'}</Link>
-            </div>
+              {/* Cards de atalho para funcionalidades principais da empresa. */}
+              <section className="cards">
+                <div className="card">
+                  <FaSuitcase className="card-icon" />
+                  <h3>Minhas Vagas</h3>
+                  <p>Crie sua rede de postagens de vagas, melhore suas conexoes e contrate rapido.</p>
+                  <Link to="/criar-vaga/empresa">Criar Vagas {'->'}</Link>
+                </div>
 
-            <div className="card">
-              <FaUserFriends className="card-icon" />
-              <h3>Candidatos</h3>
-              <p>Veja os candidatos disponíveis para suas vagas publicadas.</p>
-              <Link to="/candidatos/empresa">Ver Candidatos {'->'}</Link>
-            </div>
+                <div className="card">
+                  <FaUserFriends className="card-icon" />
+                  <h3>Candidatos</h3>
+                  <p>Veja os candidatos disponiveis para suas vagas publicadas.</p>
+                  <Link to="/candidatos/empresa">Ver Candidatos {'->'}</Link>
+                </div>
 
-            <div className="card">
-              <FaUserTie className="card-icon" />
-              <h3>Perfil</h3>
-              <p>Personalize o perfil da sua empresa e gerencie seus dados.</p>
-              <Link to="/painel/empresa">Meu Perfil {'->'}</Link>
-            </div>
+                <div className="card">
+                  <FaUserTie className="card-icon" />
+                  <h3>Perfil</h3>
+                  <p>Personalize o perfil da sua empresa e gerencie seus dados.</p>
+                  <Link to="/painel/empresa?secao=perfil">Meu Perfil {'->'}</Link>
+                </div>
 
-            <div className="card">
-              <FaChartBar className="card-icon" />
-              <h3>Dashboard</h3>
-              <p>Acompanhe status, ganhos e impacto das suas contratações.</p>
-              <Link to="/painel/empresa">Acompanhar {'->'}</Link>
-            </div>
+                <div className="card">
+                  <FaChartBar className="card-icon" />
+                  <h3>Dashboard</h3>
+                  <p>Acompanhe status, ganhos e impacto das suas contratacoes.</p>
+                  <Link to="/painel/empresa">Acompanhar {'->'}</Link>
+                </div>
 
-            <div className="card">
-              <FaCalendarAlt className="card-icon" />
-              <h3>Entrevistas</h3>
-              <p>Organize e acompanhe entrevistas com candidatos de forma simples.</p>
-              <Link to="/painel/empresa">Minhas Entrevistas {'->'}</Link>
-            </div>
-          </section>
+                <div className="card">
+                  <FaCalendarAlt className="card-icon" />
+                  <h3>Entrevistas</h3>
+                  <p>Organize e acompanhe entrevistas com candidatos de forma simples.</p>
+                  <Link to="/painel/empresa?secao=entrevistas">Minhas Entrevistas {'->'}</Link>
+                </div>
+              </section>
 
-          {/* Atalho flutuante para criação de vaga. */}
-          <Link className="floating-btn" to="/criar-vaga/empresa">+</Link>
+              {/* Atalho flutuante para criacao de vaga. */}
+              <Link className="floating-btn" to="/criar-vaga/empresa">+</Link>
+            </>
+          )}
         </main>
       </div>
 
-      {/* Componente de rodapé. */}
+      {/* Componente de rodape. */}
       <Footer />
     </>
+  );
+}
+
+function PanelPlaceholder({ title, description }) {
+  return (
+    <section className="panel-placeholder">
+      <p className="breadcrumb">PAINEL - Em construcao</p>
+      <h1>
+        {title}
+        <span>.</span>
+      </h1>
+      <p className="subtitle">{description}</p>
+    </section>
   );
 }
 
