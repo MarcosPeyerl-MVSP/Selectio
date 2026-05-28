@@ -15,8 +15,8 @@ import {
   FiChevronLeft,
   FiChevronRight
 } from 'react-icons/fi'
-import Navbar from '../../components/Navbar/Navbar/Navbar'
-import Footer from '../../components/Footer/Footer'
+import Navbar from '../../components/layout/Navbar'
+import Footer from '../../components/layout/Footer'
 import { listarVagasBanner } from '../../services/firestoreVagas'
 
 function Home() {

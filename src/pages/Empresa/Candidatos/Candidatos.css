@@ -7,7 +7,7 @@
   display: grid;
   grid-template-columns: 255px minmax(0, 1fr);
   min-height: calc(100vh - 80px);
-  background: #f5f5f5;
+  background: var(--background);
 }
 
 /* Área principal da página. */
@@ -15,7 +15,7 @@
   width: 100%;
   min-width: 0;
   padding: 38px 38px 80px;
-  background: #fefefe;
+  background: var(--surface);
   animation: selectioFadeIn 0.36s ease both;
 }
 
@@ -38,7 +38,7 @@
 
 .empresa-candidatos-header h1 {
   margin: 0 0 8px;
-  color: #202024;
+  color: var(--text-heading);
   font-size: 40px;
   line-height: 1.05;
 }
@@ -46,13 +46,13 @@
 .empresa-candidatos-header p {
   max-width: 660px;
   margin: 0 0 8px;
-  color: #62666f;
+  color: var(--muted);
   font-size: 14px;
   line-height: 1.6;
 }
 
 .empresa-candidatos-header a {
-  color: #444;
+  color: var(--text);
   font-size: 13px;
   text-decoration: none;
 }
@@ -79,9 +79,9 @@
   min-height: 44px;
   padding: 0 18px;
   border-radius: 8px;
-  background: #f7f7f8;
-  color: #7a7f88;
-  border: 1px solid #ececf0;
+  background: var(--surface-soft);
+  color: var(--muted);
+  border: 1px solid var(--border);
   transition: background var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast);
 }
 
@@ -89,14 +89,14 @@
   width: 100%;
   border: 0;
   background: transparent;
-  color: #111;
+  color: var(--text);
   font: inherit;
   font-size: 14px;
   outline: none;
 }
 
 .empresa-candidate-search:focus-within {
-  background: #fff;
+  background: var(--surface);
   border-color: rgba(182, 28, 47, 0.24);
   box-shadow: 0 0 0 3px rgba(182, 28, 47, 0.1);
   transform: translateY(-1px);
@@ -116,8 +116,8 @@
   height: 34px;
   border: 0;
   border-radius: 999px;
-  background: #f0f0f2;
-  color: #666b75;
+  background: var(--surface-soft);
+  color: var(--muted);
   font-weight: 800;
   cursor: pointer;
   transition: background var(--motion-fast), color var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast);
@@ -125,7 +125,7 @@
 
 .empresa-candidate-tabs button:hover {
   transform: translateY(-1px);
-  background: #fff;
+  background: var(--surface);
   color: var(--primary);
 }
 
@@ -147,8 +147,8 @@
 .empresa-load-more {
   min-height: 246px;
   border-radius: 10px;
-  background: #fff;
-  border: 1px solid #ececf0;
+  background: var(--surface);
+  border: 1px solid var(--border);
   animation: selectioSlideUp 0.42s var(--ease-premium) both;
   transition: transform var(--motion-base), box-shadow var(--motion-base), border-color var(--motion-fast);
 }
@@ -217,8 +217,8 @@
   border: 1px solid var(--status-border);
   border-radius: 999px;
   padding: 0 30px 0 30px;
-  background: linear-gradient(180deg, #fff 0%, var(--status-bg) 100%);
-  color: #202024;
+  background: linear-gradient(180deg, var(--surface) 0%, var(--status-bg) 100%);
+  color: var(--text-heading);
   font-size: 11px;
   font-weight: 900;
   text-transform: uppercase;
@@ -245,8 +245,8 @@
 }
 
 .empresa-status-select select option {
-  color: #202024;
-  background: #fff;
+  color: var(--text-heading);
+  background: var(--surface);
   font-weight: 700;
   text-transform: none;
 }
@@ -305,7 +305,7 @@
 
 .empresa-candidate-card h2 {
   margin: 0 0 6px;
-  color: #202024;
+  color: var(--text-heading);
   font-size: 18px;
 }
 
@@ -322,7 +322,7 @@
   gap: 10px;
   margin-top: auto;
   margin-bottom: 18px;
-  color: #777d88;
+  color: var(--muted);
   font-size: 11px;
 }
 
@@ -356,8 +356,8 @@
 }
 
 .empresa-candidate-actions button:last-child {
-  background: #ececef;
-  color: #777d88;
+  background: var(--surface-soft);
+  color: var(--muted);
 }
 
 /* Botão visual para carregar mais candidatos. */
@@ -367,7 +367,7 @@
   align-content: center;
   gap: 12px;
   border: 0;
-  color: #555b66;
+  color: var(--muted);
   cursor: pointer;
   text-align: center;
   transition: transform var(--motion-base), box-shadow var(--motion-base), background var(--motion-fast);
@@ -379,7 +379,7 @@
   width: 54px;
   height: 54px;
   border-radius: 999px;
-  background: #f6dfe4;
+  background: color-mix(in srgb, var(--primary) 14%, var(--surface));
   color: var(--primary);
 }
 
@@ -390,14 +390,14 @@
 
 .empresa-load-more small {
   max-width: 190px;
-  color: #777d88;
+  color: var(--muted);
   font-size: 11px;
   line-height: 1.5;
 }
 
 /* Feedback textual de carregamento e erro. */
 .empresa-candidate-feedback {
-  color: #555;
+  color: var(--muted);
   font-weight: 700;
 }
 

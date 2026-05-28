@@ -1,8 +1,8 @@
 .app-sidebar {
   width: 255px;
   min-height: 100vh;
-  background: #f5f5f5;
-  border-right: 1px solid #d9d9d9;
+  background: var(--surface-muted);
+  border-right: 1px solid var(--border);
   padding: 24px 14px;
   display: flex;
   flex-direction: column;
@@ -11,7 +11,7 @@
 .app-sidebar-title {
   font-size: 22px;
   font-weight: 800;
-  color: #c3383d;
+  color: var(--primary);
   line-height: 1.15;
   margin-bottom: 24px;
 }
@@ -20,22 +20,22 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #ffffff;
-  border: 1px solid #d9d9d9;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px;
   margin-bottom: 28px;
 }
 
 .app-sidebar-user svg {
-  color: #c3383d;
+  color: var(--primary);
   font-size: 15px;
 }
 
 .app-sidebar-user strong {
   display: block;
   max-width: 165px;
-  color: #c3383d;
+  color: var(--primary);
   font-size: 11px;
   font-weight: 700;
   overflow: hidden;
@@ -45,7 +45,7 @@
 
 .app-sidebar-user p {
   max-width: 165px;
-  color: #777777;
+  color: var(--muted);
   font-size: 10px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -66,7 +66,7 @@
   min-height: 38px;
   padding: 10px 12px;
   border-radius: 8px;
-  color: #171717;
+  color: var(--text);
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
@@ -75,20 +75,20 @@
 }
 
 .app-sidebar-menu a svg {
-  color: #585858;
+  color: var(--muted);
   font-size: 12px;
   transition: color 0.25s ease;
 }
 
 .app-sidebar-menu a:hover {
-  background: #ffffff;
-  color: #c3383d;
+  background: var(--surface);
+  color: var(--primary);
   transform: translateX(3px);
 }
 
 .app-sidebar-menu a.active {
   background: transparent;
-  color: #171717;
+  color: var(--text);
   transform: none;
 }
 
@@ -100,23 +100,23 @@
   bottom: 9px;
   width: 3px;
   border-radius: 999px;
-  background: #6a0f21;
+  background: var(--primary-dark);
 }
 
 .app-sidebar-menu a:hover svg {
-  color: #c3383d;
+  color: var(--primary);
 }
 
 .app-sidebar-menu a.active svg {
-  color: #585858;
+  color: var(--muted);
 }
 
 .app-sidebar-btn {
   margin-top: 28px;
   min-height: 46px;
   border-radius: 8px;
-  background: #ffffff;
-  color: #c3383d;
+  background: var(--surface);
+  color: var(--primary);
   font-size: 13px;
   font-weight: 700;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
@@ -129,8 +129,8 @@
 }
 
 .app-sidebar-btn:hover {
-  background: #c3383d;
-  color: #ffffff;
+  background: var(--primary);
+  color: var(--white);
   transform: translateY(-2px);
   box-shadow: 0 8px 18px rgba(195, 56, 61, 0.22);
 }
@@ -140,7 +140,7 @@
     width: 100%;
     min-height: auto;
     border-right: 0;
-    border-bottom: 1px solid #d9d9d9;
+    border-bottom: 1px solid var(--border);
   }
 
   .app-sidebar-menu {

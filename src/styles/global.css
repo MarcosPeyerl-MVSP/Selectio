@@ -16,6 +16,11 @@
   --border: #e5e5e5;
   --nav-bg: #ffffff;
   --input-bg: #ffffff;
+  --success: #166534;
+  --success-bg: #f1f8f3;
+  --warning: #92400e;
+  --warning-bg: #fff7e8;
+  --danger-bg: #fff4f4;
   --shadow: 0 18px 45px rgba(0, 0, 0, 0.06);
   --shadow-soft: 0 8px 22px rgba(23, 23, 23, 0.08);
   --transition: 0.25s ease;
@@ -37,6 +42,11 @@
   --border: #2d2d2d;
   --nav-bg: #151515;
   --input-bg: #202020;
+  --success: #8fe5a7;
+  --success-bg: rgba(22, 128, 58, 0.18);
+  --warning: #ffd28a;
+  --warning-bg: rgba(154, 91, 0, 0.18);
+  --danger-bg: rgba(182, 28, 47, 0.18);
   --shadow: 0 18px 45px rgba(0, 0, 0, 0.34);
   --shadow-soft: 0 8px 22px rgba(0, 0, 0, 0.26);
   --shadow-hover: 0 22px 44px rgba(0, 0, 0, 0.34);
@@ -100,38 +110,107 @@ main {
   color: #8f8f8f;
 }
 
-:root[data-theme='dark'] .painel-container,
-:root[data-theme='dark'] .painel-content,
+:root[data-theme='dark'] .page,
+:root[data-theme='dark'] main,
 :root[data-theme='dark'] .login-container,
+:root[data-theme='dark'] .cadastro-container,
+:root[data-theme='dark'] .vagas-page,
+:root[data-theme='dark'] .vagas-layout,
 :root[data-theme='dark'] .empresa-container,
-:root[data-theme='dark'] .indicador-cadastro-container {
+:root[data-theme='dark'] .indicador-cadastro-container,
+:root[data-theme='dark'] .empresa-candidatos-layout,
+:root[data-theme='dark'] .empresa-candidatos-page,
+:root[data-theme='dark'] .candidatos-layout,
+:root[data-theme='dark'] .candidatos-page,
+:root[data-theme='dark'] .criar-vaga-page,
+:root[data-theme='dark'] .editar-vaga-page,
+:root[data-theme='dark'] .indicar-page,
+:root[data-theme='dark'] .vaga-page {
   background: var(--background);
   color: var(--text);
 }
 
-:root[data-theme='dark'] .app-sidebar,
-:root[data-theme='dark'] .sidebar {
-  background: var(--surface-muted);
-  border-color: var(--border);
-}
-
-:root[data-theme='dark'] .card,
+:root[data-theme='dark'] .hero-card,
+:root[data-theme='dark'] .hero-card.glass-effect,
+:root[data-theme='dark'] .info-box,
+:root[data-theme='dark'] .info-box.glass-effect,
+:root[data-theme='dark'] .solution-card,
+:root[data-theme='dark'] .matching-card,
+:root[data-theme='dark'] .vaga-card,
+:root[data-theme='dark'] .empty-vagas,
 :root[data-theme='dark'] .login-card,
 :root[data-theme='dark'] .empresa-form,
 :root[data-theme='dark'] .plano-box,
+:root[data-theme='dark'] .plano-card,
 :root[data-theme='dark'] .indicador-cadastro-card,
-:root[data-theme='dark'] .panel-placeholder {
+:root[data-theme='dark'] .cadastro-card,
+:root[data-theme='dark'] .empresa-candidate-card,
+:root[data-theme='dark'] .empresa-load-more,
+:root[data-theme='dark'] .candidate-card,
+:root[data-theme='dark'] .candidate-add-card,
+:root[data-theme='dark'] .panel-placeholder,
+:root[data-theme='dark'] .settings-card {
   background: var(--surface);
   border-color: var(--border);
   color: var(--text);
 }
 
+:root[data-theme='dark'] .filtros,
+:root[data-theme='dark'] .filtro-input,
+:root[data-theme='dark'] .filtro-select,
+:root[data-theme='dark'] .choice-list label,
+:root[data-theme='dark'] .password-strength,
+:root[data-theme='dark'] .candidate-search,
+:root[data-theme='dark'] .empresa-candidate-search,
+:root[data-theme='dark'] .candidate-tabs,
+:root[data-theme='dark'] .empresa-candidate-tabs button,
+:root[data-theme='dark'] .profile-photo,
+:root[data-theme='dark'] .placeholder-photo,
+:root[data-theme='dark'] .bar {
+  background: var(--surface-soft);
+  border-color: var(--border);
+  color: var(--text);
+}
+
 :root[data-theme='dark'] .subtitle,
-:root[data-theme='dark'] .card p,
+:root[data-theme='dark'] .dashboard-subtitle,
+:root[data-theme='dark'] .hero-text p,
+:root[data-theme='dark'] .solution-card p,
+:root[data-theme='dark'] .section-text,
+:root[data-theme='dark'] .steps p,
+:root[data-theme='dark'] .vaga-content p,
+:root[data-theme='dark'] .vagas-header p,
+:root[data-theme='dark'] .empresa-candidatos-header p,
+:root[data-theme='dark'] .empresa-candidatos-header a,
+:root[data-theme='dark'] .candidatos-header p,
+:root[data-theme='dark'] .candidate-card p,
+:root[data-theme='dark'] .candidate-meta span,
+:root[data-theme='dark'] .empresa-candidate-details,
+:root[data-theme='dark'] .empresa-load-more small,
+:root[data-theme='dark'] .candidate-feedback,
+:root[data-theme='dark'] .empresa-candidate-feedback,
 :root[data-theme='dark'] .register-link,
-:root[data-theme='dark'] .login-form label,
-:root[data-theme='dark'] .stats span {
+:root[data-theme='dark'] .login-form label {
   color: var(--muted);
+}
+
+:root[data-theme='dark'] .hero-text h1,
+:root[data-theme='dark'] .ecosystem h2,
+:root[data-theme='dark'] .solution-card h3,
+:root[data-theme='dark'] .how-it-works h2,
+:root[data-theme='dark'] .steps h3,
+:root[data-theme='dark'] .matching-card strong,
+:root[data-theme='dark'] .vagas-header h1,
+:root[data-theme='dark'] .vaga-content h3,
+:root[data-theme='dark'] .empresa-candidatos-header h1,
+:root[data-theme='dark'] .empresa-candidate-card h2,
+:root[data-theme='dark'] .candidatos-header h1,
+:root[data-theme='dark'] .candidate-card h2,
+:root[data-theme='dark'] .form-header h1,
+:root[data-theme='dark'] .form-section h2,
+:root[data-theme='dark'] .indicador-cadastro-card h1,
+:root[data-theme='dark'] .cadastro-header h1 {
+  color: var(--text-heading);
 }
 
 @keyframes selectioFadeIn {

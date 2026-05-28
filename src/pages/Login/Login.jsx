@@ -3,8 +3,8 @@
 // após login e mantém a sessão no localStorage.
 
 import './Login.css'
-import Navbar from '../../components/Navbar/Navbar/Navbar'
-import Footer from '../../components/Footer/Footer'
+import Navbar from '../../components/layout/Navbar'
+import Footer from '../../components/layout/Footer'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { FaApple, FaEye, FaEyeSlash, FaGoogle, FaLock, FaUser } from 'react-icons/fa'

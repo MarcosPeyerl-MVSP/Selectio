@@ -5,7 +5,7 @@
 /* Container principal da página de criação de vaga. */
 .empresa-vaga-page {
   min-height: 100vh;
-  background: #f6f6f7;
+  background: var(--background);
 }
 
 /* Layout com menu lateral e área principal. */
@@ -22,7 +22,7 @@
   gap: 72px;
   align-items: start;
   padding: 56px 56px 72px;
-  background: #fff;
+  background: var(--surface);
 }
 
 /* Bloco de introdução da página. */
@@ -32,13 +32,13 @@
 
 .empresa-vaga-intro > span {
   font-size: 10px;
-  color: #b7b7b7;
+  color: var(--muted);
   font-weight: 800;
 }
 
 .empresa-vaga-intro h1 {
   margin: 12px 0;
-  color: #252525;
+  color: var(--text-heading);
   font-size: 42px;
   line-height: 1.15;
 }
@@ -49,7 +49,7 @@
 
 .empresa-vaga-intro p {
   max-width: 270px;
-  color: #777;
+  color: var(--muted);
   font-size: 13px;
   line-height: 1.6;
 }
@@ -62,8 +62,8 @@
 
 /* Card de cada etapa do formulário. */
 .vaga-step {
-  background: #fff;
-  border: 1px solid #dedede;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 6px;
   padding: 30px;
 }
@@ -77,13 +77,13 @@
 }
 
 .step-header h2 {
-  color: #222;
+  color: var(--text);
   font-size: 18px;
 }
 
 .step-header p {
   margin-top: 12px;
-  color: #777;
+  color: var(--muted);
   font-size: 12px;
 }
 
@@ -102,7 +102,7 @@
 .empresa-vaga-form label {
   display: block;
   margin-bottom: 8px;
-  color: #777;
+  color: var(--muted);
   font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
@@ -112,10 +112,10 @@
 .empresa-vaga-form input,
 .empresa-vaga-form textarea {
   width: 100%;
-  border: 1px solid #e8e8e8;
+  border: 1px solid var(--border);
   border-radius: 6px;
-  background: #f7f7f8;
-  color: #222;
+  background: var(--surface-soft);
+  color: var(--text);
   font: inherit;
   font-size: 13px;
   padding: 16px;
@@ -126,7 +126,7 @@
 .empresa-vaga-form input:focus,
 .empresa-vaga-form textarea:focus {
   border-color: #c51d32;
-  background: #fff;
+  background: var(--surface);
 }
 
 .empresa-vaga-form textarea {
@@ -183,10 +183,10 @@
 .option-grid button,
 .reward-grid button {
   min-height: 44px;
-  border: 1px solid #dedede;
+  border: 1px solid var(--border);
   border-radius: 4px;
-  background: #fff;
-  color: #222;
+  background: var(--surface);
+  color: var(--text);
   font-weight: 800;
   cursor: pointer;
 }
@@ -198,7 +198,7 @@
 }
 
 .option-grid button.selected.outline {
-  background: #fff;
+  background: var(--surface);
   color: #c51d32;
 }
 
@@ -217,7 +217,7 @@
 
 .reward-grid button span {
   display: block;
-  color: #999;
+  color: var(--muted);
   font-size: 10px;
   text-transform: uppercase;
 }
@@ -248,8 +248,8 @@
   padding: 7px 9px;
   border: 1px solid #ead0d4;
   border-radius: 999px;
-  background: #fff7f8;
-  color: #333;
+  background: var(--surface-soft);
+  color: var(--text);
   font-size: 12px;
   font-weight: 700;
   text-transform: none;
@@ -281,7 +281,7 @@
 .finish-btn {
   border: none;
   background: transparent;
-  color: #555;
+  color: var(--muted);
   cursor: pointer;
   font-weight: 700;
 }

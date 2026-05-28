@@ -1,11 +1,11 @@
 import './Navbar.css'
 
-import logoVermelho from '../../../assets/Selectio_vermelho_sem_fundo.png'
+import logoVermelho from '../../assets/Selectio_vermelho_sem_fundo.png'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { FaBell, FaMoon, FaSignOutAlt, FaSun, FaUserCircle } from 'react-icons/fa'
 import { signOut } from 'firebase/auth'
-import { auth } from '../../../services/firebase'
-import { useTheme } from '../../../hooks/useTheme'
+import { auth } from '../../services/firebase'
+import { useTheme } from '../../hooks/useTheme'
 
 function Navbar() {
   const navigate = useNavigate()

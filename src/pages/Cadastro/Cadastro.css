@@ -5,7 +5,8 @@
 .cadastro-container {
   min-height: 100vh;
   padding: 20px 20px 100px;
-  background: #ffffff;
+  background: var(--background);
+  color: var(--text);
 }
 
 /* Área superior com texto introdutório da página. */
@@ -35,7 +36,7 @@
 /* Texto descritivo do cabeçalho. */
 .cadastro-header p {
   font-size: 15px;
-  color: #666;
+  color: var(--muted);
   line-height: 1.6;
 }
 
@@ -50,7 +51,8 @@
 
 /* Card individual de opção de cadastro. */
 .cadastro-card {
-  background: #ffffff;
+  background: var(--surface);
+  border: 1px solid var(--border);
   padding: 36px 34px 40px;
   border-radius: 18px;
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
@@ -67,7 +69,7 @@
 .cadastro-card .icon {
   width: 46px;
   height: 46px;
-  background: #ffe7ec;
+  background: color-mix(in srgb, var(--primary) 14%, var(--surface));
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -84,7 +86,7 @@
 /* Descrição da opção de cadastro. */
 .cadastro-card p {
   font-size: 14px;
-  color: #555;
+  color: var(--muted);
   line-height: 1.5;
   margin-bottom: 18px;
 }
@@ -99,7 +101,7 @@
 /* Item individual da lista de benefícios. */
 .cadastro-card ul li {
   font-size: 13px;
-  color: #666;
+  color: var(--muted);
   margin-bottom: 8px;
   padding-left: 18px;
   position: relative;
@@ -120,7 +122,7 @@
   text-align: center;
 
   background: var(--primary);
-  color: #ffffff;
+  color: var(--white);
   padding: 14px 24px;
   border-radius: 8px;
   font-weight: 800;
@@ -132,7 +134,7 @@
 
 /* Feedback visual do botão/link principal. */
 .btn-primary:hover {
-  background: #ffffff;
+  background: var(--surface);
   color: var(--primary);
   border: 1px solid var(--primary);
   transform: translateY(-2px);

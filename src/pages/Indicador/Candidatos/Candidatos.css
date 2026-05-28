@@ -6,7 +6,7 @@
   display: grid;
   grid-template-columns: 255px minmax(0, 1fr);
   min-height: calc(100vh - 80px);
-  background: #f5f5f5;
+  background: var(--background);
 }
 
 /* Área principal da página. */
@@ -14,7 +14,7 @@
   width: 100%;
   min-width: 0;
   padding: 38px 38px 80px;
-  background: #fefefe;
+  background: var(--surface);
   animation: selectioFadeIn 0.36s ease both;
 }
 
@@ -37,7 +37,7 @@
 
 .candidatos-header h1 {
   margin: 0 0 6px;
-  color: #202024;
+  color: var(--text-heading);
   font-size: 40px;
   line-height: 1.05;
 }
@@ -45,7 +45,7 @@
 .candidatos-header p {
   max-width: 650px;
   margin: 0;
-  color: #62666f;
+  color: var(--muted);
   font-size: 14px;
   line-height: 1.6;
 }
@@ -67,9 +67,9 @@
   min-height: 44px;
   padding: 0 18px;
   border-radius: 8px;
-  background: #f7f7f8;
-  color: #7a7f88;
-  border: 1px solid #ececf0;
+  background: var(--surface-soft);
+  color: var(--muted);
+  border: 1px solid var(--border);
   transition: background var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast);
 }
 
@@ -77,18 +77,18 @@
   width: 100%;
   border: 0;
   background: transparent;
-  color: #111;
+  color: var(--text);
   font: inherit;
   font-size: 14px;
   outline: none;
 }
 
 .candidate-search input::placeholder {
-  color: #7a7f88;
+  color: var(--muted);
 }
 
 .candidate-search:focus-within {
-  background: #fff;
+  background: var(--surface);
   border-color: rgba(182, 28, 47, 0.24);
   box-shadow: 0 0 0 3px rgba(182, 28, 47, 0.1);
   transform: translateY(-1px);
@@ -100,7 +100,7 @@
   align-items: center;
   padding: 4px;
   border-radius: 8px;
-  background: #f0f0f2;
+  background: var(--surface-soft);
 }
 
 .candidate-tabs button {
@@ -109,7 +109,7 @@
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: #666b75;
+  color: var(--muted);
   font-weight: 800;
   cursor: pointer;
   transition: background var(--motion-fast), color var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast);
@@ -117,13 +117,13 @@
 
 .candidate-tabs button:hover {
   transform: translateY(-1px);
-  background: #fff;
+  background: var(--surface);
   color: var(--primary);
 }
 
 /* Estado visual da aba selecionada. */
 .candidate-tabs button.active {
-  background: #fff;
+  background: var(--surface);
   color: var(--primary);
   box-shadow: 0 8px 16px rgba(20, 20, 24, 0.06);
 }
@@ -140,8 +140,8 @@
 .candidate-add-card {
   min-height: 174px;
   border-radius: 10px;
-  background: #fff;
-  border: 1px solid #ececf0;
+  background: var(--surface);
+  border: 1px solid var(--border);
   animation: selectioSlideUp 0.42s var(--ease-premium) both;
   transition: transform var(--motion-base), box-shadow var(--motion-base), border-color var(--motion-fast), background var(--motion-fast);
 }
@@ -149,7 +149,7 @@
 /* Card individual do candidato. */
 .candidate-card {
   padding: 22px;
-  color: #202024;
+  color: var(--text-heading);
 }
 
 .candidate-card:hover,
@@ -208,7 +208,7 @@
   bottom: -3px;
   width: 14px;
   height: 14px;
-  border: 3px solid #fff;
+  border: 3px solid var(--surface);
   border-radius: 999px;
   background: #22c55e;
 }
@@ -240,13 +240,13 @@
 /* Estado visual específico para candidato contratado. */
 .candidate-card.contratado {
   background: linear-gradient(135deg, #15803d 0%, #16a34a 100%);
-  color: #fff;
+  color: var(--white);
   border-color: transparent;
 }
 
 .candidate-card.contratado .candidate-status {
   background: rgba(255, 255, 255, 0.24);
-  color: #fff;
+  color: var(--white);
 }
 
 /* Estado visual específico para candidato cancelado. */
@@ -262,7 +262,7 @@
 
 .candidate-card p {
   margin: 0 0 22px;
-  color: #68707d;
+  color: var(--muted);
   font-size: 13px;
 }
 
@@ -276,7 +276,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   padding-top: 16px;
-  border-top: 1px solid #ececef;
+  border-top: 1px solid var(--border);
 }
 
 .candidate-card.contratado .candidate-meta {
@@ -286,7 +286,7 @@
 .candidate-meta span {
   display: block;
   margin-bottom: 5px;
-  color: #7b808a;
+  color: var(--muted);
   font-size: 9px;
   font-weight: 900;
   text-transform: uppercase;
@@ -307,8 +307,8 @@
   align-content: center;
   gap: 10px;
   border-style: dashed;
-  border-color: #d5d5da;
-  color: #777d88;
+  border-color: var(--border);
+  color: var(--muted);
   text-align: center;
   text-decoration: none;
   text-transform: uppercase;
@@ -325,13 +325,13 @@
   width: 48px;
   height: 48px;
   border-radius: 999px;
-  background: #ececef;
+  background: var(--surface-soft);
   color: #9aa0aa;
   transition: background var(--motion-fast), color var(--motion-fast), transform var(--motion-fast);
 }
 
 .candidate-add-card:hover span {
-  background: #f6dfe4;
+  background: color-mix(in srgb, var(--primary) 14%, var(--surface));
   color: var(--primary);
   transform: scale(1.04);
 }
@@ -346,7 +346,7 @@
 
 /* Feedback textual de carregamento ou erro. */
 .candidate-feedback {
-  color: #555;
+  color: var(--muted);
   font-weight: 700;
 }
 

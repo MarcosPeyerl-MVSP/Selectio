@@ -26,12 +26,12 @@
 .not-found-message h2 {
   font-size: 32px;
   margin-bottom: 16px;
-  color: #333;
+  color: var(--text);
 }
 
 .not-found-message p {
   font-size: 18px;
-  color: #666;
+  color: var(--muted);
   margin-bottom: 24px;
 }
 
@@ -52,7 +52,7 @@
 
 /* Estilos de sidebar usados nesta página. */
 .sidebar {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid rgba(182, 28, 47, 0.08);
   border-radius: 20px;
   padding: 28px 20px;
@@ -89,7 +89,7 @@
 .sidebar-user p {
   margin: 4px 0 0;
   font-size: 13px;
-  color: #666;
+  color: var(--muted);
 }
 
 .sidebar-menu {
@@ -104,7 +104,7 @@
   gap: 12px;
   padding: 12px 14px;
   border-radius: 12px;
-  color: #333;
+  color: var(--text);
   text-decoration: none;
   background: #fafafa;
   transition: 0.2s ease;
@@ -181,7 +181,7 @@
 
 /* Card superior com resumo da vaga. */
 .vaga-card-top {
-  background: #fff;
+  background: var(--surface);
   padding: 28px;
   border-radius: 20px;
   border: 1px solid rgba(182, 28, 47, 0.08);
@@ -202,8 +202,8 @@
 }
 
 .vaga-tags span {
-  background: #f7f7fb;
-  color: #444;
+  background: var(--surface-soft);
+  color: var(--text);
   padding: 10px 14px;
   border-radius: 999px;
   font-size: 13px;
@@ -224,7 +224,7 @@
 
 /* Blocos de descrição e requisitos. */
 .section-block {
-  background: #fff;
+  background: var(--surface);
   border-radius: 20px;
   padding: 28px;
   border: 1px solid rgba(182, 28, 47, 0.08);
@@ -236,7 +236,7 @@
 }
 
 .section-block p {
-  color: #555;
+  color: var(--muted);
   line-height: 1.75;
   margin-bottom: 14px;
 }
@@ -252,7 +252,7 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  color: #444;
+  color: var(--text);
   line-height: 1.7;
 }
 
@@ -271,7 +271,7 @@
 .reward-card,
 .edit-vaga-card,
 .benefits-card {
-  background: #fff;
+  background: var(--surface);
   border-radius: 20px;
   padding: 26px;
   border: 1px solid rgba(182, 28, 47, 0.08);
@@ -293,7 +293,7 @@
 
 .reward-card p,
 .edit-vaga-card p {
-  color: #555;
+  color: var(--muted);
   line-height: 1.7;
   margin-bottom: 22px;
 }
@@ -342,7 +342,7 @@
   gap: 12px;
   padding: 14px 16px;
   border-radius: 14px;
-  background: #f7f7f7;
+  background: var(--surface-soft);
 }
 
 .benefits-grid div svg {

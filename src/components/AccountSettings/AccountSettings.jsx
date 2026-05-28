@@ -250,14 +250,14 @@ function AccountSettings({ user, tipo }) {
 
   return (
     <section className="account-settings">
-      <p className="breadcrumb">CONFIGURACOES - Conta</p>
+      <p className="dashboard-breadcrumb">CONFIGURACOES - Conta</p>
 
       <div className="settings-header">
         <div>
           <h1>
             Configuracoes da <span>conta</span>.
           </h1>
-          <p className="subtitle">
+          <p className="dashboard-subtitle">
             Gerencie dados basicos e os metodos usados para acessar sua conta Selectio.
           </p>
         </div>

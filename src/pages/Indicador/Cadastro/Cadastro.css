@@ -7,13 +7,15 @@
   display: grid;
   place-items: center;
   padding: 34px 20px;
+  background: var(--background);
+  color: var(--text);
 }
 
 /* Card que envolve título, descrição e formulário. */
 .indicador-cadastro-card {
   width: 100%;
   max-width: 560px;
-  background: var(--white);
+  background: var(--surface);
   padding: 42px 40px;
   border: 1px solid rgba(182, 28, 47, 0.08);
   border-radius: 12px;
@@ -32,7 +34,7 @@
 /* Texto auxiliar abaixo do título. */
 .indicador-cadastro-card .subtitle {
   font-size: 14px;
-  color: #666;
+  color: var(--muted);
   margin-bottom: 28px;
   line-height: 1.5;
   animation: selectioSlideUp 0.4s var(--ease-premium) 0.09s both;
@@ -52,8 +54,8 @@
   min-height: 48px;
   padding: 13px 14px;
   border-radius: 8px;
-  border: 1px solid #ddd;
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--surface);
   color: var(--text);
   font-size: 14px;
   transition: border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast);
@@ -104,7 +106,7 @@
   border-radius: 8px;
   border: 0;
   background: transparent;
-  color: #555;
+  color: var(--muted);
   cursor: pointer;
   line-height: 1;
 }
@@ -118,9 +120,9 @@
 /* Painel com resultado da análise de força da senha. */
 .password-strength {
   padding: 12px;
-  border: 1px solid #e8e8e8;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--surface);
   text-align: left;
   animation: selectioScaleIn 0.28s var(--ease-premium) both;
 }
@@ -135,14 +137,14 @@
 
 .strength-header strong {
   display: block;
-  color: #333333;
+  color: var(--text);
   font-size: 13px;
   text-transform: capitalize;
 }
 
 .strength-header p {
   margin-top: 2px;
-  color: #666;
+  color: var(--muted);
   font-size: 12px;
   line-height: 1.35;
 }
@@ -153,7 +155,7 @@
   padding: 4px 7px;
   border-radius: 6px;
   background: #f5f5f5;
-  color: #555;
+  color: var(--muted);
   font-size: 12px;
   font-weight: 700;
   text-align: center;
@@ -187,12 +189,12 @@
 }
 
 .strength-fraca .strength-score {
-  background: #fff1f1;
+  background: var(--danger-bg);
   color: #b42318;
 }
 
 .strength-media .strength-score {
-  background: #fff7e8;
+  background: var(--warning-bg);
   color: #92400e;
 }
 
@@ -256,7 +258,7 @@
 .confirm-password-message {
   display: block;
   margin-top: 7px;
-  color: #666;
+  color: var(--muted);
   font-size: 12px;
   font-weight: 700;
   text-align: left;
@@ -290,13 +292,13 @@
 
 .google-linked-card strong {
   display: block;
-  color: #171717;
+  color: var(--text-heading);
   font-size: 13px;
 }
 
 .google-linked-card p {
   margin-top: 2px;
-  color: #666666;
+  color: var(--muted);
   font-size: 12px;
   overflow-wrap: anywhere;
 }
@@ -316,7 +318,7 @@
 }
 
 .btn-primary:hover {
-  background: var(--white);
+  background: var(--surface);
   color: var(--primary);
   transform: translateY(-2px);
   box-shadow: 0 12px 28px rgba(182, 28, 47, 0.25);
@@ -342,7 +344,7 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 14px;
-  color: #777777;
+  color: var(--muted);
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
@@ -372,7 +374,7 @@
 }
 
 .google-signup-message.warning {
-  background: #fff4f4;
+  background: var(--danger-bg);
   color: #9f1728;
 }
 
@@ -383,10 +385,10 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  border: 1px solid #dcdcdc;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: #ffffff;
-  color: #171717;
+  background: var(--surface);
+  color: var(--text-heading);
   font-family: inherit;
   font-size: 14px;
   font-weight: 800;
@@ -402,8 +404,8 @@
 }
 
 .google-signup-button:disabled {
-  background: #f2f2f2;
-  color: #777777;
+  background: var(--surface-soft);
+  color: var(--muted);
   cursor: not-allowed;
   box-shadow: none;
 }

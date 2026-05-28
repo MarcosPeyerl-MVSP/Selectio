@@ -15,7 +15,7 @@
   padding: 0 14px;
   border: 1px solid #ead0d4;
   border-radius: 6px;
-  background: #fff7f8;
+  background: var(--surface-soft);
   color: #b41427;
   font-size: 12px;
   font-weight: 800;
@@ -23,6 +23,6 @@
 
 /* Define a aparência das mensagens exibidas dentro de uma etapa da edição. */
 .editar-vaga-content .vaga-step > p {
-  color: #777;
+  color: var(--muted);
   font-weight: 700;
 }

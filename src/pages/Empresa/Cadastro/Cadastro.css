@@ -6,7 +6,8 @@
 .empresa-container {
   min-height: calc(100vh - 140px);
   padding: 48px 20px;
-  background: #ffffff;
+  background: var(--background);
+  color: var(--text);
 }
 
 /* Layout com formulário principal e card lateral de plano. */
@@ -24,8 +25,8 @@
 /* Blocos visuais principais da tela. */
 .empresa-form,
 .plano-box {
-  background: #ffffff;
-  border: 1px solid #e8e8e8;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 10px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.06);
 }
@@ -38,7 +39,7 @@
 /* Cabeçalho do formulário. */
 .form-header {
   padding-bottom: 22px;
-  border-bottom: 1px solid #eeeeee;
+  border-bottom: 1px solid var(--border);
   animation: selectioSlideUp 0.42s var(--ease-premium) 0.04s both;
 }
 
@@ -55,14 +56,14 @@
 
 .form-header h1 {
   margin-bottom: 8px;
-  color: #171717;
+  color: var(--text-heading);
   font-size: 30px;
   line-height: 1.2;
 }
 
 .form-header p {
   max-width: 620px;
-  color: #666666;
+  color: var(--muted);
   font-size: 14px;
   line-height: 1.5;
 }
@@ -70,7 +71,7 @@
 /* Seções internas do formulário. */
 .form-section {
   padding: 22px 0 8px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border);
   animation: selectioSlideUp 0.38s var(--ease-premium) both;
 }
 
@@ -90,7 +91,7 @@
 
 .form-section h2 {
   margin-bottom: 18px;
-  color: #171717;
+  color: var(--text-heading);
   font-size: 17px;
 }
 
@@ -98,7 +99,7 @@
 .field-label {
   display: block;
   margin-bottom: 7px;
-  color: #333333;
+  color: var(--text);
   font-size: 13px;
   font-weight: 700;
 }
@@ -109,10 +110,10 @@
   width: 100%;
   min-height: 46px;
   padding: 12px 13px;
-  border: 1px solid #dcdcdc;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: #ffffff;
-  color: #222222;
+  background: var(--surface);
+  color: var(--text);
   font-family: inherit;
   font-size: 14px;
   transition: border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast), background var(--motion-fast);
@@ -270,9 +271,9 @@
 .password-strength {
   margin-top: 16px;
   padding: 12px;
-  border: 1px solid #e8e8e8;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--surface);
   animation: selectioScaleIn 0.28s var(--ease-premium) both;
 }
 
@@ -285,14 +286,14 @@
 
 .strength-header strong {
   display: block;
-  color: #333333;
+  color: var(--text);
   font-size: 13px;
   text-transform: capitalize;
 }
 
 .strength-header p {
   margin-top: 2px;
-  color: #666666;
+  color: var(--muted);
   font-size: 12px;
   line-height: 1.35;
 }
@@ -302,7 +303,7 @@
   padding: 4px 7px;
   border-radius: 6px;
   background: #f5f5f5;
-  color: #555555;
+  color: var(--muted);
   font-size: 12px;
   font-weight: 700;
   text-align: center;
@@ -336,12 +337,12 @@
 }
 
 .strength-fraca .strength-score {
-  background: #fff1f1;
+  background: var(--danger-bg);
   color: #b42318;
 }
 
 .strength-media .strength-score {
-  background: #fff7e8;
+  background: var(--warning-bg);
   color: #92400e;
 }
 
@@ -427,13 +428,13 @@
 
 .google-linked-card strong {
   display: block;
-  color: #171717;
+  color: var(--text-heading);
   font-size: 13px;
 }
 
 .google-linked-card p {
   margin-top: 2px;
-  color: #666666;
+  color: var(--muted);
   font-size: 12px;
   overflow-wrap: anywhere;
 }
@@ -451,10 +452,10 @@
   gap: 10px;
   min-height: 44px;
   padding: 12px;
-  border: 1px solid #e8e8e8;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: #fafafa;
-  color: #333333;
+  background: var(--surface-soft);
+  color: var(--text);
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
@@ -463,7 +464,7 @@
 
 .choice-list label:hover {
   border-color: rgba(182, 28, 47, 0.24);
-  background: #fff;
+  background: var(--surface);
   transform: translateY(-1px);
 }
 
@@ -509,7 +510,7 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 14px;
-  color: #777777;
+  color: var(--muted);
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
@@ -539,7 +540,7 @@
 }
 
 .google-signup-message.warning {
-  background: #fff4f4;
+  background: var(--danger-bg);
   color: #9f1728;
 }
 
@@ -550,10 +551,10 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  border: 1px solid #dcdcdc;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: #ffffff;
-  color: #171717;
+  background: var(--surface);
+  color: var(--text-heading);
   font-family: inherit;
   font-size: 14px;
   font-weight: 800;
@@ -570,7 +571,7 @@
 
 .google-signup-button:disabled {
   background: #f2f2f2;
-  color: #777777;
+  color: var(--muted);
   cursor: not-allowed;
   box-shadow: none;
 }
@@ -587,7 +588,7 @@
   padding: 18px;
   border: 1px solid #e7d2d6;
   border-radius: 10px;
-  background: #fffafa;
+  background: var(--surface-soft);
   transition: border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast);
 }
 
@@ -609,7 +610,7 @@
 }
 
 .preco span {
-  color: #666666;
+  color: var(--muted);
   font-size: 13px;
   font-weight: 600;
 }
@@ -623,7 +624,7 @@
 .plano-card li {
   padding: 9px 0;
   border-top: 1px solid rgba(182, 28, 47, 0.12);
-  color: #333333;
+  color: var(--text);
   font-size: 13px;
 }
 
@@ -631,7 +632,7 @@
   width: 100%;
   margin-top: 14px;
   border: 1px solid #b61c2f;
-  background: #ffffff;
+  background: var(--surface);
   color: #b61c2f;
 }
 
@@ -644,7 +645,7 @@
 .help-box {
   margin-top: 18px;
   padding-top: 18px;
-  border-top: 1px solid #eeeeee;
+  border-top: 1px solid var(--border);
 }
 
 .help-box h3 {
@@ -654,7 +655,7 @@
 
 .help-box p {
   margin-bottom: 10px;
-  color: #666666;
+  color: var(--muted);
   font-size: 13px;
   line-height: 1.45;
 }

@@ -19,7 +19,7 @@
 }
 
 .settings-header h1 span {
-  color: #b61c2f;
+  color: var(--primary);
 }
 
 .settings-grid {
@@ -56,7 +56,7 @@
   padding: 10px;
   border-radius: 8px;
   background: rgba(182, 28, 47, 0.09);
-  color: #b61c2f;
+  color: var(--primary);
 }
 
 .settings-card-title span {
@@ -135,7 +135,7 @@
   place-items: center;
   border-radius: 8px;
   background: rgba(182, 28, 47, 0.08);
-  color: #b61c2f;
+  color: var(--primary);
 }
 
 .login-method strong {
@@ -168,13 +168,13 @@
 }
 
 .login-method.linked .method-badge {
-  background: #f1f8f3;
-  color: #166534;
+  background: var(--success-bg);
+  color: var(--success);
 }
 
 .login-method.unlinked .method-badge {
-  background: #fff4f4;
-  color: #9f1728;
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .settings-note,
@@ -189,13 +189,13 @@
 }
 
 .settings-message.success {
-  background: #f1f8f3;
-  color: #166534;
+  background: var(--success-bg);
+  color: var(--success);
 }
 
 .settings-message.warning {
-  background: #fff4f4;
-  color: #9f1728;
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .password-setup {
@@ -238,7 +238,7 @@
 
 .settings-field-grid input:focus {
   outline: none;
-  border-color: #b61c2f;
+  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(182, 28, 47, 0.12);
 }
 
@@ -264,23 +264,23 @@
 }
 
 .google-link-button {
-  border: 1px solid #b61c2f;
-  background: #b61c2f;
+  border: 1px solid var(--primary);
+  background: var(--primary);
   color: #ffffff;
   box-shadow: 0 12px 26px rgba(182, 28, 47, 0.18);
 }
 
 .settings-secondary-button {
   margin-top: 14px;
-  border: 1px solid #b61c2f;
+  border: 1px solid var(--primary);
   background: var(--surface);
-  color: #b61c2f;
+  color: var(--primary);
 }
 
 .settings-danger-button {
   border: 1px solid rgba(182, 28, 47, 0.32);
   background: var(--surface);
-  color: #9f1728;
+  color: var(--danger);
 }
 
 .google-link-button:hover:not(:disabled),
@@ -291,17 +291,17 @@
 }
 
 .google-link-button:hover:not(:disabled) {
-  background: #9f1728;
+  background: var(--primary-dark);
 }
 
 .settings-secondary-button:hover:not(:disabled) {
-  background: #b61c2f;
+  background: var(--primary);
   color: #ffffff;
 }
 
 .settings-danger-button:hover:not(:disabled) {
-  border-color: #9f1728;
-  background: #9f1728;
+  border-color: var(--primary-dark);
+  background: var(--primary-dark);
   color: #ffffff;
 }
 

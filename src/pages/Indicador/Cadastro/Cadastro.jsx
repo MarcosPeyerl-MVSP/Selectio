@@ -13,8 +13,8 @@ import {
   signInWithPopup,
   signOut
 } from 'firebase/auth'
-import Navbar from '../../../components/Navbar/Navbar/Navbar'
-import Footer from '../../../components/Footer/Footer'
+import Navbar from '../../../components/layout/Navbar'
+import Footer from '../../../components/layout/Footer'
 import { auth } from '../../../services/firebase'
 import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from '../../../services/authErrors'
 import { buscarPerfilUsuario, salvarPerfilUsuario } from '../../../services/firestoreUsers'

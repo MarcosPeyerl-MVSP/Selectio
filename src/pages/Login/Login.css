@@ -229,8 +229,8 @@ html, body, #root {
   margin-top: -4px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: #fff4f4;
-  color: #9f1728;
+  background: var(--danger-bg);
+  color: var(--danger);
   font-size: 12px;
   font-weight: 700;
   line-height: 1.4;
@@ -253,8 +253,8 @@ html, body, #root {
   margin-top: -4px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: #f1f8f3;
-  color: #166534;
+  background: var(--success-bg);
+  color: var(--success);
   font-size: 12px;
   font-weight: 700;
   line-height: 1.4;

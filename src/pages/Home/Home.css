@@ -43,7 +43,7 @@
   max-width: 620px;
   font-size: 19px;
   line-height: 1.6;
-  color: #555555;
+  color: var(--muted);
   margin-bottom: 28px;
   transition: opacity 0.6s ease, transform 0.6s ease;
 }
@@ -72,7 +72,7 @@
 .hero-actions button:hover,
 .hero-actions .hero-indication:hover,
 .solution-card button:hover {
-  background: var(--white);
+  background: var(--surface);
   color: var(--primary) !important;
   transform: translateY(-2px);
   box-shadow: 0 12px 28px rgba(182, 28, 47, 0.25);
@@ -100,7 +100,7 @@
 
 /* Efeito visual translúcido aplicado ao card da vaga. */
 .hero-card.glass-effect {
-  background: rgba(255, 255, 255, 0.85);
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.3);
@@ -173,7 +173,7 @@
 .profile-photo {
   height: 300px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #e5e5e5, #f8f8f8);
+  background: linear-gradient(135deg, var(--surface-muted), var(--surface-soft));
   background-size: cover;
   background-position: center;
 }
@@ -182,8 +182,8 @@
 .placeholder-photo {
   display: grid;
   place-items: center;
-  border: 1px dashed #cccccc;
-  color: #999999;
+  border: 1px dashed var(--border);
+  color: var(--muted);
   font-size: 14px;
   font-weight: 700;
 }
@@ -194,14 +194,14 @@
   left: -28px;
   bottom: 28px;
   width: 220px;
-  background: var(--white);
+  background: var(--surface);
   border-radius: 12px;
   padding: 18px;
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
 }
 
 .info-box.glass-effect {
-  background: rgba(255, 255, 255, 0.9);
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.3);
@@ -219,7 +219,7 @@
 
 .info-box span {
   margin-top: 4px;
-  color: #444444;
+  color: var(--text);
 }
 
 /* Botões laterais de navegação do carrossel. */
@@ -333,7 +333,7 @@
 /* Cards de solução para empresas e indicadores. */
 .solution-card {
   text-align: left;
-  background: var(--white);
+  background: var(--surface);
   padding: 34px;
   border-radius: 16px;
   box-shadow: 0 14px 35px rgba(0, 0, 0, 0.05);
@@ -345,7 +345,7 @@
 }
 
 .solution-card p {
-  color: #555555;
+  color: var(--muted);
   margin-bottom: 10px;
   line-height: 1.5;
 }
@@ -375,7 +375,7 @@
 }
 
 .section-text {
-  color: #555555;
+  color: var(--muted);
   line-height: 1.6;
   margin-bottom: 30px;
   max-width: 520px;
@@ -412,13 +412,13 @@
 }
 
 .steps p {
-  color: #666666;
+  color: var(--muted);
   line-height: 1.5;
 }
 
 /* Card visual do indicador de compatibilidade. */
 .matching-card {
-  background: var(--white);
+  background: var(--surface);
   border-radius: 18px;
   padding: 38px;
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.06);
@@ -436,7 +436,7 @@
 /* Barras usadas como representação visual de compatibilidade. */
 .bar {
   height: 18px;
-  background: #f0d1d8;
+  background: color-mix(in srgb, var(--primary) 18%, var(--surface));
   border-radius: 999px;
   margin-bottom: 18px;
 }
@@ -470,7 +470,7 @@
 }
 
 .companies span {
-  color: #888888;
+  color: var(--muted);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 2px;
@@ -486,7 +486,7 @@
 
 .companies p {
   font-weight: 800;
-  color: #777777;
+  color: var(--muted);
   transition: var(--transition);
 }
 
@@ -577,7 +577,7 @@
 .solution-icon {
   width: 46px;
   height: 46px;
-  background: #ffe7ec;
+  background: color-mix(in srgb, var(--primary) 14%, var(--surface));
   color: var(--primary);
   border-radius: 50%;
   display: grid;
@@ -610,7 +610,7 @@
 }
 
 .home-button-primary:hover {
-  background: var(--white);
+  background: var(--surface);
   color: var(--primary) !important;
   transform: translateY(-2px);
   box-shadow: 0 12px 28px rgba(182, 28, 47, 0.25);
@@ -625,7 +625,7 @@
 .matching-icon {
   width: 48px;
   height: 48px;
-  background: #ffe7ec;
+  background: color-mix(in srgb, var(--primary) 14%, var(--surface));
   color: var(--primary);
   border-radius: 50%;
   display: grid;

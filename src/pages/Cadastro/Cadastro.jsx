@@ -2,8 +2,8 @@
 // A página permite que o usuário selecione entre cadastro de empresa ou cadastro de indicador.
 
 import './Cadastro.css'
-import Navbar from '../../components/Navbar/Navbar/Navbar'
-import Footer from '../../components/Footer/Footer'
+import Navbar from '../../components/layout/Navbar'
+import Footer from '../../components/layout/Footer'
 import { Link } from 'react-router-dom'
 
 function Cadastro() {

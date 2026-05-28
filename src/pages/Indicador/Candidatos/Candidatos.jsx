@@ -9,9 +9,9 @@ import {
   FaPlus,
   FaSearch,
 } from 'react-icons/fa'
-import Navbar from '../../../components/Navbar/Navbar/Navbar'
-import Sidebar from '../../../components/Sidebar/Sidebar'
-import Footer from '../../../components/Footer/Footer'
+import Navbar from '../../../components/layout/Navbar'
+import Sidebar from '../../../components/layout/Sidebar'
+import Footer from '../../../components/layout/Footer'
 import { listarCandidatosPorIndicador } from '../../../services/firestoreCandidatos'
 import { getFirebaseUid } from '../../../services/firebaseIdentity'
 
