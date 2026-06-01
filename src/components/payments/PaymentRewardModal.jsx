@@ -12,14 +12,13 @@ function PaymentRewardModal({ candidato, empresa, pagamentoExistente, onClose, o
   const toast = useToast()
   const confirm = useConfirm()
   const empresaId = getFirebaseUid(empresa)
-  const valorInicial = useMemo(() => obterValorRecompensa(candidato), [candidato])
-  const [valor, setValor] = useState(valorInicial ? String(valorInicial) : '')
+  const valorRecompensa = useMemo(() => obterValorRecompensa(candidato), [candidato])
   const [carregando, setCarregando] = useState(false)
 
   if (!candidato) return null
 
   const statusPagamento = pagamentoExistente?.status
-  const checkoutUrl = pagamentoExistente?.sandboxCheckoutUrl || pagamentoExistente?.checkoutUrl
+  const checkoutUrl = pagamentoExistente?.checkoutUrl || pagamentoExistente?.sandboxCheckoutUrl
   const recompensaPaga = statusPagamento === 'approved'
   const pagamentoPendente = statusPagamento === 'pending' && checkoutUrl
 
@@ -30,16 +29,11 @@ function PaymentRewardModal({ candidato, empresa, pagamentoExistente, onClose, o
   const handleSubmit = async (event) => {
     event.preventDefault()
 
-    const valorNumerico = normalizarValor(valor)
-
-    if (!valorNumerico) {
-      toast.warning('Informe um valor valido para a recompensa.')
-      return
-    }
-
     const confirmado = await confirm({
       title: 'Pagar recompensa?',
-      description: `Voce sera redirecionado para o Mercado Pago para pagar ${formatCurrency(valorNumerico)}.`,
+      description: valorRecompensa
+        ? `Voce sera redirecionado para o Mercado Pago para pagar ${formatCurrency(valorRecompensa)}.`
+        : 'A recompensa sera validada pela vaga no Firestore antes de abrir o checkout.',
       confirmLabel: 'Ir para pagamento',
       cancelLabel: 'Voltar',
       tone: 'danger'
@@ -56,13 +50,12 @@ function PaymentRewardModal({ candidato, empresa, pagamentoExistente, onClose, o
         indicacaoId: candidato.indicacaoId || '',
         vagaId: candidato.vagaId || '',
         indicadorId: candidato.indicadorId || candidato.indicadorUid || '',
-        valor: valorNumerico,
         descricao: `Recompensa Selectio - ${candidato.vagaTitulo || 'Vaga'} - ${candidato.nome || 'Candidato'}`
       })
 
       onCreated?.(pagamento)
 
-      const url = pagamento.sandboxInitPoint || pagamento.initPoint
+      const url = pagamento.checkoutUrl || pagamento.initPoint || pagamento.sandboxInitPoint
       if (url) {
         window.location.href = url
         return
@@ -121,13 +114,18 @@ function PaymentRewardModal({ candidato, empresa, pagamentoExistente, onClose, o
             <label className="payment-field">
               Valor da recompensa
               <input
-                value={valor}
-                onChange={(event) => setValor(event.target.value)}
-                inputMode="decimal"
-                placeholder="Ex: 2500"
+                value={valorRecompensa ? formatCurrency(valorRecompensa) : 'Validado pela vaga no Firestore'}
+                readOnly
                 disabled={Boolean(pagamentoPendente)}
               />
             </label>
+
+            {!valorRecompensa && (
+              <div className="payment-state pending">
+                <strong>Valor pendente de validacao</strong>
+                <p>A Cloud Function vai buscar a recompensa cadastrada na vaga antes de criar o checkout.</p>
+              </div>
+            )}
 
             {pagamentoPendente && (
               <div className="payment-state pending">

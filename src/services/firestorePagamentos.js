@@ -43,7 +43,7 @@ const ordenarPorCriacao = (a, b) => {
 }
 
 export const criarPagamentoRecompensa = async (payload) => {
-  const criarPreferencia = httpsCallable(functions, 'createMercadoPagoPreference')
+  const criarPreferencia = httpsCallable(functions, 'criarPreferenciaPagamento')
   const resultado = await criarPreferencia(payload)
 
   return resultado.data

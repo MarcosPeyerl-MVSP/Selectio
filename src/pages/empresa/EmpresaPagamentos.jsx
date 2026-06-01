@@ -50,9 +50,13 @@ function EmpresaPagamentos({ empresa }) {
   }, [empresaId, toast])
 
   const metricas = useMemo(() => ({
-    total: pagamentos.reduce((soma, pagamento) => soma + Number(pagamento.valor || 0), 0),
-    aprovados: pagamentos.filter((pagamento) => pagamento.status === 'approved').length,
-    pendentes: pagamentos.filter((pagamento) => pagamento.status === 'pending').length
+    totalCriado: pagamentos.reduce((soma, pagamento) => soma + Number(pagamento.valor || 0), 0),
+    totalAprovado: pagamentos
+      .filter((pagamento) => pagamento.status === 'approved')
+      .reduce((soma, pagamento) => soma + Number(pagamento.valor || 0), 0),
+    totalPendente: pagamentos
+      .filter((pagamento) => pagamento.status === 'pending')
+      .reduce((soma, pagamento) => soma + Number(pagamento.valor || 0), 0)
   }), [pagamentos])
 
   if (carregando) return <PageLoader label="Carregando pagamentos..." compact />
@@ -66,9 +70,9 @@ function EmpresaPagamentos({ empresa }) {
       </header>
 
       <section className="empresa-pagamentos-metricas">
-        <MetricCard label="Volume criado" value={formatCurrency(metricas.total)} />
-        <MetricCard label="Aprovados" value={metricas.aprovados} />
-        <MetricCard label="Pendentes" value={metricas.pendentes} />
+        <MetricCard label="Volume aprovado" value={formatCurrency(metricas.totalAprovado)} />
+        <MetricCard label="Volume pendente" value={formatCurrency(metricas.totalPendente)} />
+        <MetricCard label="Total criado" value={formatCurrency(metricas.totalCriado)} />
       </section>
 
       <article className="empresa-pagamentos-lista">
@@ -92,8 +96,8 @@ function EmpresaPagamentos({ empresa }) {
                 </span>
               </div>
 
-              {pagamento.status === 'pending' && (pagamento.sandboxCheckoutUrl || pagamento.checkoutUrl) && (
-                <a href={pagamento.sandboxCheckoutUrl || pagamento.checkoutUrl}>
+              {pagamento.status === 'pending' && (pagamento.checkoutUrl || pagamento.sandboxCheckoutUrl) && (
+                <a href={pagamento.checkoutUrl || pagamento.sandboxCheckoutUrl}>
                   <FaExternalLinkAlt /> Continuar checkout
                 </a>
               )}

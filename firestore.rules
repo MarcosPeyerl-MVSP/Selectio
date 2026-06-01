@@ -76,6 +76,11 @@ service cloud.firestore {
         );
     }
 
+    function isEmpresaOwner(data) {
+      return isEmpresa()
+        && data.empresaId == request.auth.uid;
+    }
+
     function vagaEmpresaMatches(data) {
       return data.vagaId is string
         && data.empresaId is string
@@ -91,7 +96,19 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
         'lida',
         'lidaEm'
-      ]);
+      ])
+        && request.resource.data.lida == true;
+    }
+
+    function hasValidInterviewStatus(status) {
+      return status in ['agendada', 'realizada', 'cancelada', 'pendente'];
+    }
+
+    function sameInterviewOwnership() {
+      return request.resource.data.empresaId == resource.data.empresaId
+        && request.resource.data.indicadorId == resource.data.indicadorId
+        && request.resource.data.candidatoId == resource.data.candidatoId
+        && request.resource.data.vagaId == resource.data.vagaId;
     }
 
     match /users/{uid} {
@@ -136,7 +153,7 @@ service cloud.firestore {
 
       allow read: if isEmpresaOrIndicadorOwner(resource.data);
 
-      allow update: if isEmpresaOrIndicadorOwner(resource.data)
+      allow update: if isEmpresaOwner(resource.data)
         && sameCandidateOwnership()
         && statusUpdateOnly()
         && hasValidStatus(request.resource.data.status);
@@ -152,12 +169,26 @@ service cloud.firestore {
 
       allow read: if isEmpresaOrIndicadorOwner(resource.data);
 
-      allow update: if isEmpresaOrIndicadorOwner(resource.data)
+      allow update: if isEmpresaOwner(resource.data)
         && sameIndicacaoOwnership()
         && statusUpdateOnly()
         && hasValidStatus(request.resource.data.status);
 
       allow delete: if false;
+    }
+
+    match /entrevistas/{entrevistaId} {
+      allow create: if isEmpresa()
+        && request.resource.data.empresaId == request.auth.uid
+        && hasValidInterviewStatus(request.resource.data.status);
+
+      allow read: if isEmpresaOrIndicadorOwner(resource.data);
+
+      allow update: if isEmpresaOwner(resource.data)
+        && sameInterviewOwnership()
+        && hasValidInterviewStatus(request.resource.data.status);
+
+      allow delete: if isEmpresaOwner(resource.data);
     }
 
     match /pagamentos/{pagamentoId} {
@@ -171,7 +202,7 @@ service cloud.firestore {
     }
 
     match /movimentacoesFinanceiras/{movimentacaoId} {
-      allow read: if signedIn() && resource.data.indicadorId == request.auth.uid;
+      allow read: if isEmpresaOrIndicadorOwner(resource.data);
       allow create, update, delete: if false;
     }
 

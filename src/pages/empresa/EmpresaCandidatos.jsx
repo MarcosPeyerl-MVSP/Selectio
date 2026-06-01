@@ -237,7 +237,7 @@ function CandidatosEmpresa() {
         candidatoNome: paymentCandidate.nome,
         vagaTitulo: paymentCandidate.vagaTitulo,
         indicadorNome: paymentCandidate.indicadorNome,
-        checkoutUrl: pagamento.initPoint,
+        checkoutUrl: pagamento.checkoutUrl || pagamento.initPoint,
         sandboxCheckoutUrl: pagamento.sandboxInitPoint,
         criadoEm: new Date().toISOString()
       },

@@ -64,6 +64,39 @@ function numeroPositivo(valor) {
   return Number.isFinite(numero) && numero > 0 ? Number(numero.toFixed(2)) : null
 }
 
+function valorMonetario(valor) {
+  if (typeof valor === 'number') return numeroPositivo(valor)
+
+  const texto = String(valor || '')
+    .replace(/[^\d,.-]/g, '')
+    .trim()
+
+  if (!texto) return null
+
+  let normalizado = texto.includes(',')
+    ? texto.replace(/\./g, '').replace(',', '.')
+    : texto.replace(/,/g, '')
+
+  if (!texto.includes(',') && /^\d{1,3}(\.\d{3})+$/.test(texto)) {
+    normalizado = texto.replace(/\./g, '')
+  }
+
+  return numeroPositivo(normalizado)
+}
+
+function primeiroValorMonetario(...valores) {
+  for (const valor of valores) {
+    const numero = valorMonetario(valor)
+    if (numero) return numero
+  }
+
+  return null
+}
+
+function valoresIguais(valorA, valorB) {
+  return Math.abs(Number(valorA || 0) - Number(valorB || 0)) < 0.01
+}
+
 function dinheiro(valor) {
   return Number(valor || 0).toLocaleString('pt-BR', {
     style: 'currency',
@@ -145,9 +178,26 @@ function extrairPagamentoIdDaReferencia(referencia) {
   return partes[1] || null
 }
 
-exports.createMercadoPagoPreference = functions
-  .region(regiao)
-  .https.onCall(async (dados, contexto) => {
+function extrairPaymentIdWebhook(req) {
+  const idDireto = req.body?.data?.id || req.body?.id || req.query.id || req.query['data.id']
+  if (idDireto) return String(idDireto)
+
+  const recurso = String(req.body?.resource || req.query.resource || '')
+  const match = recurso.match(/\/payments\/(\d+)/)
+
+  return match?.[1] || ''
+}
+
+function webhookEhDePagamento(req) {
+  const tipo = req.body?.type || req.body?.topic || req.query.type || req.query.topic
+  const acao = req.body?.action || ''
+  const recurso = req.body?.resource || req.query.resource || ''
+  const texto = `${tipo} ${acao} ${recurso}`
+
+  return texto.includes('payment')
+}
+
+async function criarPreferenciaPagamentoHandler(dados = {}, contexto) {
     if (!contexto.auth) {
       erroHttps('unauthenticated', 'Faca login como empresa para criar pagamento.')
     }
@@ -157,14 +207,14 @@ exports.createMercadoPagoPreference = functions
     const indicadorIdInput = String(dados.indicadorId || '')
     const indicacaoId = String(dados.indicacaoId || '')
     const vagaIdInput = String(dados.vagaId || '')
-    const valor = numeroPositivo(dados.valor)
+    const valorInformado = valorMonetario(dados.valor)
 
     if (!empresaId || empresaId !== contexto.auth.uid) {
       erroHttps('permission-denied', 'Esta empresa nao pode criar este pagamento.')
     }
 
-    if (!candidatoId || !valor) {
-      erroHttps('invalid-argument', 'Candidato e valor positivo sao obrigatorios.')
+    if (!candidatoId) {
+      erroHttps('invalid-argument', 'Candidato e obrigatorio para criar pagamento.')
     }
 
     const empresaDoc = await db.collection('empresas').doc(empresaId).get()
@@ -184,16 +234,39 @@ exports.createMercadoPagoPreference = functions
       erroHttps('permission-denied', 'Candidato nao pertence a esta empresa.')
     }
 
+    if (candidato.status !== 'contratado') {
+      erroHttps('failed-precondition', 'A recompensa so pode ser paga para candidato contratado.')
+    }
+
     const indicacao = await buscarIndicacao({ indicacaoId, candidatoId, empresaId })
-    const indicadorId = indicadorIdInput || candidato.indicadorId || candidato.indicadorUid || indicacao?.indicadorId
+
+    if (indicacao?.candidatoId && indicacao.candidatoId !== candidatoId) {
+      erroHttps('permission-denied', 'Indicacao nao corresponde ao candidato.')
+    }
+
+    if (indicacao?.empresaId && indicacao.empresaId !== empresaId) {
+      erroHttps('permission-denied', 'Indicacao nao pertence a esta empresa.')
+    }
+
+    const indicadorIdDocumento = candidato.indicadorId
+      || candidato.indicadorUid
+      || indicacao?.indicadorId
+      || indicacao?.indicadorUid
+    const indicadorId = indicadorIdDocumento || indicadorIdInput
 
     if (!indicadorId) {
       erroHttps('failed-precondition', 'Candidato nao possui indicador vinculado.')
     }
 
+    if (indicadorIdInput && indicadorIdDocumento && indicadorIdInput !== indicadorIdDocumento) {
+      erroHttps('permission-denied', 'Indicador informado nao corresponde ao candidato.')
+    }
+
     if (
       (candidato.indicadorId && candidato.indicadorId !== indicadorId)
+      || (candidato.indicadorUid && candidato.indicadorUid !== indicadorId)
       || (indicacao?.indicadorId && indicacao.indicadorId !== indicadorId)
+      || (indicacao?.indicadorUid && indicacao.indicadorUid !== indicadorId)
     ) {
       erroHttps('permission-denied', 'Indicador nao corresponde ao candidato ou indicacao.')
     }
@@ -208,6 +281,7 @@ exports.createMercadoPagoPreference = functions
       return {
         pagamentoId: pendente.id,
         preferenceId: pendente.mercadoPagoPreferenceId,
+        checkoutUrl: pendente.checkoutUrl || pendente.sandboxCheckoutUrl || '',
         initPoint: pendente.checkoutUrl,
         sandboxInitPoint: pendente.sandboxCheckoutUrl,
         reused: true
@@ -215,10 +289,36 @@ exports.createMercadoPagoPreference = functions
     }
 
     const indicadorDoc = await db.collection('indicadores').doc(indicadorId).get()
-    const vagaId = vagaIdInput || candidato.vagaId || indicacao?.vagaId || ''
+    const vagaId = candidato.vagaId || indicacao?.vagaId || vagaIdInput || ''
     const vagaDoc = vagaId ? await db.collection('vagas').doc(vagaId).get() : null
     const indicador = indicadorDoc.exists ? indicadorDoc.data() : {}
     const vaga = vagaDoc?.exists ? vagaDoc.data() : {}
+
+    if (!indicadorDoc.exists) {
+      erroHttps('failed-precondition', 'Perfil de indicador nao encontrado.')
+    }
+
+    if (vagaDoc?.exists && vaga.empresaId !== empresaId && vaga.empresaUid !== empresaId) {
+      erroHttps('permission-denied', 'Vaga nao pertence a esta empresa.')
+    }
+
+    const valor = primeiroValorMonetario(
+      candidato.recompensaValor,
+      indicacao?.recompensaValor,
+      vaga.recompensaValor,
+      candidato.recompensa,
+      indicacao?.recompensa,
+      vaga.recompensa
+    )
+
+    if (!valor) {
+      erroHttps('failed-precondition', 'Recompensa da vaga nao encontrada ou invalida.')
+    }
+
+    if (valorInformado && !valoresIguais(valorInformado, valor)) {
+      erroHttps('invalid-argument', 'Valor informado nao corresponde a recompensa cadastrada.')
+    }
+
     const pagamentoRef = db.collection('pagamentos').doc()
     const finalIndicacaoId = indicacao?.id || indicacaoId || ''
     const vagaTitulo = textoSeguro(vaga.titulo || candidato.vagaTitulo || indicacao?.vagaTitulo, 'Vaga Selectio')
@@ -233,42 +333,9 @@ exports.createMercadoPagoPreference = functions
       indicacaoId: finalIndicacaoId
     })
 
-    const preferencia = await chamarMercadoPago('/checkout/preferences', {
-      method: 'POST',
-      body: JSON.stringify({
-        items: [
-          {
-            title: descricao,
-            quantity: 1,
-            unit_price: valor,
-            currency_id: moedaPadrao
-          }
-        ],
-        payer: {
-          email: empresa.email || contexto.auth.token.email || undefined
-        },
-        back_urls: {
-          success: `${obterAppUrl()}/painel/empresa?secao=pagamentos&status=success`,
-          failure: `${obterAppUrl()}/painel/empresa?secao=pagamentos&status=failure`,
-          pending: `${obterAppUrl()}/painel/empresa?secao=pagamentos&status=pending`
-        },
-        auto_return: 'approved',
-        notification_url: obterWebhookUrl(),
-        external_reference: referenciaExterna,
-        metadata: {
-          empresaId,
-          indicadorId,
-          candidatoId,
-          vagaId,
-          indicacaoId: finalIndicacaoId,
-          valor
-        }
-      })
-    })
-
     const agora = FieldValue.serverTimestamp()
     const pagamento = {
-      mercadoPagoPreferenceId: preferencia.id || '',
+      mercadoPagoPreferenceId: '',
       mercadoPagoPaymentId: '',
       status: 'pending',
       statusDetail: '',
@@ -284,8 +351,8 @@ exports.createMercadoPagoPreference = functions
       vagaTitulo,
       indicacaoId: finalIndicacaoId,
       descricao,
-      checkoutUrl: preferencia.init_point || '',
-      sandboxCheckoutUrl: preferencia.sandbox_init_point || '',
+      checkoutUrl: '',
+      sandboxCheckoutUrl: '',
       externalReference: referenciaExterna,
       creditado: false,
       criadoEm: agora,
@@ -294,13 +361,74 @@ exports.createMercadoPagoPreference = functions
 
     await pagamentoRef.set(pagamento)
 
+    let preferencia
+
+    try {
+      preferencia = await chamarMercadoPago('/checkout/preferences', {
+        method: 'POST',
+        body: JSON.stringify({
+          items: [
+            {
+              title: descricao,
+              quantity: 1,
+              unit_price: valor,
+              currency_id: moedaPadrao
+            }
+          ],
+          payer: {
+            email: empresa.email || contexto.auth.token.email || undefined
+          },
+          back_urls: {
+            success: `${obterAppUrl()}/painel/empresa?secao=pagamentos&status=success`,
+            failure: `${obterAppUrl()}/painel/empresa?secao=pagamentos&status=failure`,
+            pending: `${obterAppUrl()}/painel/empresa?secao=pagamentos&status=pending`
+          },
+          auto_return: 'approved',
+          notification_url: obterWebhookUrl(),
+          external_reference: referenciaExterna,
+          metadata: {
+            empresaId,
+            indicadorId,
+            candidatoId,
+            vagaId,
+            indicacaoId: finalIndicacaoId,
+            valor
+          }
+        })
+      })
+    } catch (error) {
+      await pagamentoRef.update({
+        status: 'failed',
+        statusDetail: 'erro_criar_preferencia',
+        erroCriacao: error.message || 'Erro ao criar preferencia Mercado Pago.',
+        atualizadoEm: FieldValue.serverTimestamp()
+      })
+      throw error
+    }
+
+    await pagamentoRef.update({
+      mercadoPagoPreferenceId: preferencia.id || '',
+      checkoutUrl: preferencia.init_point || '',
+      sandboxCheckoutUrl: preferencia.sandbox_init_point || '',
+      atualizadoEm: FieldValue.serverTimestamp()
+    })
+
     return {
       pagamentoId: pagamentoRef.id,
       preferenceId: preferencia.id,
+      checkoutUrl: preferencia.init_point || preferencia.sandbox_init_point || '',
       initPoint: preferencia.init_point || '',
       sandboxInitPoint: preferencia.sandbox_init_point || ''
     }
-  })
+}
+
+exports.criarPreferenciaPagamento = functions
+  .region(regiao)
+  .https.onCall(criarPreferenciaPagamentoHandler)
+
+exports.createMercadoPagoPreference = functions
+  .region(regiao)
+  .https.onCall(criarPreferenciaPagamentoHandler)
 
 exports.solicitarSaqueIndicador = functions
   .region(regiao)
@@ -386,10 +514,9 @@ exports.mercadoPagoWebhook = functions
     }
 
     try {
-      const tipo = req.body?.type || req.query.type || req.query.topic
-      const paymentId = req.body?.data?.id || req.body?.id || req.query.id || req.query['data.id']
+      const paymentId = extrairPaymentIdWebhook(req)
 
-      if (!paymentId || !String(tipo || '').includes('payment')) {
+      if (!paymentId || !webhookEhDePagamento(req)) {
         res.status(200).send('ignored')
         return
       }
@@ -411,7 +538,8 @@ exports.mercadoPagoWebhook = functions
         const pagamentoDoc = await transaction.get(pagamentoRef)
 
         if (!pagamentoDoc.exists) {
-          throw new Error('Pagamento interno nao encontrado.')
+          console.warn('Pagamento interno nao encontrado para webhook:', pagamentoId)
+          return
         }
 
         const pagamento = pagamentoDoc.data()
