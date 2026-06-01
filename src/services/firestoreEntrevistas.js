@@ -68,7 +68,7 @@ export const criarEntrevista = async (dados) => {
   const entrevista = normalizarDadosEntrevista(dados)
 
   if (!entrevista.candidatoId || !entrevista.empresaId || !entrevista.data || !entrevista.horaInicio) {
-    throw new Error('Candidato, empresa, data e horario sao obrigatorios para agendar entrevista.')
+    throw new Error('Candidato, empresa, data e horário são obrigatórios para agendar entrevista.')
   }
 
   const docRef = await addDoc(colecaoEntrevistas, {
@@ -142,7 +142,7 @@ export const buscarEntrevistaPorId = async (id) => {
 
 export const atualizarEntrevista = async (id, dados) => {
   if (!id) {
-    throw new Error('ID da entrevista e obrigatorio para atualizar.')
+    throw new Error('ID da entrevista e obrigatório para atualizar.')
   }
 
   const atualizacoes = {
@@ -161,7 +161,7 @@ export const atualizarEntrevista = async (id, dados) => {
 
 export const atualizarStatusEntrevista = async (id, status) => {
   if (!statusPermitidos.includes(status)) {
-    throw new Error('Status de entrevista invalido.')
+    throw new Error('Status de entrevista inválido.')
   }
 
   return atualizarEntrevista(id, { status })

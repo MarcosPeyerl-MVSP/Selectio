@@ -99,7 +99,7 @@ function Vagas() {
         setVagas(data)
       } catch (err) {
         setError(err.message)
-        toast.error('Nao foi possivel carregar as vagas.')
+        toast.error('Não foi possível carregar as vagas.')
       } finally {
         setLoading(false)
       }

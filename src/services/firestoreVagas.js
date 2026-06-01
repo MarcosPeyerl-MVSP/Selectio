@@ -77,7 +77,7 @@ export const buscarVagaPorId = async (id) => {
 
 export const editarVaga = async (id, dados) => {
   if (!id) {
-    throw new Error('ID da vaga e obrigatorio para editar.')
+    throw new Error('ID da vaga é obrigatório para editar.')
   }
 
   await updateDoc(doc(db, 'vagas', id), {

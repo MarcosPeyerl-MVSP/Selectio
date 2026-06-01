@@ -129,7 +129,7 @@ function Candidatos() {
         setCandidatos(data)
       } catch (err) {
         setError(err.message)
-        toast.error('Nao foi possivel carregar seus candidatos.')
+        toast.error('Não foi possível carregar seus candidatos.')
       } finally {
         setLoading(false)
       }

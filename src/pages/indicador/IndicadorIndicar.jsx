@@ -200,14 +200,14 @@ function Indicar() {
 
     if (!vaga) {
       setSaving(false)
-      setMessage('Vaga nao carregada para finalizar a indicacao.')
-      toast.warning('Vaga nao carregada para finalizar a indicacao.')
+      setMessage('Vaga não carregada para finalizar a indicação.')
+      toast.warning('Vaga não carregada para finalizar a indicação.')
       return
     }
 
     try {
       await criarCandidatoIndicado({ dados: form, indicador, vaga })
-      toast.success('Indicacao enviada com sucesso.')
+      toast.success('Indicação enviada com sucesso.')
 
       // Após criar a indicação, retorna para a página da vaga.
       navigate(`/vaga/${vagaId}`)

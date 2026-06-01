@@ -20,7 +20,7 @@ import { listarIndicacoesPorIndicador } from '../../services/firestoreIndicacoes
 import { atualizarPerfilUsuario } from '../../services/firestoreUsers'
 import { useToast } from '../../hooks/useToast'
 
-const emptyValue = 'Nao informado'
+const emptyValue = 'Não informado'
 
 const getInitialForm = (indicador) => ({
   nome: indicador?.nome || '',
@@ -80,7 +80,7 @@ function IndicadorPerfil({ user, onUserUpdate }) {
         setIndicacoes(indicacoesData)
         setCandidatos(candidatosData)
       } catch {
-        toast.error('Nao foi possivel carregar os dados do perfil do indicador.')
+        toast.error('Não foi possível carregar os dados do perfil do indicador.')
       } finally {
         if (active) setLoading(false)
       }
@@ -153,7 +153,7 @@ function IndicadorPerfil({ user, onUserUpdate }) {
       setEditing(false)
       toast.success('Perfil do indicador atualizado.')
     } catch {
-      toast.error('Nao foi possivel salvar o perfil do indicador.')
+      toast.error('Não foi possível salvar o perfil do indicador.')
     } finally {
       setSaving(false)
     }
@@ -171,7 +171,7 @@ function IndicadorPerfil({ user, onUserUpdate }) {
       <header className="profile-page-header">
         <span>PERFIL PROFISSIONAL</span>
         <h1>Meu Perfil</h1>
-        <p>Gerencie suas informacoes profissionais e visualize o impacto das suas indicacoes na rede Selectio.</p>
+        <p>Gerencie suas informações profissionais e visualize o impacto das suas indicações na rede Selectio.</p>
       </header>
 
       <div className="indicador-profile-layout">
@@ -185,7 +185,7 @@ function IndicadorPerfil({ user, onUserUpdate }) {
             {user?.portfolio && <a href={formatExternalLink(user.portfolio)} target="_blank" rel="noreferrer"><FaExternalLinkAlt /> Portfolio</a>}
           </div>
           <button type="button" onClick={() => setEditing((current) => !current)}>
-            <FaUserTie /> {editing ? 'Cancelar edicao' : 'Editar perfil'}
+            <FaUserTie /> {editing ? 'Cancelar edição' : 'Editar perfil'}
           </button>
         </aside>
 
@@ -205,7 +205,7 @@ function IndicadorPerfil({ user, onUserUpdate }) {
           )}
 
           <section className="indicador-profile-metrics">
-            <MetricCard icon={FaAward} label="Total de indicacoes" value={metrics.totalIndicacoes} />
+            <MetricCard icon={FaAward} label="Total de indicações" value={metrics.totalIndicacoes} />
             <MetricCard icon={FaCheckCircle} label="Contratados" value={metrics.contratados} />
             <MetricCard icon={FaBriefcase} label="Taxa de conversao" value={`${metrics.taxaConversao}%`} />
             <MetricCard icon={FaUserTie} label="Em andamento" value={metrics.andamento} />
@@ -234,17 +234,17 @@ function IndicadorPerfil({ user, onUserUpdate }) {
                 {specialties.map((item) => <span key={item}>{item}</span>)}
               </div>
             ) : (
-              <p>Especialidades ainda nao informadas.</p>
+              <p>Especialidades ainda não informadas.</p>
             )}
           </section>
 
           <section className="indicador-empty-card">
-            <h3>Experiencia profissional</h3>
-            <p>Experiencia profissional ainda nao cadastrada.</p>
+            <h3>Experiência profissional</h3>
+            <p>Experiência profissional ainda não cadastrada.</p>
           </section>
 
           <section className="indicador-recent-card">
-            <h3>Ultimas indicacoes</h3>
+            <h3>Últimas indicações</h3>
             {recentIndications.length ? (
               <div>
                 {recentIndications.map((item) => (
@@ -257,7 +257,7 @@ function IndicadorPerfil({ user, onUserUpdate }) {
                 ))}
               </div>
             ) : (
-              <p>Nenhuma indicacao registrada ainda.</p>
+              <p>Nenhuma indicação registrada ainda.</p>
             )}
           </section>
         </main>

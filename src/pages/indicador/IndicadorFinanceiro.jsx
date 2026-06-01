@@ -50,7 +50,7 @@ function IndicadorFinanceiro({ user }) {
         setMovimentacoes(movimentacoesData)
         setNotificacoes(notificacoesData.filter((notificacao) => notificacao.tipo === 'pagamento_aprovado'))
       } catch (error) {
-        toast.error(error.message || 'Nao foi possivel carregar o financeiro.')
+        toast.error(error.message || 'Não foi possível carregar o financeiro.')
       } finally {
         if (ativo) setCarregando(false)
       }
@@ -71,12 +71,12 @@ function IndicadorFinanceiro({ user }) {
     const valorNumerico = Number(String(valor).replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.'))
 
     if (!valorNumerico || valorNumerico <= 0) {
-      toast.warning('Informe um valor valido para saque.')
+      toast.warning('Informe um valor válido para saque.')
       return
     }
 
     if (valorNumerico > Number(saldo?.saldoDisponivel || 0)) {
-      toast.warning('Valor maior que o saldo disponivel.')
+      toast.warning('Valor maior que o saldo disponível.')
       return
     }
 
@@ -87,7 +87,7 @@ function IndicadorFinanceiro({ user }) {
 
     const confirmado = await confirm({
       title: 'Solicitar saque?',
-      description: 'A equipe Selectio fara a validacao manual desta solicitacao.',
+      description: 'A equipe Selectio fará a validação manual desta solicitação.',
       confirmLabel: 'Solicitar saque',
       cancelLabel: 'Voltar'
     })
@@ -110,9 +110,9 @@ function IndicadorFinanceiro({ user }) {
       }))
       setModalAberto(false)
       setValor('')
-      toast.success('Solicitacao de saque enviada. A equipe Selectio fara a validacao.')
+      toast.success('Solicitação de saque enviada. A equipe Selectio fará a validação.')
     } catch (error) {
-      toast.error(error.message || 'Nao foi possivel solicitar o saque.')
+      toast.error(error.message || 'Não foi possível solicitar o saque.')
     } finally {
       setEnviando(false)
     }
@@ -126,7 +126,7 @@ function IndicadorFinanceiro({ user }) {
         <div>
           <span>Carteira Selectio</span>
           <h1>Financeiro</h1>
-          <p>Acompanhe recompensas recebidas, saldo disponivel e solicitacoes de saque.</p>
+          <p>Acompanhe recompensas recebidas, saldo disponível e solicitações de saque.</p>
         </div>
 
         <button type="button" onClick={() => setModalAberto(true)} disabled={!Number(saldo?.saldoDisponivel || 0)}>
@@ -135,16 +135,16 @@ function IndicadorFinanceiro({ user }) {
       </header>
 
       <section className="indicador-saldo-grid">
-        <BalanceCard label="Saldo disponivel" value={saldo?.saldoDisponivel} helper="Pode ser solicitado para saque manual." tone="primary" />
-        <BalanceCard label="Saldo pendente" value={saldo?.saldoPendente} helper="Valores em validacao de saque." />
-        <BalanceCard label="Total recebido" value={saldo?.totalRecebido} helper="Recompensas aprovadas por contratacao." />
+        <BalanceCard label="Saldo disponível" value={saldo?.saldoDisponivel} helper="Pode ser solicitado para saque manual." tone="primary" />
+        <BalanceCard label="Saldo pendente" value={saldo?.saldoPendente} helper="Valores em validação de saque." />
+        <BalanceCard label="Total recebido" value={saldo?.totalRecebido} helper="Recompensas aprovadas por contratação." />
         <BalanceCard label="Total sacado" value={saldo?.totalSacado} helper="Soma de saques pagos futuramente." />
       </section>
 
       <div className="indicador-financeiro-grid">
         <article className="indicador-financeiro-card">
           <div className="indicador-financeiro-card-title">
-            <span><FaMoneyBillWave /> Movimentacoes</span>
+            <span><FaMoneyBillWave /> Movimentações</span>
             <strong>{movimentacoes.length}</strong>
           </div>
 
@@ -153,13 +153,13 @@ function IndicadorFinanceiro({ user }) {
               <div className="indicador-movimentacao-item" key={movimentacao.id}>
                 <div>
                   <strong>{rotuloMovimentacao(movimentacao.tipo)}</strong>
-                  <span>{movimentacao.descricao || 'Movimentacao financeira'}</span>
+                  <span>{movimentacao.descricao || 'Movimentação financeira'}</span>
                 </div>
                 <strong>{formatCurrency(movimentacao.valor)}</strong>
               </div>
             ))
           ) : (
-            <EstadoVazio title="Sem movimentacoes" description="Pagamentos aprovados e saques solicitados aparecem aqui." />
+            <EstadoVazio title="Sem movimentações" description="Pagamentos aprovados e saques solicitados aparecem aqui." />
           )}
         </article>
 
@@ -177,7 +177,7 @@ function IndicadorFinanceiro({ user }) {
               </div>
             ))
           ) : (
-            <EstadoVazio title="Nenhum pagamento recebido" description="Quando uma recompensa for aprovada, voce sera avisado aqui." />
+            <EstadoVazio title="Nenhum pagamento recebido" description="Quando uma recompensa for aprovada, você será avisado aqui." />
           )}
         </article>
       </div>
@@ -186,9 +186,9 @@ function IndicadorFinanceiro({ user }) {
         <div className="saque-modal-backdrop" role="presentation" onMouseDown={() => setModalAberto(false)}>
           <section className="saque-modal" role="dialog" aria-modal="true" onMouseDown={(event) => event.stopPropagation()}>
             <header>
-              <span>Solicitacao manual</span>
+              <span>Solicitação manual</span>
               <h2>Solicitar saque</h2>
-              <p>O valor sai do saldo disponivel e fica pendente ate validacao da equipe Selectio.</p>
+              <p>O valor sai do saldo disponível e fica pendente até a validação da equipe Selectio.</p>
             </header>
 
             <form onSubmit={enviarSaque}>
@@ -199,7 +199,7 @@ function IndicadorFinanceiro({ user }) {
 
               <label>
                 Chave Pix
-                <input value={chavePix} onChange={(event) => setChavePix(event.target.value)} placeholder="CPF, e-mail, telefone ou chave aleatoria" />
+                <input value={chavePix} onChange={(event) => setChavePix(event.target.value)} placeholder="CPF, e-mail, telefone ou chave aleatória" />
               </label>
 
               <div className="saque-modal-actions">
@@ -229,14 +229,14 @@ function EstadoVazio({ title, description }) {
 
 function rotuloMovimentacao(tipo) {
   const labels = {
-    credito_recompensa: 'Credito de recompensa',
+    credito_recompensa: 'Crédito de recompensa',
     saque_solicitado: 'Saque solicitado',
     saque_aprovado: 'Saque aprovado',
     saque_recusado: 'Saque recusado',
     estorno: 'Estorno'
   }
 
-  return labels[tipo] || 'Movimentacao'
+  return labels[tipo] || 'Movimentação'
 }
 
 function formatCurrency(value) {

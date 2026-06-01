@@ -64,7 +64,7 @@ const formatarChaveData = (data) => {
 }
 
 const formatarData = (valor) => {
-  if (!valor) return 'Data nao informada'
+  if (!valor) return 'Data não informada'
 
   const data = new Date(`${valor}T12:00:00`)
   if (Number.isNaN(data.getTime())) return valor
@@ -159,7 +159,7 @@ function PainelEntrevistas({ empresa }) {
       } catch (error) {
         if (!ativo) return
 
-        toast.error(error.message || 'Nao foi possivel carregar entrevistas.')
+        toast.error(error.message || 'Não foi possível carregar entrevistas.')
       } finally {
         if (ativo) setCarregando(false)
       }
@@ -345,7 +345,7 @@ function PainelEntrevistas({ empresa }) {
       setCandidatoEmAgendamento(null)
       toast.success('Entrevista agendada com sucesso.')
     } catch (error) {
-      toast.error(error.message || 'Nao foi possivel agendar a entrevista.')
+      toast.error(error.message || 'Não foi possível agendar a entrevista.')
     } finally {
       setAcaoEmAndamento(null)
     }
@@ -408,7 +408,7 @@ function PainelEntrevistas({ empresa }) {
       )))
       window.open(calendario.url, '_blank', 'noopener,noreferrer')
     } catch (error) {
-      toast.error(error.message || 'Nao foi possivel abrir o Google Calendar.')
+      toast.error(error.message || 'Não foi possível abrir o Google Calendar.')
     } finally {
       setAcaoEmAndamento(null)
     }
@@ -424,7 +424,7 @@ function PainelEntrevistas({ empresa }) {
       )))
       toast.success('Status da entrevista atualizado.')
     } catch (error) {
-      toast.error(error.message || 'Nao foi possivel atualizar a entrevista.')
+      toast.error(error.message || 'Não foi possível atualizar a entrevista.')
     } finally {
       setAcaoEmAndamento(null)
     }
@@ -449,7 +449,7 @@ function PainelEntrevistas({ empresa }) {
       )))
       toast.success('Entrevista cancelada.')
     } catch (error) {
-      toast.error(error.message || 'Nao foi possivel cancelar a entrevista.')
+      toast.error(error.message || 'Não foi possível cancelar a entrevista.')
     } finally {
       setAcaoEmAndamento(null)
     }
@@ -472,7 +472,7 @@ function PainelEntrevistas({ empresa }) {
         <div>
           <span>Agenda inteligente</span>
           <h1>Painel de Entrevistas</h1>
-          <p>Agende conversas com candidatos das suas vagas e acompanhe o dia pelo calendario.</p>
+          <p>Agende conversas com candidatos das suas vagas e acompanhe o dia pelo calendário.</p>
         </div>
 
         <button
@@ -516,11 +516,11 @@ function PainelEntrevistas({ empresa }) {
       <div className="entrevistas-grade-principal">
         <article className="entrevistas-calendario-card">
           <div className="entrevistas-calendario-cabecalho">
-            <button type="button" onClick={() => mudarMes(-1)} aria-label="Mes anterior">
+            <button type="button" onClick={() => mudarMes(-1)} aria-label="Mês anterior">
               <FaChevronLeft />
             </button>
             <strong>{formatarMes(mesAtual)}</strong>
-            <button type="button" onClick={() => mudarMes(1)} aria-label="Proximo mes">
+            <button type="button" onClick={() => mudarMes(1)} aria-label="Próximo mes">
               <FaChevronRight />
             </button>
           </div>
@@ -575,7 +575,7 @@ function PainelEntrevistas({ empresa }) {
           ) : (
             <EstadoVazio
               title="Nenhuma entrevista neste dia"
-              description="Escolha outro dia no calendario ou agende uma nova conversa com um candidato."
+            description="Escolha outro dia no calendário ou agende uma nova conversa com um candidato."
             />
           )}
         </article>
@@ -593,7 +593,7 @@ function PainelEntrevistas({ empresa }) {
               <div className="entrevistas-aguardando-item" key={candidato.id}>
                 <div>
                   <strong>{obterNomeCandidato(candidato)}</strong>
-                  <span>{candidato.vagaTitulo || 'Vaga nao informada'}</span>
+                  <span>{candidato.vagaTitulo || 'Vaga não informada'}</span>
                   <small>{normalizarStatusCandidato(candidato) === 'entrevista' ? 'Status: entrevista' : 'Status: indicado'}</small>
                 </div>
 
@@ -606,7 +606,7 @@ function PainelEntrevistas({ empresa }) {
         ) : (
           <EstadoVazio
             title="Sem candidatos prontos para agendar"
-            description="Candidatos com status entrevista aparecem aqui quando ainda nao possuem entrevista agendada ou pendente."
+            description="Candidatos com status entrevista aparecem aqui quando ainda não possuem entrevista agendada ou pendente."
           />
         )}
       </article>
@@ -659,7 +659,7 @@ function CartaoEntrevista({ entrevista, carregando, onAbrir, onRealizada, onCanc
 
       <div className="entrevistas-card-conteudo">
         <strong>{entrevista.candidatoNome || 'Candidato sem nome'}</strong>
-        <p>{entrevista.vagaTitulo || 'Vaga nao informada'}</p>
+        <p>{entrevista.vagaTitulo || 'Vaga não informada'}</p>
         <span>{rotulosStatus[status] || status}</span>
       </div>
 
@@ -710,13 +710,13 @@ function ModalAgendamento({
         <header>
           <span><FaVideo /> Nova entrevista</span>
           <h2 id="entrevistas-modal-title">Agendar conversa</h2>
-          <p>O Google Calendar sera aberto com os dados preenchidos. O Meet pode ser criado ao salvar o evento.</p>
+          <p>O Google Calendar será aberto com os dados preenchidos. O Meet pode ser criado ao salvar o evento.</p>
         </header>
 
         <form onSubmit={onSubmit}>
           <div className="entrevistas-candidato-resumo">
             <strong>{obterNomeCandidato(candidato)}</strong>
-            <span>{candidato.vagaTitulo || 'Vaga nao informada'}</span>
+            <span>{candidato.vagaTitulo || 'Vaga não informada'}</span>
           </div>
 
           <div className="entrevistas-formulario-grid">
@@ -731,7 +731,7 @@ function ModalAgendamento({
             </label>
 
             <label>
-              Inicio
+              Início
               <input
                 type="time"
                 value={formulario.horaInicio}
@@ -741,7 +741,7 @@ function ModalAgendamento({
             </label>
 
             <label>
-              Duracao
+              Duração
               <select
                 value={formulario.duracaoMinutos}
                 onChange={(event) => onChange('duracaoMinutos', event.target.value)}
@@ -755,7 +755,7 @@ function ModalAgendamento({
           </div>
 
           <label className="entrevistas-campo-inteiro">
-            Observacoes
+            Observações
             <textarea
               value={formulario.observacoes}
               onChange={(event) => onChange('observacoes', event.target.value)}
@@ -765,7 +765,7 @@ function ModalAgendamento({
           </label>
 
           <div className="entrevistas-titulo-preview">
-            <span>Titulo no Google Calendar</span>
+            <span>Título no Google Calendar</span>
             <strong>{tituloPreview}</strong>
           </div>
 

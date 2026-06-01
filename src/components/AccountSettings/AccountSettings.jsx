@@ -39,7 +39,7 @@ const profileFieldsByTipo = {
     { name: 'telefone', label: 'Telefone', placeholder: '(00) 00000-0000' },
     { name: 'site', label: 'Site', placeholder: 'https://empresa.com' },
     { name: 'setor', label: 'Setor', placeholder: 'Tecnologia, Financeiro...' },
-    { name: 'tamanho', label: 'Tamanho', placeholder: 'Pequena, media, grande...' }
+    { name: 'tamanho', label: 'Tamanho', placeholder: 'Pequena, média, grande...' }
   ],
   indicador: [
     { name: 'nome', label: 'Nome', placeholder: 'Nome completo' },
@@ -93,7 +93,7 @@ function AccountSettings({ user, tipo, onUserUpdate }) {
   const firebaseUid = getFirebaseUid(user)
   const accountType = tipo === 'empresa' ? 'Empresa' : 'Indicador'
   const accountName = user?.nomeEmpresa || user?.nome || 'Conta Selectio'
-  const accountEmail = user?.email || firebaseUser?.email || 'E-mail nao informado'
+  const accountEmail = user?.email || firebaseUser?.email || 'E-mail não informado'
   const profileFields = profileFieldsByTipo[tipo] || []
   const storageKey = tipo === 'empresa' ? 'empresaUser' : 'indicadorUser'
 
@@ -132,7 +132,7 @@ function AccountSettings({ user, tipo, onUserUpdate }) {
     }
 
     if (firebaseUid && currentUser.uid !== firebaseUid) {
-      toast.warning('A sessao do Firebase nao corresponde a conta aberta no painel. Entre novamente.')
+      toast.warning('A sessão do Firebase não corresponde a conta aberta no painel. Entre novamente.')
       return null
     }
 
@@ -154,7 +154,7 @@ function AccountSettings({ user, tipo, onUserUpdate }) {
     if (!currentUser) return
 
     if (hasPasswordLinked) {
-      toast.info('Esta conta ja possui login por e-mail e senha.')
+      toast.info('Esta conta já possui login por e-mail e senha.')
       return
     }
 
@@ -164,7 +164,7 @@ function AccountSettings({ user, tipo, onUserUpdate }) {
     }
 
     if (passwordForm.novaSenha !== passwordForm.confirmarSenha) {
-      toast.warning('As senhas nao conferem.')
+      toast.warning('As senhas não conferem.')
       return
     }
 
@@ -173,11 +173,11 @@ function AccountSettings({ user, tipo, onUserUpdate }) {
       await updatePassword(currentUser, passwordForm.novaSenha)
       await refreshFirebaseUser(currentUser)
       setPasswordForm({ novaSenha: '', confirmarSenha: '' })
-      toast.success('Senha adicionada com sucesso. Agora voce tambem pode entrar com e-mail e senha.')
+      toast.success('Senha adicionada com sucesso. Agora você também pode entrar com e-mail e senha.')
     } catch (error) {
       toast.warning(isFirebaseAuthError(error)
         ? getFirebaseAuthErrorMessage(error)
-        : 'Nao foi possivel adicionar senha agora. Tente novamente.')
+        : 'Não foi possível adicionar senha agora. Tente novamente.')
     } finally {
       setSavingPassword(false)
     }
@@ -189,7 +189,7 @@ function AccountSettings({ user, tipo, onUserUpdate }) {
 
     if (getLinkedProviderIds(currentUser).includes(googleProviderId)) {
       await refreshFirebaseUser(currentUser)
-      toast.info('Esta conta ja possui Google vinculado.')
+      toast.info('Esta conta já possui Google vinculado.')
       return
     }
 
@@ -205,7 +205,7 @@ function AccountSettings({ user, tipo, onUserUpdate }) {
     } catch (error) {
       toast.warning(isFirebaseAuthError(error)
         ? getFirebaseAuthErrorMessage(error)
-        : 'Nao foi possivel vincular Google agora. Tente novamente.')
+        : 'Não foi possível vincular Google agora. Tente novamente.')
     } finally {
       setLinking(false)
     }
@@ -219,7 +219,7 @@ function AccountSettings({ user, tipo, onUserUpdate }) {
 
     if (!currentProviderIds.includes(googleProviderId)) {
       await refreshFirebaseUser(currentUser)
-      toast.info('Esta conta nao possui Google vinculado.')
+      toast.info('Esta conta não possui Google vinculado.')
       return
     }
 
@@ -230,7 +230,7 @@ function AccountSettings({ user, tipo, onUserUpdate }) {
 
     const confirmed = await confirm({
       title: 'Desvincular Google?',
-      description: 'Voce ainda podera entrar com e-mail e senha. Esta acao remove apenas o metodo de login Google.',
+      description: 'Você ainda poderá entrar com e-mail e senha. Esta ação remove apenas o método de login Google.',
       confirmLabel: 'Desvincular'
     })
 
@@ -244,7 +244,7 @@ function AccountSettings({ user, tipo, onUserUpdate }) {
     } catch (error) {
       toast.warning(isFirebaseAuthError(error)
         ? getFirebaseAuthErrorMessage(error)
-        : 'Nao foi possivel desvincular Google agora. Tente novamente.')
+        : 'Não foi possível desvincular Google agora. Tente novamente.')
     } finally {
       setUnlinking(false)
     }
@@ -259,9 +259,9 @@ function AccountSettings({ user, tipo, onUserUpdate }) {
       await refreshFirebaseUser(currentUser)
       toast.info(auth.currentUser?.emailVerified
         ? 'E-mail verificado confirmado.'
-        : 'Seu e-mail ainda nao aparece como verificado.')
+        : 'Seu e-mail ainda não aparece como verificado.')
     } catch {
-      toast.error('Nao foi possivel atualizar o status do e-mail agora.')
+      toast.error('Não foi possível atualizar o status do e-mail agora.')
     } finally {
       setRefreshingEmail(false)
     }
@@ -273,18 +273,18 @@ function AccountSettings({ user, tipo, onUserUpdate }) {
 
     if (currentUser.emailVerified) {
       await refreshFirebaseUser(currentUser)
-      toast.info('Este e-mail ja esta verificado.')
+      toast.info('Este e-mail já está verificado.')
       return
     }
 
     try {
       setSendingVerification(true)
       await sendEmailVerification(currentUser)
-      toast.success('Enviamos um novo e-mail de verificacao.')
+      toast.success('Enviamos um novo e-mail de verificação.')
     } catch (error) {
       toast.warning(isFirebaseAuthError(error)
         ? getFirebaseAuthErrorMessage(error)
-        : 'Nao foi possivel reenviar a verificacao agora.')
+        : 'Não foi possível reenviar a verificação agora.')
     } finally {
       setSendingVerification(false)
     }
@@ -325,7 +325,7 @@ function AccountSettings({ user, tipo, onUserUpdate }) {
       onUserUpdate?.(updatedUser)
       toast.success('Perfil atualizado com sucesso.')
     } catch {
-      toast.error('Nao foi possivel atualizar o perfil agora.')
+      toast.error('Não foi possível atualizar o perfil agora.')
     } finally {
       setSavingProfile(false)
     }
@@ -341,15 +341,15 @@ function AccountSettings({ user, tipo, onUserUpdate }) {
 
   return (
     <section className="account-settings">
-      <p className="dashboard-breadcrumb">CONFIGURACOES - Conta</p>
+      <p className="dashboard-breadcrumb">CONFIGURAÇÕES - Conta</p>
 
       <div className="settings-header">
         <div>
           <h1>
-            Configuracoes da <span>conta</span>.
+            Configurações da <span>conta</span>.
           </h1>
           <p className="dashboard-subtitle">
-            Gerencie dados basicos e os metodos usados para acessar sua conta Selectio.
+            Gerencie dados básicos e os métodos usados para acessar sua conta Selectio.
           </p>
         </div>
       </div>
@@ -380,7 +380,7 @@ function AccountSettings({ user, tipo, onUserUpdate }) {
           </dl>
 
           <form className="profile-edit-form" onSubmit={handleSaveProfile}>
-            <h3>Editar dados basicos</h3>
+            <h3>Editar dados básicos</h3>
             <div className="settings-field-grid">
               {profileFields.map((field) => (
                 <label key={field.name}>
@@ -406,7 +406,7 @@ function AccountSettings({ user, tipo, onUserUpdate }) {
           <div className="settings-card-title">
             <FaKey />
             <div>
-              <span>Metodos de login</span>
+              <span>Métodos de login</span>
               <h2>Acesso</h2>
             </div>
           </div>
@@ -419,7 +419,7 @@ function AccountSettings({ user, tipo, onUserUpdate }) {
               description={
                 hasPasswordLinked
                   ? 'Senha ativa para login com e-mail.'
-                  : 'Adicione uma senha para ter um segundo metodo de acesso.'
+                  : 'Adicione uma senha para ter um segundo método de acesso.'
               }
             />
 
@@ -437,16 +437,16 @@ function AccountSettings({ user, tipo, onUserUpdate }) {
 
           {!isSameFirebaseUser && authReady && (
             <p className="settings-note">
-              Entre novamente para confirmar sua sessao do Firebase antes de alterar metodos de login.
+              Entre novamente para confirmar sua sessão do Firebase antes de alterar métodos de login.
             </p>
           )}
 
           <div className={`email-verification-card ${isEmailVerified ? 'verified' : 'pending'}`}>
             <div>
-              <strong>{isEmailVerified ? 'E-mail verificado' : 'E-mail nao verificado'}</strong>
+              <strong>{isEmailVerified ? 'E-mail verificado' : 'E-mail não verificado'}</strong>
               <p>
                 {isEmailVerified
-                  ? 'Este e-mail ja foi confirmado no Firebase Auth.'
+                  ? 'Este e-mail já foi confirmado no Firebase Auth.'
                   : 'Confirme seu e-mail para manter a conta mais segura.'}
               </p>
             </div>
@@ -457,7 +457,7 @@ function AccountSettings({ user, tipo, onUserUpdate }) {
             {!isEmailVerified && (
               <button type="button" className="settings-secondary-button" onClick={handleResendVerification} disabled={!isSameFirebaseUser || sendingVerification}>
                 <FaEnvelope />
-                {sendingVerification ? 'Enviando...' : 'Reenviar verificacao'}
+                {sendingVerification ? 'Enviando...' : 'Reenviar verificação'}
               </button>
             )}
             <button type="button" className="settings-secondary-button" onClick={handleRefreshEmailStatus} disabled={!isSameFirebaseUser || refreshingEmail}>
@@ -478,7 +478,7 @@ function AccountSettings({ user, tipo, onUserUpdate }) {
                     value={passwordForm.novaSenha}
                     onChange={handlePasswordChange}
                     minLength={minPasswordLength}
-                    placeholder="Minimo de 8 caracteres"
+                    placeholder="Mínimo de 8 caracteres"
                   />
                 </label>
 
@@ -545,7 +545,7 @@ function LoginMethod({ icon, title, linked, description }) {
       </div>
       <span className="method-badge">
         {linked ? <FaCheckCircle /> : <FaExclamationTriangle />}
-        {linked ? 'Vinculado' : 'Nao vinculado'}
+        {linked ? 'Vinculado' : 'Não vinculado'}
       </span>
     </div>
   )

@@ -222,8 +222,8 @@ function Vaga() {
                   <strong>{recompensa}</strong>
                   <p>
                     {perfil.tipo === 'indicador'
-                      ? 'Indique um profissional qualificado. Se ele for contratado, voce recebe o premio direto na sua conta.'
-                      : 'Esta vaga foi publicada por outra empresa e esta disponivel apenas para visualizacao.'}
+                      ? 'Indique um profissional qualificado. Se ele for contratado, você recebe o prêmio direto na sua conta.'
+                      : 'Esta vaga foi publicada por outra empresa e está disponível apenas para visualização.'}
                   </p>
                   {perfil.tipo === 'indicador' && (
                     <Link className="btn-primary" to={`/indicar/${id}`}>Fazer Indicação</Link>

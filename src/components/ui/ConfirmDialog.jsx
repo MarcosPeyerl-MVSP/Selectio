@@ -6,7 +6,7 @@ import { FaExclamationTriangle, FaTimes } from 'react-icons/fa'
 import { ConfirmContext } from './confirmContext'
 
 const defaultOptions = {
-  title: 'Confirmar acao',
+  title: 'Confirmar ação',
   description: 'Tem certeza de que deseja continuar?',
   confirmLabel: 'Confirmar',
   cancelLabel: 'Cancelar',
@@ -61,7 +61,7 @@ function ConfirmDialog({ options, onCancel, onConfirm }) {
         aria-describedby="confirm-description"
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <button type="button" className="confirm-close" onClick={onCancel} aria-label="Fechar confirmacao">
+        <button type="button" className="confirm-close" onClick={onCancel} aria-label="Fechar confirmação">
           <FaTimes />
         </button>
 

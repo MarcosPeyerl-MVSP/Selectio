@@ -46,7 +46,7 @@ const strengthCopy = {
     label: "fraca",
     hint: "Use mais caracteres e misture letras, números e símbolo.",
   },
-  media: {
+  média: {
     label: "média",
     hint: "Quase lá. Complete os critérios restantes.",
   },
@@ -62,7 +62,7 @@ const rollbackFirebaseUser = async (firebaseUser) => {
   try {
     await deleteUser(firebaseUser);
   } catch {
-    // O cadastro local nao deve travar se o rollback no Firebase falhar.
+    // O cadastro local não deve travar se o rollback no Firebase falhar.
   }
 };
 
@@ -155,7 +155,7 @@ export default function Cadastro() {
     if (perfil.tipo === "empresa") {
       localStorage.setItem("empresaUser", JSON.stringify(perfil));
       localStorage.removeItem("indicadorUser");
-      toast.info("Esta conta Google ja esta cadastrada. Vamos te levar ao painel da empresa.");
+      toast.info("Esta conta Google já está cadastrada. Vamos te levar ao painel da empresa.");
       navigate("/painel/empresa");
       return;
     }
@@ -163,12 +163,12 @@ export default function Cadastro() {
     if (perfil.tipo === "indicador") {
       localStorage.setItem("indicadorUser", JSON.stringify(perfil));
       localStorage.removeItem("empresaUser");
-      toast.info("Esta conta Google ja esta cadastrada como indicador. Vamos te levar ao painel correto.");
+      toast.info("Esta conta Google já está cadastrada como indicador. Vamos te levar ao painel correto.");
       navigate("/painel/indicador");
       return;
     }
 
-    toast.info("Esta conta Google ja possui um cadastro no Selectio. Entre pelo login.");
+    toast.info("Esta conta Google já possui um cadastro no Selectio. Entre pelo login.");
     navigate("/login");
   };
 
@@ -209,7 +209,7 @@ export default function Cadastro() {
     return {
       criteria,
       score,
-      strength: score <= 2 ? "fraca" : score <= 4 ? "media" : "forte",
+      strength: score <= 2 ? "fraca" : score <= 4 ? "média" : "forte",
     };
   };
 
@@ -329,8 +329,8 @@ export default function Cadastro() {
         setGoogleMessage(message);
         toast.warning(message);
       } else {
-        setGoogleMessage("Nao foi possivel continuar com Google. Tente novamente.");
-        toast.warning("Nao foi possivel continuar com Google. Tente novamente.");
+        setGoogleMessage("Não foi possível continuar com Google. Tente novamente.");
+        toast.warning("Não foi possível continuar com Google. Tente novamente.");
       }
     } finally {
       setGoogleLoading(false);
@@ -341,12 +341,12 @@ export default function Cadastro() {
     e.preventDefault();
 
     if (!form.termos) {
-      toast.warning("Voce precisa aceitar os termos.");
+      toast.warning("Você precisa aceitar os termos.");
       return;
     }
 
     if (!form.nome || !form.email || !form.cnpj) {
-      toast.warning("Preencha os campos obrigatorios.");
+      toast.warning("Preencha os campos obrigatórios.");
       return;
     }
 
@@ -357,7 +357,7 @@ export default function Cadastro() {
       }
 
       if (form.senha !== form.confirmarSenha) {
-        toast.warning("As senhas nao conferem.");
+        toast.warning("As senhas não conferem.");
         return;
       }
 
@@ -418,7 +418,7 @@ export default function Cadastro() {
         verificationSent = await sendEmailVerification(firebaseUser)
           .then(() => true)
           .catch(() => {
-            toast.warning("Cadastro criado, mas nao foi possivel enviar a verificacao agora.");
+            toast.warning("Cadastro criado, mas não foi possível enviar a verificação agora.");
             return false;
           });
       }
@@ -450,10 +450,10 @@ export default function Cadastro() {
       localStorage.setItem("empresaUser", JSON.stringify(perfilEmpresa));
       localStorage.removeItem("indicadorUser");
       toast.success(isGoogleSignup
-        ? "Cadastro concluido com Google."
+        ? "Cadastro concluído com Google."
         : verificationSent
-          ? "Cadastro concluido. Enviamos um e-mail de verificacao."
-          : "Cadastro concluido.");
+          ? "Cadastro concluído. Enviamos um e-mail de verificação."
+          : "Cadastro concluído.");
       navigate("/painel/empresa");
     } catch (error) {
       await rollbackFirebaseUser(firebaseUser);
@@ -461,7 +461,7 @@ export default function Cadastro() {
       if (isFirebaseAuthError(error)) {
         toast.error(getFirebaseAuthErrorMessage(error));
       } else {
-        toast.error("Nao foi possivel salvar o perfil da empresa no Firestore. Tente novamente.");
+        toast.error("Não foi possível salvar o perfil da empresa no Firestore. Tente novamente.");
       }
     } finally {
       setSubmitLoading(false);

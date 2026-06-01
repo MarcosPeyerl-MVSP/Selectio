@@ -37,7 +37,7 @@ const strengthCopy = {
     label: 'fraca',
     hint: 'Comece combinando tamanho, letras e números.'
   },
-  media: {
+  média: {
     label: 'média',
     hint: 'Boa direção. Adicione mais variedade para proteger melhor.'
   },
@@ -53,7 +53,7 @@ const rollbackFirebaseUser = async (firebaseUser) => {
   try {
     await deleteUser(firebaseUser)
   } catch {
-    // O cadastro local nao deve travar se o rollback no Firebase falhar.
+    // O cadastro local não deve travar se o rollback no Firebase falhar.
   }
 }
 
@@ -145,7 +145,7 @@ function CadastroIndicador() {
     return {
       criteria,
       score,
-      strength: score <= 2 ? 'fraca' : score <= 4 ? 'media' : 'forte'
+      strength: score <= 2 ? 'fraca' : score <= 4 ? 'média' : 'forte'
     }
   }
 
@@ -186,7 +186,7 @@ function CadastroIndicador() {
     if (perfil.tipo === 'indicador') {
       localStorage.setItem('indicadorUser', JSON.stringify(perfil))
       localStorage.removeItem('empresaUser')
-      toast.info('Esta conta Google ja esta cadastrada. Vamos te levar ao painel do indicador.')
+      toast.info('Esta conta Google já está cadastrada. Vamos te levar ao painel do indicador.')
       navigate('/painel/indicador')
       return
     }
@@ -194,12 +194,12 @@ function CadastroIndicador() {
     if (perfil.tipo === 'empresa') {
       localStorage.setItem('empresaUser', JSON.stringify(perfil))
       localStorage.removeItem('indicadorUser')
-      toast.info('Esta conta Google ja esta cadastrada como empresa. Vamos te levar ao painel correto.')
+      toast.info('Esta conta Google já está cadastrada como empresa. Vamos te levar ao painel correto.')
       navigate('/painel/empresa')
       return
     }
 
-    toast.info('Esta conta Google ja possui um cadastro no Selectio. Entre pelo login.')
+    toast.info('Esta conta Google já possui um cadastro no Selectio. Entre pelo login.')
     navigate('/login')
   }
 
@@ -268,8 +268,8 @@ function CadastroIndicador() {
         setGoogleMessage(message)
         toast.warning(message)
       } else {
-        setGoogleMessage('Nao foi possivel continuar com Google. Tente novamente.')
-        toast.warning('Nao foi possivel continuar com Google. Tente novamente.')
+        setGoogleMessage('Não foi possível continuar com Google. Tente novamente.')
+        toast.warning('Não foi possível continuar com Google. Tente novamente.')
       }
     } finally {
       setGoogleLoading(false)
@@ -282,7 +282,7 @@ function CadastroIndicador() {
     // Validação: senha e confirmação precisam ser iguais.
     if (!isGoogleSignup) {
       if (form.senha !== form.confirmarSenha) {
-        toast.warning('As senhas nao conferem.')
+        toast.warning('As senhas não conferem.')
         return
       }
 
@@ -335,7 +335,7 @@ function CadastroIndicador() {
         verificationSent = await sendEmailVerification(firebaseUser)
           .then(() => true)
           .catch(() => {
-            toast.warning('Cadastro criado, mas nao foi possivel enviar a verificacao agora.')
+            toast.warning('Cadastro criado, mas não foi possível enviar a verificação agora.')
             return false
           })
       }
@@ -359,10 +359,10 @@ function CadastroIndicador() {
       localStorage.setItem('indicadorUser', JSON.stringify(perfilIndicador))
       localStorage.removeItem('empresaUser')
       toast.success(isGoogleSignup
-        ? 'Cadastro concluido com Google.'
+        ? 'Cadastro concluído com Google.'
         : verificationSent
-          ? 'Cadastro concluido. Enviamos um e-mail de verificacao.'
-          : 'Cadastro concluido.')
+          ? 'Cadastro concluído. Enviamos um e-mail de verificação.'
+          : 'Cadastro concluído.')
       navigate('/painel/indicador')
     } catch (error) {
       await rollbackFirebaseUser(firebaseUser)
@@ -370,7 +370,7 @@ function CadastroIndicador() {
       if (isFirebaseAuthError(error)) {
         toast.error(getFirebaseAuthErrorMessage(error))
       } else {
-        toast.error('Nao foi possivel salvar o perfil do indicador no Firestore. Tente novamente.')
+        toast.error('Não foi possível salvar o perfil do indicador no Firestore. Tente novamente.')
       }
     } finally {
       setSubmitLoading(false)

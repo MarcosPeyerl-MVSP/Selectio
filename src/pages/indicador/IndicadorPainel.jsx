@@ -1,5 +1,5 @@
 // Objetivo do arquivo: renderizar o painel central do indicador.
-// A pagina valida a sessao do indicador, atualiza dados, busca metricas
+// A pagina valida a sessão do indicador, atualiza dados, busca metricas
 // e exibe as secoes internas de dashboard, perfil e configuracoes.
 
 import { useEffect, useState } from 'react'
@@ -40,7 +40,7 @@ const indicadorCards = [
   {
     icon: FaUserFriends,
     title: 'Candidatos',
-    description: 'Inicie uma nova indicacao de talento e impulsione a carreira da sua rede.',
+    description: 'Inicie uma nova indicação de talento e impulsione a carreira da sua rede.',
     to: '/vagas',
     action: 'Indicar Agora'
   },
@@ -54,14 +54,14 @@ const indicadorCards = [
   {
     icon: FaChartBar,
     title: 'Dashboard',
-    description: 'Acompanhe status, ganhos e o impacto de cada indicacao em tempo real.',
+    description: 'Acompanhe status, ganhos e o impacto de cada indicação em tempo real.',
     to: '/painel/indicador',
     action: 'Acompanhar'
   },
   {
     icon: FaMoneyBillWave,
     title: 'Financeiro',
-    description: 'Veja seu saldo, movimentacoes e solicite saques manuais.',
+    description: 'Veja seu saldo, movimentações e solicite saques manuais.',
     to: '/painel/indicador?secao=financeiro',
     action: 'Abrir Carteira'
   }
@@ -115,7 +115,7 @@ function Painel() {
           return mergedUser
         })
       } catch (error) {
-        console.error('Erro ao buscar usuario:', error)
+        console.error('Erro ao buscar usuário:', error)
       } finally {
         setLoadingPanel(false)
       }
@@ -153,9 +153,9 @@ function Painel() {
         <>
           <DashboardHeader
             eyebrow="BOAS-VINDAS - Painel Central"
-            greeting="Ola,"
+            greeting="Olá,"
             name={user.nome}
-            description="Gerencie suas indicacoes, explore novas oportunidades e acompanhe seu crescimento editorial em um so lugar."
+            description="Gerencie suas indicações, explore novas oportunidades e acompanhe seu crescimento editorial em um só lugar."
           />
 
           <section className="dashboard-cards">
@@ -166,12 +166,12 @@ function Painel() {
 
           <section className="dashboard-stats">
             <div>
-              <span>Total de Indicacoes</span>
+              <span>Total de Indicações</span>
               <h2>{status?.totalIndicacoes ?? 0}</h2>
             </div>
 
             <div>
-              <span>Taxa de Conversao</span>
+              <span>Taxa de Conversão</span>
               <h2 className="red">{status?.taxaSucesso ?? 0}%</h2>
             </div>
 

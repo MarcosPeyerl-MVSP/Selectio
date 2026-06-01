@@ -23,7 +23,7 @@ const sidebarConfig = {
       { to: '/painel/indicador', label: 'Dashboard', icon: FaChartBar, exact: true },
       { to: '/painel/indicador?secao=perfil', label: 'Perfil', icon: FaUserTie },
       { to: '/painel/indicador?secao=financeiro', label: 'Financeiro', icon: FaMoneyBillWave },
-      { to: '/painel/indicador?secao=configuracoes', label: 'Configuracoes', icon: FaCog },
+      { to: '/painel/indicador?secao=configuracoes', label: 'Configurações', icon: FaCog },
     ],
   },
   empresa: {
@@ -36,7 +36,7 @@ const sidebarConfig = {
       { to: '/painel/empresa', label: 'Dashboard', icon: FaChartBar, exact: true },
       { to: '/painel/empresa?secao=perfil', label: 'Perfil', icon: FaUserTie },
       { to: '/painel/empresa?secao=pagamentos', label: 'Pagamentos', icon: FaCreditCard },
-      { to: '/painel/empresa?secao=configuracoes', label: 'Configuracoes', icon: FaCog },
+      { to: '/painel/empresa?secao=configuracoes', label: 'Configurações', icon: FaCog },
       { to: '/painel/empresa?secao=entrevistas', label: 'Entrevistas', icon: FaCalendarAlt },
     ],
   },

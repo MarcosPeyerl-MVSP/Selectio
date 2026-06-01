@@ -15,7 +15,7 @@ const iconByType = {
 const titleByType = {
   success: 'Sucesso',
   error: 'Erro',
-  warning: 'Atencao',
+  warning: 'Atenção',
   info: 'Aviso'
 }
 
@@ -97,7 +97,7 @@ function Toast({ toast, onDismiss }) {
         {toast.message && <p>{toast.message}</p>}
       </div>
 
-      <button type="button" onClick={onDismiss} aria-label="Fechar notificacao">
+      <button type="button" onClick={onDismiss} aria-label="Fechar notificação">
         <FaTimes />
       </button>
     </section>

@@ -32,8 +32,8 @@ function PaymentRewardModal({ candidato, empresa, pagamentoExistente, onClose, o
     const confirmado = await confirm({
       title: 'Pagar recompensa?',
       description: valorRecompensa
-        ? `Voce sera redirecionado para o Mercado Pago para pagar ${formatCurrency(valorRecompensa)}.`
-        : 'A recompensa sera validada pela vaga no Firestore antes de abrir o checkout.',
+        ? `Você será redirecionado para o Mercado Pago para pagar ${formatCurrency(valorRecompensa)}.`
+        : 'A recompensa será validada pela vaga no Firestore antes de abrir o checkout.',
       confirmLabel: 'Ir para pagamento',
       cancelLabel: 'Voltar',
       tone: 'danger'
@@ -61,10 +61,10 @@ function PaymentRewardModal({ candidato, empresa, pagamentoExistente, onClose, o
         return
       }
 
-      toast.success('Preferencia de pagamento criada.')
+      toast.success('Preferência de pagamento criada.')
       onClose()
     } catch (error) {
-      toast.error(error.message || 'Nao foi possivel criar o pagamento.')
+      toast.error(error.message || 'Não foi possível criar o pagamento.')
     } finally {
       setCarregando(false)
     }
@@ -86,28 +86,28 @@ function PaymentRewardModal({ candidato, empresa, pagamentoExistente, onClose, o
         <header>
           <span><FaCreditCard /> Mercado Pago</span>
           <h2 id="payment-reward-title">Pagar recompensa</h2>
-          <p>O pagamento vai para a conta Selectio. Depois da aprovacao, o saldo do indicador e creditado internamente.</p>
+          <p>O pagamento vai para a conta Selectio. Depois da aprovação, o saldo do indicador é creditado internamente.</p>
         </header>
 
         <div className="payment-summary">
           <div>
             <span>Candidato</span>
-            <strong>{candidato.nome || 'Nao informado'}</strong>
+            <strong>{candidato.nome || 'Não informado'}</strong>
           </div>
           <div>
             <span>Vaga</span>
-            <strong>{candidato.vagaTitulo || 'Nao informada'}</strong>
+            <strong>{candidato.vagaTitulo || 'Não informada'}</strong>
           </div>
           <div>
             <span>Indicador</span>
-            <strong>{candidato.indicadorNome || 'Nao informado'}</strong>
+            <strong>{candidato.indicadorNome || 'Não informado'}</strong>
           </div>
         </div>
 
         {recompensaPaga ? (
           <div className="payment-state approved">
             <strong>Recompensa paga</strong>
-            <p>Este candidato ja possui pagamento aprovado.</p>
+            <p>Este candidato já possui pagamento aprovado.</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
@@ -122,7 +122,7 @@ function PaymentRewardModal({ candidato, empresa, pagamentoExistente, onClose, o
 
             {!valorRecompensa && (
               <div className="payment-state pending">
-                <strong>Valor pendente de validacao</strong>
+                <strong>Valor pendente de validação</strong>
                 <p>A Cloud Function vai buscar a recompensa cadastrada na vaga antes de criar o checkout.</p>
               </div>
             )}
@@ -130,7 +130,7 @@ function PaymentRewardModal({ candidato, empresa, pagamentoExistente, onClose, o
             {pagamentoPendente && (
               <div className="payment-state pending">
                 <strong>Pagamento pendente</strong>
-                <p>Continue o checkout ja criado para esta recompensa.</p>
+                <p>Continue o checkout já criado para esta recompensa.</p>
               </div>
             )}
 

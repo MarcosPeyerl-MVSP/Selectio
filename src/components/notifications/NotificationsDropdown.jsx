@@ -79,7 +79,7 @@ function NotificationsDropdown({ user }) {
                   to={notificacao.link || '#'}
                   onClick={() => marcarComoLida(notificacao)}
                 >
-                  <strong>{notificacao.titulo || 'Notificacao'}</strong>
+                  <strong>{notificacao.titulo || 'Notificação'}</strong>
                   <p>{notificacao.mensagem || ''}</p>
                 </Link>
               ))}

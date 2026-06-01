@@ -10,7 +10,7 @@ const getCollectionByTipo = (tipo) => {
   const collectionName = collectionsByTipo[tipo]
 
   if (!collectionName) {
-    throw new Error('Tipo de usuario invalido para perfil no Firestore.')
+    throw new Error('Tipo de usuário inválido para perfil no Firestore.')
   }
 
   return collectionName
@@ -18,7 +18,7 @@ const getCollectionByTipo = (tipo) => {
 
 export const salvarPerfilUsuario = async ({ uid, tipo, dados }) => {
   if (!uid) {
-    throw new Error('UID do Firebase e obrigatorio para salvar o perfil.')
+    throw new Error('UID do Firebase é obrigatório para salvar o perfil.')
   }
 
   const collectionName = getCollectionByTipo(tipo)
@@ -66,7 +66,7 @@ const pickEditableFields = ({ tipo, dados }) => {
 
 export const atualizarPerfilUsuario = async ({ uid, tipo, dados }) => {
   if (!uid) {
-    throw new Error('UID do Firebase e obrigatorio para atualizar o perfil.')
+    throw new Error('UID do Firebase é obrigatório para atualizar o perfil.')
   }
 
   const collectionName = getCollectionByTipo(tipo)

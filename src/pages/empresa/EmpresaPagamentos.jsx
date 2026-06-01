@@ -36,7 +36,7 @@ function EmpresaPagamentos({ empresa }) {
         const dados = await listarPagamentosPorEmpresa(empresaId)
         if (ativo) setPagamentos(dados)
       } catch (error) {
-        toast.error(error.message || 'Nao foi possivel carregar pagamentos.')
+        toast.error(error.message || 'Não foi possível carregar pagamentos.')
       } finally {
         if (ativo) setCarregando(false)
       }
@@ -77,7 +77,7 @@ function EmpresaPagamentos({ empresa }) {
 
       <article className="empresa-pagamentos-lista">
         <div className="empresa-pagamentos-lista-header">
-          <span><FaReceipt /> Historico</span>
+          <span><FaReceipt /> Histórico</span>
           <strong>{pagamentos.length}</strong>
         </div>
 
@@ -86,7 +86,7 @@ function EmpresaPagamentos({ empresa }) {
             <div className="empresa-pagamento-item" key={pagamento.id}>
               <div>
                 <strong>{pagamento.candidatoNome || 'Candidato'}</strong>
-                <span>{pagamento.vagaTitulo || 'Vaga nao informada'} - {pagamento.indicadorNome || 'Indicador'}</span>
+                <span>{pagamento.vagaTitulo || 'Vaga não informada'} - {pagamento.indicadorNome || 'Indicador'}</span>
               </div>
 
               <div className="empresa-pagamento-meta">
@@ -107,7 +107,7 @@ function EmpresaPagamentos({ empresa }) {
           <div className="empresa-pagamentos-vazio">
             <FaCreditCard />
             <strong>Nenhum pagamento criado</strong>
-            <p>Quando uma recompensa for paga para um candidato contratado, ela aparecera aqui.</p>
+            <p>Quando uma recompensa for paga para um candidato contratado, ela aparecerá aqui.</p>
           </div>
         )}
       </article>

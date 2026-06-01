@@ -35,12 +35,12 @@ export const montarDescricaoEntrevista = ({
   indicadorNome,
   observacoes
 }) => [
-  `Candidato: ${textoSeguro(candidatoNome, 'Nao informado')}`,
+  `Candidato: ${textoSeguro(candidatoNome, 'Não informado')}`,
   candidatoEmail ? `E-mail: ${candidatoEmail}` : '',
-  `Vaga: ${textoSeguro(vagaTitulo, 'Nao informada')}`,
+  `Vaga: ${textoSeguro(vagaTitulo, 'Não informada')}`,
   empresaNome ? `Empresa: ${empresaNome}` : '',
   indicadorNome ? `Indicador: ${indicadorNome}` : '',
-  observacoes ? `Observacoes: ${observacoes}` : '',
+  observacoes ? `Observações: ${observacoes}` : '',
   '',
   'Evento gerado pelo Selectio. O link do Google Meet pode ser criado ao salvar o evento no Google Calendar.'
 ].filter(Boolean).join('\n')

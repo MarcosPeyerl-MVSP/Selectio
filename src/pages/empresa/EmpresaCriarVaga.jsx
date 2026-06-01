@@ -118,7 +118,7 @@ function CriarVagaEmpresa() {
     // Validação: campos principais obrigatórios da vaga.
     if (!form.titulo || !form.area || !form.descricaoLonga || !form.localizacao) {
       setMessage('Preencha título, área, descrição e localização.')
-      toast.warning('Preencha titulo, area, descricao e localizacao.')
+      toast.warning('Preencha título, área, descrição e localização.')
       return
     }
 
@@ -127,14 +127,14 @@ function CriarVagaEmpresa() {
     const salarioMax = getNumberFromCurrency(form.salarioMax)
     if (salarioMin && salarioMax && salarioMin > salarioMax) {
       setMessage('O salário mínimo não pode ser maior que o máximo.')
-      toast.warning('O salario minimo nao pode ser maior que o maximo.')
+      toast.warning('O salário mínimo não pode ser maior que o máximo.')
       return
     }
 
     // Validação: contrato temporário exige datas de início e fim.
     if (form.tipo === 'Contrato temporário' && (!form.tipoDataInicio || !form.tipoDataFim)) {
       setMessage('Informe a data de início e a data de fim do contrato temporário.')
-      toast.warning('Informe a data de inicio e a data de fim do contrato temporario.')
+      toast.warning('Informe a data de início e a data de fim do contrato temporário.')
       return
     }
 
@@ -146,7 +146,7 @@ function CriarVagaEmpresa() {
       && form.tipoDataInicio > form.tipoDataFim
     ) {
       setMessage('A data de início não pode ser posterior à data de fim.')
-      toast.warning('A data de inicio nao pode ser posterior a data de fim.')
+      toast.warning('A data de início não pode ser posterior à data de fim.')
       return
     }
 
@@ -193,8 +193,8 @@ function CriarVagaEmpresa() {
       setForm(initialForm)
       navigate('/vagas')
     } catch {
-      setMessage('Nao foi possivel salvar a vaga no Firestore.')
-      toast.error('Nao foi possivel salvar a vaga no Firestore.')
+      setMessage('Não foi possível salvar a vaga no Firestore.')
+      toast.error('Não foi possível salvar a vaga no Firestore.')
     } finally {
       setLoading(false)
     }

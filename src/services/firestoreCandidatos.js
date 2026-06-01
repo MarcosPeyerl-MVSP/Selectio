@@ -38,7 +38,7 @@ const getOrigem = (dados) => {
   if (dados.linkedin) return 'LinkedIn'
   if (dados.portfolio) return 'Portfolio'
   if (dados.github) return 'GitHub'
-  return 'Indicacao'
+  return 'Indicação'
 }
 
 const mapCandidatoDoc = (snapshot) => {
@@ -73,11 +73,11 @@ export const criarCandidatoIndicado = async ({ dados, indicador, vaga }) => {
   const empresaId = getEmpresaUidFromVaga(vaga)
 
   if (!indicadorId) {
-    throw new Error('UID do indicador e obrigatorio para criar candidato.')
+    throw new Error('UID do indicador e obrigatório para criar candidato.')
   }
 
   if (!vaga?.id || !empresaId) {
-    throw new Error('Vaga e empresa da vaga sao obrigatorias para criar candidato.')
+    throw new Error('Vaga e empresa da vaga são obrigatórias para criar candidato.')
   }
 
   const recompensaValor = parseMoneyValue(vaga.recompensa)
@@ -154,23 +154,23 @@ export const buscarCandidatoPorId = async (id) => {
 
 export const atualizarStatusCandidato = async ({ candidatoId, status, empresaId }) => {
   if (!candidatoId) {
-    throw new Error('ID do candidato e obrigatorio para atualizar status.')
+    throw new Error('ID do candidato e obrigatório para atualizar status.')
   }
 
   if (!statusPermitidos.includes(status)) {
-    throw new Error('Status de candidato invalido.')
+    throw new Error('Status de candidato inválido.')
   }
 
   const candidato = await buscarCandidatoPorId(candidatoId)
 
   if (!candidato) {
-    throw new Error('Candidato nao encontrado.')
+    throw new Error('Candidato não encontrado.')
   }
 
   const candidatoEmpresaId = String(candidato.empresaId || candidato.empresaUid || '')
 
   if (!empresaId || candidatoEmpresaId !== String(empresaId)) {
-    throw new Error('Esta empresa nao pode alterar este candidato.')
+    throw new Error('Esta empresa não pode alterar este candidato.')
   }
 
   await updateDoc(doc(db, 'candidatos', candidatoId), {

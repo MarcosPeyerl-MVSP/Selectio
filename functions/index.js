@@ -29,7 +29,7 @@ function obterAccessToken() {
   const token = process.env.MERCADO_PAGO_ACCESS_TOKEN
 
   if (!token) {
-    throw new Error('MERCADO_PAGO_ACCESS_TOKEN nao configurado nas Cloud Functions.')
+    throw new Error('MERCADO_PAGO_ACCESS_TOKEN não configurado nas Cloud Functions.')
   }
 
   return token
@@ -210,28 +210,28 @@ async function criarPreferenciaPagamentoHandler(dados = {}, contexto) {
     const valorInformado = valorMonetario(dados.valor)
 
     if (!empresaId || empresaId !== contexto.auth.uid) {
-      erroHttps('permission-denied', 'Esta empresa nao pode criar este pagamento.')
+      erroHttps('permission-denied', 'Esta empresa não pode criar este pagamento.')
     }
 
     if (!candidatoId) {
-      erroHttps('invalid-argument', 'Candidato e obrigatorio para criar pagamento.')
+      erroHttps('invalid-argument', 'Candidato e obrigatório para criar pagamento.')
     }
 
     const empresaDoc = await db.collection('empresas').doc(empresaId).get()
     if (!empresaDoc.exists) {
-      erroHttps('permission-denied', 'Perfil de empresa nao encontrado.')
+      erroHttps('permission-denied', 'Perfil de empresa não encontrado.')
     }
 
     const candidatoDoc = await db.collection('candidatos').doc(candidatoId).get()
     if (!candidatoDoc.exists) {
-      erroHttps('not-found', 'Candidato nao encontrado.')
+      erroHttps('not-found', 'Candidato não encontrado.')
     }
 
     const empresa = empresaDoc.data()
     const candidato = candidatoDoc.data()
 
     if (candidato.empresaId !== empresaId && candidato.empresaUid !== empresaId) {
-      erroHttps('permission-denied', 'Candidato nao pertence a esta empresa.')
+      erroHttps('permission-denied', 'Candidato não pertence a esta empresa.')
     }
 
     if (candidato.status !== 'contratado') {
@@ -241,11 +241,11 @@ async function criarPreferenciaPagamentoHandler(dados = {}, contexto) {
     const indicacao = await buscarIndicacao({ indicacaoId, candidatoId, empresaId })
 
     if (indicacao?.candidatoId && indicacao.candidatoId !== candidatoId) {
-      erroHttps('permission-denied', 'Indicacao nao corresponde ao candidato.')
+      erroHttps('permission-denied', 'Indicação não corresponde ao candidato.')
     }
 
     if (indicacao?.empresaId && indicacao.empresaId !== empresaId) {
-      erroHttps('permission-denied', 'Indicacao nao pertence a esta empresa.')
+      erroHttps('permission-denied', 'Indicação não pertence a esta empresa.')
     }
 
     const indicadorIdDocumento = candidato.indicadorId
@@ -255,11 +255,11 @@ async function criarPreferenciaPagamentoHandler(dados = {}, contexto) {
     const indicadorId = indicadorIdDocumento || indicadorIdInput
 
     if (!indicadorId) {
-      erroHttps('failed-precondition', 'Candidato nao possui indicador vinculado.')
+      erroHttps('failed-precondition', 'Candidato não possui indicador vinculado.')
     }
 
     if (indicadorIdInput && indicadorIdDocumento && indicadorIdInput !== indicadorIdDocumento) {
-      erroHttps('permission-denied', 'Indicador informado nao corresponde ao candidato.')
+      erroHttps('permission-denied', 'Indicador informado não corresponde ao candidato.')
     }
 
     if (
@@ -268,13 +268,13 @@ async function criarPreferenciaPagamentoHandler(dados = {}, contexto) {
       || (indicacao?.indicadorId && indicacao.indicadorId !== indicadorId)
       || (indicacao?.indicadorUid && indicacao.indicadorUid !== indicadorId)
     ) {
-      erroHttps('permission-denied', 'Indicador nao corresponde ao candidato ou indicacao.')
+      erroHttps('permission-denied', 'Indicador não corresponde ao candidato ou indicação.')
     }
 
     const { aprovado, pendente } = await buscarPagamentoAberto({ candidatoId, empresaId })
 
     if (aprovado) {
-      erroHttps('already-exists', 'Ja existe pagamento aprovado para este candidato.')
+      erroHttps('already-exists', 'Já existe pagamento aprovado para este candidato.')
     }
 
     if (pendente) {
@@ -295,11 +295,11 @@ async function criarPreferenciaPagamentoHandler(dados = {}, contexto) {
     const vaga = vagaDoc?.exists ? vagaDoc.data() : {}
 
     if (!indicadorDoc.exists) {
-      erroHttps('failed-precondition', 'Perfil de indicador nao encontrado.')
+      erroHttps('failed-precondition', 'Perfil de indicador não encontrado.')
     }
 
     if (vagaDoc?.exists && vaga.empresaId !== empresaId && vaga.empresaUid !== empresaId) {
-      erroHttps('permission-denied', 'Vaga nao pertence a esta empresa.')
+      erroHttps('permission-denied', 'Vaga não pertence a esta empresa.')
     }
 
     const valor = primeiroValorMonetario(
@@ -312,11 +312,11 @@ async function criarPreferenciaPagamentoHandler(dados = {}, contexto) {
     )
 
     if (!valor) {
-      erroHttps('failed-precondition', 'Recompensa da vaga nao encontrada ou invalida.')
+      erroHttps('failed-precondition', 'Recompensa da vaga não encontrada ou invalida.')
     }
 
     if (valorInformado && !valoresIguais(valorInformado, valor)) {
-      erroHttps('invalid-argument', 'Valor informado nao corresponde a recompensa cadastrada.')
+      erroHttps('invalid-argument', 'Valor informado não corresponde a recompensa cadastrada.')
     }
 
     const pagamentoRef = db.collection('pagamentos').doc()
@@ -400,7 +400,7 @@ async function criarPreferenciaPagamentoHandler(dados = {}, contexto) {
       await pagamentoRef.update({
         status: 'failed',
         statusDetail: 'erro_criar_preferencia',
-        erroCriacao: error.message || 'Erro ao criar preferencia Mercado Pago.',
+        erroCriacao: error.message || 'Erro ao criar preferência Mercado Pago.',
         atualizadoEm: FieldValue.serverTimestamp()
       })
       throw error
@@ -442,16 +442,16 @@ exports.solicitarSaqueIndicador = functions
     const chavePix = textoSeguro(dados.chavePix)
 
     if (!indicadorId || indicadorId !== contexto.auth.uid) {
-      erroHttps('permission-denied', 'Este indicador nao pode solicitar saque para outra conta.')
+      erroHttps('permission-denied', 'Este indicador não pode solicitar saque para outra conta.')
     }
 
     if (!valor || !chavePix) {
-      erroHttps('invalid-argument', 'Valor e chave Pix sao obrigatorios.')
+      erroHttps('invalid-argument', 'Valor e chave Pix são obrigatórios.')
     }
 
     const indicadorDoc = await db.collection('indicadores').doc(indicadorId).get()
     if (!indicadorDoc.exists) {
-      erroHttps('permission-denied', 'Perfil de indicador nao encontrado.')
+      erroHttps('permission-denied', 'Perfil de indicador não encontrado.')
     }
 
     const indicador = indicadorDoc.data()
@@ -465,7 +465,7 @@ exports.solicitarSaqueIndicador = functions
       const saldoDisponivel = Number(saldo.saldoDisponivel || 0)
 
       if (saldoDisponivel < valor) {
-        throw new functions.https.HttpsError('failed-precondition', 'Saldo disponivel insuficiente.')
+        throw new functions.https.HttpsError('failed-precondition', 'Saldo disponível insuficiente.')
       }
 
       const agora = FieldValue.serverTimestamp()
@@ -487,7 +487,7 @@ exports.solicitarSaqueIndicador = functions
         valor,
         status: 'solicitado',
         saqueId: saqueRef.id,
-        descricao: `Solicitacao de saque de ${dinheiro(valor)}`,
+        descricao: `Solicitação de saque de ${dinheiro(valor)}`,
         criadoEm: agora
       })
 
@@ -538,7 +538,7 @@ exports.mercadoPagoWebhook = functions
         const pagamentoDoc = await transaction.get(pagamentoRef)
 
         if (!pagamentoDoc.exists) {
-          console.warn('Pagamento interno nao encontrado para webhook:', pagamentoId)
+          console.warn('Pagamento interno não encontrado para webhook:', pagamentoId)
           return
         }
 
@@ -606,7 +606,7 @@ exports.mercadoPagoWebhook = functions
           userId: pagamento.indicadorId,
           tipo: 'pagamento_aprovado',
           titulo: 'Pagamento recebido',
-          mensagem: `Voce recebeu ${dinheiro(valorEsperado)} pela indicacao de ${pagamento.candidatoNome || 'um candidato'} para a vaga ${pagamento.vagaTitulo || 'informada'}.`,
+          mensagem: `Você recebeu ${dinheiro(valorEsperado)} pela indicação de ${pagamento.candidatoNome || 'um candidato'} para a vaga ${pagamento.vagaTitulo || 'informada'}.`,
           lida: false,
           link: '/painel/indicador?secao=financeiro',
           metadata: {

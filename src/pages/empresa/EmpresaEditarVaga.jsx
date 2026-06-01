@@ -167,13 +167,13 @@ function EditarVagaEmpresa() {
 
         if (!data) {
           setMessage('Vaga não encontrada.')
-          toast.error('Vaga nao encontrada.')
+          toast.error('Vaga não encontrada.')
           return
         }
 
         if (String(data.empresaId || data.empresaUid || '') !== String(getFirebaseUid(empresa))) {
           setMessage('Esta vaga não pertence à sua empresa.')
-          toast.warning('Esta vaga nao pertence a sua empresa.')
+          toast.warning('Esta vaga não pertence a sua empresa.')
           setCanEdit(false)
           return
         }
@@ -201,7 +201,7 @@ function EditarVagaEmpresa() {
         setCanEdit(true)
       } catch {
         setMessage('Não foi possível carregar a vaga.')
-        toast.error('Nao foi possivel carregar a vaga.')
+        toast.error('Não foi possível carregar a vaga.')
         setCanEdit(false)
       } finally {
         setLoadingVaga(false)
@@ -246,7 +246,7 @@ function EditarVagaEmpresa() {
 
     if (!form.titulo || !form.area || !form.descricaoLonga || !form.localizacao) {
       setMessage('Preencha título, área, descrição e localização.')
-      toast.warning('Preencha titulo, area, descricao e localizacao.')
+      toast.warning('Preencha título, área, descrição e localização.')
       return
     }
 
@@ -254,13 +254,13 @@ function EditarVagaEmpresa() {
     const salarioMax = getNumberFromCurrency(form.salarioMax)
     if (salarioMin && salarioMax && salarioMin > salarioMax) {
       setMessage('O salário mínimo não pode ser maior que o máximo.')
-      toast.warning('O salario minimo nao pode ser maior que o maximo.')
+      toast.warning('O salário mínimo não pode ser maior que o máximo.')
       return
     }
 
     if (form.tipo === 'Contrato temporário' && (!form.tipoDataInicio || !form.tipoDataFim)) {
       setMessage('Informe a data de início e a data de fim do contrato temporário.')
-      toast.warning('Informe a data de inicio e a data de fim do contrato temporario.')
+      toast.warning('Informe a data de início e a data de fim do contrato temporário.')
       return
     }
 
@@ -303,8 +303,8 @@ function EditarVagaEmpresa() {
       toast.success('Vaga atualizada com sucesso.')
       navigate(`/vaga/${id}`)
     } catch {
-      setMessage('Nao foi possivel salvar a vaga no Firestore.')
-      toast.error('Nao foi possivel salvar a vaga no Firestore.')
+      setMessage('Não foi possível salvar a vaga no Firestore.')
+      toast.error('Não foi possível salvar a vaga no Firestore.')
     } finally {
       setLoading(false)
     }

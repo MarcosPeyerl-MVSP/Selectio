@@ -97,14 +97,14 @@ function Login() {
 
       if (!perfil) {
         await signOut(auth)
-        showError('Sua conta existe no Firebase, mas ainda nao possui perfil no Selectio.')
+        showError('Sua conta existe no Firebase, mas ainda não possui perfil no Selectio.')
         setLoading(false)
         return
       }
 
       if (!storeProfileAndNavigate(perfil)) {
         await signOut(auth)
-        showError('Perfil de usuario invalido. Entre em contato com o suporte da Selectio.')
+        showError('Perfil de usuário inválido. Entre em contato com o suporte da Selectio.')
         setLoading(false)
       }
     } catch (error) {
@@ -115,7 +115,7 @@ function Login() {
           await signOut(auth).catch(() => {})
         }
 
-        showError('Nao foi possivel buscar seu perfil no Firestore. Verifique sua conexao e tente novamente.')
+        showError('Não foi possível buscar seu perfil no Firestore. Verifique sua conexão e tente novamente.')
       }
 
       setLoading(false)
@@ -137,7 +137,7 @@ function Login() {
 
       if (!perfil) {
         await signOut(auth)
-        const message = 'Esta conta Google ainda nao possui perfil no Selectio. Conclua o cadastro primeiro.'
+        const message = 'Esta conta Google ainda não possui perfil no Selectio. Conclua o cadastro primeiro.'
         setError(message)
         toast.warning(message)
         setLoading(false)
@@ -146,14 +146,14 @@ function Login() {
 
       if (!storeProfileAndNavigate(perfil)) {
         await signOut(auth)
-        showError('Perfil de usuario invalido. Entre em contato com o suporte da Selectio.')
+        showError('Perfil de usuário inválido. Entre em contato com o suporte da Selectio.')
         setLoading(false)
       }
     } catch (error) {
       if (isFirebaseAuthError(error)) {
         showError(getFirebaseAuthErrorMessage(error))
       } else {
-        showError('Nao foi possivel entrar com Google. Verifique sua conexao e tente novamente.')
+        showError('Não foi possível entrar com Google. Verifique sua conexão e tente novamente.')
       }
 
       setLoading(false)
@@ -167,7 +167,7 @@ function Login() {
     const email = form.login.trim()
 
     if (!email) {
-      const message = 'Informe seu e-mail para receber o link de redefinicao.'
+      const message = 'Informe seu e-mail para receber o link de redefinição.'
       setError(message)
       toast.warning(message)
       return
@@ -176,14 +176,14 @@ function Login() {
     try {
       setLoading(true)
       await sendPasswordResetEmail(auth, email)
-      const message = 'Se este e-mail estiver cadastrado, enviaremos um link de redefinicao.'
+      const message = 'Se este e-mail estiver cadastrado, enviaremos um link de redefinição.'
       setSuccess(message)
       toast.success(message)
     } catch (error) {
       if (isFirebaseAuthError(error)) {
         showError(getFirebaseAuthErrorMessage(error))
       } else {
-        showError('Nao foi possivel solicitar a redefinicao agora. Verifique sua conexao e tente novamente.')
+        showError('Não foi possível solicitar a redefinição agora. Verifique sua conexão e tente novamente.')
       }
     } finally {
       setLoading(false)
@@ -265,7 +265,7 @@ function Login() {
           </div>
 
           <p className="register-link">
-            Nao tem uma conta? <Link to="/cadastro">Cadastre-se</Link>
+            Não tem uma conta? <Link to="/cadastro">Cadastre-se</Link>
           </p>
         </div>
       </main>

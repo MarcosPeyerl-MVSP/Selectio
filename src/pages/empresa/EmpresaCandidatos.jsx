@@ -134,7 +134,7 @@ function CandidatosEmpresa() {
         setCandidatos(candidatosData)
       } catch (err) {
         setError(err.message)
-        toast.error('Nao foi possivel carregar os candidatos.')
+        toast.error('Não foi possível carregar os candidatos.')
       } finally {
         setLoading(false)
       }
@@ -143,7 +143,7 @@ function CandidatosEmpresa() {
         const pagamentosData = await listarPagamentosPorEmpresa(empresaUid)
         setPagamentos(pagamentosData)
       } catch (err) {
-        console.warn('Nao foi possivel carregar pagamentos da empresa:', err)
+        console.warn('Não foi possível carregar pagamentos da empresa:', err)
         setPagamentos([])
       }
     }

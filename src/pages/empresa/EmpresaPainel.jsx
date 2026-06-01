@@ -1,5 +1,5 @@
 // Objetivo do arquivo: renderizar o painel central da empresa.
-// A pagina valida a sessao da empresa e exibe secoes internas de dashboard,
+// A pagina valida a sessão da empresa e exibe secoes internas de dashboard,
 // perfil, configuracoes e entrevistas.
 
 import { useEffect, useState } from 'react'
@@ -26,14 +26,14 @@ const empresaCards = [
   {
     icon: FaSuitcase,
     title: 'Minhas Vagas',
-    description: 'Crie sua rede de postagens de vagas, melhore suas conexoes e contrate rapido.',
+    description: 'Crie sua rede de postagens de vagas, melhore suas conexões e contrate rápido.',
     to: '/criar-vaga/empresa',
     action: 'Criar Vagas'
   },
   {
     icon: FaUserFriends,
     title: 'Candidatos',
-    description: 'Veja os candidatos disponiveis para suas vagas publicadas.',
+    description: 'Veja os candidatos disponíveis para suas vagas publicadas.',
     to: '/candidatos/empresa',
     action: 'Ver Candidatos'
   },
@@ -47,7 +47,7 @@ const empresaCards = [
   {
     icon: FaChartBar,
     title: 'Dashboard',
-    description: 'Acompanhe status, ganhos e impacto das suas contratacoes.',
+    description: 'Acompanhe status, ganhos e impacto das suas contratações.',
     to: '/painel/empresa',
     action: 'Acompanhar'
   },
@@ -61,7 +61,7 @@ const empresaCards = [
   {
     icon: FaCreditCard,
     title: 'Pagamentos',
-    description: 'Acompanhe recompensas pagas aos indicadores por contratacoes.',
+    description: 'Acompanhe recompensas pagas aos indicadores por contratações.',
     to: '/painel/empresa?secao=pagamentos',
     action: 'Ver Pagamentos'
   }
@@ -101,7 +101,7 @@ function PainelEmpresa() {
             eyebrow="BOAS-VINDAS - Painel Central"
             greeting="Bem-vinda,"
             name={empresa.nomeEmpresa}
-            description="Gerencie suas vagas, explore novas oportunidades e acompanhe seu crescimento em um so lugar."
+            description="Gerencie suas vagas, explore novas oportunidades e acompanhe seu crescimento em um só lugar."
           />
 
           <section className="dashboard-cards">

@@ -16,7 +16,7 @@ import {
 
 import CandidateStatusTimeline from './CandidateStatusTimeline'
 
-const emptyValue = 'Nao informado'
+const emptyValue = 'Não informado'
 
 const statusLabels = {
   indicado: 'Indicado',
@@ -67,7 +67,7 @@ function CandidateProfileModal({
     { icon: FaPhone, label: 'Telefone', value: candidato.telefone },
     { icon: FaLink, label: 'LinkedIn', value: candidato.linkedin },
     { icon: FaBriefcase, label: 'Cargo atual', value: candidato.cargoAtual },
-    { icon: FaUserTie, label: 'Experiencia', value: candidato.anosExperiencia },
+    { icon: FaUserTie, label: 'Experiência', value: candidato.anosExperiencia },
     { icon: FaFileAlt, label: 'Escolaridade', value: candidato.escolaridade },
     { icon: FaMoneyBillWave, label: 'Expectativa salarial', value: candidato.expectativaSalarial },
     { icon: FaBriefcase, label: 'Modelo de trabalho', value: candidato.modeloTrabalho },
@@ -75,8 +75,8 @@ function CandidateProfileModal({
     { icon: FaBriefcase, label: 'Vaga relacionada', value: candidato.vagaTitulo },
     { icon: FaBriefcase, label: 'Empresa', value: candidato.vagaEmpresa || candidato.empresaNome },
     { icon: FaUser, label: 'Indicador', value: candidato.indicadorNome },
-    { icon: FaCalendarAlt, label: 'Data da indicacao', value: formatDate(candidato.aplicadoEm || candidato.criadoEm) },
-    { icon: FaFileAlt, label: 'Curriculo', value: candidato.curriculoNome }
+    { icon: FaCalendarAlt, label: 'Data da indicação', value: formatDate(candidato.aplicadoEm || candidato.criadoEm) },
+    { icon: FaFileAlt, label: 'Currículo', value: candidato.curriculoNome }
   ]
 
   return (

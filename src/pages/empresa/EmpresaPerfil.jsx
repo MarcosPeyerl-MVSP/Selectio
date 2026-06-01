@@ -21,7 +21,7 @@ import { atualizarPerfilUsuario } from '../../services/firestoreUsers'
 import { listarVagasPorEmpresa } from '../../services/firestoreVagas'
 import { useToast } from '../../hooks/useToast'
 
-const emptyValue = 'Nao informado'
+const emptyValue = 'Não informado'
 
 const getInitialForm = (empresa) => ({
   nomeEmpresa: empresa?.nomeEmpresa || '',
@@ -78,7 +78,7 @@ function EmpresaPerfil({ empresa, onUserUpdate }) {
         setVagas(vagasData)
         setCandidatos(candidatosData)
       } catch {
-        toast.error('Nao foi possivel carregar os dados do perfil da empresa.')
+        toast.error('Não foi possível carregar os dados do perfil da empresa.')
       } finally {
         if (active) setLoading(false)
       }
@@ -137,7 +137,7 @@ function EmpresaPerfil({ empresa, onUserUpdate }) {
       setEditing(false)
       toast.success('Perfil da empresa atualizado.')
     } catch {
-      toast.error('Nao foi possivel salvar o perfil da empresa.')
+      toast.error('Não foi possível salvar o perfil da empresa.')
     } finally {
       setSaving(false)
     }
@@ -156,19 +156,19 @@ function EmpresaPerfil({ empresa, onUserUpdate }) {
       <header className="profile-page-header">
         <span>PERFIL CORPORATIVO</span>
         <h1>Perfil da Empresa</h1>
-        <p>Gerencie a identidade e as informacoes corporativas da sua organizacao na plataforma Selectio.</p>
+        <p>Gerencie a identidade e as informações corporativas da sua organização na plataforma Selectio.</p>
       </header>
 
       <section className="empresa-profile-hero">
         <div className="empresa-profile-avatar">{companyInitial}</div>
         <div>
-          <span>{empresa?.setor || 'Organizacao Selectio'}</span>
+          <span>{empresa?.setor || 'Organização Selectio'}</span>
           <h2>{empresa?.nomeEmpresa || emptyValue}</h2>
           <p>Na plataforma desde {formatDate(empresa?.criadoEm)}</p>
         </div>
         <div className="empresa-profile-actions">
           <button type="button" onClick={() => setEditing((current) => !current)}>
-            <FaEdit /> {editing ? 'Cancelar edicao' : 'Editar informacoes'}
+            <FaEdit /> {editing ? 'Cancelar edição' : 'Editar informações'}
           </button>
           <button type="button" className="ghost" disabled>
             <FaExternalLinkAlt /> Ver perfil publico
@@ -185,7 +185,7 @@ function EmpresaPerfil({ empresa, onUserUpdate }) {
           <ProfileField label="Tamanho" name="tamanho" value={form.tamanho} onChange={handleChange} />
           <ProfileField label="Endereco" name="endereco" value={form.endereco} onChange={handleChange} />
           <button type="submit" disabled={saving}>
-            <FaSave /> {saving ? 'Salvando...' : 'Salvar alteracoes'}
+            <FaSave /> {saving ? 'Salvando...' : 'Salvar alterações'}
           </button>
         </form>
       )}
@@ -207,7 +207,7 @@ function EmpresaPerfil({ empresa, onUserUpdate }) {
         <InfoCard title="Dados institucionais" items={[
           ['Razao social', empresa?.razaoSocial],
           ['CNPJ', empresa?.cnpj],
-          ['Plano', empresa?.plano || 'Plano nao informado']
+          ['Plano', empresa?.plano || 'Plano não informado']
         ]} />
         <InfoCard title="Setor e estrutura" items={[
           ['Setor', empresa?.setor],

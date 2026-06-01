@@ -64,7 +64,7 @@ export const atualizarStatusIndicacaoPorCandidato = async ({ candidatoId, status
   if (!candidatoId) return
 
   if (!empresaId && !indicadorId) {
-    throw new Error('UID do dono e obrigatorio para atualizar a indicacao.')
+    throw new Error('UID do dono é obrigatório para atualizar a indicação.')
   }
 
   const donoFiltro = empresaId

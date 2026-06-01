@@ -120,6 +120,12 @@
   gap: 10px;
 }
 
+.profile-menu-wrapper {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
 .icon-button {
   width: 34px;
   height: 34px;
@@ -150,6 +156,156 @@
 .icon-button:hover svg,
 .icon-button:hover img {
   opacity: 1;
+}
+
+.profile-trigger[aria-expanded='true'] {
+  background: var(--surface);
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 8px 20px rgba(182, 28, 47, 0.15);
+}
+
+.profile-menu {
+  position: absolute;
+  top: calc(100% + 14px);
+  right: 0;
+  width: min(320px, calc(100vw - 32px));
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  box-shadow: 0 24px 60px rgba(23, 23, 23, 0.16);
+  backdrop-filter: blur(18px);
+  z-index: 120;
+  animation: profileMenuIn var(--motion-fast);
+}
+
+.profile-menu::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 16px;
+  width: 12px;
+  height: 12px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  transform: rotate(45deg);
+}
+
+.profile-menu-header {
+  position: relative;
+  display: grid;
+  grid-template-columns: 46px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 10px 14px;
+}
+
+.profile-menu-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(182, 28, 47, 0.1);
+  color: var(--primary);
+  border: 1px solid rgba(182, 28, 47, 0.18);
+}
+
+.profile-menu-avatar svg {
+  width: 18px;
+  height: 18px;
+}
+
+.profile-menu-header strong,
+.profile-menu-header span,
+.profile-menu-header small {
+  display: block;
+}
+
+.profile-menu-header strong {
+  color: var(--text-heading);
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.profile-menu-header span {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  word-break: break-word;
+}
+
+.profile-menu-header small {
+  width: fit-content;
+  margin-top: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.profile-menu-section {
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+
+.profile-menu-section a,
+.profile-menu-section button {
+  width: 100%;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 10px;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.profile-menu-section svg {
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+  transition: var(--transition);
+}
+
+.profile-menu-section a:hover,
+.profile-menu-section button:hover {
+  background: var(--surface-soft);
+  color: var(--primary);
+}
+
+.profile-menu-section a:hover svg,
+.profile-menu-section button:hover svg {
+  color: var(--primary);
+}
+
+.profile-menu-section .logout-item {
+  color: var(--danger);
+}
+
+.profile-menu-section .logout-item svg {
+  color: var(--danger);
+}
+
+@keyframes profileMenuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .theme-toggle {
@@ -205,5 +361,17 @@
   .icon-button {
     width: 30px;
     height: 30px;
+  }
+
+  .profile-menu {
+    position: fixed;
+    top: 68px;
+    right: 14px;
+    left: 14px;
+    width: auto;
+  }
+
+  .profile-menu::before {
+    display: none;
   }
 }
