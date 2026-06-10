@@ -5,11 +5,11 @@ MVP SaaS de recrutamento e indicação de talentos feito com React + Vite e serv
 O projeto usa:
 
 - Firebase Auth para autenticação.
-- Cloud Firestore para perfis, empresas, indicadores, vagas, candidatos e indicações.
+- Cloud Firestore para perfis, empresas, indicadores, vagas, candidatos, indicações e pagamentos.
 - React Router para rotas do painel.
 - CSS modular e React Icons para a interface.
 
-A integração de pagamentos usa Firebase Cloud Functions. O Access Token do Mercado Pago nunca deve ser colocado no frontend.
+A integração de pagamentos usa Firebase Cloud Functions. O Access Token do Mercado Pago nunca deve ser colocado no frontend para evitar invasões por "requisição aberta".
 
 ## Rodar o programa:
 
