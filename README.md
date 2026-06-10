@@ -15,6 +15,9 @@ A integração de pagamentos usa Firebase Cloud Functions. O Access Token do Mer
 
 Crie/configure as variáveis Vite do Firebase em um arquivo `.env` local dentro da pasta `Selectio/` e `Selectio/functions/`
 
+Ademais, antes de rodar qualquer coisa no terminal utilize esse codigo para permitir o uso do React e do Vite
+Set-ExecutionPolicy Unrestricted -Scope CurrentUser
+
 Esses arquivos estão no drive em Documentos/MVP/Atual
 
 Na pasta functions:
