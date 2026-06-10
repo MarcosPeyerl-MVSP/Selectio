@@ -93,6 +93,13 @@
   font-size: 13px;
 }
 
+.empresa-pagamento-item small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
 .empresa-pagamento-meta {
   text-align: right;
 }
@@ -113,6 +120,7 @@
   color: var(--success);
 }
 
+.empresa-pagamento-status.created,
 .empresa-pagamento-status.pending {
   background: var(--warning-bg);
   color: var(--warning);

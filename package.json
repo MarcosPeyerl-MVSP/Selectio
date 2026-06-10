@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "sandbox:mercado-pago": "node scripts/servidorMercadoPagoTeste.cjs",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"

@@ -6,15 +6,15 @@ import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { FaCog, FaMoon, FaSignOutAlt, FaSun, FaUserAlt, FaUserCircle } from 'react-icons/fa'
 import { signOut } from 'firebase/auth'
 import { auth } from '../../services/firebase'
-import { useTheme } from '../../hooks/useTheme'
-import { useConfirm } from '../../hooks/useConfirm'
+import { useTema } from '../../hooks/useTema'
+import { useConfirmacao } from '../../hooks/useConfirmacao'
 import { useToast } from '../../hooks/useToast'
-import NotificationsDropdown from '../notifications/NotificationsDropdown'
+import MenuNotificacoes from '../notificacoes/MenuNotificacoes'
 
 function Navbar() {
   const navigate = useNavigate()
-  const { isDark, toggleTheme } = useTheme()
-  const confirm = useConfirm()
+  const { isDark, toggleTheme } = useTema()
+  const confirm = useConfirmacao()
   const toast = useToast()
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const profileMenuRef = useRef(null)
@@ -102,7 +102,7 @@ function Navbar() {
           </>
         ) : (
           <div className="user-actions">
-            <NotificationsDropdown user={session.user} />
+            <MenuNotificacoes user={session.user} />
             <div className="profile-menu-wrapper" ref={profileMenuRef}>
               <button
                 type="button"

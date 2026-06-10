@@ -1,6 +1,6 @@
-import './BalanceCard.css'
+import './CardSaldo.css'
 
-function BalanceCard({ label, value, helper, tone = 'default' }) {
+function CardSaldo({ label, value, helper, tone = 'default' }) {
   return (
     <article className={`balance-card ${tone}`}>
       <span>{label}</span>
@@ -17,4 +17,4 @@ function formatCurrency(value) {
   })
 }
 
-export default BalanceCard
+export default CardSaldo

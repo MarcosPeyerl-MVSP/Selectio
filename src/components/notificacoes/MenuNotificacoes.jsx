@@ -1,4 +1,4 @@
-import './NotificationsDropdown.css'
+import './MenuNotificacoes.css'
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -8,9 +8,9 @@ import {
   listarNotificacoesUsuario,
   marcarNotificacaoComoLida
 } from '../../services/firestoreNotificacoes'
-import { getFirebaseUid } from '../../services/firebaseIdentity'
+import { getFirebaseUid } from '../../services/identidadeFirebase'
 
-function NotificationsDropdown({ user }) {
+function MenuNotificacoes({ user }) {
   const userId = getFirebaseUid(user)
   const [aberto, setAberto] = useState(false)
   const [notificacoes, setNotificacoes] = useState([])
@@ -96,4 +96,4 @@ function NotificationsDropdown({ user }) {
   )
 }
 
-export default NotificationsDropdown
+export default MenuNotificacoes

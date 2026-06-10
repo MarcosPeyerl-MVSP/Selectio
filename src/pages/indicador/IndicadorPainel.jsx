@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { FaChartBar, FaMoneyBillWave, FaSuitcase, FaUserFriends, FaUserTie } from 'react-icons/fa'
 
-import AccountSettings from '../../components/AccountSettings/AccountSettings'
+import ConfiguracoesConta from '../../components/configuracoes-conta/ConfiguracoesConta'
 import DashboardActionCard from '../../components/dashboard/DashboardActionCard'
 import DashboardHeader from '../../components/dashboard/DashboardHeader'
 import DashboardLayout from '../../components/dashboard/DashboardLayout'
@@ -15,7 +15,7 @@ import IndicadorFinanceiro from './IndicadorFinanceiro'
 import IndicadorPerfil from './IndicadorPerfil'
 import { buscarStatusIndicador } from '../../services/firestoreIndicacoes'
 import { buscarPerfilUsuario } from '../../services/firestoreUsers'
-import { getFirebaseUid } from '../../services/firebaseIdentity'
+import { getFirebaseUid } from '../../services/identidadeFirebase'
 
 const formatCurrency = (value) => Number(value || 0).toLocaleString('pt-BR', {
   style: 'currency',
@@ -144,7 +144,7 @@ function Painel() {
   return (
     <DashboardLayout sidebarType="indicador" user={user}>
       {activeSection === 'configuracoes' ? (
-        <AccountSettings user={user} tipo="indicador" onUserUpdate={setUser} />
+        <ConfiguracoesConta user={user} tipo="indicador" onUserUpdate={setUser} />
       ) : activeSection === 'perfil' ? (
         <IndicadorPerfil user={user} onUserUpdate={setUser} />
       ) : activeSection === 'financeiro' ? (

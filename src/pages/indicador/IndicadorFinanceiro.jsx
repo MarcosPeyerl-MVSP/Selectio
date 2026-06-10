@@ -3,11 +3,11 @@ import './styles/IndicadorFinanceiro.css'
 import { useEffect, useMemo, useState } from 'react'
 import { FaMoneyBillWave, FaWallet } from 'react-icons/fa'
 
-import BalanceCard from '../../components/payments/BalanceCard'
+import CardSaldo from '../../components/pagamentos/CardSaldo'
 import PageLoader from '../../components/ui/PageLoader'
-import { useConfirm } from '../../hooks/useConfirm'
+import { useConfirmacao } from '../../hooks/useConfirmacao'
 import { useToast } from '../../hooks/useToast'
-import { getFirebaseUid } from '../../services/firebaseIdentity'
+import { getFirebaseUid } from '../../services/identidadeFirebase'
 import {
   buscarSaldoIndicador,
   listarMovimentacoesIndicador,
@@ -17,7 +17,7 @@ import { listarNotificacoesUsuario } from '../../services/firestoreNotificacoes'
 
 function IndicadorFinanceiro({ user }) {
   const toast = useToast()
-  const confirm = useConfirm()
+  const confirm = useConfirmacao()
   const indicadorId = getFirebaseUid(user)
   const [saldo, setSaldo] = useState(null)
   const [movimentacoes, setMovimentacoes] = useState([])
@@ -135,10 +135,10 @@ function IndicadorFinanceiro({ user }) {
       </header>
 
       <section className="indicador-saldo-grid">
-        <BalanceCard label="Saldo disponível" value={saldo?.saldoDisponivel} helper="Pode ser solicitado para saque manual." tone="primary" />
-        <BalanceCard label="Saldo pendente" value={saldo?.saldoPendente} helper="Valores em validação de saque." />
-        <BalanceCard label="Total recebido" value={saldo?.totalRecebido} helper="Recompensas aprovadas por contratação." />
-        <BalanceCard label="Total sacado" value={saldo?.totalSacado} helper="Soma de saques pagos futuramente." />
+        <CardSaldo label="Saldo disponível" value={saldo?.saldoDisponivel} helper="Pode ser solicitado para saque manual." tone="primary" />
+        <CardSaldo label="Saldo pendente" value={saldo?.saldoPendente} helper="Valores em validação de saque." />
+        <CardSaldo label="Total recebido" value={saldo?.totalRecebido} helper="Recompensas aprovadas por contratação." />
+        <CardSaldo label="Total sacado" value={saldo?.totalSacado} helper="Soma de saques pagos futuramente." />
       </section>
 
       <div className="indicador-financeiro-grid">

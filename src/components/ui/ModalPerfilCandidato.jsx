@@ -1,4 +1,4 @@
-import './CandidateProfileModal.css'
+import './ModalPerfilCandidato.css'
 
 import { useEffect } from 'react'
 import {
@@ -14,7 +14,7 @@ import {
   FaUserTie
 } from 'react-icons/fa'
 
-import CandidateStatusTimeline from './CandidateStatusTimeline'
+import LinhaStatusCandidato from './LinhaStatusCandidato'
 
 const emptyValue = 'Não informado'
 
@@ -43,7 +43,7 @@ function formatDate(value) {
   }).replace('.', '')
 }
 
-function CandidateProfileModal({
+function ModalPerfilCandidato({
   candidato,
   onClose,
   editableStatus = false,
@@ -104,7 +104,7 @@ function CandidateProfileModal({
             <span>Status</span>
             <p>Acompanhamento do processo seletivo</p>
           </div>
-          <CandidateStatusTimeline
+          <LinhaStatusCandidato
             status={status}
             editable={editableStatus}
             loading={loadingStatus}
@@ -173,4 +173,4 @@ function ProfileTags({ title, values }) {
   )
 }
 
-export default CandidateProfileModal
+export default ModalPerfilCandidato

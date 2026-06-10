@@ -13,7 +13,7 @@ import {
   FaUserTie
 } from 'react-icons/fa'
 
-import AccountSettings from '../../components/AccountSettings/AccountSettings'
+import ConfiguracoesConta from '../../components/configuracoes-conta/ConfiguracoesConta'
 import DashboardActionCard from '../../components/dashboard/DashboardActionCard'
 import DashboardHeader from '../../components/dashboard/DashboardHeader'
 import DashboardLayout from '../../components/dashboard/DashboardLayout'
@@ -88,7 +88,7 @@ function PainelEmpresa() {
   return (
     <DashboardLayout sidebarType="empresa" user={empresa}>
       {activeSection === 'configuracoes' ? (
-        <AccountSettings user={empresa} tipo="empresa" onUserUpdate={setEmpresa} />
+        <ConfiguracoesConta user={empresa} tipo="empresa" onUserUpdate={setEmpresa} />
       ) : activeSection === 'perfil' ? (
         <EmpresaPerfil empresa={empresa} onUserUpdate={setEmpresa} />
       ) : activeSection === 'entrevistas' ? (

@@ -12,11 +12,11 @@ import {
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import Footer from '../../components/layout/Footer'
-import CandidateProfileModal from '../../components/ui/CandidateProfileModal'
-import CandidateStatusTimeline from '../../components/ui/CandidateStatusTimeline'
-import SkeletonCard from '../../components/ui/SkeletonCard'
+import ModalPerfilCandidato from '../../components/ui/ModalPerfilCandidato'
+import LinhaStatusCandidato from '../../components/ui/LinhaStatusCandidato'
+import CardEsqueleto from '../../components/ui/CardEsqueleto'
 import { listarCandidatosPorIndicador } from '../../services/firestoreCandidatos'
-import { getFirebaseUid } from '../../services/firebaseIdentity'
+import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { useToast } from '../../hooks/useToast'
 
 // Status disponíveis para filtro na interface.
@@ -205,7 +205,7 @@ function Candidatos() {
           {/* Mensagens de carregamento e erro da busca de candidatos. */}
           {loading && (
             <section className="candidate-grid">
-              <SkeletonCard count={6} />
+              <CardEsqueleto count={6} />
             </section>
           )}
           {error && <p className="candidate-feedback error">{error}</p>}
@@ -240,7 +240,7 @@ function Candidatos() {
                       </div>
                     </div>
 
-                    <CandidateStatusTimeline status={candidato.status || 'indicado'} variant="compact" />
+                    <LinhaStatusCandidato status={candidato.status || 'indicado'} variant="compact" />
 
                     <div className="candidate-card-actions">
                       <button type="button" onClick={() => setSelectedCandidate(candidato)}>
@@ -265,7 +265,7 @@ function Candidatos() {
       </div>
 
       {selectedCandidate && (
-        <CandidateProfileModal
+        <ModalPerfilCandidato
           candidato={selectedCandidate}
           onClose={() => setSelectedCandidate(null)}
         />

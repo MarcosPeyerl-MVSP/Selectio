@@ -11,7 +11,7 @@ import Sidebar from '../../components/layout/Sidebar'
 import Footer from '../../components/layout/Footer'
 import PageLoader from '../../components/ui/PageLoader'
 import { buscarVagaPorId, editarVaga } from '../../services/firestoreVagas'
-import { getFirebaseUid } from '../../services/firebaseIdentity'
+import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { useToast } from '../../hooks/useToast'
 
 // Estado inicial do formulário de edição da vaga.

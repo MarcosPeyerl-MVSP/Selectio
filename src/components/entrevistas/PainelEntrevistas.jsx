@@ -15,8 +15,8 @@ import {
 } from 'react-icons/fa'
 
 import PageLoader from '../ui/PageLoader'
-import SkeletonCard from '../ui/SkeletonCard'
-import { useConfirm } from '../../hooks/useConfirm'
+import CardEsqueleto from '../ui/CardEsqueleto'
+import { useConfirmacao } from '../../hooks/useConfirmacao'
 import { useToast } from '../../hooks/useToast'
 import {
   atualizarEntrevista,
@@ -29,7 +29,7 @@ import {
   atualizarStatusCandidato,
   listarCandidatosPorEmpresa
 } from '../../services/firestoreCandidatos'
-import { getFirebaseUid } from '../../services/firebaseIdentity'
+import { getFirebaseUid } from '../../services/identidadeFirebase'
 import {
   montarDescricaoEntrevista,
   montarTituloMeet,
@@ -114,7 +114,7 @@ const ordenarCandidatosAgendaveis = (primeiroCandidato, segundoCandidato) => {
 function PainelEntrevistas({ empresa }) {
   const empresaId = getFirebaseUid(empresa)
   const toast = useToast()
-  const confirm = useConfirm()
+  const confirm = useConfirmacao()
 
   const hoje = useMemo(() => formatarChaveData(new Date()), [])
   const [mesAtual, setMesAtual] = useState(() => new Date())
@@ -460,7 +460,7 @@ function PainelEntrevistas({ empresa }) {
       <section className="painel-entrevistas">
         <PageLoader label="Carregando entrevistas..." compact />
         <div className="entrevistas-carregando-grid">
-          <SkeletonCard count={3} lines={3} />
+          <CardEsqueleto count={3} lines={3} />
         </div>
       </section>
     )

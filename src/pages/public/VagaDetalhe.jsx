@@ -14,7 +14,7 @@ import {
   FaEdit,
 } from 'react-icons/fa'
 import { buscarVagaPorId } from '../../services/firestoreVagas'
-import { getFirebaseUid } from '../../services/firebaseIdentity'
+import { getFirebaseUid } from '../../services/identidadeFirebase'
 
 // Responsabilidade: identificar o perfil atual com base nos dados salvos no localStorage.
 const getPerfil = () => {

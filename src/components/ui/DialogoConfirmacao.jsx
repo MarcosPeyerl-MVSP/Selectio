@@ -1,9 +1,9 @@
-import './ConfirmDialog.css'
+import './DialogoConfirmacao.css'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FaExclamationTriangle, FaTimes } from 'react-icons/fa'
 
-import { ConfirmContext } from './confirmContext'
+import { ContextoConfirmacao } from './contextoConfirmacao'
 
 const defaultOptions = {
   title: 'Confirmar ação',
@@ -13,7 +13,7 @@ const defaultOptions = {
   tone: 'danger'
 }
 
-export function ConfirmProvider({ children }) {
+export function ProvedorConfirmacao({ children }) {
   const [dialog, setDialog] = useState(null)
   const resolverRef = useRef(null)
 
@@ -34,14 +34,14 @@ export function ConfirmProvider({ children }) {
   const value = useMemo(() => ({ confirm }), [confirm])
 
   return (
-    <ConfirmContext.Provider value={value}>
+    <ContextoConfirmacao.Provider value={value}>
       {children}
-      {dialog && <ConfirmDialog options={dialog} onCancel={() => close(false)} onConfirm={() => close(true)} />}
-    </ConfirmContext.Provider>
+      {dialog && <DialogoConfirmacao options={dialog} onCancel={() => close(false)} onConfirm={() => close(true)} />}
+    </ContextoConfirmacao.Provider>
   )
 }
 
-function ConfirmDialog({ options, onCancel, onConfirm }) {
+function DialogoConfirmacao({ options, onCancel, onConfirm }) {
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') onCancel()
@@ -87,4 +87,4 @@ function ConfirmDialog({ options, onCancel, onConfirm }) {
   )
 }
 
-export default ConfirmDialog
+export default DialogoConfirmacao

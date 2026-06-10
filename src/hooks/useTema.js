@@ -16,7 +16,7 @@ const applyTheme = (theme) => {
   document.documentElement.dataset.theme = theme
 }
 
-export function useTheme() {
+export function useTema() {
   const [theme, setTheme] = useState(() => {
     const initialTheme = getStoredTheme()
     applyTheme(initialTheme)

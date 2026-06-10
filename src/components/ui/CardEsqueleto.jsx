@@ -1,6 +1,6 @@
 import './PageLoader.css'
 
-function SkeletonCard({ count = 1, lines = 3, className = '' }) {
+function CardEsqueleto({ count = 1, lines = 3, className = '' }) {
   const cards = Array.from({ length: count }, (_, index) => index)
 
   return (
@@ -18,4 +18,4 @@ function SkeletonCard({ count = 1, lines = 3, className = '' }) {
   )
 }
 
-export default SkeletonCard
+export default CardEsqueleto

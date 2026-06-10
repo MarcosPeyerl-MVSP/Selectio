@@ -1,4 +1,4 @@
-import './CandidateStatusTimeline.css'
+import './LinhaStatusCandidato.css'
 
 import { FaBan, FaBriefcase, FaCheck, FaComments, FaUserCheck } from 'react-icons/fa'
 
@@ -19,7 +19,7 @@ const normalizeStatus = (status) => {
   return steps.some((step) => step.value === status) ? status : 'indicado'
 }
 
-function CandidateStatusTimeline({
+function LinhaStatusCandidato({
   status,
   editable = false,
   loading = false,
@@ -82,4 +82,4 @@ function CandidateStatusTimeline({
   )
 }
 
-export default CandidateStatusTimeline
+export default LinhaStatusCandidato

@@ -11,7 +11,7 @@ import {
   where
 } from 'firebase/firestore'
 import { db } from './firebase'
-import { getFirebaseUid } from './firebaseIdentity'
+import { getFirebaseUid } from './identidadeFirebase'
 import { atualizarStatusIndicacaoPorCandidato, registrarIndicacao } from './firestoreIndicacoes'
 
 const candidatosCollection = collection(db, 'candidatos')

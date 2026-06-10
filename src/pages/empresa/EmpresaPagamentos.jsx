@@ -1,14 +1,20 @@
 import './styles/EmpresaPagamentos.css'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { FaCreditCard, FaExternalLinkAlt, FaReceipt } from 'react-icons/fa'
+import { useSearchParams } from 'react-router-dom'
 
 import PageLoader from '../../components/ui/PageLoader'
 import { useToast } from '../../hooks/useToast'
-import { getFirebaseUid } from '../../services/firebaseIdentity'
-import { listarPagamentosPorEmpresa } from '../../services/firestorePagamentos'
+import { getFirebaseUid } from '../../services/identidadeFirebase'
+import {
+  listarPagamentosPorEmpresa,
+  obterCheckoutUrlPagamento,
+  sincronizarPagamentoMercadoPago
+} from '../../services/firestorePagamentos'
 
 const statusLabels = {
+  created: 'Criado',
   pending: 'Pendente',
   approved: 'Aprovado',
   rejected: 'Recusado',
@@ -19,9 +25,11 @@ const statusLabels = {
 
 function EmpresaPagamentos({ empresa }) {
   const toast = useToast()
+  const [searchParams, setSearchParams] = useSearchParams()
   const empresaId = getFirebaseUid(empresa)
   const [pagamentos, setPagamentos] = useState([])
   const [carregando, setCarregando] = useState(true)
+  const retornoProcessado = useRef('')
 
   useEffect(() => {
     let ativo = true
@@ -33,7 +41,49 @@ function EmpresaPagamentos({ empresa }) {
       }
 
       try {
-        const dados = await listarPagamentosPorEmpresa(empresaId)
+        const paymentId = searchParams.get('payment_id') || searchParams.get('collection_id')
+
+        if (paymentId && retornoProcessado.current !== paymentId) {
+          retornoProcessado.current = paymentId
+          const pagamentoAtualizado = await sincronizarPagamentoMercadoPago({ paymentId })
+
+          if (pagamentoAtualizado?.status === 'approved') {
+            toast.success('Pagamento de teste aprovado e transação atualizada.')
+          } else if (pagamentoAtualizado?.status === 'pending') {
+            toast.warning('Pagamento ainda pendente no Mercado Pago.')
+          } else {
+            toast.error('O pagamento não foi aprovado pelo Mercado Pago.')
+          }
+
+          const parametrosLimpos = new URLSearchParams(searchParams)
+          ;[
+            'collection_id',
+            'collection_status',
+            'external_reference',
+            'merchant_order_id',
+            'payment_id',
+            'payment_type',
+            'preference_id',
+            'site_id',
+            'status'
+          ].forEach((parametro) => parametrosLimpos.delete(parametro))
+          setSearchParams(parametrosLimpos, { replace: true })
+        }
+
+        let dados = await listarPagamentosPorEmpresa(empresaId)
+        const pendentes = dados
+          .filter((pagamento) => pagamento.status === 'pending')
+          .slice(0, 10)
+
+        if (pendentes.length) {
+          await Promise.allSettled(
+            pendentes.map((pagamento) => sincronizarPagamentoMercadoPago({
+              pagamentoId: pagamento.id
+            }))
+          )
+          dados = await listarPagamentosPorEmpresa(empresaId)
+        }
+
         if (ativo) setPagamentos(dados)
       } catch (error) {
         toast.error(error.message || 'Não foi possível carregar pagamentos.')
@@ -47,7 +97,7 @@ function EmpresaPagamentos({ empresa }) {
     return () => {
       ativo = false
     }
-  }, [empresaId, toast])
+  }, [empresaId, searchParams, setSearchParams, toast])
 
   const metricas = useMemo(() => ({
     totalCriado: pagamentos.reduce((soma, pagamento) => soma + Number(pagamento.valor || 0), 0),
@@ -87,6 +137,13 @@ function EmpresaPagamentos({ empresa }) {
               <div>
                 <strong>{pagamento.candidatoNome || 'Candidato'}</strong>
                 <span>{pagamento.vagaTitulo || 'Vaga não informada'} - {pagamento.indicadorNome || 'Indicador'}</span>
+                <small>Criado em {formatDateTime(pagamento.criadoEm)}</small>
+                {pagamento.transacaoEm && (
+                  <small>Transação em {formatDateTime(pagamento.transacaoEm)}</small>
+                )}
+                {pagamento.encerradoEm && (
+                  <small>Encerrado em {formatDateTime(pagamento.encerradoEm)}</small>
+                )}
               </div>
 
               <div className="empresa-pagamento-meta">
@@ -96,8 +153,12 @@ function EmpresaPagamentos({ empresa }) {
                 </span>
               </div>
 
-              {pagamento.status === 'pending' && (pagamento.checkoutUrl || pagamento.sandboxCheckoutUrl) && (
-                <a href={pagamento.checkoutUrl || pagamento.sandboxCheckoutUrl}>
+              {pagamento.status === 'pending' && obterCheckoutUrlPagamento(pagamento) && (
+                <a
+                  href={obterCheckoutUrlPagamento(pagamento)}
+                  target={obterCheckoutUrlPagamento(pagamento).includes('sandbox.mercadopago') ? '_blank' : undefined}
+                  rel="noreferrer"
+                >
                   <FaExternalLinkAlt /> Continuar checkout
                 </a>
               )}
@@ -129,6 +190,15 @@ function formatCurrency(value) {
     style: 'currency',
     currency: 'BRL'
   })
+}
+
+function formatDateTime(value) {
+  if (!value) return 'não informado'
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'não informado'
+
+  return date.toLocaleString('pt-BR')
 }
 
 export default EmpresaPagamentos

@@ -16,12 +16,12 @@ import {
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import Footer from '../../components/layout/Footer'
-import PaymentRewardModal from '../../components/payments/PaymentRewardModal'
-import CandidateProfileModal from '../../components/ui/CandidateProfileModal'
-import CandidateStatusTimeline from '../../components/ui/CandidateStatusTimeline'
-import SkeletonCard from '../../components/ui/SkeletonCard'
+import ModalPagamentoRecompensa from '../../components/pagamentos/ModalPagamentoRecompensa'
+import ModalPerfilCandidato from '../../components/ui/ModalPerfilCandidato'
+import LinhaStatusCandidato from '../../components/ui/LinhaStatusCandidato'
+import CardEsqueleto from '../../components/ui/CardEsqueleto'
 import { atualizarStatusCandidato, listarCandidatosPorEmpresa } from '../../services/firestoreCandidatos'
-import { getFirebaseUid } from '../../services/firebaseIdentity'
+import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { listarPagamentosPorEmpresa } from '../../services/firestorePagamentos'
 import { useToast } from '../../hooks/useToast'
 
@@ -232,13 +232,13 @@ function CandidatosEmpresa() {
       {
         id: pagamento.pagamentoId,
         mercadoPagoPreferenceId: pagamento.preferenceId,
-        status: 'pending',
+        status: pagamento.status || 'pending',
         candidatoId: paymentCandidate.id,
         candidatoNome: paymentCandidate.nome,
         vagaTitulo: paymentCandidate.vagaTitulo,
         indicadorNome: paymentCandidate.indicadorNome,
-        checkoutUrl: pagamento.checkoutUrl || pagamento.initPoint,
-        sandboxCheckoutUrl: pagamento.sandboxInitPoint,
+        checkoutUrl: pagamento.sandboxInitPoint || pagamento.checkoutUrl || pagamento.initPoint,
+        sandboxCheckoutUrl: pagamento.sandboxInitPoint || '',
         criadoEm: new Date().toISOString()
       },
       ...current
@@ -256,7 +256,7 @@ function CandidatosEmpresa() {
 
         <main className="empresa-candidatos-page">
           <header className="empresa-candidatos-header">
-            <span>Gestão de talentos - Q3 pipeline</span>
+            <span>Gestão de talentos</span>
             <h1>Visualização de Candidatos</h1>
             <p>Curadoria estratégica de profissionais em processo seletivo. Analise o progresso das candidaturas através do pipeline editorial da Selectio.</p>
             <a href="/vagas">Voltar para minhas vagas</a>
@@ -290,7 +290,7 @@ function CandidatosEmpresa() {
           {/* Mensagens de carregamento e erro. */}
           {loading && (
             <section className="empresa-candidate-grid">
-              <SkeletonCard count={6} />
+              <CardEsqueleto count={6} />
             </section>
           )}
           {error && <p className="empresa-candidate-feedback error">{error}</p>}
@@ -324,7 +324,7 @@ function CandidatosEmpresa() {
                       <span><FaCalendarAlt /> Aplicado em {formatDate(candidato.aplicadoEm)}</span>
                     </div>
 
-                    <CandidateStatusTimeline
+                    <LinhaStatusCandidato
                       status={status}
                       editable
                       loading={updatingId === candidato.id}
@@ -358,7 +358,7 @@ function CandidatosEmpresa() {
               <button className="empresa-load-more" type="button">
                 <span><FaChevronDown /></span>
                 <strong>Visualizar mais candidatos</strong>
-                <small>Carregar registros adicionais do banco de talentos Q3.</small>
+                <small>Carregar registros do banco de talentos.</small>
               </button>
             </section>
           )}
@@ -366,7 +366,7 @@ function CandidatosEmpresa() {
       </div>
 
       {selectedCandidate && (
-        <CandidateProfileModal
+        <ModalPerfilCandidato
           candidato={selectedCandidate}
           onClose={() => setSelectedCandidate(null)}
           editableStatus
@@ -377,7 +377,7 @@ function CandidatosEmpresa() {
 
       {/* Componente de rodapé. */}
       {paymentCandidate && (
-        <PaymentRewardModal
+        <ModalPagamentoRecompensa
           candidato={paymentCandidate}
           empresa={empresa}
           pagamentoExistente={pagamentosPorCandidato.get(paymentCandidate.id)}

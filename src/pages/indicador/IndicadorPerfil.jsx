@@ -15,7 +15,7 @@ import {
 import PageLoader from '../../components/ui/PageLoader'
 import { auth } from '../../services/firebase'
 import { listarCandidatosPorIndicador } from '../../services/firestoreCandidatos'
-import { getFirebaseUid } from '../../services/firebaseIdentity'
+import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { listarIndicacoesPorIndicador } from '../../services/firestoreIndicacoes'
 import { atualizarPerfilUsuario } from '../../services/firestoreUsers'
 import { useToast } from '../../hooks/useToast'

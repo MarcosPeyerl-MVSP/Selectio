@@ -8,10 +8,10 @@ import { Link } from 'react-router-dom'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import Footer from '../../components/layout/Footer'
-import SkeletonCard from '../../components/ui/SkeletonCard'
+import CardEsqueleto from '../../components/ui/CardEsqueleto'
 import { FiSearch } from 'react-icons/fi'
 import { listarVagas } from '../../services/firestoreVagas'
-import { getFirebaseUid } from '../../services/firebaseIdentity'
+import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { useToast } from '../../hooks/useToast'
 
 // Responsabilidade: formatar o valor digitado no filtro de salário como moeda brasileira.
@@ -206,7 +206,7 @@ function Vagas() {
 
         {/* Grade com os cards das vagas filtradas. */}
         <section className="vagas-grid">
-          {loading && <SkeletonCard count={6} />}
+          {loading && <CardEsqueleto count={6} />}
           {error && <p>Erro ao carregar vagas: {error}</p>}
 
           {!loading && !error && vagasFiltradas.map((vaga) => {

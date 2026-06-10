@@ -1,3 +1,4 @@
+const crypto = require('node:crypto')
 const admin = require('firebase-admin')
 const functions = require('firebase-functions')
 
@@ -20,19 +21,26 @@ const STATUS_PAGAMENTO = {
 
 const moedaPadrao = 'BRL'
 const regiao = 'us-central1'
+const STATUS_ENCERRADOS = new Set(['approved', 'rejected', 'cancelled', 'refunded', 'failed'])
 
 function erroHttps(codigo, mensagem) {
   throw new functions.https.HttpsError(codigo, mensagem)
 }
 
 function obterAccessToken() {
-  const token = process.env.MERCADO_PAGO_ACCESS_TOKEN
+  const token = ambienteSandbox()
+    ? process.env.MERCADO_PAGO_TEST_ACCESS_TOKEN || process.env.MERCADO_PAGO_ACCESS_TOKEN
+    : process.env.MERCADO_PAGO_ACCESS_TOKEN
 
   if (!token) {
-    throw new Error('MERCADO_PAGO_ACCESS_TOKEN não configurado nas Cloud Functions.')
+    throw new Error('Access Token do Mercado Pago não configurado nas Cloud Functions.')
   }
 
   return token
+}
+
+function ambienteSandbox() {
+  return String(process.env.MP_ENVIRONMENT || '').toLowerCase() === 'sandbox'
 }
 
 function obterAppUrl() {
@@ -42,12 +50,8 @@ function obterAppUrl() {
 function obterWebhookUrl() {
   const projectId = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || admin.app().options.projectId
   const urlBase = process.env.MP_WEBHOOK_URL || `https://${regiao}-${projectId}.cloudfunctions.net/mercadoPagoWebhook`
-  const segredo = process.env.MP_WEBHOOK_SECRET
-
-  if (!segredo) return urlBase
-
   const separador = urlBase.includes('?') ? '&' : '?'
-  return `${urlBase}${separador}secret=${encodeURIComponent(segredo)}`
+  return `${urlBase}${separador}source_news=webhooks`
 }
 
 function validarWebhook(req) {
@@ -55,7 +59,30 @@ function validarWebhook(req) {
 
   if (!segredo) return true
 
-  return req.query.secret === segredo
+  const assinatura = String(req.get('x-signature') || '')
+  const requestId = String(req.get('x-request-id') || '')
+  const dataId = String(req.query['data.id'] || req.body?.data?.id || '').toLowerCase()
+  const partes = Object.fromEntries(
+    assinatura.split(',').map((parte) => {
+      const [chave, valor] = parte.trim().split('=', 2)
+      return [chave, valor]
+    })
+  )
+
+  if (!partes.ts || !partes.v1 || !requestId || !dataId) return false
+
+  const manifesto = `id:${dataId};request-id:${requestId};ts:${partes.ts};`
+  const esperado = crypto
+    .createHmac('sha256', segredo)
+    .update(manifesto)
+    .digest('hex')
+
+  if (esperado.length !== partes.v1.length) return false
+
+  return crypto.timingSafeEqual(
+    Buffer.from(esperado, 'utf8'),
+    Buffer.from(partes.v1, 'utf8')
+  )
 }
 
 function numeroPositivo(valor) {
@@ -113,6 +140,21 @@ function normalizarStatusMercadoPago(status) {
   return STATUS_PAGAMENTO[status] || 'failed'
 }
 
+function timestampMercadoPago(valor) {
+  if (!valor) return null
+
+  const data = new Date(valor)
+  return Number.isNaN(data.getTime()) ? null : admin.firestore.Timestamp.fromDate(data)
+}
+
+function checkoutUrlPreferida(preferencia) {
+  if (ambienteSandbox()) {
+    return preferencia.sandbox_init_point || preferencia.init_point || ''
+  }
+
+  return preferencia.init_point || preferencia.sandbox_init_point || ''
+}
+
 async function chamarMercadoPago(caminho, opcoes = {}) {
   const resposta = await globalThis.fetch(`https://api.mercadopago.com${caminho}`, {
     ...opcoes,
@@ -131,6 +173,24 @@ async function chamarMercadoPago(caminho, opcoes = {}) {
   }
 
   return corpo
+}
+
+async function buscarPagamentoMercadoPagoPorReferencia(externalReference) {
+  const agora = new Date()
+  const inicio = new Date(agora)
+  inicio.setDate(inicio.getDate() - 30)
+  const parametros = new URLSearchParams({
+    sort: 'date_created',
+    criteria: 'desc',
+    external_reference: externalReference,
+    range: 'date_created',
+    begin_date: inicio.toISOString(),
+    end_date: agora.toISOString(),
+    limit: '1'
+  })
+  const resultado = await chamarMercadoPago(`/v1/payments/search?${parametros}`)
+
+  return Array.isArray(resultado.results) ? resultado.results[0] || null : null
 }
 
 async function buscarIndicacao({ indicacaoId, candidatoId, empresaId }) {
@@ -278,10 +338,14 @@ async function criarPreferenciaPagamentoHandler(dados = {}, contexto) {
     }
 
     if (pendente) {
+      const checkoutUrl = pendente.ambiente === 'sandbox'
+        ? pendente.sandboxCheckoutUrl || pendente.checkoutUrl || ''
+        : pendente.checkoutUrl || pendente.sandboxCheckoutUrl || ''
+
       return {
         pagamentoId: pendente.id,
         preferenceId: pendente.mercadoPagoPreferenceId,
-        checkoutUrl: pendente.checkoutUrl || pendente.sandboxCheckoutUrl || '',
+        checkoutUrl,
         initPoint: pendente.checkoutUrl,
         sandboxInitPoint: pendente.sandboxCheckoutUrl,
         reused: true
@@ -320,6 +384,7 @@ async function criarPreferenciaPagamentoHandler(dados = {}, contexto) {
     }
 
     const pagamentoRef = db.collection('pagamentos').doc()
+    const transacaoRef = db.collection('transacoesPagamento').doc(pagamentoRef.id)
     const finalIndicacaoId = indicacao?.id || indicacaoId || ''
     const vagaTitulo = textoSeguro(vaga.titulo || candidato.vagaTitulo || indicacao?.vagaTitulo, 'Vaga Selectio')
     const candidatoNome = textoSeguro(candidato.nome || indicacao?.candidatoNome, 'Candidato')
@@ -335,9 +400,10 @@ async function criarPreferenciaPagamentoHandler(dados = {}, contexto) {
 
     const agora = FieldValue.serverTimestamp()
     const pagamento = {
+      ambiente: ambienteSandbox() ? 'sandbox' : 'producao',
       mercadoPagoPreferenceId: '',
       mercadoPagoPaymentId: '',
-      status: 'pending',
+      status: 'created',
       statusDetail: '',
       valor,
       moeda: moedaPadrao,
@@ -354,18 +420,48 @@ async function criarPreferenciaPagamentoHandler(dados = {}, contexto) {
       checkoutUrl: '',
       sandboxCheckoutUrl: '',
       externalReference: referenciaExterna,
+      transacaoId: transacaoRef.id,
       creditado: false,
       criadoEm: agora,
       atualizadoEm: agora
     }
 
-    await pagamentoRef.set(pagamento)
+    const transacao = {
+      pagamentoId: pagamentoRef.id,
+      empresaId,
+      indicadorId,
+      ambiente: ambienteSandbox() ? 'sandbox' : 'producao',
+      status: 'created',
+      statusDetail: '',
+      mercadoPagoPreferenceId: '',
+      mercadoPagoPaymentId: '',
+      valor,
+      moeda: moedaPadrao,
+      criadoEm: agora,
+      atualizadoEm: agora,
+      encerradoEm: null,
+      transacaoEm: null
+    }
+
+    const loteCriacao = db.batch()
+    loteCriacao.set(pagamentoRef, pagamento)
+    loteCriacao.set(transacaoRef, transacao)
+    await loteCriacao.commit()
 
     let preferencia
 
     try {
+      const payer = ambienteSandbox()
+        ? undefined
+        : { email: empresa.email || contexto.auth.token.email || undefined }
+      const appUrl = obterAppUrl()
+      const autoReturn = appUrl.startsWith('https://') ? { auto_return: 'approved' } : {}
+
       preferencia = await chamarMercadoPago('/checkout/preferences', {
         method: 'POST',
+        headers: {
+          'X-Idempotency-Key': crypto.randomUUID()
+        },
         body: JSON.stringify({
           items: [
             {
@@ -375,15 +471,14 @@ async function criarPreferenciaPagamentoHandler(dados = {}, contexto) {
               currency_id: moedaPadrao
             }
           ],
-          payer: {
-            email: empresa.email || contexto.auth.token.email || undefined
-          },
+          ...(payer ? { payer } : {}),
           back_urls: {
-            success: `${obterAppUrl()}/painel/empresa?secao=pagamentos&status=success`,
-            failure: `${obterAppUrl()}/painel/empresa?secao=pagamentos&status=failure`,
-            pending: `${obterAppUrl()}/painel/empresa?secao=pagamentos&status=pending`
+            success: `${appUrl}/painel/empresa?secao=pagamentos&status=success`,
+            failure: `${appUrl}/painel/empresa?secao=pagamentos&status=failure`,
+            pending: `${appUrl}/painel/empresa?secao=pagamentos&status=pending`
           },
-          auto_return: 'approved',
+          ...autoReturn,
+          binary_mode: false,
           notification_url: obterWebhookUrl(),
           external_reference: referenciaExterna,
           metadata: {
@@ -397,38 +492,75 @@ async function criarPreferenciaPagamentoHandler(dados = {}, contexto) {
         })
       })
     } catch (error) {
-      await pagamentoRef.update({
+      const atualizacaoFalha = {
         status: 'failed',
         statusDetail: 'erro_criar_preferencia',
         erroCriacao: error.message || 'Erro ao criar preferência Mercado Pago.',
-        atualizadoEm: FieldValue.serverTimestamp()
+        atualizadoEm: FieldValue.serverTimestamp(),
+        encerradoEm: FieldValue.serverTimestamp()
+      }
+      const loteFalha = db.batch()
+      loteFalha.update(pagamentoRef, atualizacaoFalha)
+      loteFalha.update(transacaoRef, {
+        status: atualizacaoFalha.status,
+        statusDetail: atualizacaoFalha.statusDetail,
+        atualizadoEm: atualizacaoFalha.atualizadoEm,
+        encerradoEm: atualizacaoFalha.encerradoEm
       })
+      await loteFalha.commit()
       throw error
     }
 
-    await pagamentoRef.update({
+    const checkoutUrl = checkoutUrlPreferida(preferencia)
+    const lotePreferencia = db.batch()
+    lotePreferencia.update(pagamentoRef, {
       mercadoPagoPreferenceId: preferencia.id || '',
-      checkoutUrl: preferencia.init_point || '',
+      status: 'pending',
+      checkoutUrl,
       sandboxCheckoutUrl: preferencia.sandbox_init_point || '',
       atualizadoEm: FieldValue.serverTimestamp()
     })
+    lotePreferencia.update(transacaoRef, {
+      mercadoPagoPreferenceId: preferencia.id || '',
+      status: 'pending',
+      atualizadoEm: FieldValue.serverTimestamp()
+    })
+    await lotePreferencia.commit()
 
     return {
       pagamentoId: pagamentoRef.id,
       preferenceId: preferencia.id,
-      checkoutUrl: preferencia.init_point || preferencia.sandbox_init_point || '',
+      checkoutUrl,
       initPoint: preferencia.init_point || '',
-      sandboxInitPoint: preferencia.sandbox_init_point || ''
+      sandboxInitPoint: preferencia.sandbox_init_point || '',
+      ambiente: ambienteSandbox() ? 'sandbox' : 'producao',
+      status: 'pending'
     }
+}
+
+async function criarPreferenciaPagamentoCallable(dados, contexto) {
+  try {
+    return await criarPreferenciaPagamentoHandler(dados, contexto)
+  } catch (error) {
+    if (error instanceof functions.https.HttpsError) {
+      throw error
+    }
+
+    console.error('Erro ao criar preferência de pagamento:', error)
+    erroHttps(
+      'unavailable',
+      'Não foi possível criar o pagamento no Mercado Pago. Verifique a configuração e tente novamente.'
+    )
+  }
 }
 
 exports.criarPreferenciaPagamento = functions
   .region(regiao)
-  .https.onCall(criarPreferenciaPagamentoHandler)
+  .https.onCall(criarPreferenciaPagamentoCallable)
 
 exports.createMercadoPagoPreference = functions
   .region(regiao)
-  .https.onCall(criarPreferenciaPagamentoHandler)
+  .https.onCall(criarPreferenciaPagamentoCallable)
 
 exports.solicitarSaqueIndicador = functions
   .region(regiao)
@@ -505,11 +637,224 @@ exports.solicitarSaqueIndicador = functions
     }
   })
 
+async function processarPagamentoMercadoPago(pagamentoMp, empresaIdEsperada = '') {
+  const referenciaExterna = pagamentoMp.external_reference
+  const pagamentoId = extrairPagamentoIdDaReferencia(referenciaExterna)
+
+  if (!pagamentoId) {
+    throw new Error('Pagamento sem referência externa válida.')
+  }
+
+  const pagamentoRef = db.collection('pagamentos').doc(pagamentoId)
+  const transacaoRef = db.collection('transacoesPagamento').doc(pagamentoId)
+  const statusRecebido = normalizarStatusMercadoPago(pagamentoMp.status)
+  const valorPago = Number(pagamentoMp.transaction_amount || 0)
+  let resultado
+
+  await db.runTransaction(async (transaction) => {
+    const pagamentoDoc = await transaction.get(pagamentoRef)
+
+    if (!pagamentoDoc.exists) {
+      throw new Error('Pagamento interno não encontrado.')
+    }
+
+    const pagamento = pagamentoDoc.data()
+    if (empresaIdEsperada && pagamento.empresaId !== empresaIdEsperada) {
+      throw new functions.https.HttpsError(
+        'permission-denied',
+        'Este pagamento não pertence à empresa autenticada.'
+      )
+    }
+
+    const agora = FieldValue.serverTimestamp()
+    const valorEsperado = Number(pagamento.valor || 0)
+    const valorConfere = Math.abs(valorPago - valorEsperado) < 0.01
+    const status = valorConfere ? statusRecebido : 'failed'
+    const statusDetail = valorConfere
+      ? textoSeguro(pagamentoMp.status_detail)
+      : 'valor_divergente'
+    const mercadoPagoPaymentId = String(pagamentoMp.id || '')
+    const transacaoEm = timestampMercadoPago(pagamentoMp.date_created) || agora
+    const encerradoEm = STATUS_ENCERRADOS.has(status)
+      ? timestampMercadoPago(pagamentoMp.date_last_updated)
+        || timestampMercadoPago(pagamentoMp.date_approved)
+        || agora
+      : null
+
+    const atualizacaoPagamento = {
+      status,
+      statusDetail,
+      mercadoPagoPaymentId,
+      transacaoEm,
+      atualizadoEm: agora
+    }
+
+    if (status === 'approved') {
+      atualizacaoPagamento.aprovadoEm = timestampMercadoPago(pagamentoMp.date_approved) || agora
+    }
+    if (encerradoEm) atualizacaoPagamento.encerradoEm = encerradoEm
+
+    transaction.set(transacaoRef, {
+      pagamentoId,
+      empresaId: pagamento.empresaId,
+      indicadorId: pagamento.indicadorId,
+      ambiente: pagamento.ambiente || (ambienteSandbox() ? 'sandbox' : 'producao'),
+      status,
+      statusDetail,
+      mercadoPagoPreferenceId: pagamento.mercadoPagoPreferenceId || '',
+      mercadoPagoPaymentId,
+      valor: valorEsperado,
+      moeda: pagamento.moeda || moedaPadrao,
+      criadoEm: pagamento.criadoEm || agora,
+      atualizadoEm: agora,
+      transacaoEm,
+      encerradoEm
+    }, { merge: true })
+
+    const deveCreditar = status === 'approved'
+      && !pagamento.creditado
+      && pagamento.ambiente !== 'sandbox'
+
+    if (!deveCreditar) {
+      transaction.update(pagamentoRef, atualizacaoPagamento)
+      resultado = {
+        pagamentoId,
+        empresaId: pagamento.empresaId,
+        status,
+        statusDetail,
+        mercadoPagoPaymentId,
+        ambiente: pagamento.ambiente || 'producao',
+        creditado: Boolean(pagamento.creditado)
+      }
+      return
+    }
+
+    const saldoRef = db.collection('indicadorSaldos').doc(pagamento.indicadorId)
+    const movimentacaoRef = db.collection('movimentacoesFinanceiras').doc()
+    const notificacaoIndicadorRef = db.collection('notificacoes').doc()
+    const notificacaoEmpresaRef = db.collection('notificacoes').doc()
+
+    transaction.set(saldoRef, {
+      indicadorId: pagamento.indicadorId,
+      saldoDisponivel: FieldValue.increment(valorEsperado),
+      saldoPendente: FieldValue.increment(0),
+      totalRecebido: FieldValue.increment(valorEsperado),
+      totalSacado: FieldValue.increment(0),
+      atualizadoEm: agora
+    }, { merge: true })
+
+    transaction.set(movimentacaoRef, {
+      indicadorId: pagamento.indicadorId,
+      tipo: 'credito_recompensa',
+      valor: valorEsperado,
+      status: 'approved',
+      pagamentoId,
+      candidatoId: pagamento.candidatoId,
+      vagaId: pagamento.vagaId,
+      empresaId: pagamento.empresaId,
+      descricao: `Credito de recompensa por ${pagamento.candidatoNome || 'candidato'} em ${pagamento.vagaTitulo || 'vaga'}`,
+      criadoEm: agora
+    })
+
+    transaction.set(notificacaoIndicadorRef, {
+      userId: pagamento.indicadorId,
+      tipo: 'pagamento_aprovado',
+      titulo: 'Pagamento recebido',
+      mensagem: `Você recebeu ${dinheiro(valorEsperado)} pela indicação de ${pagamento.candidatoNome || 'um candidato'} para a vaga ${pagamento.vagaTitulo || 'informada'}.`,
+      lida: false,
+      link: '/painel/indicador?secao=financeiro',
+      metadata: {
+        pagamentoId,
+        candidatoId: pagamento.candidatoId,
+        vagaId: pagamento.vagaId
+      },
+      criadoEm: agora
+    })
+
+    transaction.set(notificacaoEmpresaRef, {
+      userId: pagamento.empresaId,
+      tipo: 'pagamento_aprovado',
+      titulo: 'Pagamento aprovado',
+      mensagem: `Pagamento de ${dinheiro(valorEsperado)} aprovado para ${pagamento.candidatoNome || 'o candidato'}.`,
+      lida: false,
+      link: '/painel/empresa?secao=pagamentos',
+      metadata: {
+        pagamentoId,
+        candidatoId: pagamento.candidatoId,
+        vagaId: pagamento.vagaId
+      },
+      criadoEm: agora
+    })
+
+    transaction.update(pagamentoRef, {
+      ...atualizacaoPagamento,
+      creditado: true
+    })
+
+    resultado = {
+      pagamentoId,
+      empresaId: pagamento.empresaId,
+      status,
+      statusDetail,
+      mercadoPagoPaymentId,
+      ambiente: pagamento.ambiente || 'producao',
+      creditado: true
+    }
+  })
+
+  return resultado
+}
+
+exports.sincronizarPagamentoMercadoPago = functions
+  .region(regiao)
+  .https.onCall(async (dados, contexto) => {
+    if (!contexto.auth) {
+      erroHttps('unauthenticated', 'Faça login como empresa para atualizar o pagamento.')
+    }
+
+    try {
+      const paymentId = String(dados.mercadoPagoPaymentId || '')
+      const pagamentoId = String(dados.pagamentoId || '')
+      let pagamentoMp
+
+      if (/^\d+$/.test(paymentId)) {
+        pagamentoMp = await chamarMercadoPago(`/v1/payments/${paymentId}`)
+      } else if (pagamentoId) {
+        const pagamentoDoc = await db.collection('pagamentos').doc(pagamentoId).get()
+
+        if (!pagamentoDoc.exists || pagamentoDoc.data().empresaId !== contexto.auth.uid) {
+          erroHttps('permission-denied', 'Este pagamento não pertence à empresa autenticada.')
+        }
+
+        pagamentoMp = await buscarPagamentoMercadoPagoPorReferencia(
+          pagamentoDoc.data().externalReference
+        )
+      } else {
+        erroHttps('invalid-argument', 'Identificador do pagamento inválido.')
+      }
+
+      if (!pagamentoMp) {
+        return {
+          pagamentoId,
+          status: 'pending',
+          encontrado: false
+        }
+      }
+
+      return await processarPagamentoMercadoPago(pagamentoMp, contexto.auth.uid)
+    } catch (error) {
+      if (error instanceof functions.https.HttpsError) throw error
+
+      console.error('Erro ao sincronizar pagamento Mercado Pago:', error)
+      erroHttps('unavailable', 'Não foi possível atualizar o pagamento no Mercado Pago.')
+    }
+  })
+
 exports.mercadoPagoWebhook = functions
   .region(regiao)
   .https.onRequest(async (req, res) => {
     if (!validarWebhook(req)) {
-      res.status(401).send('invalid secret')
+      res.status(401).send('invalid signature')
       return
     }
 
@@ -522,140 +867,10 @@ exports.mercadoPagoWebhook = functions
       }
 
       const pagamentoMp = await chamarMercadoPago(`/v1/payments/${paymentId}`)
-      const referenciaExterna = pagamentoMp.external_reference
-      const pagamentoId = extrairPagamentoIdDaReferencia(referenciaExterna)
-
-      if (!pagamentoId) {
-        res.status(200).send('missing reference')
-        return
-      }
-
-      const pagamentoRef = db.collection('pagamentos').doc(pagamentoId)
-      const statusInterno = normalizarStatusMercadoPago(pagamentoMp.status)
-      const valorPago = Number(pagamentoMp.transaction_amount || 0)
-
-      await db.runTransaction(async (transaction) => {
-        const pagamentoDoc = await transaction.get(pagamentoRef)
-
-        if (!pagamentoDoc.exists) {
-          console.warn('Pagamento interno não encontrado para webhook:', pagamentoId)
-          return
-        }
-
-        const pagamento = pagamentoDoc.data()
-        const agora = FieldValue.serverTimestamp()
-        const valorEsperado = Number(pagamento.valor || 0)
-        const valorConfere = Math.abs(valorPago - valorEsperado) < 0.01
-
-        if (!valorConfere) {
-          transaction.update(pagamentoRef, {
-            status: 'failed',
-            statusDetail: 'valor_divergente',
-            mercadoPagoPaymentId: String(pagamentoMp.id || paymentId),
-            rawPayment: resumirPagamentoMercadoPago(pagamentoMp),
-            atualizadoEm: agora
-          })
-          return
-        }
-
-        const atualizacaoPagamento = {
-          status: statusInterno,
-          statusDetail: pagamentoMp.status_detail || '',
-          mercadoPagoPaymentId: String(pagamentoMp.id || paymentId),
-          rawPayment: resumirPagamentoMercadoPago(pagamentoMp),
-          atualizadoEm: agora
-        }
-
-        if (statusInterno === 'approved') {
-          atualizacaoPagamento.aprovadoEm = agora
-        }
-
-        if (statusInterno !== 'approved' || pagamento.creditado) {
-          transaction.update(pagamentoRef, atualizacaoPagamento)
-          return
-        }
-
-        const saldoRef = db.collection('indicadorSaldos').doc(pagamento.indicadorId)
-        const movimentacaoRef = db.collection('movimentacoesFinanceiras').doc()
-        const notificacaoIndicadorRef = db.collection('notificacoes').doc()
-        const notificacaoEmpresaRef = db.collection('notificacoes').doc()
-
-        transaction.set(saldoRef, {
-          indicadorId: pagamento.indicadorId,
-          saldoDisponivel: FieldValue.increment(valorEsperado),
-          saldoPendente: FieldValue.increment(0),
-          totalRecebido: FieldValue.increment(valorEsperado),
-          totalSacado: FieldValue.increment(0),
-          atualizadoEm: agora
-        }, { merge: true })
-
-        transaction.set(movimentacaoRef, {
-          indicadorId: pagamento.indicadorId,
-          tipo: 'credito_recompensa',
-          valor: valorEsperado,
-          status: 'approved',
-          pagamentoId: pagamentoDoc.id,
-          candidatoId: pagamento.candidatoId,
-          vagaId: pagamento.vagaId,
-          empresaId: pagamento.empresaId,
-          descricao: `Credito de recompensa por ${pagamento.candidatoNome || 'candidato'} em ${pagamento.vagaTitulo || 'vaga'}`,
-          criadoEm: agora
-        })
-
-        transaction.set(notificacaoIndicadorRef, {
-          userId: pagamento.indicadorId,
-          tipo: 'pagamento_aprovado',
-          titulo: 'Pagamento recebido',
-          mensagem: `Você recebeu ${dinheiro(valorEsperado)} pela indicação de ${pagamento.candidatoNome || 'um candidato'} para a vaga ${pagamento.vagaTitulo || 'informada'}.`,
-          lida: false,
-          link: '/painel/indicador?secao=financeiro',
-          metadata: {
-            pagamentoId: pagamentoDoc.id,
-            candidatoId: pagamento.candidatoId,
-            vagaId: pagamento.vagaId
-          },
-          criadoEm: agora
-        })
-
-        transaction.set(notificacaoEmpresaRef, {
-          userId: pagamento.empresaId,
-          tipo: 'pagamento_aprovado',
-          titulo: 'Pagamento aprovado',
-          mensagem: `Pagamento de ${dinheiro(valorEsperado)} aprovado para ${pagamento.candidatoNome || 'o candidato'}.`,
-          lida: false,
-          link: '/painel/empresa?secao=pagamentos',
-          metadata: {
-            pagamentoId: pagamentoDoc.id,
-            candidatoId: pagamento.candidatoId,
-            vagaId: pagamento.vagaId
-          },
-          criadoEm: agora
-        })
-
-        transaction.update(pagamentoRef, {
-          ...atualizacaoPagamento,
-          creditado: true
-        })
-      })
-
+      await processarPagamentoMercadoPago(pagamentoMp)
       res.status(200).send('ok')
     } catch (error) {
       console.error('Erro no webhook Mercado Pago:', error)
       res.status(500).send('webhook error')
     }
   })
-
-function resumirPagamentoMercadoPago(pagamento) {
-  return {
-    id: pagamento.id || null,
-    status: pagamento.status || '',
-    status_detail: pagamento.status_detail || '',
-    transaction_amount: pagamento.transaction_amount || 0,
-    currency_id: pagamento.currency_id || moedaPadrao,
-    external_reference: pagamento.external_reference || '',
-    payment_method_id: pagamento.payment_method_id || '',
-    payment_type_id: pagamento.payment_type_id || '',
-    date_approved: pagamento.date_approved || null,
-    date_created: pagamento.date_created || null
-  }
-}

@@ -1,16 +1,19 @@
-import './PaymentRewardModal.css'
+import './ModalPagamentoRecompensa.css'
 
 import { useMemo, useState } from 'react'
 import { FaCreditCard, FaExternalLinkAlt, FaTimes } from 'react-icons/fa'
 
-import { useConfirm } from '../../hooks/useConfirm'
+import { useConfirmacao } from '../../hooks/useConfirmacao'
 import { useToast } from '../../hooks/useToast'
-import { criarPagamentoRecompensa } from '../../services/firestorePagamentos'
-import { getFirebaseUid } from '../../services/firebaseIdentity'
+import {
+  criarPagamentoRecompensa,
+  obterCheckoutUrlPagamento
+} from '../../services/firestorePagamentos'
+import { getFirebaseUid } from '../../services/identidadeFirebase'
 
-function PaymentRewardModal({ candidato, empresa, pagamentoExistente, onClose, onCreated }) {
+function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onClose, onCreated }) {
   const toast = useToast()
-  const confirm = useConfirm()
+  const confirm = useConfirmacao()
   const empresaId = getFirebaseUid(empresa)
   const valorRecompensa = useMemo(() => obterValorRecompensa(candidato), [candidato])
   const [carregando, setCarregando] = useState(false)
@@ -18,12 +21,12 @@ function PaymentRewardModal({ candidato, empresa, pagamentoExistente, onClose, o
   if (!candidato) return null
 
   const statusPagamento = pagamentoExistente?.status
-  const checkoutUrl = pagamentoExistente?.checkoutUrl || pagamentoExistente?.sandboxCheckoutUrl
+  const checkoutUrl = obterCheckoutUrlPagamento(pagamentoExistente)
   const recompensaPaga = statusPagamento === 'approved'
   const pagamentoPendente = statusPagamento === 'pending' && checkoutUrl
 
   const abrirCheckoutExistente = () => {
-    if (checkoutUrl) window.location.href = checkoutUrl
+    if (checkoutUrl) abrirCheckout(checkoutUrl, toast)
   }
 
   const handleSubmit = async (event) => {
@@ -50,14 +53,21 @@ function PaymentRewardModal({ candidato, empresa, pagamentoExistente, onClose, o
         indicacaoId: candidato.indicacaoId || '',
         vagaId: candidato.vagaId || '',
         indicadorId: candidato.indicadorId || candidato.indicadorUid || '',
+        valor: valorRecompensa,
         descricao: `Recompensa Selectio - ${candidato.vagaTitulo || 'Vaga'} - ${candidato.nome || 'Candidato'}`
       })
 
       onCreated?.(pagamento)
 
-      const url = pagamento.checkoutUrl || pagamento.initPoint || pagamento.sandboxInitPoint
+      const url = pagamento.sandboxInitPoint || pagamento.checkoutUrl || pagamento.initPoint
       if (url) {
-        window.location.href = url
+        if (url.includes('sandbox.mercadopago')) {
+          toast.success('Preferência sandbox criada. Clique em Continuar checkout para pagar.')
+          return
+        }
+
+        abrirCheckout(url, toast)
+        onClose()
         return
       }
 
@@ -156,6 +166,23 @@ function PaymentRewardModal({ candidato, empresa, pagamentoExistente, onClose, o
   )
 }
 
+function abrirCheckout(url, toast) {
+  if (url.includes('sandbox.mercadopago')) {
+    const checkout = window.open(url, '_blank')
+
+    if (!checkout) {
+      window.location.href = url
+      return
+    }
+
+    checkout.opener = null
+    toast.info('Checkout sandbox aberto em outra aba. Ao finalizar, volte ao Selectio para atualizar o status.')
+    return
+  }
+
+  window.location.href = url
+}
+
 function obterValorRecompensa(candidato) {
   if (Number(candidato?.recompensaValor || 0) > 0) return Number(candidato.recompensaValor)
   return normalizarValor(candidato?.recompensa)
@@ -178,4 +205,4 @@ function formatCurrency(value) {
   })
 }
 
-export default PaymentRewardModal
+export default ModalPagamentoRecompensa

@@ -17,7 +17,7 @@ import {
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import { auth } from '../../services/firebase'
-import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from '../../services/authErrors'
+import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from '../../services/errosAutenticacao'
 import { buscarPerfilUsuario, salvarPerfilUsuario } from '../../services/firestoreUsers'
 import { useToast } from '../../hooks/useToast'
 

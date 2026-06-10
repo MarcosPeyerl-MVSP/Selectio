@@ -1,4 +1,4 @@
-import './AccountSettings.css'
+import './ConfiguracoesConta.css'
 
 import { useEffect, useMemo, useState } from 'react'
 import {
@@ -23,10 +23,10 @@ import {
 
 import PageLoader from '../ui/PageLoader'
 import { auth } from '../../services/firebase'
-import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from '../../services/authErrors'
-import { getFirebaseUid } from '../../services/firebaseIdentity'
+import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from '../../services/errosAutenticacao'
+import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { atualizarPerfilUsuario } from '../../services/firestoreUsers'
-import { useConfirm } from '../../hooks/useConfirm'
+import { useConfirmacao } from '../../hooks/useConfirmacao'
 import { useToast } from '../../hooks/useToast'
 
 const googleProviderId = 'google.com'
@@ -73,9 +73,9 @@ const getProfileForm = (profile, tipo) => {
   }), {})
 }
 
-function AccountSettings({ user, tipo, onUserUpdate }) {
+function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
   const toast = useToast()
-  const confirm = useConfirm()
+  const confirm = useConfirmacao()
   const [firebaseUser, setFirebaseUser] = useState(() => snapshotFirebaseUser(auth.currentUser))
   const [authReady, setAuthReady] = useState(false)
   const [linking, setLinking] = useState(false)
@@ -530,6 +530,7 @@ function AccountSettings({ user, tipo, onUserUpdate }) {
             )}
           </div>
         </article>
+
       </div>
     </section>
   )
@@ -551,4 +552,4 @@ function LoginMethod({ icon, title, linked, description }) {
   )
 }
 
-export default AccountSettings
+export default ConfiguracoesConta

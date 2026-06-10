@@ -16,7 +16,7 @@ import {
 
 import PageLoader from '../../components/ui/PageLoader'
 import { listarCandidatosPorEmpresa } from '../../services/firestoreCandidatos'
-import { getFirebaseUid } from '../../services/firebaseIdentity'
+import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { atualizarPerfilUsuario } from '../../services/firestoreUsers'
 import { listarVagasPorEmpresa } from '../../services/firestoreVagas'
 import { useToast } from '../../hooks/useToast'

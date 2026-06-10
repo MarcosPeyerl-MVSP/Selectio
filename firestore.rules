@@ -81,6 +81,132 @@ service cloud.firestore {
         && data.empresaId == request.auth.uid;
     }
 
+    function sandboxPaymentCreate() {
+      return isEmpresa()
+        && request.resource.data.empresaId == request.auth.uid
+        && request.resource.data.ambiente == 'sandbox'
+        && request.resource.data.status == 'created'
+        && request.resource.data.creditado == false
+        && request.resource.data.valor is number
+        && request.resource.data.valor > 0
+        && request.resource.data.moeda == 'BRL'
+        && request.resource.data.keys().hasOnly([
+          'ambiente',
+          'atualizadoEm',
+          'candidatoId',
+          'candidatoNome',
+          'checkoutUrl',
+          'criadoEm',
+          'creditado',
+          'descricao',
+          'empresaId',
+          'externalReference',
+          'indicacaoId',
+          'indicadorId',
+          'indicadorNome',
+          'mercadoPagoPaymentId',
+          'mercadoPagoPreferenceId',
+          'moeda',
+          'sandboxCheckoutUrl',
+          'status',
+          'statusDetail',
+          'transacaoId',
+          'vagaId',
+          'vagaTitulo',
+          'valor'
+        ]);
+    }
+
+    function sandboxPaymentUpdate() {
+      return isEmpresaOwner(resource.data)
+        && resource.data.ambiente == 'sandbox'
+        && request.resource.data.ambiente == resource.data.ambiente
+        && request.resource.data.empresaId == resource.data.empresaId
+        && request.resource.data.indicadorId == resource.data.indicadorId
+        && request.resource.data.candidatoId == resource.data.candidatoId
+        && request.resource.data.vagaId == resource.data.vagaId
+        && request.resource.data.valor == resource.data.valor
+        && request.resource.data.moeda == resource.data.moeda
+        && request.resource.data.creditado == false
+        && request.resource.data.status in [
+          'created',
+          'pending',
+          'approved',
+          'rejected',
+          'cancelled',
+          'refunded',
+          'failed'
+        ]
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'aprovadoEm',
+          'atualizadoEm',
+          'checkoutUrl',
+          'encerradoEm',
+          'erroCriacao',
+          'mercadoPagoPaymentId',
+          'mercadoPagoPreferenceId',
+          'sandboxCheckoutUrl',
+          'status',
+          'statusDetail',
+          'transacaoEm'
+        ]);
+    }
+
+    function sandboxTransactionCreate() {
+      return isEmpresa()
+        && request.resource.data.empresaId == request.auth.uid
+        && request.resource.data.ambiente == 'sandbox'
+        && request.resource.data.status == 'created'
+        && request.resource.data.valor is number
+        && request.resource.data.valor > 0
+        && request.resource.data.moeda == 'BRL'
+        && request.resource.data.keys().hasOnly([
+          'ambiente',
+          'atualizadoEm',
+          'criadoEm',
+          'empresaId',
+          'encerradoEm',
+          'indicadorId',
+          'mercadoPagoPaymentId',
+          'mercadoPagoPreferenceId',
+          'moeda',
+          'pagamentoId',
+          'status',
+          'statusDetail',
+          'transacaoEm',
+          'valor'
+        ]);
+    }
+
+    function sandboxTransactionUpdate() {
+      return isEmpresaOwner(resource.data)
+        && resource.data.ambiente == 'sandbox'
+        && request.resource.data.ambiente == resource.data.ambiente
+        && request.resource.data.empresaId == resource.data.empresaId
+        && request.resource.data.indicadorId == resource.data.indicadorId
+        && request.resource.data.pagamentoId == resource.data.pagamentoId
+        && request.resource.data.valor == resource.data.valor
+        && request.resource.data.moeda == resource.data.moeda
+        && request.resource.data.status in [
+          'created',
+          'pending',
+          'approved',
+          'rejected',
+          'cancelled',
+          'refunded',
+          'failed'
+        ]
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'atualizadoEm',
+          'encerradoEm',
+          'mercadoPagoPaymentId',
+          'mercadoPagoPreferenceId',
+          'status',
+          'statusDetail',
+          'transacaoEm'
+        ]);
+    }
+
     function vagaEmpresaMatches(data) {
       return data.vagaId is string
         && data.empresaId is string
@@ -193,7 +319,16 @@ service cloud.firestore {
 
     match /pagamentos/{pagamentoId} {
       allow read: if isEmpresaOrIndicadorOwner(resource.data);
-      allow create, update, delete: if false;
+      allow create: if sandboxPaymentCreate();
+      allow update: if sandboxPaymentUpdate();
+      allow delete: if false;
+    }
+
+    match /transacoesPagamento/{transacaoId} {
+      allow read: if isEmpresaOrIndicadorOwner(resource.data);
+      allow create: if sandboxTransactionCreate();
+      allow update: if sandboxTransactionUpdate();
+      allow delete: if false;
     }
 
     match /indicadorSaldos/{indicadorId} {
