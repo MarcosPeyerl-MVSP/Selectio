@@ -1,6 +1,6 @@
 # Selectio
 
-MVP SaaS de recrutamento e indicação de talentos feito com React + Vite e servicos gerenciados do Firebase.
+MVP SaaS de recrutamento e indicação de talentos feito com React + Vite e serviços gerenciados do Firebase.
 
 O projeto usa:
 
@@ -22,6 +22,7 @@ Na pasta functions:
 ```bash
 npm install
 ```
+Na raiz (Selectio/):
 
 ```bash
 npm install
