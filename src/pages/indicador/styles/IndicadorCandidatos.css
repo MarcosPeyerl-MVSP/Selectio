@@ -327,6 +327,118 @@
   color: #15803d;
 }
 
+.candidate-payment-summary {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.candidate-card.contratado .candidate-payment-summary {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--white);
+}
+
+.candidate-payment-summary-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.candidate-payment-summary-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--primary);
+}
+
+.candidate-payment-summary.waiting .candidate-payment-summary-icon,
+.candidate-payment-summary.pending .candidate-payment-summary-icon {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.candidate-payment-summary.approved .candidate-payment-summary-icon {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.candidate-payment-summary.danger .candidate-payment-summary-icon {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.candidate-payment-summary strong {
+  display: block;
+  font-size: 13px;
+}
+
+.candidate-payment-summary p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.candidate-card.contratado .candidate-payment-summary p {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.candidate-payment-summary-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.candidate-card.contratado .candidate-payment-summary-meta {
+  border-top-color: rgba(255, 255, 255, 0.18);
+}
+
+.candidate-payment-summary-meta span {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.candidate-card.contratado .candidate-payment-summary-meta span {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.candidate-payment-summary-meta strong {
+  margin-top: 4px;
+  color: var(--text-heading);
+  font-size: 12px;
+}
+
+.candidate-card.contratado .candidate-payment-summary-meta strong {
+  color: var(--white);
+}
+
+.candidate-payment-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.candidate-card.contratado .candidate-payment-link {
+  color: var(--white);
+}
+
 .candidate-card-actions {
   margin-top: 18px;
 }

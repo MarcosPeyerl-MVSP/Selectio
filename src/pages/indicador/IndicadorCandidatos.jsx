@@ -6,8 +6,13 @@ import './styles/IndicadorCandidatos.css'
 import { Link, Navigate } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import {
+  FaCheckCircle,
+  FaClock,
+  FaExclamationTriangle,
+  FaExternalLinkAlt,
   FaPlus,
   FaSearch,
+  FaWallet,
 } from 'react-icons/fa'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
@@ -16,6 +21,7 @@ import ModalPerfilCandidato from '../../components/ui/ModalPerfilCandidato'
 import LinhaStatusCandidato from '../../components/ui/LinhaStatusCandidato'
 import CardEsqueleto from '../../components/ui/CardEsqueleto'
 import { listarCandidatosPorIndicador } from '../../services/firestoreCandidatos'
+import { listarPagamentosPorIndicador } from '../../services/firestorePagamentos'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { useToast } from '../../hooks/useToast'
 
@@ -37,6 +43,57 @@ const statusClass = {
   Entrevista: 'entrevista',
   Contratado: 'contratado',
   Cancelado: 'cancelado',
+}
+
+const paymentStatusInfo = {
+  created: {
+    title: 'Pagamento pendente',
+    description: 'Aguardando confirmação do Mercado Pago.',
+    tone: 'pending',
+    icon: FaClock
+  },
+  pending: {
+    title: 'Pagamento pendente',
+    description: 'Aguardando confirmação do Mercado Pago.',
+    tone: 'pending',
+    icon: FaClock
+  },
+  in_process: {
+    title: 'Pagamento pendente',
+    description: 'Aguardando confirmação do Mercado Pago.',
+    tone: 'pending',
+    icon: FaClock
+  },
+  authorized: {
+    title: 'Pagamento pendente',
+    description: 'Aguardando confirmação do Mercado Pago.',
+    tone: 'pending',
+    icon: FaClock
+  },
+  rejected: {
+    title: 'Pagamento recusado',
+    description: 'Mercado Pago recusou a transação. A recompensa não foi creditada.',
+    tone: 'danger',
+    icon: FaExclamationTriangle
+  },
+  cancelled: {
+    title: 'Pagamento cancelado',
+    description: 'A transação foi cancelada. A recompensa não foi creditada.',
+    tone: 'danger',
+    icon: FaExclamationTriangle
+  },
+  refunded: {
+    title: 'Pagamento estornado',
+    description: 'O valor foi estornado. A recompensa não fica disponível no saldo.',
+    tone: 'danger',
+    icon: FaExclamationTriangle
+  },
+  failed: {
+    title: 'Pagamento falhou',
+    description: 'Não foi possível confirmar o pagamento. A recompensa não foi creditada.',
+    tone: 'danger',
+    icon: FaExclamationTriangle
+  }
 }
 
 // Lista de imagens usadas como avatares visuais dos candidatos.
@@ -93,6 +150,9 @@ function Candidatos() {
   // Armazena candidatos retornados pelo Firestore.
   const [candidatos, setCandidatos] = useState([])
 
+  // Armazena pagamentos de recompensa vinculados ao indicador.
+  const [pagamentos, setPagamentos] = useState([])
+
   // Armazena o termo digitado no campo de busca.
   const [busca, setBusca] = useState('')
 
@@ -118,6 +178,7 @@ function Candidatos() {
 
       if (!indicadorUid) {
         setCandidatos([])
+        setPagamentos([])
         setError('Perfil do indicador sem UID do Firebase.')
         toast.warning('Perfil do indicador sem UID do Firebase.')
         setLoading(false)
@@ -125,8 +186,17 @@ function Candidatos() {
       }
 
       try {
-        const data = await listarCandidatosPorIndicador(indicadorUid)
-        setCandidatos(data)
+        const [candidatosData, pagamentosData] = await Promise.all([
+          listarCandidatosPorIndicador(indicadorUid),
+          listarPagamentosPorIndicador(indicadorUid).catch((err) => {
+            console.warn('Não foi possível carregar pagamentos do indicador:', err)
+            toast.warning('Não foi possível carregar o status financeiro das indicações.')
+            return []
+          })
+        ])
+
+        setCandidatos(candidatosData)
+        setPagamentos(pagamentosData)
       } catch (err) {
         setError(err.message)
         toast.error('Não foi possível carregar seus candidatos.')
@@ -155,6 +225,22 @@ function Candidatos() {
       return matchesStatus && matchesBusca
     })
   }, [activeStatus, busca, candidatos])
+
+  const pagamentosPorCandidato = useMemo(() => {
+    const mapa = new Map()
+
+    pagamentos.forEach((pagamento) => {
+      if (!pagamento.candidatoId) return
+
+      const atual = mapa.get(pagamento.candidatoId)
+
+      if (!atual || deveUsarPagamento(pagamento, atual)) {
+        mapa.set(pagamento.candidatoId, pagamento)
+      }
+    })
+
+    return mapa
+  }, [pagamentos])
 
   // Regra de acesso: sem indicador autenticado, redireciona para login.
   if (!indicador) {
@@ -215,6 +301,10 @@ function Candidatos() {
               {candidatosFiltrados.map((candidato, index) => {
                 const status = statusLabels[candidato.status] || 'Indicado'
                 const cardClass = statusClass[status] || 'indicado'
+                const pagamento = pagamentosPorCandidato.get(candidato.id)
+                const financeiro = status === 'Contratado'
+                  ? getResumoFinanceiroIndicacao(pagamento)
+                  : null
 
                 return (
                   <article className={`candidate-card ${cardClass}`} key={candidato.id}>
@@ -241,6 +331,8 @@ function Candidatos() {
                     </div>
 
                     <LinhaStatusCandidato status={candidato.status || 'indicado'} variant="compact" />
+
+                    {financeiro && <ResumoFinanceiroIndicacao info={financeiro} />}
 
                     <div className="candidate-card-actions">
                       <button type="button" onClick={() => setSelectedCandidate(candidato)}>
@@ -275,6 +367,102 @@ function Candidatos() {
       <Footer />
     </>
   )
+}
+
+function ResumoFinanceiroIndicacao({ info }) {
+  const Icon = info.icon
+
+  return (
+    <div className={`candidate-payment-summary ${info.tone}`}>
+      <div className="candidate-payment-summary-main">
+        <span className="candidate-payment-summary-icon">
+          <Icon />
+        </span>
+
+        <div>
+          <strong>{info.title}</strong>
+          <p>{info.description}</p>
+        </div>
+      </div>
+
+      {(info.value || info.date) && (
+        <div className="candidate-payment-summary-meta">
+          {info.value && (
+            <span>
+              Valor
+              <strong>{formatCurrency(info.value)}</strong>
+            </span>
+          )}
+
+          {info.date && (
+            <span>
+              Aprovado em
+              <strong>{formatDate(info.date)}</strong>
+            </span>
+          )}
+        </div>
+      )}
+
+      {info.showFinanceLink && (
+        <Link className="candidate-payment-link" to="/painel/indicador?secao=financeiro">
+          <FaExternalLinkAlt /> Abrir financeiro
+        </Link>
+      )}
+    </div>
+  )
+}
+
+function getResumoFinanceiroIndicacao(pagamento) {
+  if (!pagamento) {
+    return {
+      title: 'Candidato contratado',
+      description: 'Recompensa aguardando pagamento da empresa.',
+      tone: 'waiting',
+      icon: FaWallet
+    }
+  }
+
+  if (pagamento.status === 'approved') {
+    const creditado = pagamento.creditado !== false
+
+    return {
+      title: 'Recompensa recebida',
+      description: creditado
+        ? 'Valor creditado no financeiro.'
+        : 'Pagamento aprovado pelo Mercado Pago. Crédito em processamento.',
+      tone: 'approved',
+      icon: FaCheckCircle,
+      value: pagamento.valor,
+      date: pagamento.aprovadoEm || pagamento.encerradoEm || pagamento.transacaoEm,
+      showFinanceLink: true
+    }
+  }
+
+  const info = paymentStatusInfo[pagamento.status] || {
+    title: 'Status do pagamento',
+    description: 'Acompanhe a atualização da recompensa.',
+    tone: 'pending',
+    icon: FaClock
+  }
+
+  return info
+}
+
+function deveUsarPagamento(novo, atual) {
+  if (novo.status === 'approved' && atual.status !== 'approved') return true
+  if (atual.status === 'approved' && novo.status !== 'approved') return false
+
+  const dataAtual = new Date(atual.criadoEm || atual.atualizadoEm || 0).getTime()
+  const dataNova = new Date(novo.criadoEm || novo.atualizadoEm || 0).getTime()
+
+  return dataNova >= dataAtual
+}
+
+function formatCurrency(value) {
+  return Number(value || 0).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  })
 }
 
 export default Candidatos

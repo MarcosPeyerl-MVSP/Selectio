@@ -66,6 +66,159 @@
   margin-bottom: 18px;
 }
 
+.indicador-pagamentos-metricas {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.indicador-pagamentos-metrica,
+.indicador-pagamentos-lista {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.indicador-pagamentos-metrica {
+  padding: 20px;
+}
+
+.indicador-pagamentos-metrica span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.indicador-pagamentos-metrica strong {
+  color: var(--text-heading);
+  font-size: 28px;
+}
+
+.indicador-pagamentos-lista {
+  margin-bottom: 18px;
+  padding: 22px;
+}
+
+.indicador-pagamentos-lista-header,
+.indicador-pagamento-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.indicador-pagamentos-lista-header {
+  margin-bottom: 16px;
+}
+
+.indicador-pagamentos-lista-header span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary-dark);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.indicador-pagamentos-lista-header strong {
+  color: var(--text-heading);
+}
+
+.indicador-pagamento-item {
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+}
+
+.indicador-pagamento-item strong {
+  display: block;
+  color: var(--text-heading);
+}
+
+.indicador-pagamento-item span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.indicador-pagamento-item small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.indicador-pagamento-meta {
+  text-align: right;
+}
+
+.indicador-pagamento-status {
+  display: inline-flex;
+  margin-top: 5px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.indicador-pagamento-status.approved {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.indicador-pagamento-status.awaiting_company,
+.indicador-pagamento-status.created,
+.indicador-pagamento-status.pending,
+.indicador-pagamento-status.in_process,
+.indicador-pagamento-status.authorized {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.indicador-pagamento-status.rejected,
+.indicador-pagamento-status.failed,
+.indicador-pagamento-status.cancelled,
+.indicador-pagamento-status.refunded {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.indicador-pagamentos-vazio {
+  display: grid;
+  place-items: center;
+  min-height: 240px;
+  padding: 28px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  text-align: center;
+}
+
+.indicador-pagamentos-vazio svg {
+  margin-bottom: 12px;
+  color: var(--primary);
+  font-size: 28px;
+}
+
+.indicador-pagamentos-vazio strong {
+  color: var(--text-heading);
+}
+
+.indicador-pagamentos-vazio p {
+  max-width: 390px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .indicador-financeiro-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(320px, 0.7fr);
@@ -211,6 +364,7 @@
 
 @media (max-width: 1000px) {
   .indicador-saldo-grid,
+  .indicador-pagamentos-metricas,
   .indicador-financeiro-grid {
     grid-template-columns: 1fr;
   }
@@ -226,9 +380,14 @@
   }
 
   .indicador-movimentacao-item,
+  .indicador-pagamento-item,
   .saque-modal-actions {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .indicador-pagamento-meta {
+    text-align: left;
   }
 
   .saque-modal-actions button {
