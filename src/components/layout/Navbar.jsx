@@ -101,7 +101,7 @@ function Navbar() {
             </nav>
           </>
         ) : (
-          <div className="user-actions">
+          <div className="user-actions" data-tour="navbar-account-actions">
             <MenuNotificacoes user={session.user} />
             <div className="profile-menu-wrapper" ref={profileMenuRef}>
               <button

@@ -30,6 +30,39 @@ service cloud.firestore {
         && validUserTipo(request.resource.data.tipo);
     }
 
+    function validOnboardingTourPayload() {
+      return !('onboardingTour' in request.resource.data)
+        || (
+          request.resource.data.onboardingTour is map
+          &&
+          request.resource.data.onboardingTour.keys().hasOnly([
+            'empresaConcluido',
+            'indicadorConcluido'
+          ])
+          && (!('empresaConcluido' in request.resource.data.onboardingTour)
+            || request.resource.data.onboardingTour.empresaConcluido is bool)
+          && (!('indicadorConcluido' in request.resource.data.onboardingTour)
+            || request.resource.data.onboardingTour.indicadorConcluido is bool)
+        );
+    }
+
+    function ownUserUpdatePayload(uid) {
+      return ownUserPayload(uid)
+        && validOnboardingTourPayload()
+        && (!('tourEmpresaConcluido' in request.resource.data)
+          || request.resource.data.tourEmpresaConcluido is bool)
+        && (!('tourIndicadorConcluido' in request.resource.data)
+          || request.resource.data.tourIndicadorConcluido is bool)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'atualizadoEm',
+          'email',
+          'nome',
+          'onboardingTour',
+          'tourEmpresaConcluido',
+          'tourIndicadorConcluido'
+        ]);
+    }
+
     function ownEmpresaPayload(uid) {
       return isOwner(uid)
         && request.resource.data.uid == uid
@@ -214,8 +247,193 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/vagas/$(data.vagaId)).data.empresaId == data.empresaId;
     }
 
+    function referencedCandidateMatches(data) {
+      return data.candidatoId is string
+        && data.empresaId is string
+        && data.indicadorId is string
+        && data.vagaId is string
+        && exists(/databases/$(database)/documents/candidatos/$(data.candidatoId))
+        && get(/databases/$(database)/documents/candidatos/$(data.candidatoId)).data.empresaId == data.empresaId
+        && get(/databases/$(database)/documents/candidatos/$(data.candidatoId)).data.indicadorId == data.indicadorId
+        && get(/databases/$(database)/documents/candidatos/$(data.candidatoId)).data.vagaId == data.vagaId;
+    }
+
     function isNotificationOwner() {
       return signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    function notificationCreatePayload() {
+      return signedIn()
+        && request.resource.data.keys().hasOnly([
+          'criadoEm',
+          'criadoPor',
+          'link',
+          'lida',
+          'mensagem',
+          'metadata',
+          'origem',
+          'tipo',
+          'titulo',
+          'userId'
+        ])
+        && request.resource.data.userId is string
+        && request.resource.data.tipo is string
+        && request.resource.data.titulo is string
+        && request.resource.data.mensagem is string
+        && request.resource.data.link is string
+        && request.resource.data.metadata is map
+        && request.resource.data.lida == false
+        && request.resource.data.origem == 'app'
+        && request.resource.data.criadoPor == request.auth.uid
+        && request.resource.data.criadoEm == request.time;
+    }
+
+    function notificationHasCandidate() {
+      return request.resource.data.metadata.candidatoId is string
+        && exists(/databases/$(database)/documents/candidatos/$(request.resource.data.metadata.candidatoId));
+    }
+
+    function notificationCandidate() {
+      return get(/databases/$(database)/documents/candidatos/$(request.resource.data.metadata.candidatoId)).data;
+    }
+
+    function notificationCandidatePayload() {
+      return notificationCreatePayload()
+        && notificationHasCandidate()
+        && request.resource.data.metadata.empresaId == notificationCandidate().empresaId
+        && request.resource.data.metadata.indicadorId == notificationCandidate().indicadorId
+        && request.resource.data.metadata.vagaId == notificationCandidate().vagaId;
+    }
+
+    function notificationStatusTypeMatches(status, tipo) {
+      return (status == 'entrevista' && tipo == 'candidato_entrevista')
+        || (status == 'contratado' && tipo == 'candidato_contratado')
+        || (status == 'cancelado' && tipo == 'candidato_cancelado')
+        || (status == 'recusado' && tipo == 'candidato_recusado');
+    }
+
+    function notificationHasInterview() {
+      return request.resource.data.metadata.entrevistaId is string
+        && exists(/databases/$(database)/documents/entrevistas/$(request.resource.data.metadata.entrevistaId));
+    }
+
+    function notificationInterview() {
+      return get(/databases/$(database)/documents/entrevistas/$(request.resource.data.metadata.entrevistaId)).data;
+    }
+
+    function notificationInterviewStatusTypeMatches(status, tipo) {
+      return (status == 'agendada' && tipo == 'entrevista_agendada')
+        || (status == 'pendente' && tipo == 'entrevista_pendente')
+        || (status == 'realizada' && tipo == 'entrevista_realizada')
+        || (status == 'cancelada' && tipo == 'entrevista_cancelada');
+    }
+
+    function notificationHasPayment() {
+      return request.resource.data.metadata.pagamentoId is string
+        && exists(/databases/$(database)/documents/pagamentos/$(request.resource.data.metadata.pagamentoId));
+    }
+
+    function notificationPayment() {
+      return get(/databases/$(database)/documents/pagamentos/$(request.resource.data.metadata.pagamentoId)).data;
+    }
+
+    function notificationPaymentStatusTypeMatches(status, tipo) {
+      return (status == 'created' && tipo == 'pagamento_criado')
+        || (status == 'pending' && tipo == 'pagamento_pendente')
+        || (status == 'approved' && tipo == 'pagamento_aprovado')
+        || (status == 'rejected' && tipo == 'pagamento_recusado')
+        || (status == 'cancelled' && tipo == 'pagamento_cancelado')
+        || (status == 'refunded' && tipo == 'pagamento_estornado')
+        || (status == 'failed' && tipo == 'pagamento_falhou');
+    }
+
+    function notificationNewCandidateCreate() {
+      return notificationCandidatePayload()
+        && request.resource.data.tipo == 'novo_candidato'
+        && request.resource.data.userId == notificationCandidate().empresaId
+        && notificationCandidate().indicadorId == request.auth.uid;
+    }
+
+    function notificationReferralSentCreate() {
+      return notificationCandidatePayload()
+        && request.resource.data.tipo == 'indicacao_enviada'
+        && request.resource.data.userId == request.auth.uid
+        && notificationCandidate().indicadorId == request.auth.uid;
+    }
+
+    function notificationCandidateStatusCreate() {
+      return notificationCandidatePayload()
+        && notificationCandidate().empresaId == request.auth.uid
+        && request.resource.data.userId == notificationCandidate().indicadorId
+        && request.resource.data.metadata.statusAtual == notificationCandidate().status
+        && notificationStatusTypeMatches(
+          request.resource.data.metadata.statusAtual,
+          request.resource.data.tipo
+        );
+    }
+
+    function notificationRewardPendingCreate() {
+      return notificationCandidatePayload()
+        && request.resource.data.tipo == 'recompensa_pendente'
+        && request.resource.data.userId == request.auth.uid
+        && notificationCandidate().empresaId == request.auth.uid
+        && request.resource.data.metadata.statusAtual == 'contratado'
+        && notificationCandidate().status == 'contratado';
+    }
+
+    function notificationInterviewPayload() {
+      return notificationCreatePayload()
+        && notificationHasInterview()
+        && request.resource.data.metadata.empresaId == notificationInterview().empresaId
+        && request.resource.data.metadata.indicadorId == notificationInterview().indicadorId
+        && request.resource.data.metadata.candidatoId == notificationInterview().candidatoId
+        && request.resource.data.metadata.vagaId == notificationInterview().vagaId;
+    }
+
+    function notificationInterviewCreate() {
+      return notificationInterviewPayload()
+        && notificationInterview().empresaId == request.auth.uid
+        && (
+          request.resource.data.userId == notificationInterview().empresaId
+          || request.resource.data.userId == notificationInterview().indicadorId
+        )
+        && request.resource.data.metadata.statusAtual == notificationInterview().status
+        && notificationInterviewStatusTypeMatches(
+          request.resource.data.metadata.statusAtual,
+          request.resource.data.tipo
+        );
+    }
+
+    function notificationPaymentPayload() {
+      return notificationCreatePayload()
+        && notificationHasPayment()
+        && request.resource.data.metadata.empresaId == notificationPayment().empresaId
+        && request.resource.data.metadata.indicadorId == notificationPayment().indicadorId
+        && request.resource.data.metadata.candidatoId == notificationPayment().candidatoId
+        && request.resource.data.metadata.vagaId == notificationPayment().vagaId;
+    }
+
+    function notificationPaymentCreate() {
+      return notificationPaymentPayload()
+        && notificationPayment().empresaId == request.auth.uid
+        && (
+          request.resource.data.userId == notificationPayment().empresaId
+          || request.resource.data.userId == notificationPayment().indicadorId
+        )
+        && request.resource.data.metadata.statusAtual == notificationPayment().status
+        && notificationPaymentStatusTypeMatches(
+          request.resource.data.metadata.statusAtual,
+          request.resource.data.tipo
+        );
+    }
+
+    function notificationCreateAllowed() {
+      return notificationNewCandidateCreate()
+        || notificationReferralSentCreate()
+        || notificationCandidateStatusCreate()
+        || notificationRewardPendingCreate()
+        || notificationInterviewCreate()
+        || notificationPaymentCreate();
     }
 
     function notificationReadUpdateOnly() {
@@ -239,7 +457,8 @@ service cloud.firestore {
 
     match /users/{uid} {
       allow read: if isOwner(uid);
-      allow create, update: if ownUserPayload(uid);
+      allow create: if ownUserPayload(uid);
+      allow update: if ownUserUpdatePayload(uid);
       allow delete: if false;
     }
 
@@ -265,7 +484,8 @@ service cloud.firestore {
       allow update: if isEmpresa()
         && resource.data.empresaId == request.auth.uid
         && request.resource.data.empresaId == resource.data.empresaId
-        && (!('empresaUid' in resource.data) || request.resource.data.empresaUid == resource.data.empresaUid);
+        && (!('empresaUid' in request.resource.data)
+          || request.resource.data.empresaUid == request.auth.uid);
 
       allow delete: if isEmpresa()
         && resource.data.empresaId == request.auth.uid;
@@ -274,6 +494,10 @@ service cloud.firestore {
     match /candidatos/{candidatoId} {
       allow create: if isIndicador()
         && request.resource.data.indicadorId == request.auth.uid
+        && (!('indicadorUid' in request.resource.data)
+          || request.resource.data.indicadorUid == request.auth.uid)
+        && (!('empresaUid' in request.resource.data)
+          || request.resource.data.empresaUid == request.resource.data.empresaId)
         && request.resource.data.status == 'indicado'
         && vagaEmpresaMatches(request.resource.data);
 
@@ -290,8 +514,13 @@ service cloud.firestore {
     match /indicacoes/{indicacaoId} {
       allow create: if isIndicador()
         && request.resource.data.indicadorId == request.auth.uid
+        && (!('indicadorUid' in request.resource.data)
+          || request.resource.data.indicadorUid == request.auth.uid)
+        && (!('empresaUid' in request.resource.data)
+          || request.resource.data.empresaUid == request.resource.data.empresaId)
         && request.resource.data.status == 'indicado'
-        && vagaEmpresaMatches(request.resource.data);
+        && vagaEmpresaMatches(request.resource.data)
+        && referencedCandidateMatches(request.resource.data);
 
       allow read: if isEmpresaOrIndicadorOwner(resource.data);
 
@@ -306,28 +535,28 @@ service cloud.firestore {
     match /entrevistas/{entrevistaId} {
       allow create: if isEmpresa()
         && request.resource.data.empresaId == request.auth.uid
-        && hasValidInterviewStatus(request.resource.data.status);
+        && hasValidInterviewStatus(request.resource.data.status)
+        && referencedCandidateMatches(request.resource.data);
 
       allow read: if isEmpresaOrIndicadorOwner(resource.data);
 
       allow update: if isEmpresaOwner(resource.data)
         && sameInterviewOwnership()
-        && hasValidInterviewStatus(request.resource.data.status);
+        && hasValidInterviewStatus(request.resource.data.status)
+        && referencedCandidateMatches(request.resource.data);
 
       allow delete: if isEmpresaOwner(resource.data);
     }
 
     match /pagamentos/{pagamentoId} {
       allow read: if isEmpresaOrIndicadorOwner(resource.data);
-      allow create: if sandboxPaymentCreate();
-      allow update: if sandboxPaymentUpdate();
+      allow create, update: if false;
       allow delete: if false;
     }
 
     match /transacoesPagamento/{transacaoId} {
       allow read: if isEmpresaOrIndicadorOwner(resource.data);
-      allow create: if sandboxTransactionCreate();
-      allow update: if sandboxTransactionUpdate();
+      allow create, update: if false;
       allow delete: if false;
     }
 
@@ -346,7 +575,8 @@ service cloud.firestore {
       allow update: if isNotificationOwner()
         && request.resource.data.userId == resource.data.userId
         && notificationReadUpdateOnly();
-      allow create, delete: if false;
+      allow create: if notificationCreateAllowed();
+      allow delete: if false;
     }
 
     match /saques/{saqueId} {

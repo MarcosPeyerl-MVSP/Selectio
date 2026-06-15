@@ -18,11 +18,11 @@ const sidebarConfig = {
     userLabel: 'Indicador',
     action: { to: '/vagas', label: 'Candidato', icon: FaPlus },
     items: [
-      { to: '/vagas', label: 'Vagas', icon: FaBriefcase, activeOn: ['/vagas'] },
-      { to: '/candidatos/indicador', label: 'Candidatos', icon: FaUserFriends, activeOn: ['/candidatos/indicador', '/indicar'] },
-      { to: '/painel/indicador', label: 'Dashboard', icon: FaChartBar, exact: true },
-      { to: '/painel/indicador?secao=perfil', label: 'Perfil', icon: FaUserTie },
-      { to: '/painel/indicador?secao=financeiro', label: 'Financeiro', icon: FaMoneyBillWave },
+      { to: '/vagas', label: 'Vagas', icon: FaBriefcase, activeOn: ['/vagas'], tourKey: 'vagas' },
+      { to: '/candidatos/indicador', label: 'Candidatos', icon: FaUserFriends, activeOn: ['/candidatos/indicador', '/indicar'], tourKey: 'candidatos' },
+      { to: '/painel/indicador', label: 'Dashboard', icon: FaChartBar, exact: true, tourKey: 'dashboard' },
+      { to: '/painel/indicador?secao=perfil', label: 'Perfil', icon: FaUserTie, tourKey: 'perfil' },
+      { to: '/painel/indicador?secao=financeiro', label: 'Financeiro', icon: FaMoneyBillWave, tourKey: 'financeiro' },
       { to: '/painel/indicador?secao=configuracoes', label: 'Configurações', icon: FaCog },
     ],
   },
@@ -31,13 +31,13 @@ const sidebarConfig = {
     userLabel: 'Empresa',
     action: { to: '/criar-vaga/empresa', label: 'Nova vaga', icon: FaPlus },
     items: [
-      { to: '/vagas', label: 'Vagas', icon: FaBriefcase, activeOn: ['/vagas'] },
-      { to: '/candidatos/empresa', label: 'Candidatos', icon: FaUserFriends, activeOn: ['/candidatos/empresa'] },
-      { to: '/painel/empresa', label: 'Dashboard', icon: FaChartBar, exact: true },
-      { to: '/painel/empresa?secao=perfil', label: 'Perfil', icon: FaUserTie },
-      { to: '/painel/empresa?secao=pagamentos', label: 'Pagamentos', icon: FaCreditCard },
+      { to: '/vagas', label: 'Vagas', icon: FaBriefcase, activeOn: ['/vagas'], tourKey: 'vagas' },
+      { to: '/candidatos/empresa', label: 'Candidatos', icon: FaUserFriends, activeOn: ['/candidatos/empresa'], tourKey: 'candidatos' },
+      { to: '/painel/empresa', label: 'Dashboard', icon: FaChartBar, exact: true, tourKey: 'dashboard' },
+      { to: '/painel/empresa?secao=perfil', label: 'Perfil', icon: FaUserTie, tourKey: 'perfil' },
+      { to: '/painel/empresa?secao=pagamentos', label: 'Pagamentos', icon: FaCreditCard, tourKey: 'pagamentos' },
       { to: '/painel/empresa?secao=configuracoes', label: 'Configurações', icon: FaCog },
-      { to: '/painel/empresa?secao=entrevistas', label: 'Entrevistas', icon: FaCalendarAlt },
+      { to: '/painel/empresa?secao=entrevistas', label: 'Entrevistas', icon: FaCalendarAlt, tourKey: 'entrevistas' },
     ],
   },
 }
@@ -55,7 +55,7 @@ function Sidebar({ type, user }) {
   const userInfo = activeUser?.email || activeUser?.cnpj || config.userLabel
 
   return (
-    <aside className="app-sidebar">
+    <aside className="app-sidebar" data-tour={`${activeType}-sidebar`}>
       <h2 className="app-sidebar-title">{config.title}</h2>
 
       <div className="app-sidebar-user">
@@ -75,6 +75,7 @@ function Sidebar({ type, user }) {
               key={`${item.to}-${item.label}`}
               to={item.to}
               className={() => isItemActive(item, pathname, search) ? 'active' : ''}
+              data-tour={item.tourKey ? `${activeType}-nav-${item.tourKey}` : undefined}
             >
               <Icon /> {item.label}
             </NavLink>
@@ -82,7 +83,7 @@ function Sidebar({ type, user }) {
         })}
       </nav>
 
-      <NavLink className={() => 'app-sidebar-btn'} to={config.action.to}>
+      <NavLink className={() => 'app-sidebar-btn'} to={config.action.to} data-tour={`${activeType}-nav-action`}>
         <ActionIcon /> {config.action.label}
       </NavLink>
     </aside>

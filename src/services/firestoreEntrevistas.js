@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore'
 
 import { db } from './firebase'
+import { notificarEntrevistaAlterada } from './firestoreNotificacoes'
 
 const colecaoEntrevistas = collection(db, 'entrevistas')
 const statusPermitidos = ['agendada', 'realizada', 'cancelada', 'pendente']
@@ -79,12 +80,19 @@ export const criarEntrevista = async (dados) => {
 
   const agora = new Date().toISOString()
 
-  return {
+  const entrevistaCriada = {
     ...entrevista,
     id: docRef.id,
     criadoEm: agora,
     atualizadoEm: agora
   }
+
+  await notificarEntrevistaAlterada({
+    entrevista: entrevistaCriada,
+    statusAtual: entrevistaCriada.status
+  })
+
+  return entrevistaCriada
 }
 
 export const listarEntrevistasPorEmpresa = async (empresaId) => {
@@ -164,7 +172,22 @@ export const atualizarStatusEntrevista = async (id, status) => {
     throw new Error('Status de entrevista inválido.')
   }
 
-  return atualizarEntrevista(id, { status })
+  const entrevistaAtual = await buscarEntrevistaPorId(id)
+  const entrevistaAtualizada = await atualizarEntrevista(id, { status })
+
+  if (entrevistaAtual && entrevistaAtual.status !== status) {
+    await notificarEntrevistaAlterada({
+      entrevista: {
+        ...entrevistaAtual,
+        ...entrevistaAtualizada,
+        status
+      },
+      statusAnterior: entrevistaAtual.status || 'agendada',
+      statusAtual: status
+    })
+  }
+
+  return entrevistaAtualizada
 }
 
 export const cancelarEntrevista = async (id) => atualizarStatusEntrevista(id, 'cancelada')

@@ -1,6 +1,7 @@
 import './ConfiguracoesConta.css'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   GoogleAuthProvider,
   linkWithPopup,
@@ -16,6 +17,7 @@ import {
   FaGoogle,
   FaKey,
   FaRedo,
+  FaRoute,
   FaSave,
   FaUnlink,
   FaUserCircle
@@ -25,7 +27,7 @@ import PageLoader from '../ui/PageLoader'
 import { auth } from '../../services/firebase'
 import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from '../../services/errosAutenticacao'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
-import { atualizarPerfilUsuario } from '../../services/firestoreUsers'
+import { atualizarPerfilUsuario, definirTourUsuarioConcluido } from '../../services/firestoreUsers'
 import { useConfirmacao } from '../../hooks/useConfirmacao'
 import { useToast } from '../../hooks/useToast'
 
@@ -74,6 +76,7 @@ const getProfileForm = (profile, tipo) => {
 }
 
 function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
+  const navigate = useNavigate()
   const toast = useToast()
   const confirm = useConfirmacao()
   const [firebaseUser, setFirebaseUser] = useState(() => snapshotFirebaseUser(auth.currentUser))
@@ -105,6 +108,35 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
   const isBusy = linking || unlinking || savingPassword || sendingVerification || refreshingEmail || savingProfile
   const canLinkGoogle = authReady && isSameFirebaseUser && !hasGoogleLinked && !isBusy
   const canUnlinkGoogle = authReady && isSameFirebaseUser && hasGoogleLinked && !isBusy
+
+  const repetirTour = async () => {
+    if (!firebaseUid) {
+      toast.warning('Perfil sem UID do Firebase. Entre novamente antes de reiniciar o tour.')
+      return
+    }
+
+    const field = tipo === 'empresa' ? 'tourEmpresaConcluido' : 'tourIndicadorConcluido'
+    const onboardingField = tipo === 'empresa' ? 'empresaConcluido' : 'indicadorConcluido'
+    const updatedUser = {
+      ...user,
+      [field]: false,
+      onboardingTour: {
+        ...(user?.onboardingTour || {}),
+        [onboardingField]: false
+      }
+    }
+
+    localStorage.setItem(storageKey, JSON.stringify(updatedUser))
+    onUserUpdate?.(updatedUser)
+
+    try {
+      await definirTourUsuarioConcluido({ uid: firebaseUid, tipo, concluido: false })
+    } catch {
+      toast.warning('O tour será reaberto nesta sessão. Não foi possível salvar a preferência agora.')
+    }
+
+    navigate(tipo === 'empresa' ? '/painel/empresa' : '/painel/indicador')
+  }
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -529,6 +561,24 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
               </button>
             )}
           </div>
+        </article>
+
+        <article className="settings-card onboarding-card">
+          <div className="settings-card-title">
+            <FaRoute />
+            <div>
+              <span>Onboarding</span>
+              <h2>Tour guiado</h2>
+            </div>
+          </div>
+
+          <p className="settings-note">
+            Reabra o tour inicial para rever rapidamente as principais áreas do painel.
+          </p>
+
+          <button type="button" className="settings-secondary-button" onClick={repetirTour}>
+            <FaRoute /> Repetir tour
+          </button>
         </article>
 
       </div>

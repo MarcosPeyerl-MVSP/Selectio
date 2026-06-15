@@ -15,7 +15,8 @@ function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onCl
   const toast = useToast()
   const confirm = useConfirmacao()
   const empresaId = getFirebaseUid(empresa)
-  const valorRecompensa = useMemo(() => obterValorRecompensa(candidato), [candidato])
+  const recompensaFixa = useMemo(() => obterRecompensaFixa(candidato), [candidato])
+  const valorRecompensa = recompensaFixa.valor
   const [carregando, setCarregando] = useState(false)
 
   if (!candidato) return null
@@ -31,6 +32,11 @@ function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onCl
 
   const handleSubmit = async (event) => {
     event.preventDefault()
+
+    if (!recompensaFixa.disponivel) {
+      toast.warning('Esta vaga não possui recompensa fixa. Defina um valor fixo para liberar pagamento automático.')
+      return
+    }
 
     const confirmado = await confirm({
       title: 'Pagar recompensa?',
@@ -50,9 +56,12 @@ function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onCl
       const pagamento = await criarPagamentoRecompensa({
         empresaId,
         candidatoId: candidato.id,
+        candidatoNome: candidato.nome || '',
         indicacaoId: candidato.indicacaoId || '',
         vagaId: candidato.vagaId || '',
+        vagaTitulo: candidato.vagaTitulo || '',
         indicadorId: candidato.indicadorId || candidato.indicadorUid || '',
+        indicadorNome: candidato.indicadorNome || '',
         valor: valorRecompensa,
         descricao: `Recompensa Selectio - ${candidato.vagaTitulo || 'Vaga'} - ${candidato.nome || 'Candidato'}`
       })
@@ -96,7 +105,7 @@ function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onCl
         <header>
           <span><FaCreditCard /> Mercado Pago</span>
           <h2 id="payment-reward-title">Pagar recompensa</h2>
-          <p>O pagamento vai para a conta Selectio. Depois da aprovação, o saldo do indicador é creditado internamente.</p>
+          <p>O checkout é criado pelo backend local da Selectio. Depois da aprovação, o saldo do indicador é creditado internamente.</p>
         </header>
 
         <div className="payment-summary">
@@ -124,16 +133,25 @@ function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onCl
             <label className="payment-field">
               Valor da recompensa
               <input
-                value={valorRecompensa ? formatCurrency(valorRecompensa) : 'Validado pela vaga no Firestore'}
+                value={recompensaFixa.disponivel
+                  ? valorRecompensa ? formatCurrency(valorRecompensa) : 'Validado pela vaga no Firestore'
+                  : 'Recompensa fixa não definida'}
                 readOnly
                 disabled={Boolean(pagamentoPendente)}
               />
             </label>
 
-            {!valorRecompensa && (
+            {!recompensaFixa.disponivel && (
+              <div className="payment-state blocked">
+                <strong>Recompensa fixa obrigatória</strong>
+                <p>Esta vaga não possui recompensa fixa. Defina um valor fixo para liberar pagamento automático.</p>
+              </div>
+            )}
+
+            {recompensaFixa.disponivel && !valorRecompensa && (
               <div className="payment-state pending">
                 <strong>Valor pendente de validação</strong>
-                <p>A Cloud Function vai buscar a recompensa cadastrada na vaga antes de criar o checkout.</p>
+                <p>O backend local vai buscar a recompensa cadastrada na vaga antes de criar o checkout.</p>
               </div>
             )}
 
@@ -154,7 +172,7 @@ function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onCl
                   <FaExternalLinkAlt /> Continuar checkout
                 </button>
               ) : (
-                <button type="submit" disabled={carregando}>
+                <button type="submit" disabled={carregando || !recompensaFixa.disponivel}>
                   {carregando ? 'Criando...' : 'Pagar recompensa'}
                 </button>
               )}
@@ -183,9 +201,28 @@ function abrirCheckout(url, toast) {
   window.location.href = url
 }
 
-function obterValorRecompensa(candidato) {
-  if (Number(candidato?.recompensaValor || 0) > 0) return Number(candidato.recompensaValor)
-  return normalizarValor(candidato?.recompensa)
+function obterRecompensaFixa(candidato) {
+  const tipo = String(candidato?.recompensaTipo || '').toLowerCase()
+
+  if (tipo && tipo !== 'fixo') {
+    return { disponivel: false, valor: 0 }
+  }
+
+  if (Number(candidato?.recompensaValorFixo || 0) > 0) {
+    return { disponivel: true, valor: Number(candidato.recompensaValorFixo) }
+  }
+
+  const texto = String(candidato?.recompensa || '').trim()
+
+  if (
+    !texto
+    || /%|percent|sal[aá]rio|combinar|consultar|a definir|sob consulta/i.test(texto)
+    || !/^(r\$\s*)?\d[\d.\s]*(,\d{1,2})?$/i.test(texto)
+  ) {
+    return { disponivel: false, valor: 0 }
+  }
+
+  return { disponivel: true, valor: normalizarValor(texto) }
 }
 
 function normalizarValor(valor) {

@@ -42,6 +42,11 @@
   animation-delay: 0.06s;
 }
 
+.onboarding-card {
+  grid-column: 1 / -1;
+  max-width: 760px;
+}
+
 .settings-card-title {
   display: flex;
   align-items: center;

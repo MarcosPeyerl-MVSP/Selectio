@@ -170,6 +170,10 @@ function CriarVagaEmpresa() {
         ? `${form.tipo} (${formatDate(form.tipoDataInicio)} – ${formatDate(form.tipoDataFim)})`
         : form.tipo,
       recompensa: getRecompensa(),
+      recompensaTipo: form.recompensaTipo,
+      recompensaValorFixo: form.recompensaTipo === 'fixo'
+        ? getNumberFromCurrency(form.recompensaValor)
+        : null,
       descricaoCurta: form.descricaoCurta || form.descricaoLonga.slice(0, 160),
       descricaoLonga: form.descricaoLonga,
       beneficios: parseList(form.beneficios),

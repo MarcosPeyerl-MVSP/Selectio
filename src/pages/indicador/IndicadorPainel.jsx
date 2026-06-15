@@ -10,11 +10,12 @@ import ConfiguracoesConta from '../../components/configuracoes-conta/Configuraco
 import DashboardActionCard from '../../components/dashboard/DashboardActionCard'
 import DashboardHeader from '../../components/dashboard/DashboardHeader'
 import DashboardLayout from '../../components/dashboard/DashboardLayout'
+import GuidedTour from '../../components/onboarding/GuidedTour'
 import PageLoader from '../../components/ui/PageLoader'
 import IndicadorFinanceiro from './IndicadorFinanceiro'
 import IndicadorPerfil from './IndicadorPerfil'
 import { buscarStatusIndicador } from '../../services/firestoreIndicacoes'
-import { buscarPerfilUsuario } from '../../services/firestoreUsers'
+import { buscarPerfilUsuario, marcarTourUsuarioConcluido } from '../../services/firestoreUsers'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 
 const formatCurrency = (value) => Number(value || 0).toLocaleString('pt-BR', {
@@ -35,35 +36,79 @@ const indicadorCards = [
     title: 'Vagas',
     description: 'Explore oportunidades de talentos e encontre o match perfeito para sua rede.',
     to: '/vagas',
-    action: 'Ver Oportunidades'
+    action: 'Ver Oportunidades',
+    dataTour: 'indicador-card-vagas'
   },
   {
     icon: FaUserFriends,
     title: 'Candidatos',
     description: 'Inicie uma nova indicação de talento e impulsione a carreira da sua rede.',
     to: '/vagas',
-    action: 'Indicar Agora'
+    action: 'Indicar Agora',
+    dataTour: 'indicador-card-candidatos'
   },
   {
     icon: FaUserTie,
     title: 'Perfil',
     description: 'Personalize sua bio e gerencie seus dados para manter sua autoridade.',
     to: '/painel/indicador?secao=perfil',
-    action: 'Meu Perfil'
+    action: 'Meu Perfil',
+    dataTour: 'indicador-card-perfil'
   },
   {
     icon: FaChartBar,
     title: 'Dashboard',
     description: 'Acompanhe status, ganhos e o impacto de cada indicação em tempo real.',
     to: '/painel/indicador',
-    action: 'Acompanhar'
+    action: 'Acompanhar',
+    dataTour: 'indicador-card-dashboard'
   },
   {
     icon: FaMoneyBillWave,
     title: 'Financeiro',
     description: 'Veja seu saldo, movimentações e solicite saques manuais.',
     to: '/painel/indicador?secao=financeiro',
-    action: 'Abrir Carteira'
+    action: 'Abrir Carteira',
+    dataTour: 'indicador-card-financeiro'
+  }
+]
+
+const indicadorTourSteps = [
+  {
+    title: 'Bem-vindo ao painel do indicador',
+    description: 'Aqui você acompanha suas indicações, entrevistas e recompensas.'
+  },
+  {
+    selector: '[data-tour="indicador-sidebar"]',
+    align: 'start',
+    title: 'Menu lateral',
+    description: 'Use o menu lateral para navegar entre candidatos, entrevistas, financeiro e perfil.'
+  },
+  {
+    selector: '[data-tour="indicador-card-vagas"]',
+    title: 'Vagas disponíveis',
+    description: 'Explore vagas abertas e escolha oportunidades compatíveis com sua rede de contatos.'
+  },
+  {
+    selector: '[data-tour="indicador-card-candidatos"]',
+    title: 'Candidatos indicados',
+    description: 'Acompanhe o andamento dos candidatos que você indicou.'
+  },
+  {
+    selector: '[data-tour="indicador-nav-candidatos"]',
+    title: 'Entrevistas',
+    description: 'Quando uma empresa agendar uma entrevista, ela aparecerá nesta seção.'
+  },
+  {
+    selector: '[data-tour="indicador-card-financeiro"]',
+    title: 'Financeiro',
+    description: 'Veja recompensas recebidas, saldo disponível e solicitações de saque.'
+  },
+  {
+    selector: '[data-tour="navbar-account-actions"]',
+    scroll: false,
+    title: 'Notificações e perfil',
+    description: 'Receba alertas sobre status, entrevistas, pagamentos e acesse suas configurações.'
   }
 ]
 
@@ -141,6 +186,26 @@ function Painel() {
 
   if (!user || loadingPanel) return <PageLoader label="Carregando painel do indicador..." />
 
+  const tourConcluido = Boolean(user.tourIndicadorConcluido || user.onboardingTour?.indicadorConcluido)
+
+  const concluirTour = async () => {
+    const atualizacao = {
+      tourIndicadorConcluido: true,
+      onboardingTour: {
+        ...(user.onboardingTour || {}),
+        indicadorConcluido: true
+      }
+    }
+
+    setUser((usuarioAtual) => {
+      const merged = { ...usuarioAtual, ...atualizacao }
+      localStorage.setItem('indicadorUser', JSON.stringify(merged))
+      return merged
+    })
+
+    await marcarTourUsuarioConcluido({ uid: indicadorUid, tipo: 'indicador' }).catch(() => {})
+  }
+
   return (
     <DashboardLayout sidebarType="indicador" user={user}>
       {activeSection === 'configuracoes' ? (
@@ -182,6 +247,14 @@ function Painel() {
           </section>
 
           <Link className="dashboard-floating-btn" to="/vagas">+</Link>
+
+          <GuidedTour
+            key={`indicador-tour-${indicadorUid}`}
+            active={activeSection === 'dashboard' && !tourConcluido}
+            steps={indicadorTourSteps}
+            storageKey={`indicador-${indicadorUid}`}
+            onFinish={concluirTour}
+          />
         </>
       )}
     </DashboardLayout>

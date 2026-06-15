@@ -127,6 +127,11 @@
   background: var(--warning-bg);
 }
 
+.payment-state.blocked {
+  border-color: rgba(182, 28, 47, 0.28);
+  background: var(--danger-bg);
+}
+
 .payment-actions {
   display: flex;
   justify-content: flex-end;

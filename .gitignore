@@ -11,7 +11,27 @@ node_modules
 dist
 dist-ssr
 *.local
+.env*
+!.env.example
+!scripts/.env.example
 env
+env*
+*.download
+serviceAccount*.json
+*service-account*.json
+*firebase-adminsdk*.json
+*.service-account.json
+application_default_credentials.json
+application-default-credentials.json
+google-credentials*.json
+credentials.local.json
+scripts/serviceAccount*.json
+scripts/*.local.json
+functions/env*
+*.pem
+*.key
+*.p12
+*.pfx
 
 # Editor directories and files
 .vscode/*
@@ -27,9 +47,3 @@ env
 *.db
 *.sqlite
 *.sqlite3
-
-
-.env
-.env.local
-functions/.env
-functions/.env.local

@@ -28,6 +28,21 @@ const parseMoneyValue = (value) => {
   return Number(normalized || 0)
 }
 
+const isFixedRewardText = (value) => {
+  const text = String(value || '').trim()
+
+  return Boolean(text)
+    && !/%|percent|sal[aá]rio|combinar|consultar|a definir|sob consulta/i.test(text)
+    && /^(r\$\s*)?\d[\d.\s]*(,\d{1,2})?$/i.test(text)
+}
+
+const normalizeRewardValue = (dados) => {
+  const numericValue = Number(dados.recompensaValorFixo || dados.recompensaValor || 0)
+  if (Number.isFinite(numericValue) && numericValue > 0) return numericValue
+
+  return isFixedRewardText(dados.recompensa) ? parseMoneyValue(dados.recompensa) : null
+}
+
 const mapIndicacaoDoc = (snapshot) => {
   if (!snapshot.exists()) return null
 
@@ -36,7 +51,7 @@ const mapIndicacaoDoc = (snapshot) => {
   return {
     id: snapshot.id,
     ...data,
-    recompensaValor: Number(data.recompensaValor || parseMoneyValue(data.recompensa)),
+    recompensaValor: normalizeRewardValue(data),
     criadoEm: timestampToValue(data.criadoEm),
     atualizadoEm: timestampToValue(data.atualizadoEm)
   }
@@ -52,7 +67,7 @@ export const registrarIndicacao = async (dados) => {
   const docRef = await addDoc(indicacoesCollection, {
     ...dados,
     status: dados.status || 'indicado',
-    recompensaValor: Number(dados.recompensaValor || parseMoneyValue(dados.recompensa)),
+    recompensaValor: normalizeRewardValue(dados),
     criadoEm: serverTimestamp(),
     atualizadoEm: serverTimestamp()
   })

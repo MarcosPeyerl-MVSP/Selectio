@@ -74,6 +74,20 @@
   background: var(--surface);
 }
 
+.notification-item-meta {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--primary-dark);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.notification-item.read .notification-item-meta {
+  color: var(--muted);
+}
+
 .notification-item strong {
   display: block;
   color: var(--text-heading);

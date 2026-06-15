@@ -115,6 +115,7 @@ export const buscarPerfilUsuario = async (uid) => {
   const perfilData = perfilSnapshot.data()
 
   return {
+    ...userData,
     ...perfilData,
     id: perfilData.id || uid,
     uid,
@@ -122,6 +123,35 @@ export const buscarPerfilUsuario = async (uid) => {
     tipo
   }
 }
+
+export const definirTourUsuarioConcluido = async ({ uid, tipo, concluido }) => {
+  if (!uid) {
+    throw new Error('UID do Firebase é obrigatório para atualizar o tour.')
+  }
+
+  const field = tipo === 'empresa'
+    ? 'tourEmpresaConcluido'
+    : 'tourIndicadorConcluido'
+  const onboardingField = tipo === 'empresa'
+    ? 'empresaConcluido'
+    : 'indicadorConcluido'
+
+  await setDoc(doc(db, 'users', uid), {
+    [field]: Boolean(concluido),
+    onboardingTour: {
+      [onboardingField]: Boolean(concluido)
+    },
+    atualizadoEm: serverTimestamp()
+  }, { merge: true })
+
+  return {
+    [field]: Boolean(concluido)
+  }
+}
+
+export const marcarTourUsuarioConcluido = ({ uid, tipo }) => (
+  definirTourUsuarioConcluido({ uid, tipo, concluido: true })
+)
 
 export const buscarTipoUsuario = async (uid) => {
   if (!uid) return null

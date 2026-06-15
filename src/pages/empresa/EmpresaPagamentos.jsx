@@ -1,7 +1,7 @@
 import './styles/EmpresaPagamentos.css'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { FaCreditCard, FaExternalLinkAlt, FaReceipt } from 'react-icons/fa'
+import { FaCreditCard, FaExternalLinkAlt, FaReceipt, FaSyncAlt } from 'react-icons/fa'
 import { useSearchParams } from 'react-router-dom'
 
 import PageLoader from '../../components/ui/PageLoader'
@@ -9,6 +9,7 @@ import { useToast } from '../../hooks/useToast'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import {
   listarPagamentosPorEmpresa,
+  obterMercadoPagoBackendUrl,
   obterCheckoutUrlPagamento,
   sincronizarPagamentoMercadoPago
 } from '../../services/firestorePagamentos'
@@ -29,7 +30,9 @@ function EmpresaPagamentos({ empresa }) {
   const empresaId = getFirebaseUid(empresa)
   const [pagamentos, setPagamentos] = useState([])
   const [carregando, setCarregando] = useState(true)
+  const [sincronizandoId, setSincronizandoId] = useState('')
   const retornoProcessado = useRef('')
+  const backendUrl = obterMercadoPagoBackendUrl()
 
   useEffect(() => {
     let ativo = true
@@ -45,7 +48,7 @@ function EmpresaPagamentos({ empresa }) {
 
         if (paymentId && retornoProcessado.current !== paymentId) {
           retornoProcessado.current = paymentId
-          const pagamentoAtualizado = await sincronizarPagamentoMercadoPago({ paymentId })
+          const pagamentoAtualizado = await sincronizarPagamentoMercadoPago({ paymentId, empresaId })
 
           if (pagamentoAtualizado?.status === 'approved') {
             toast.success('Pagamento de teste aprovado e transação atualizada.')
@@ -70,20 +73,7 @@ function EmpresaPagamentos({ empresa }) {
           setSearchParams(parametrosLimpos, { replace: true })
         }
 
-        let dados = await listarPagamentosPorEmpresa(empresaId)
-        const pendentes = dados
-          .filter((pagamento) => pagamento.status === 'pending')
-          .slice(0, 10)
-
-        if (pendentes.length) {
-          await Promise.allSettled(
-            pendentes.map((pagamento) => sincronizarPagamentoMercadoPago({
-              pagamentoId: pagamento.id
-            }))
-          )
-          dados = await listarPagamentosPorEmpresa(empresaId)
-        }
-
+        const dados = await listarPagamentosPorEmpresa(empresaId)
         if (ativo) setPagamentos(dados)
       } catch (error) {
         toast.error(error.message || 'Não foi possível carregar pagamentos.')
@@ -109,6 +99,35 @@ function EmpresaPagamentos({ empresa }) {
       .reduce((soma, pagamento) => soma + Number(pagamento.valor || 0), 0)
   }), [pagamentos])
 
+  const atualizarStatusPagamento = async (pagamento) => {
+    setSincronizandoId(pagamento.id)
+
+    try {
+      const resultado = await sincronizarPagamentoMercadoPago({
+        pagamentoId: pagamento.id,
+        preferenceId: pagamento.mercadoPagoPreferenceId,
+        empresaId
+      })
+
+      if (resultado?.status === 'approved') {
+        toast.success('Pagamento aprovado e saldo do indicador atualizado.')
+      } else if (resultado?.status === 'pending') {
+        toast.warning('Pagamento ainda pendente no Mercado Pago.')
+      } else if (resultado?.status) {
+        toast.error(`Pagamento ${statusLabels[resultado.status]?.toLowerCase() || resultado.status}.`)
+      } else {
+        toast.info('Nenhuma atualização encontrada para este pagamento.')
+      }
+
+      const dados = await listarPagamentosPorEmpresa(empresaId)
+      setPagamentos(dados)
+    } catch (error) {
+      toast.error(error.message || 'Não foi possível atualizar o pagamento.')
+    } finally {
+      setSincronizandoId('')
+    }
+  }
+
   if (carregando) return <PageLoader label="Carregando pagamentos..." compact />
 
   return (
@@ -117,6 +136,10 @@ function EmpresaPagamentos({ empresa }) {
         <span>Financeiro da empresa</span>
         <h1>Pagamentos de recompensas</h1>
         <p>Acompanhe recompensas pagas, pendentes e aprovadas para indicadores vinculados aos candidatos contratados.</p>
+        <div className="empresa-pagamentos-env">
+          <strong>Ambiente local Mercado Pago</strong>
+          <span>{backendUrl || 'VITE_MERCADO_PAGO_SANDBOX_URL não configurado'}</span>
+        </div>
       </header>
 
       <section className="empresa-pagamentos-metricas">
@@ -153,14 +176,25 @@ function EmpresaPagamentos({ empresa }) {
                 </span>
               </div>
 
-              {pagamento.status === 'pending' && obterCheckoutUrlPagamento(pagamento) && (
-                <a
-                  href={obterCheckoutUrlPagamento(pagamento)}
-                  target={obterCheckoutUrlPagamento(pagamento).includes('sandbox.mercadopago') ? '_blank' : undefined}
-                  rel="noreferrer"
-                >
-                  <FaExternalLinkAlt /> Continuar checkout
-                </a>
+              {pagamento.status === 'pending' && (
+                <div className="empresa-pagamento-acoes">
+                  {obterCheckoutUrlPagamento(pagamento) && (
+                    <a
+                      href={obterCheckoutUrlPagamento(pagamento)}
+                      target={obterCheckoutUrlPagamento(pagamento).includes('sandbox.mercadopago') ? '_blank' : undefined}
+                      rel="noreferrer"
+                    >
+                      <FaExternalLinkAlt /> Continuar checkout
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => atualizarStatusPagamento(pagamento)}
+                    disabled={sincronizandoId === pagamento.id}
+                  >
+                    <FaSyncAlt /> {sincronizandoId === pagamento.id ? 'Atualizando...' : 'Atualizar status'}
+                  </button>
+                </div>
               )}
             </div>
           ))

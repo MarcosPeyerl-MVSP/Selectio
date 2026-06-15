@@ -92,7 +92,15 @@ const getSalaryParts = (value) => {
 }
 
 // Responsabilidade: converter o texto de recompensa salvo na vaga para os campos do formulário.
-const getRecompensaForm = (value) => {
+const getRecompensaForm = (value, tipoSalvo = '') => {
+  if (tipoSalvo === 'percentual') {
+    return { recompensaTipo: 'percentual', recompensaValor: 'R$ 2.500' }
+  }
+
+  if (tipoSalvo === 'personalizado') {
+    return { recompensaTipo: 'personalizado', recompensaValor: 'R$ 2.500' }
+  }
+
   if (value === '10% Salário') {
     return { recompensaTipo: 'percentual', recompensaValor: 'R$ 2.500' }
   }
@@ -179,7 +187,7 @@ function EditarVagaEmpresa() {
         }
 
         const [salarioMin, salarioMax] = getSalaryParts(data.salario)
-        const recompensa = getRecompensaForm(data.recompensa)
+        const recompensa = getRecompensaForm(data.recompensa, data.recompensaTipo)
         const tipo = getTipoForm(data.tipo)
 
         // Preenche o formulário com os dados carregados da vaga.
@@ -283,6 +291,10 @@ function EditarVagaEmpresa() {
         ? `${form.tipo} (${formatDate(form.tipoDataInicio)} - ${formatDate(form.tipoDataFim)})`
         : form.tipo,
       recompensa: getRecompensa(),
+      recompensaTipo: form.recompensaTipo,
+      recompensaValorFixo: form.recompensaTipo === 'fixo'
+        ? getNumberFromCurrency(form.recompensaValor)
+        : null,
       descricaoCurta: form.descricaoCurta || form.descricaoLonga.slice(0, 160),
       descricaoLonga: form.descricaoLonga,
       beneficios: parseList(form.beneficios),

@@ -13,6 +13,10 @@ import {
 import { db } from './firebase'
 import { getFirebaseUid } from './identidadeFirebase'
 import { atualizarStatusIndicacaoPorCandidato, registrarIndicacao } from './firestoreIndicacoes'
+import {
+  notificarNovoCandidatoIndicado,
+  notificarStatusCandidatoAlterado
+} from './firestoreNotificacoes'
 
 const candidatosCollection = collection(db, 'candidatos')
 const statusPermitidos = ['indicado', 'entrevista', 'contratado', 'cancelado', 'recusado']
@@ -32,6 +36,23 @@ const parseMoneyValue = (value) => {
     .replace(',', '.')
 
   return Number(normalized || 0)
+}
+
+const isFixedRewardText = (value) => {
+  const text = String(value || '').trim()
+
+  return Boolean(text)
+    && !/%|percent|sal[aá]rio|combinar|consultar|a definir|sob consulta/i.test(text)
+    && /^(r\$\s*)?\d[\d.\s]*(,\d{1,2})?$/i.test(text)
+}
+
+const getFixedRewardValue = (vaga) => {
+  if (vaga?.recompensaTipo && vaga.recompensaTipo !== 'fixo') return null
+
+  const numericValue = Number(vaga?.recompensaValorFixo || 0)
+  if (Number.isFinite(numericValue) && numericValue > 0) return numericValue
+
+  return isFixedRewardText(vaga?.recompensa) ? parseMoneyValue(vaga.recompensa) : null
 }
 
 const getOrigem = (dados) => {
@@ -80,7 +101,7 @@ export const criarCandidatoIndicado = async ({ dados, indicador, vaga }) => {
     throw new Error('Vaga e empresa da vaga são obrigatórias para criar candidato.')
   }
 
-  const recompensaValor = parseMoneyValue(vaga.recompensa)
+  const recompensaValor = getFixedRewardValue(vaga)
   const candidato = {
     ...dados,
     hardSkills: normalizeList(dados.hardSkills),
@@ -94,7 +115,9 @@ export const criarCandidatoIndicado = async ({ dados, indicador, vaga }) => {
     empresaId,
     empresaUid: empresaId,
     recompensa: vaga.recompensa || '',
+    recompensaTipo: vaga.recompensaTipo || (recompensaValor ? 'fixo' : 'personalizado'),
     recompensaValor,
+    recompensaValorFixo: recompensaValor,
     status: 'indicado',
     origem: getOrigem(dados),
     aplicadoEm: serverTimestamp(),
@@ -116,19 +139,24 @@ export const criarCandidatoIndicado = async ({ dados, indicador, vaga }) => {
     empresaId,
     empresaUid: empresaId,
     recompensa: vaga.recompensa || '',
+    recompensaTipo: vaga.recompensaTipo || (recompensaValor ? 'fixo' : 'personalizado'),
     recompensaValor,
+    recompensaValorFixo: recompensaValor,
     status: 'indicado'
   })
 
   const now = new Date().toISOString()
-
-  return {
+  const candidatoCriado = {
     ...candidato,
     id: docRef.id,
     aplicadoEm: now,
     criadoEm: now,
     atualizadoEm: now
   }
+
+  await notificarNovoCandidatoIndicado(candidatoCriado)
+
+  return candidatoCriado
 }
 
 export const listarCandidatosPorIndicador = async (indicadorId) => {
@@ -180,9 +208,17 @@ export const atualizarStatusCandidato = async ({ candidatoId, status, empresaId 
 
   await atualizarStatusIndicacaoPorCandidato({ candidatoId, status, empresaId })
 
-  return {
+  const candidatoAtualizado = {
     ...candidato,
     status,
     atualizadoEm: new Date().toISOString()
   }
+
+  await notificarStatusCandidatoAlterado({
+    candidato: candidatoAtualizado,
+    statusAnterior: candidato.status || 'indicado',
+    statusAtual: status
+  })
+
+  return candidatoAtualizado
 }
