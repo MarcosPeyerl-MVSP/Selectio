@@ -20,6 +20,7 @@ import { auth } from '../../services/firebase'
 import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from '../../services/errosAutenticacao'
 import { buscarPerfilUsuario, salvarPerfilUsuario } from '../../services/firestoreUsers'
 import { useToast } from '../../hooks/useToast'
+import { useAuth } from '../../hooks/useAuth'
 
 // Critérios exibidos e validados para classificar a força da senha.
 const passwordCriteria = [
@@ -61,6 +62,7 @@ function CadastroIndicador() {
   // Hook usado para redirecionar o usuário após cadastro bem-sucedido.
   const navigate = useNavigate()
   const toast = useToast()
+  const { adotarPerfil } = useAuth()
 
   // Estado central do formulário de cadastro do indicador.
   const [form, setForm] = useState({
@@ -184,16 +186,14 @@ function CadastroIndicador() {
     keepGoogleSessionRef.current = true
 
     if (perfil.tipo === 'indicador') {
-      localStorage.setItem('indicadorUser', JSON.stringify(perfil))
-      localStorage.removeItem('empresaUser')
+      adotarPerfil(perfil)
       toast.info('Esta conta Google já está cadastrada. Vamos te levar ao painel do indicador.')
       navigate('/painel/indicador')
       return
     }
 
     if (perfil.tipo === 'empresa') {
-      localStorage.setItem('empresaUser', JSON.stringify(perfil))
-      localStorage.removeItem('indicadorUser')
+      adotarPerfil(perfil)
       toast.info('Esta conta Google já está cadastrada como empresa. Vamos te levar ao painel correto.')
       navigate('/painel/empresa')
       return
@@ -356,8 +356,7 @@ function CadastroIndicador() {
       })
 
       keepGoogleSessionRef.current = true
-      localStorage.setItem('indicadorUser', JSON.stringify(perfilIndicador))
-      localStorage.removeItem('empresaUser')
+      adotarPerfil(perfilIndicador)
       toast.success(isGoogleSignup
         ? 'Cadastro concluído com Google.'
         : verificationSent

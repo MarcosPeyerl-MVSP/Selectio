@@ -8,46 +8,20 @@ import { useEffect, useState } from 'react'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import Footer from '../../components/layout/Footer'
+import EstadoDados from '../../components/ui/EstadoDados'
+import PageLoader from '../../components/ui/PageLoader'
 import {
   FaRegClock,
   FaCheck,
   FaEdit,
 } from 'react-icons/fa'
-import { buscarVagaPorId } from '../../services/firestoreVagas'
+import {
+  buscarVagaPorId,
+  statusVagaLabels,
+  vagaAceitaIndicacoes,
+} from '../../services/firestoreVagas'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
-
-// Responsabilidade: identificar o perfil atual com base nos dados salvos no localStorage.
-const getPerfil = () => {
-  const indicador = localStorage.getItem('indicadorUser')
-  const empresa = localStorage.getItem('empresaUser')
-
-  if (indicador) {
-    const user = JSON.parse(indicador)
-    return {
-      tipo: 'indicador',
-      user,
-      vagasPath: '/vagas',
-      painelPath: '/painel/indicador'
-    }
-  }
-
-  if (empresa) {
-    const user = JSON.parse(empresa)
-    return {
-      tipo: 'empresa',
-      user,
-      vagasPath: '/vagas',
-      painelPath: '/painel/empresa'
-    }
-  }
-
-  return {
-    tipo: 'publico',
-    user: null,
-    vagasPath: '/vagas',
-    painelPath: '/login'
-  }
-}
+import { useAuth } from '../../hooks/useAuth'
 
 function Vaga() {
   // Identificador da vaga recebido pela rota.
@@ -61,9 +35,16 @@ function Vaga() {
 
   // Armazena mensagem de erro quando a vaga não é encontrada.
   const [error, setError] = useState(null)
+  const [reloadKey, setReloadKey] = useState(0)
 
   // Guarda o perfil do usuário atual para definir acesso, layout e ações.
-  const [perfil] = useState(getPerfil)
+  const { perfil: usuario } = useAuth()
+  const perfil = {
+    tipo: usuario?.tipo || 'publico',
+    user: usuario,
+    vagasPath: '/vagas',
+    painelPath: usuario?.tipo === 'empresa' ? '/painel/empresa' : '/painel/indicador'
+  }
 
   useEffect(() => {
     // Responsabilidade: buscar os detalhes da vaga no Firestore.
@@ -71,6 +52,7 @@ function Vaga() {
       if (perfil.tipo === 'publico') return
 
       try {
+        setError(null)
         const data = await buscarVagaPorId(id)
         if (!data) {
           throw new Error('Vaga não encontrada')
@@ -84,7 +66,12 @@ function Vaga() {
     }
 
     fetchVaga()
-  }, [id, perfil])
+  }, [id, perfil.tipo, reloadKey])
+
+  const tentarNovamente = () => {
+    setLoading(true)
+    setReloadKey((value) => value + 1)
+  }
 
   // Regra de acesso: usuário público precisa fazer login antes de ver a vaga.
   if (perfil.tipo === 'publico') {
@@ -97,9 +84,7 @@ function Vaga() {
       <>
         <Navbar />
         <main className="vaga-detail-content">
-          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-            <p>Carregando vaga...</p>
-          </div>
+          <PageLoader label="Carregando vaga..." />
         </main>
         <Footer />
       </>
@@ -112,11 +97,14 @@ function Vaga() {
       <>
         <Navbar />
         <main className="vaga-detail-content">
-          <div className="not-found-message">
-            <h2>Vaga não encontrada</h2>
-            <p>Verifique se a vaga existe ou retorne à lista de vagas.</p>
-            <Link to={perfil.vagasPath}>Voltar à lista</Link>
-          </div>
+          <EstadoDados
+            actionLabel="Tentar novamente"
+            description={error || 'Verifique se a vaga existe ou retorne à lista de vagas.'}
+            onAction={tentarNovamente}
+            title={navigator.onLine ? 'Não foi possível carregar a vaga' : 'Você está sem conexão'}
+            tone={navigator.onLine ? 'error' : 'offline'}
+          />
+          <Link className="detail-return-link" to={perfil.vagasPath}>Voltar à lista de vagas</Link>
         </main>
         <Footer />
       </>
@@ -143,6 +131,7 @@ function Vaga() {
   const requisitosArray = Array.isArray(requisitos) ? requisitos : JSON.parse(requisitos || '[]')
   const isOwnCompanyJob = perfil.tipo === 'empresa'
     && String(vaga.empresaId || vaga.empresaUid || '') === String(getFirebaseUid(perfil.user))
+  const aceitaIndicacoes = vagaAceitaIndicacoes(vaga)
 
   return (
     <>
@@ -160,7 +149,9 @@ function Vaga() {
             <Link className="back-link" to={perfil.vagasPath}>
               <FaRegClock /> Voltar para listagem de vagas
             </Link>
-            <span className="tag status">ABERTA</span>
+            <span className={`tag status status-${vaga.status}`}>
+              {statusVagaLabels[vaga.status] || vaga.status}
+            </span>
           </div>
 
           <div className="detail-grid">
@@ -225,8 +216,13 @@ function Vaga() {
                       ? 'Indique um profissional qualificado. Se ele for contratado, você recebe o prêmio direto na sua conta.'
                       : 'Esta vaga foi publicada por outra empresa e está disponível apenas para visualização.'}
                   </p>
-                  {perfil.tipo === 'indicador' && (
+                  {perfil.tipo === 'indicador' && aceitaIndicacoes && (
                     <Link className="btn-primary" to={`/indicar/${id}`}>Fazer Indicação</Link>
+                  )}
+                  {perfil.tipo === 'indicador' && !aceitaIndicacoes && (
+                    <div className="indication-unavailable" role="status">
+                      Esta vaga está {statusVagaLabels[vaga.status]?.toLowerCase() || 'indisponível'} e não recebe novas indicações.
+                    </div>
                   )}
                 </div>
               )}

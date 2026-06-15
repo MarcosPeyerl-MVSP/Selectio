@@ -16,6 +16,7 @@ import {
 
 import PageLoader from '../ui/PageLoader'
 import CardEsqueleto from '../ui/CardEsqueleto'
+import EstadoDados from '../ui/EstadoDados'
 import { useConfirmacao } from '../../hooks/useConfirmacao'
 import { useToast } from '../../hooks/useToast'
 import {
@@ -124,6 +125,8 @@ function PainelEntrevistas({ empresa }) {
   const [entrevistas, setEntrevistas] = useState([])
   const [candidatos, setCandidatos] = useState([])
   const [carregando, setCarregando] = useState(true)
+  const [erroCarregamento, setErroCarregamento] = useState('')
+  const [reloadKey, setReloadKey] = useState(0)
   const [acaoEmAndamento, setAcaoEmAndamento] = useState(null)
   const [candidatoEmAgendamento, setCandidatoEmAgendamento] = useState(null)
   const [formularioAgendamento, setFormularioAgendamento] = useState({
@@ -147,6 +150,7 @@ function PainelEntrevistas({ empresa }) {
       }
 
       try {
+        setErroCarregamento('')
         const [entrevistasDaEmpresa, candidatosDaEmpresa] = await Promise.all([
           listarEntrevistasPorEmpresa(empresaId),
           listarCandidatosPorEmpresa(empresaId)
@@ -159,6 +163,7 @@ function PainelEntrevistas({ empresa }) {
       } catch (error) {
         if (!ativo) return
 
+        setErroCarregamento(error.message || 'Não foi possível carregar entrevistas.')
         toast.error(error.message || 'Não foi possível carregar entrevistas.')
       } finally {
         if (ativo) setCarregando(false)
@@ -170,7 +175,7 @@ function PainelEntrevistas({ empresa }) {
     return () => {
       ativo = false
     }
-  }, [empresaId, toast])
+  }, [empresaId, reloadKey, toast])
 
   const entrevistasPorData = useMemo(() => entrevistas.reduce((acumulador, entrevista) => {
     if (!entrevista.data) return acumulador
@@ -462,6 +467,23 @@ function PainelEntrevistas({ empresa }) {
         <div className="entrevistas-carregando-grid">
           <CardEsqueleto count={3} lines={3} />
         </div>
+      </section>
+    )
+  }
+
+  if (erroCarregamento) {
+    return (
+      <section className="painel-entrevistas">
+        <EstadoDados
+          actionLabel="Tentar novamente"
+          description={erroCarregamento}
+          onAction={() => {
+            setCarregando(true)
+            setReloadKey((value) => value + 1)
+          }}
+          title={navigator.onLine ? 'Não foi possível carregar as entrevistas' : 'Você está sem conexão'}
+          tone={navigator.onLine ? 'error' : 'offline'}
+        />
       </section>
     )
   }

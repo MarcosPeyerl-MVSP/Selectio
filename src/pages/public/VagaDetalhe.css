@@ -50,6 +50,13 @@
   background: var(--primary-dark);
 }
 
+.detail-return-link {
+  align-self: center;
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
 /* Estilos de sidebar usados nesta página. */
 .sidebar {
   background: var(--surface);
@@ -165,6 +172,17 @@
   border-radius: 999px;
   font-weight: 700;
   font-size: 12px;
+}
+
+.tag.status.status-pausada {
+  background: #fff4d6;
+  color: #8a5a00;
+}
+
+.tag.status.status-encerrada,
+.tag.status.status-expirada {
+  background: #f1f1f1;
+  color: #5f6368;
 }
 
 /* Grade que separa conteúdo principal e lateral. */
@@ -313,6 +331,16 @@
   cursor: pointer;
   gap: 10px;
   text-decoration: none;
+}
+
+.indication-unavailable {
+  padding: 13px 15px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
 }
 
 /* Etiqueta da vaga pertencente à empresa. */

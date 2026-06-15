@@ -18,8 +18,9 @@ import {
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import Footer from '../../components/layout/Footer'
+import EstadoDados from '../../components/ui/EstadoDados'
 import PageLoader from '../../components/ui/PageLoader'
-import { buscarVagaPorId } from '../../services/firestoreVagas'
+import { buscarVagaPorId, vagaAceitaIndicacoes } from '../../services/firestoreVagas'
 import { criarCandidatoIndicado } from '../../services/firestoreCandidatos'
 import { useToast } from '../../hooks/useToast'
 
@@ -114,6 +115,8 @@ function Indicar() {
 
   // Armazena mensagens de erro do carregamento ou envio.
   const [message, setMessage] = useState('')
+  const [loadError, setLoadError] = useState('')
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     // Responsabilidade: buscar os dados da vaga selecionada antes de exibir o formulário.
@@ -121,23 +124,32 @@ function Indicar() {
       if (!indicador) return
 
       try {
+        setLoadError('')
         const data = await buscarVagaPorId(vagaId)
 
         if (!data) {
           throw new Error('Vaga não encontrada')
         }
 
+        if (!vagaAceitaIndicacoes(data)) {
+          throw new Error('Esta vaga não está aberta para novas indicações.')
+        }
+
         setVaga(data)
       } catch (err) {
-        setMessage(err.message)
-        toast.error(err.message)
+        setLoadError(err.message)
       } finally {
         setLoading(false)
       }
     }
 
     fetchVaga()
-  }, [indicador, vagaId, toast])
+  }, [indicador, vagaId, reloadKey])
+
+  const tentarNovamente = () => {
+    setLoading(true)
+    setReloadKey((value) => value + 1)
+  }
 
   // Regra de acesso: sem indicador autenticado, redireciona para login.
   if (!indicador) {
@@ -238,6 +250,14 @@ function Indicar() {
 
           {loading ? (
             <PageLoader label="Carregando vaga..." compact />
+          ) : loadError || !vaga ? (
+            <EstadoDados
+              actionLabel="Tentar novamente"
+              description={loadError || 'A vaga solicitada não está disponível.'}
+              onAction={tentarNovamente}
+              title={navigator.onLine ? 'Indicação indisponível' : 'Você está sem conexão'}
+              tone={navigator.onLine ? 'error' : 'offline'}
+            />
           ) : (
             <form className="indicar-form" onSubmit={handleSubmit}>
               <div className="indicar-main">

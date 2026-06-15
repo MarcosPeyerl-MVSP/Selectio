@@ -34,6 +34,14 @@ const initialForm = {
   dataLimite: '',
 }
 
+const getLocalDateInputValue = () => {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function CriarVagaEmpresa() {
   // Hook usado para redirecionar a empresa após criação da vaga ou ausência de sessão.
   const navigate = useNavigate()
@@ -109,7 +117,7 @@ function CriarVagaEmpresa() {
   }
 
   // Responsabilidade: validar o formulário e enviar a vaga para o Firestore.
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event, status = 'aberta') => {
     event.preventDefault()
     setMessage('')
 
@@ -150,6 +158,12 @@ function CriarVagaEmpresa() {
       return
     }
 
+    if (form.dataLimite && form.dataLimite < getLocalDateInputValue()) {
+      setMessage('A data limite não pode estar no passado.')
+      toast.warning('A data limite não pode estar no passado.')
+      return
+    }
+
     // Monta o texto de salário exibido na vaga.
     const salario = form.salarioMin || form.salarioMax
       ? `${form.salarioMin || 'A combinar'} – ${form.salarioMax || 'A combinar'}`
@@ -184,6 +198,8 @@ function CriarVagaEmpresa() {
       ].filter(Boolean),
       imagem: 'https://images.unsplash.com/photo-1497366216548-37526070297c',
       area: form.area,
+      status,
+      dataLimite: form.dataLimite,
     }
 
     try {
@@ -192,8 +208,12 @@ function CriarVagaEmpresa() {
       // Integração: envia a nova vaga para cadastro no Firestore.
       await criarVaga(payload)
 
-      setMessage('Vaga criada com sucesso.')
-      toast.success('Vaga criada com sucesso.')
+      const mensagemSucesso = status === 'pausada'
+        ? 'Vaga salva como pausada.'
+        : 'Vaga criada e aberta para indicações.'
+
+      setMessage(mensagemSucesso)
+      toast.success(mensagemSucesso)
       setForm(initialForm)
       navigate('/vagas')
     } catch {
@@ -460,7 +480,14 @@ function CriarVagaEmpresa() {
             {message && <p className="empresa-vaga-message">{message}</p>}
 
             <div className="form-actions">
-              <button type="button" className="draft-btn">Salvar como Rascunho</button>
+              <button
+                type="button"
+                className="draft-btn"
+                disabled={loading}
+                onClick={(event) => handleSubmit(event, 'pausada')}
+              >
+                Salvar pausada
+              </button>
               <button type="submit" className="finish-btn" disabled={loading}>
                 {loading ? 'Salvando...' : 'Finalizar Vaga'}
               </button>

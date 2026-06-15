@@ -10,20 +10,20 @@ import { useTema } from '../../hooks/useTema'
 import { useConfirmacao } from '../../hooks/useConfirmacao'
 import { useToast } from '../../hooks/useToast'
 import MenuNotificacoes from '../notificacoes/MenuNotificacoes'
+import { useAuth } from '../../hooks/useAuth'
 
 function Navbar() {
   const navigate = useNavigate()
   const { isDark, toggleTheme } = useTema()
   const confirm = useConfirmacao()
   const toast = useToast()
+  const { perfil, carregando: carregandoSessao } = useAuth()
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const profileMenuRef = useRef(null)
-  const empresa = getStoredUser('empresaUser')
-  const indicador = getStoredUser('indicadorUser')
-  const session = empresa
-    ? { type: 'empresa', label: 'Empresa', user: empresa, painelPath: '/painel/empresa' }
-    : indicador
-      ? { type: 'indicador', label: 'Indicador', user: indicador, painelPath: '/painel/indicador' }
+  const session = perfil?.tipo === 'empresa'
+    ? { type: 'empresa', label: 'Empresa', user: perfil, painelPath: '/painel/empresa' }
+    : perfil?.tipo === 'indicador'
+      ? { type: 'indicador', label: 'Indicador', user: perfil, painelPath: '/painel/indicador' }
       : { type: 'publico', label: '', user: null, painelPath: '/login' }
   const userName = getUserName(session.user)
   const userEmail = getUserEmail(session.user)
@@ -84,7 +84,7 @@ function Navbar() {
       </nav>
 
       <div className="navbar-right">
-        {session.type === 'publico' ? (
+        {!carregandoSessao && session.type === 'publico' ? (
           <>
             <button
               type="button"
@@ -173,18 +173,6 @@ function getUserName(user) {
 
 function getUserEmail(user) {
   return user?.email || user?.emailCorporativo || ''
-}
-
-function getStoredUser(key) {
-  const stored = localStorage.getItem(key)
-  if (!stored) return null
-
-  try {
-    return JSON.parse(stored)
-  } catch {
-    localStorage.removeItem(key)
-    return null
-  }
 }
 
 export default Navbar

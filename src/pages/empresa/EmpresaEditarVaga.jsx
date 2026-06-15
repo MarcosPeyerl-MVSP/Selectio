@@ -34,7 +34,16 @@ const initialForm = {
   recompensaValor: 'R$ 2.500',
   localizacao: '',
   dataLimite: '',
+  status: 'aberta',
   imagem: '',
+}
+
+const getLocalDateInputValue = () => {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 // Responsabilidade: formatar valores numéricos como moeda brasileira.
@@ -204,6 +213,8 @@ function EditarVagaEmpresa() {
           beneficios: listToText(data.beneficios),
           ...recompensa,
           localizacao: data.localizacao || '',
+          dataLimite: data.dataLimite || '',
+          status: data.status === 'expirada' ? 'aberta' : data.status || 'aberta',
           imagem: data.imagem || '',
         })
         setCanEdit(true)
@@ -272,6 +283,16 @@ function EditarVagaEmpresa() {
       return
     }
 
+    if (
+      form.status === 'aberta'
+      && form.dataLimite
+      && form.dataLimite < getLocalDateInputValue()
+    ) {
+      setMessage('Atualize a data limite antes de reabrir esta vaga.')
+      toast.warning('Atualize a data limite antes de reabrir esta vaga.')
+      return
+    }
+
     const salario = form.salarioMin || form.salarioMax
       ? `${form.salarioMin || 'A combinar'} - ${form.salarioMax || 'A combinar'}`
       : 'A combinar'
@@ -305,6 +326,8 @@ function EditarVagaEmpresa() {
       ].filter(Boolean),
       imagem: form.imagem || 'https://images.unsplash.com/photo-1497366216548-37526070297c',
       area: form.area,
+      status: form.status,
+      dataLimite: form.dataLimite,
     }
 
     try {
@@ -496,6 +519,24 @@ function EditarVagaEmpresa() {
                     <label>Data limite</label>
                     <input name="dataLimite" type="date" value={form.dataLimite} onChange={handleChange} />
                   </div>
+                </div>
+
+                <label>Status da vaga</label>
+                <div className="option-grid">
+                  {[
+                    ['aberta', 'Aberta'],
+                    ['pausada', 'Pausada'],
+                    ['encerrada', 'Encerrada']
+                  ].map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      className={form.status === value ? 'selected' : ''}
+                      onClick={() => setForm((current) => ({ ...current, status: value }))}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
               </section>
 

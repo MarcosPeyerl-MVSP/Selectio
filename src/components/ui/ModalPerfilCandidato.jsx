@@ -1,6 +1,6 @@
 import './ModalPerfilCandidato.css'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   FaBriefcase,
   FaCalendarAlt,
@@ -9,12 +9,16 @@ import {
   FaLink,
   FaMoneyBillWave,
   FaPhone,
+  FaHistory,
   FaTimes,
   FaUser,
   FaUserTie
 } from 'react-icons/fa'
 
 import LinhaStatusCandidato from './LinhaStatusCandidato'
+import EstadoDados from './EstadoDados'
+import PageLoader from './PageLoader'
+import { listarHistoricoCandidato } from '../../services/firestoreHistorico'
 
 const emptyValue = 'Não informado'
 
@@ -43,6 +47,20 @@ function formatDate(value) {
   }).replace('.', '')
 }
 
+function formatDateTime(value) {
+  if (!value) return 'Data pendente'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+
+  return date.toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).replace('.', '')
+}
+
 function ModalPerfilCandidato({
   candidato,
   onClose,
@@ -50,6 +68,11 @@ function ModalPerfilCandidato({
   onChangeStatus,
   loadingStatus = false
 }) {
+  const [historico, setHistorico] = useState([])
+  const [loadingHistorico, setLoadingHistorico] = useState(true)
+  const [erroHistorico, setErroHistorico] = useState('')
+  const [historicoReloadKey, setHistoricoReloadKey] = useState(0)
+
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') onClose()
@@ -58,6 +81,33 @@ function ModalPerfilCandidato({
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
+
+  useEffect(() => {
+    if (!candidato?.id) return undefined
+
+    let ativo = true
+
+    listarHistoricoCandidato(candidato.id)
+      .then((eventos) => {
+        if (ativo) setHistorico(eventos)
+      })
+      .catch((error) => {
+        if (ativo) setErroHistorico(error.message)
+      })
+      .finally(() => {
+        if (ativo) setLoadingHistorico(false)
+      })
+
+    return () => {
+      ativo = false
+    }
+  }, [candidato?.id, historicoReloadKey])
+
+  const carregarHistoricoNovamente = () => {
+    setLoadingHistorico(true)
+    setErroHistorico('')
+    setHistoricoReloadKey((value) => value + 1)
+  }
 
   if (!candidato) return null
 
@@ -110,6 +160,50 @@ function ModalPerfilCandidato({
             loading={loadingStatus}
             onChangeStatus={onChangeStatus}
           />
+        </section>
+
+        <section className="candidate-profile-section">
+          <div className="candidate-profile-section-title candidate-history-title">
+            <div>
+              <span>Histórico do processo</span>
+              <p>Eventos registrados automaticamente durante a seleção</p>
+            </div>
+            <FaHistory aria-hidden="true" />
+          </div>
+
+          {loadingHistorico ? (
+            <PageLoader label="Carregando histórico..." compact />
+          ) : erroHistorico ? (
+            <EstadoDados
+              actionLabel="Tentar novamente"
+              compact
+              description={erroHistorico}
+              onAction={carregarHistoricoNovamente}
+              title="Não foi possível carregar o histórico"
+              tone="error"
+            />
+          ) : historico.length ? (
+            <ol className="candidate-history">
+              {historico.map((evento) => (
+                <li key={evento.id}>
+                  <span className="candidate-history-marker" aria-hidden="true" />
+                  <div>
+                    <strong>{evento.titulo}</strong>
+                    {evento.descricao && <p>{evento.descricao}</p>}
+                    <time dateTime={evento.criadoEm || undefined}>
+                      {formatDateTime(evento.criadoEm)}
+                    </time>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <EstadoDados
+              compact
+              description="Os próximos avanços do candidato aparecerão aqui."
+              title="Nenhum evento registrado"
+            />
+          )}
         </section>
 
         <section className="candidate-profile-grid">

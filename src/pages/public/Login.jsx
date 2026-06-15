@@ -17,6 +17,7 @@ import { auth } from '../../services/firebase'
 import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from '../../services/errosAutenticacao'
 import { buscarPerfilUsuario } from '../../services/firestoreUsers'
 import { useToast } from '../../hooks/useToast'
+import { useAuth } from '../../hooks/useAuth'
 
 function Login() {
   const [form, setForm] = useState({ login: '', senha: '' })
@@ -27,18 +28,18 @@ function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const toast = useToast()
+  const { perfil: perfilSessao, carregando: carregandoSessao, adotarPerfil } = useAuth()
   const redirectTo = new URLSearchParams(location.search).get('redirect')
 
   useEffect(() => {
-    if (localStorage.getItem('indicadorUser')) {
-      navigate(redirectTo || '/painel/indicador')
-      return
-    }
+    if (carregandoSessao || !perfilSessao) return
 
-    if (localStorage.getItem('empresaUser')) {
-      navigate(redirectTo || '/painel/empresa')
+    if (perfilSessao.tipo === 'indicador') {
+      navigate(redirectTo || '/painel/indicador', { replace: true })
+    } else if (perfilSessao.tipo === 'empresa') {
+      navigate(redirectTo || '/painel/empresa', { replace: true })
     }
-  }, [navigate, redirectTo])
+  }, [carregandoSessao, navigate, perfilSessao, redirectTo])
 
   const showError = (message) => {
     setError(message)
@@ -51,17 +52,15 @@ function Login() {
   }
 
   const storeProfileAndNavigate = (perfil) => {
+    adotarPerfil(perfil)
+
     if (perfil.tipo === 'indicador') {
-      localStorage.setItem('indicadorUser', JSON.stringify(perfil))
-      localStorage.removeItem('empresaUser')
       toast.success('Login realizado com sucesso.')
       navigate(redirectTo || '/painel/indicador')
       return true
     }
 
     if (perfil.tipo === 'empresa') {
-      localStorage.setItem('empresaUser', JSON.stringify(perfil))
-      localStorage.removeItem('indicadorUser')
       toast.success('Login realizado com sucesso.')
       navigate(redirectTo || '/painel/empresa')
       return true

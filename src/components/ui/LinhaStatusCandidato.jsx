@@ -69,14 +69,24 @@ function LinhaStatusCandidato({
           {negativeCopy[normalizedStatus]}
         </div>
       ) : editable && (
-        <button
-          type="button"
-          className="timeline-cancel-button"
-          onClick={() => handleClick('cancelado')}
-          disabled={loading}
-        >
-          Cancelar processo
-        </button>
+        <div className="timeline-negative-actions">
+          <button
+            type="button"
+            className="timeline-cancel-button"
+            onClick={() => handleClick('recusado')}
+            disabled={loading}
+          >
+            Recusar candidato
+          </button>
+          <button
+            type="button"
+            className="timeline-cancel-button"
+            onClick={() => handleClick('cancelado')}
+            disabled={loading}
+          >
+            Cancelar processo
+          </button>
+        </div>
       )}
     </div>
   )

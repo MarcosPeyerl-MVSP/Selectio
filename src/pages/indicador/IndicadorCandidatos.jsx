@@ -20,6 +20,8 @@ import Footer from '../../components/layout/Footer'
 import ModalPerfilCandidato from '../../components/ui/ModalPerfilCandidato'
 import LinhaStatusCandidato from '../../components/ui/LinhaStatusCandidato'
 import CardEsqueleto from '../../components/ui/CardEsqueleto'
+import EstadoDados from '../../components/ui/EstadoDados'
+import Paginacao from '../../components/ui/Paginacao'
 import { listarCandidatosPorIndicador } from '../../services/firestoreCandidatos'
 import { listarPagamentosPorIndicador } from '../../services/firestorePagamentos'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
@@ -105,6 +107,8 @@ const avatars = [
   'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=160&q=80',
 ]
 
+const PAGE_SIZE = 6
+
 // Responsabilidade: recuperar o indicador autenticado no localStorage.
 function getIndicador() {
   const stored = localStorage.getItem('indicadorUser')
@@ -158,6 +162,9 @@ function Candidatos() {
 
   // Controla o status ativo nos filtros.
   const [activeStatus, setActiveStatus] = useState('Todos')
+  const [filtroVaga, setFiltroVaga] = useState('Todas')
+  const [pagina, setPagina] = useState(1)
+  const [reloadKey, setReloadKey] = useState(0)
 
   // Controla o estado de carregamento da busca inicial.
   const [loading, setLoading] = useState(true)
@@ -186,6 +193,7 @@ function Candidatos() {
       }
 
       try {
+        setError('')
         const [candidatosData, pagamentosData] = await Promise.all([
           listarCandidatosPorIndicador(indicadorUid),
           listarPagamentosPorIndicador(indicadorUid).catch((err) => {
@@ -206,7 +214,7 @@ function Candidatos() {
     }
 
     fetchCandidatos()
-  }, [indicador, indicadorUid, toast])
+  }, [indicador, indicadorUid, toast, reloadKey])
 
   // Filtra candidatos por status selecionado e termo de busca.
   const candidatosFiltrados = useMemo(() => {
@@ -215,6 +223,7 @@ function Candidatos() {
     return candidatos.filter((candidato) => {
       const status = statusLabels[candidato.status] || 'Indicado'
       const matchesStatus = activeStatus === 'Todos' || status === activeStatus
+      const matchesVaga = filtroVaga === 'Todas' || candidato.vagaTitulo === filtroVaga
       const matchesBusca = !termo || [
         candidato.nome,
         candidato.cargoAtual,
@@ -222,9 +231,21 @@ function Candidatos() {
         candidato.vagaEmpresa,
       ].some((value) => normalizeText(value).includes(termo))
 
-      return matchesStatus && matchesBusca
+      return matchesStatus && matchesVaga && matchesBusca
     })
-  }, [activeStatus, busca, candidatos])
+  }, [activeStatus, busca, candidatos, filtroVaga])
+
+  const vagasDisponiveis = useMemo(() => (
+    [...new Set(candidatos.map((candidato) => candidato.vagaTitulo).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, 'pt-BR'))
+  ), [candidatos])
+
+  const totalPaginas = Math.max(1, Math.ceil(candidatosFiltrados.length / PAGE_SIZE))
+  const paginaAtual = Math.min(pagina, totalPaginas)
+  const candidatosPaginados = candidatosFiltrados.slice(
+    (paginaAtual - 1) * PAGE_SIZE,
+    paginaAtual * PAGE_SIZE
+  )
 
   const pagamentosPorCandidato = useMemo(() => {
     const mapa = new Map()
@@ -247,6 +268,18 @@ function Candidatos() {
     return <Navigate to="/login?redirect=/candidatos/indicador" replace />
   }
 
+  const tentarNovamente = () => {
+    setLoading(true)
+    setReloadKey((value) => value + 1)
+  }
+
+  const limparFiltros = () => {
+    setBusca('')
+    setActiveStatus('Todos')
+    setFiltroVaga('Todas')
+    setPagina(1)
+  }
+
   return (
     <>
       {/* Componente de navegação principal. */}
@@ -258,7 +291,7 @@ function Candidatos() {
 
         <main className="candidatos-page">
           <header className="candidatos-header">
-            <span>Recrutamento ativo - Maio 2026</span>
+            <span>Recrutamento ativo</span>
             <h1>Candidatos</h1>
             <p>Gerencie o fluxo de talentos e acompanhe o progresso das suas vagas abertas com precisão editorial.</p>
           </header>
@@ -269,9 +302,28 @@ function Candidatos() {
               <FaSearch />
               <input
                 value={busca}
-                onChange={(event) => setBusca(event.target.value)}
+                onChange={(event) => {
+                  setBusca(event.target.value)
+                  setPagina(1)
+                }}
                 placeholder="Buscar por nome, cargo ou palavra-chave..."
               />
+            </label>
+
+            <label className="candidate-vacancy-filter">
+              <span>Vaga</span>
+              <select
+                value={filtroVaga}
+                onChange={(event) => {
+                  setFiltroVaga(event.target.value)
+                  setPagina(1)
+                }}
+              >
+                <option value="Todas">Todas as vagas</option>
+                {vagasDisponiveis.map((vagaTitulo) => (
+                  <option key={vagaTitulo} value={vagaTitulo}>{vagaTitulo}</option>
+                ))}
+              </select>
             </label>
 
             <div className="candidate-tabs">
@@ -279,7 +331,10 @@ function Candidatos() {
                 <button
                   key={status}
                   className={activeStatus === status ? 'active' : ''}
-                  onClick={() => setActiveStatus(status)}
+                  onClick={() => {
+                    setActiveStatus(status)
+                    setPagina(1)
+                  }}
                   type="button"
                 >
                   {status}
@@ -294,11 +349,31 @@ function Candidatos() {
               <CardEsqueleto count={6} />
             </section>
           )}
-          {error && <p className="candidate-feedback error">{error}</p>}
+          {!loading && error && (
+            <EstadoDados
+              actionLabel="Tentar novamente"
+              description={error}
+              onAction={tentarNovamente}
+              title={navigator.onLine ? 'Não foi possível carregar seus candidatos' : 'Você está sem conexão'}
+              tone={navigator.onLine ? 'error' : 'offline'}
+            />
+          )}
 
-          {!loading && !error && (
-            <section className="candidate-grid">
-              {candidatosFiltrados.map((candidato, index) => {
+          {!loading && !error && !candidatosFiltrados.length && (
+            <EstadoDados
+              actionLabel={candidatos.length ? 'Limpar filtros' : ''}
+              description={candidatos.length
+                ? 'Ajuste a busca, a vaga ou a etapa para visualizar outros resultados.'
+                : 'Escolha uma vaga aberta e faça sua primeira indicação.'}
+              onAction={limparFiltros}
+              title={candidatos.length ? 'Nenhum candidato encontrado' : 'Você ainda não fez indicações'}
+            />
+          )}
+
+          {!loading && !error && candidatosFiltrados.length > 0 && (
+            <>
+              <section className="candidate-grid">
+              {candidatosPaginados.map((candidato, index) => {
                 const status = statusLabels[candidato.status] || 'Indicado'
                 const cardClass = statusClass[status] || 'indicado'
                 const pagamento = pagamentosPorCandidato.get(candidato.id)
@@ -351,13 +426,21 @@ function Candidatos() {
                 <strong>Adicionar candidato</strong>
                 <small>Manualmente ou via CSV</small>
               </Link>
-            </section>
+              </section>
+              <Paginacao
+                page={paginaAtual}
+                pageSize={PAGE_SIZE}
+                total={candidatosFiltrados.length}
+                onPageChange={setPagina}
+              />
+            </>
           )}
         </main>
       </div>
 
       {selectedCandidate && (
         <ModalPerfilCandidato
+          key={selectedCandidate.id}
           candidato={selectedCandidate}
           onClose={() => setSelectedCandidate(null)}
         />

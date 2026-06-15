@@ -21,6 +21,7 @@ import { auth } from "../../services/firebase";
 import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from "../../services/errosAutenticacao";
 import { buscarPerfilUsuario, salvarPerfilUsuario } from "../../services/firestoreUsers";
 import { useToast } from "../../hooks/useToast";
+import { useAuth } from "../../hooks/useAuth";
 
 // Opções fixas de porte/tamanho da empresa.
 const tamanhoOptions = [
@@ -70,6 +71,7 @@ export default function Cadastro() {
   // Hook usado para redirecionar a empresa após cadastro bem-sucedido.
   const navigate = useNavigate();
   const toast = useToast();
+  const { adotarPerfil } = useAuth();
 
   // Estado central do formulário de cadastro da empresa.
   const [form, setForm] = useState({
@@ -153,16 +155,14 @@ export default function Cadastro() {
     keepGoogleSessionRef.current = true;
 
     if (perfil.tipo === "empresa") {
-      localStorage.setItem("empresaUser", JSON.stringify(perfil));
-      localStorage.removeItem("indicadorUser");
+      adotarPerfil(perfil);
       toast.info("Esta conta Google já está cadastrada. Vamos te levar ao painel da empresa.");
       navigate("/painel/empresa");
       return;
     }
 
     if (perfil.tipo === "indicador") {
-      localStorage.setItem("indicadorUser", JSON.stringify(perfil));
-      localStorage.removeItem("empresaUser");
+      adotarPerfil(perfil);
       toast.info("Esta conta Google já está cadastrada como indicador. Vamos te levar ao painel correto.");
       navigate("/painel/indicador");
       return;
@@ -447,8 +447,7 @@ export default function Cadastro() {
       });
 
       keepGoogleSessionRef.current = true;
-      localStorage.setItem("empresaUser", JSON.stringify(perfilEmpresa));
-      localStorage.removeItem("indicadorUser");
+      adotarPerfil(perfilEmpresa);
       toast.success(isGoogleSignup
         ? "Cadastro concluído com Google."
         : verificationSent

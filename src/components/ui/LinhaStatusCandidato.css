@@ -103,6 +103,12 @@
   color: var(--danger);
 }
 
+.timeline-negative-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .timeline-cancel-button {
   border: 1px solid var(--border);
   background: var(--surface);

@@ -51,7 +51,7 @@
 /* Grade de filtros por busca, salário e área. */
 .filtros {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr auto;
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
   gap: 16px;
   margin-bottom: 40px;
   background: var(--surface-soft);
@@ -88,6 +88,7 @@
   border-radius: 8px;
   border: none;
   color: var(--text);
+  font: inherit;
   cursor: pointer;
   transition: border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast);
 }
@@ -185,6 +186,34 @@
   font-weight: 700;
   color: var(--primary);
   text-transform: uppercase;
+}
+
+.vaga-card-labels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.vaga-status-badge {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: var(--success-bg);
+  color: var(--success);
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.vaga-status-badge.pausada {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.vaga-status-badge.encerrada,
+.vaga-status-badge.expirada {
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .vaga-content h3 {

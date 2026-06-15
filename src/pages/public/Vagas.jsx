@@ -3,16 +3,23 @@
 // do usuário e ajusta ações exibidas para público, indicador ou empresa.
 
 import './Vagas.css'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import Footer from '../../components/layout/Footer'
 import CardEsqueleto from '../../components/ui/CardEsqueleto'
+import EstadoDados from '../../components/ui/EstadoDados'
+import Paginacao from '../../components/ui/Paginacao'
 import { FiSearch } from 'react-icons/fi'
-import { listarVagas } from '../../services/firestoreVagas'
+import {
+  listarVagas,
+  statusVagaLabels,
+  vagaAceitaIndicacoes
+} from '../../services/firestoreVagas'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { useToast } from '../../hooks/useToast'
+import { useAuth } from '../../hooks/useAuth'
 
 // Responsabilidade: formatar o valor digitado no filtro de salário como moeda brasileira.
 const formatCurrencyFilter = (value) => {
@@ -51,33 +58,17 @@ const getSalaryValues = (value) => {
 }
 
 // Responsabilidade: identificar a sessão ativa com base nos dados salvos no localStorage.
-const getSession = () => {
-  const indicador = getStoredUser('indicadorUser')
-  const empresa = getStoredUser('empresaUser')
-
-  if (empresa) return { type: 'empresa', user: empresa }
-  if (indicador) return { type: 'indicador', user: indicador }
+const getSession = (perfil) => {
+  if (perfil?.tipo === 'empresa') return { type: 'empresa', user: perfil }
+  if (perfil?.tipo === 'indicador') return { type: 'indicador', user: perfil }
   return { type: 'publico', user: null }
-}
-
-// Responsabilidade: recuperar e validar um usuário salvo no localStorage.
-const getStoredUser = (key) => {
-  const stored = localStorage.getItem(key)
-  if (!stored) return null
-
-  try {
-    return JSON.parse(stored)
-  } catch {
-    // Fluxo de segurança: remove o item caso o JSON armazenado esteja inválido.
-    localStorage.removeItem(key)
-    return null
-  }
 }
 
 function Vagas() {
   const toast = useToast()
+  const { perfil } = useAuth()
   // Estado dos filtros aplicados à listagem.
-  const [filtro, setFiltro] = useState({ busca: '', salario: '', area: '' })
+  const [filtro, setFiltro] = useState({ busca: '', salario: '', area: '', status: 'todos' })
 
   // Estado com as vagas retornadas pelo Firestore.
   const [vagas, setVagas] = useState([])
@@ -87,14 +78,18 @@ function Vagas() {
 
   // Armazena mensagem de erro em caso de falha na busca.
   const [error, setError] = useState(null)
+  const [reloadKey, setReloadKey] = useState(0)
+  const [pagina, setPagina] = useState(1)
+  const itensPorPagina = 9
 
   // Define o tipo de usuário atual para ajustar layout e ações.
-  const session = getSession()
+  const session = getSession(perfil)
 
   useEffect(() => {
     // Responsabilidade: buscar a lista de vagas cadastradas.
     const fetchVagas = async () => {
       try {
+        setError(null)
         const data = await listarVagas()
         setVagas(data)
       } catch (err) {
@@ -106,14 +101,17 @@ function Vagas() {
     }
 
     fetchVagas()
-  }, [toast])
+  }, [reloadKey, toast])
 
   // Aplica filtros locais por busca textual, área e salário mínimo.
-  const vagasFiltradas = vagas.filter((vaga) => {
+  const vagasFiltradas = useMemo(() => vagas.filter((vaga) => {
     const busca = normalizeText(filtro.busca.trim())
     const salario = getCurrencyValue(filtro.salario)
     const area = normalizeText(filtro.area.trim())
     const salariosVaga = getSalaryValues(vaga.salario)
+    const isOwnCompanyJob = session.type === 'empresa'
+      && String(vaga.empresaId || vaga.empresaUid || '') === String(getFirebaseUid(session.user))
+    const visivelParaSessao = isOwnCompanyJob || vagaAceitaIndicacoes(vaga)
 
     const matchesBusca = !busca || [
       vaga.titulo,
@@ -124,9 +122,33 @@ function Vagas() {
 
     const matchesArea = !area || normalizeText(vaga.area).includes(area)
     const matchesSalario = !salario || salariosVaga.some((value) => value >= salario)
+    const matchesStatus = filtro.status === 'todos' || vaga.status === filtro.status
 
-    return matchesBusca && matchesArea && matchesSalario
-  })
+    return visivelParaSessao && matchesBusca && matchesArea && matchesSalario && matchesStatus
+  }), [filtro, session.type, session.user, vagas])
+
+  const totalPaginas = Math.max(1, Math.ceil(vagasFiltradas.length / itensPorPagina))
+  const paginaAtual = Math.min(pagina, totalPaginas)
+  const vagasPaginadas = vagasFiltradas.slice(
+    (paginaAtual - 1) * itensPorPagina,
+    paginaAtual * itensPorPagina
+  )
+
+  const atualizarFiltro = (campo, valor) => {
+    setFiltro((atual) => ({ ...atual, [campo]: valor }))
+    setPagina(1)
+  }
+
+  const limparFiltros = () => {
+    setFiltro({ busca: '', salario: '', area: '', status: 'todos' })
+    setPagina(1)
+  }
+
+  const tentarNovamente = () => {
+    setLoading(true)
+    setError(null)
+    setReloadKey((atual) => atual + 1)
+  }
 
   // Textos do cabeçalho variam conforme o tipo de sessão.
   const headerCopy = {
@@ -171,7 +193,7 @@ function Vagas() {
               type="text"
               placeholder="Cargo, empresa, área ou local"
               value={filtro.busca}
-              onChange={(e) => setFiltro({ ...filtro, busca: e.target.value })}
+              onChange={(e) => atualizarFiltro('busca', e.target.value)}
             />
           </div>
 
@@ -181,7 +203,7 @@ function Vagas() {
               inputMode="numeric"
               placeholder="Salário mínimo"
               value={filtro.salario}
-              onChange={(e) => setFiltro({ ...filtro, salario: formatCurrencyFilter(e.target.value) })}
+              onChange={(e) => atualizarFiltro('salario', formatCurrencyFilter(e.target.value))}
             />
           </div>
 
@@ -190,15 +212,32 @@ function Vagas() {
               type="text"
               placeholder="Filtrar por área"
               value={filtro.area}
-              onChange={(e) => setFiltro({ ...filtro, area: e.target.value })}
+              onChange={(e) => atualizarFiltro('area', e.target.value)}
             />
           </div>
+
+          <select
+            className="filtro-select"
+            value={filtro.status}
+            onChange={(event) => atualizarFiltro('status', event.target.value)}
+            aria-label="Filtrar por status"
+          >
+            <option value="todos">Todos os status</option>
+            <option value="aberta">Abertas</option>
+            {session.type === 'empresa' && (
+              <>
+                <option value="pausada">Pausadas</option>
+                <option value="encerrada">Encerradas</option>
+                <option value="expirada">Expiradas</option>
+              </>
+            )}
+          </select>
 
           {/* Limpa todos os filtros aplicados. */}
           <button
             className="btn-filtrar"
             type="button"
-            onClick={() => setFiltro({ busca: '', salario: '', area: '' })}
+            onClick={limparFiltros}
           >
             Limpar
           </button>
@@ -207,9 +246,7 @@ function Vagas() {
         {/* Grade com os cards das vagas filtradas. */}
         <section className="vagas-grid">
           {loading && <CardEsqueleto count={6} />}
-          {error && <p>Erro ao carregar vagas: {error}</p>}
-
-          {!loading && !error && vagasFiltradas.map((vaga) => {
+          {!loading && !error && vagasPaginadas.map((vaga) => {
             // Regra: empresa proprietária da vaga recebe ação de gerenciamento.
             const isOwnCompanyJob = session.type === 'empresa'
               && String(vaga.empresaId || vaga.empresaUid || '') === String(getFirebaseUid(session.user))
@@ -232,7 +269,12 @@ function Vagas() {
                   />
 
                   <div className="vaga-content">
-                    <span className="vaga-area">{vaga.area}</span>
+                    <div className="vaga-card-labels">
+                      <span className="vaga-area">{vaga.area}</span>
+                      <span className={`vaga-status-badge ${vaga.status}`}>
+                        {statusVagaLabels[vaga.status] || vaga.status}
+                      </span>
+                    </div>
                     <h3>{vaga.titulo}</h3>
                     <span className="vaga-salario">{vaga.salario}</span>
                     <p>{vaga.empresa}</p>
@@ -242,7 +284,7 @@ function Vagas() {
                 <div className="vaga-actions">
                   {session.type === 'indicador' && (
                     <Link to={`/vaga/${vaga.id}`} className="vaga-action-primary">
-                      Fazer indicação
+                      Ver vaga
                     </Link>
                   )}
 
@@ -266,12 +308,34 @@ function Vagas() {
           })}
         </section>
 
-        {/* Mensagem exibida quando nenhum resultado atende aos filtros. */}
+        {error && (
+          <EstadoDados
+            tone={navigator.onLine ? 'error' : 'offline'}
+            title={navigator.onLine ? 'Não foi possível carregar as vagas' : 'Sem conexão'}
+            description={error || 'Verifique sua conexão e tente novamente.'}
+            actionLabel="Tentar novamente"
+            onAction={tentarNovamente}
+          />
+        )}
+
         {!loading && !error && vagasFiltradas.length === 0 && (
-          <div className="empty-vagas">
-            <h2>Nenhuma vaga encontrada</h2>
-            <p>Ajuste os filtros para visualizar outras oportunidades.</p>
-          </div>
+          <EstadoDados
+            title={vagas.length ? 'Nenhuma vaga corresponde aos filtros' : 'Nenhuma vaga publicada'}
+            description={vagas.length
+              ? 'Ajuste ou limpe os filtros para encontrar outras oportunidades.'
+              : 'Quando uma empresa publicar uma oportunidade, ela aparecerá aqui.'}
+            actionLabel={vagas.length ? 'Limpar filtros' : ''}
+            onAction={vagas.length ? limparFiltros : undefined}
+          />
+        )}
+
+        {!loading && !error && (
+          <Paginacao
+            page={paginaAtual}
+            pageSize={itensPorPagina}
+            total={vagasFiltradas.length}
+            onPageChange={setPagina}
+          />
         )}
         </main>
       </div>

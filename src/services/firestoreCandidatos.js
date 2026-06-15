@@ -1,5 +1,4 @@
 import {
-  addDoc,
   collection,
   doc,
   getDoc,
@@ -7,16 +6,21 @@ import {
   limit,
   query,
   serverTimestamp,
-  updateDoc,
+  writeBatch,
   where
 } from 'firebase/firestore'
 import { db } from './firebase'
 import { getFirebaseUid } from './identidadeFirebase'
-import { atualizarStatusIndicacaoPorCandidato, registrarIndicacao } from './firestoreIndicacoes'
+import {
+  adicionarIndicacaoAoBatch,
+  adicionarStatusIndicacaoAoBatch
+} from './firestoreIndicacoes'
+import { adicionarHistoricoAoBatch } from './firestoreHistorico'
 import {
   notificarNovoCandidatoIndicado,
   notificarStatusCandidatoAlterado
 } from './firestoreNotificacoes'
+import { vagaAceitaIndicacoes } from './firestoreVagas'
 
 const candidatosCollection = collection(db, 'candidatos')
 const statusPermitidos = ['indicado', 'entrevista', 'contratado', 'cancelado', 'recusado']
@@ -101,6 +105,10 @@ export const criarCandidatoIndicado = async ({ dados, indicador, vaga }) => {
     throw new Error('Vaga e empresa da vaga são obrigatórias para criar candidato.')
   }
 
+  if (!vagaAceitaIndicacoes(vaga)) {
+    throw new Error('Esta vaga não está aberta para novas indicações.')
+  }
+
   const recompensaValor = getFixedRewardValue(vaga)
   const candidato = {
     ...dados,
@@ -125,10 +133,12 @@ export const criarCandidatoIndicado = async ({ dados, indicador, vaga }) => {
     atualizadoEm: serverTimestamp()
   }
 
-  const docRef = await addDoc(candidatosCollection, candidato)
+  const candidatoRef = doc(candidatosCollection)
+  const batch = writeBatch(db)
 
-  await registrarIndicacao({
-    candidatoId: docRef.id,
+  batch.set(candidatoRef, candidato)
+  adicionarIndicacaoAoBatch(batch, {
+    candidatoId: candidatoRef.id,
     candidatoNome: dados.nome || '',
     indicadorId,
     indicadorUid: indicadorId,
@@ -144,11 +154,25 @@ export const criarCandidatoIndicado = async ({ dados, indicador, vaga }) => {
     recompensaValorFixo: recompensaValor,
     status: 'indicado'
   })
+  adicionarHistoricoAoBatch(batch, {
+    candidatoId: candidatoRef.id,
+    candidatoNome: dados.nome || '',
+    vagaId: vaga.id,
+    vagaTitulo: vaga.titulo || '',
+    empresaId,
+    indicadorId,
+    tipo: 'indicacao_criada',
+    titulo: 'Indicação enviada',
+    descricao: `${dados.nome || 'Candidato'} foi indicado para ${vaga.titulo || 'a vaga'}.`,
+    statusAtual: 'indicado',
+    criadoPor: indicadorId
+  })
+  await batch.commit()
 
   const now = new Date().toISOString()
   const candidatoCriado = {
     ...candidato,
-    id: docRef.id,
+    id: candidatoRef.id,
     aplicadoEm: now,
     criadoEm: now,
     atualizadoEm: now
@@ -201,12 +225,39 @@ export const atualizarStatusCandidato = async ({ candidatoId, status, empresaId 
     throw new Error('Esta empresa não pode alterar este candidato.')
   }
 
-  await updateDoc(doc(db, 'candidatos', candidatoId), {
+  const batch = writeBatch(db)
+
+  batch.update(doc(db, 'candidatos', candidatoId), {
     status,
     atualizadoEm: serverTimestamp()
   })
-
-  await atualizarStatusIndicacaoPorCandidato({ candidatoId, status, empresaId })
+  await adicionarStatusIndicacaoAoBatch({
+    batch,
+    candidatoId,
+    status,
+    empresaId
+  })
+  adicionarHistoricoAoBatch(batch, {
+    candidatoId,
+    candidatoNome: candidato.nome || '',
+    vagaId: candidato.vagaId || '',
+    vagaTitulo: candidato.vagaTitulo || '',
+    empresaId,
+    indicadorId: candidato.indicadorId || candidato.indicadorUid || '',
+    tipo: 'status_alterado',
+    titulo: status === 'contratado'
+      ? 'Candidato contratado'
+      : status === 'recusado'
+        ? 'Candidato recusado'
+        : status === 'cancelado'
+          ? 'Processo cancelado'
+        : 'Status do candidato atualizado',
+    descricao: `Status alterado de ${candidato.status || 'indicado'} para ${status}.`,
+    statusAnterior: candidato.status || 'indicado',
+    statusAtual: status,
+    criadoPor: empresaId
+  })
+  await batch.commit()
 
   const candidatoAtualizado = {
     ...candidato,

@@ -7,7 +7,6 @@ import { Navigate } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import {
   FaCalendarAlt,
-  FaChevronDown,
   FaCreditCard,
   FaEllipsisH,
   FaSearch,
@@ -20,6 +19,8 @@ import ModalPagamentoRecompensa from '../../components/pagamentos/ModalPagamento
 import ModalPerfilCandidato from '../../components/ui/ModalPerfilCandidato'
 import LinhaStatusCandidato from '../../components/ui/LinhaStatusCandidato'
 import CardEsqueleto from '../../components/ui/CardEsqueleto'
+import EstadoDados from '../../components/ui/EstadoDados'
+import Paginacao from '../../components/ui/Paginacao'
 import { atualizarStatusCandidato, listarCandidatosPorEmpresa } from '../../services/firestoreCandidatos'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { listarPagamentosPorEmpresa } from '../../services/firestorePagamentos'
@@ -45,6 +46,8 @@ const avatars = [
   'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=160&q=80',
   'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=160&q=80',
 ]
+
+const PAGE_SIZE = 6
 
 // Responsabilidade: recuperar a empresa autenticada salva no localStorage.
 function getEmpresa() {
@@ -95,6 +98,9 @@ function CandidatosEmpresa() {
 
   // Controla a aba de status ativa.
   const [activeTab, setActiveTab] = useState('Todos')
+  const [filtroVaga, setFiltroVaga] = useState('Todas')
+  const [pagina, setPagina] = useState(1)
+  const [reloadKey, setReloadKey] = useState(0)
 
   // Controla o carregamento inicial da lista.
   const [loading, setLoading] = useState(true)
@@ -130,6 +136,7 @@ function CandidatosEmpresa() {
       }
 
       try {
+        setError('')
         const candidatosData = await listarCandidatosPorEmpresa(empresaUid)
         setCandidatos(candidatosData)
       } catch (err) {
@@ -149,7 +156,7 @@ function CandidatosEmpresa() {
     }
 
     fetchCandidatos()
-  }, [empresa, empresaUid, toast])
+  }, [empresa, empresaUid, toast, reloadKey])
 
   // Filtra candidatos por status selecionado e termo de busca.
   const candidatosFiltrados = useMemo(() => {
@@ -158,6 +165,7 @@ function CandidatosEmpresa() {
     return candidatos.filter((candidato) => {
       const status = statusLabels[candidato.status] || 'Indicado'
       const matchesStatus = activeTab === 'Todos' || status === activeTab
+      const matchesVaga = filtroVaga === 'Todas' || candidato.vagaTitulo === filtroVaga
       const matchesBusca = !termo || [
         candidato.nome,
         candidato.cargoAtual,
@@ -165,9 +173,21 @@ function CandidatosEmpresa() {
         candidato.indicadorNome,
       ].some((value) => normalizeText(value).includes(termo))
 
-      return matchesStatus && matchesBusca
+      return matchesStatus && matchesVaga && matchesBusca
     })
-  }, [activeTab, busca, candidatos])
+  }, [activeTab, busca, candidatos, filtroVaga])
+
+  const vagasDisponiveis = useMemo(() => (
+    [...new Set(candidatos.map((candidato) => candidato.vagaTitulo).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, 'pt-BR'))
+  ), [candidatos])
+
+  const totalPaginas = Math.max(1, Math.ceil(candidatosFiltrados.length / PAGE_SIZE))
+  const paginaAtual = Math.min(pagina, totalPaginas)
+  const candidatosPaginados = candidatosFiltrados.slice(
+    (paginaAtual - 1) * PAGE_SIZE,
+    paginaAtual * PAGE_SIZE
+  )
 
   const pagamentosPorCandidato = useMemo(() => {
     const mapa = new Map()
@@ -190,13 +210,23 @@ function CandidatosEmpresa() {
     return <Navigate to="/login?redirect=/candidatos/empresa" replace />
   }
 
+  const tentarNovamente = () => {
+    setLoading(true)
+    setReloadKey((value) => value + 1)
+  }
+
+  const limparFiltros = () => {
+    setBusca('')
+    setActiveTab('Todos')
+    setFiltroVaga('Todas')
+    setPagina(1)
+  }
+
   // Responsabilidade: atualizar o status de um candidato no Firestore.
   const updateStatus = async (candidatoId, status) => {
     setUpdatingId(candidatoId)
-    setError('')
 
     if (!empresaUid) {
-      setError('Perfil da empresa sem UID do Firebase.')
       toast.warning('Perfil da empresa sem UID do Firebase.')
       setUpdatingId(null)
       return
@@ -214,7 +244,6 @@ function CandidatosEmpresa() {
       ))
       toast.success('Status atualizado com sucesso.')
     } catch (err) {
-      setError(err.message)
       toast.error(err.message)
     } finally {
       setUpdatingId(null)
@@ -271,9 +300,28 @@ function CandidatosEmpresa() {
               <FaSearch />
               <input
                 value={busca}
-                onChange={(event) => setBusca(event.target.value)}
+                onChange={(event) => {
+                  setBusca(event.target.value)
+                  setPagina(1)
+                }}
                 placeholder="Buscar por nome ou cargo..."
               />
+            </label>
+
+            <label className="empresa-candidate-vacancy-filter">
+              <span>Vaga</span>
+              <select
+                value={filtroVaga}
+                onChange={(event) => {
+                  setFiltroVaga(event.target.value)
+                  setPagina(1)
+                }}
+              >
+                <option value="Todas">Todas as vagas</option>
+                {vagasDisponiveis.map((vagaTitulo) => (
+                  <option key={vagaTitulo} value={vagaTitulo}>{vagaTitulo}</option>
+                ))}
+              </select>
             </label>
 
             <div className="empresa-candidate-tabs">
@@ -282,7 +330,10 @@ function CandidatosEmpresa() {
                   key={tab}
                   type="button"
                   className={activeTab === tab ? 'active' : ''}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => {
+                    setActiveTab(tab)
+                    setPagina(1)
+                  }}
                 >
                   {tab}
                 </button>
@@ -296,11 +347,31 @@ function CandidatosEmpresa() {
               <CardEsqueleto count={6} />
             </section>
           )}
-          {error && <p className="empresa-candidate-feedback error">{error}</p>}
+          {!loading && error && (
+            <EstadoDados
+              actionLabel="Tentar novamente"
+              description={error}
+              onAction={tentarNovamente}
+              title={navigator.onLine ? 'Não foi possível carregar os candidatos' : 'Você está sem conexão'}
+              tone={navigator.onLine ? 'error' : 'offline'}
+            />
+          )}
 
-          {!loading && !error && (
-            <section className="empresa-candidate-grid">
-              {candidatosFiltrados.map((candidato, index) => {
+          {!loading && !error && !candidatosFiltrados.length && (
+            <EstadoDados
+              actionLabel={candidatos.length ? 'Limpar filtros' : ''}
+              description={candidatos.length
+                ? 'Ajuste a busca, a vaga ou a etapa para visualizar outros resultados.'
+                : 'Os candidatos indicados para suas vagas aparecerão aqui.'}
+              onAction={limparFiltros}
+              title={candidatos.length ? 'Nenhum candidato encontrado' : 'Ainda não há candidatos'}
+            />
+          )}
+
+          {!loading && !error && candidatosFiltrados.length > 0 && (
+            <>
+              <section className="empresa-candidate-grid">
+              {candidatosPaginados.map((candidato, index) => {
                 // Regra de normalização: status "recusado" é tratado visualmente como "cancelado".
                 const status = candidato.status === 'recusado' ? 'cancelado' : candidato.status || 'indicado'
                 const pagamento = pagamentosPorCandidato.get(candidato.id)
@@ -358,18 +429,21 @@ function CandidatosEmpresa() {
                 )
               })}
 
-              <button className="empresa-load-more" type="button">
-                <span><FaChevronDown /></span>
-                <strong>Visualizar mais candidatos</strong>
-                <small>Carregar registros do banco de talentos.</small>
-              </button>
-            </section>
+              </section>
+              <Paginacao
+                page={paginaAtual}
+                pageSize={PAGE_SIZE}
+                total={candidatosFiltrados.length}
+                onPageChange={setPagina}
+              />
+            </>
           )}
         </main>
       </div>
 
       {selectedCandidate && (
         <ModalPerfilCandidato
+          key={selectedCandidate.id}
           candidato={selectedCandidate}
           onClose={() => setSelectedCandidate(null)}
           editableStatus

@@ -1,12 +1,11 @@
 import {
-  addDoc,
   collection,
   doc,
   getDocs,
   limit,
   query,
   serverTimestamp,
-  updateDoc,
+  writeBatch,
   where
 } from 'firebase/firestore'
 import { db } from './firebase'
@@ -63,19 +62,36 @@ const sortByCreatedDesc = (a, b) => {
   return dateB - dateA
 }
 
-export const registrarIndicacao = async (dados) => {
-  const docRef = await addDoc(indicacoesCollection, {
-    ...dados,
-    status: dados.status || 'indicado',
-    recompensaValor: normalizeRewardValue(dados),
-    criadoEm: serverTimestamp(),
-    atualizadoEm: serverTimestamp()
-  })
+const montarIndicacao = (dados) => ({
+  ...dados,
+  status: dados.status || 'indicado',
+  recompensaValor: normalizeRewardValue(dados),
+  criadoEm: serverTimestamp(),
+  atualizadoEm: serverTimestamp()
+})
 
+export const adicionarIndicacaoAoBatch = (batch, dados) => {
+  const docRef = doc(indicacoesCollection)
+
+  batch.set(docRef, montarIndicacao(dados))
+  return docRef
+}
+
+export const registrarIndicacao = async (dados) => {
+  const batch = writeBatch(db)
+  const docRef = adicionarIndicacaoAoBatch(batch, dados)
+
+  await batch.commit()
   return docRef.id
 }
 
-export const atualizarStatusIndicacaoPorCandidato = async ({ candidatoId, status, empresaId, indicadorId }) => {
+export const adicionarStatusIndicacaoAoBatch = async ({
+  batch,
+  candidatoId,
+  status,
+  empresaId,
+  indicadorId
+}) => {
   if (!candidatoId) return
 
   if (!empresaId && !indicadorId) {
@@ -93,12 +109,22 @@ export const atualizarStatusIndicacaoPorCandidato = async ({ candidatoId, status
     limit(10)
   ))
 
-  await Promise.all(snapshot.docs.map((indicacaoDoc) => (
-    updateDoc(doc(db, 'indicacoes', indicacaoDoc.id), {
+  snapshot.docs.forEach((indicacaoDoc) => {
+    batch.update(indicacaoDoc.ref, {
       status,
       atualizadoEm: serverTimestamp()
     })
-  )))
+  })
+}
+
+export const atualizarStatusIndicacaoPorCandidato = async (dados) => {
+  const batch = writeBatch(db)
+
+  await adicionarStatusIndicacaoAoBatch({
+    batch,
+    ...dados
+  })
+  await batch.commit()
 }
 
 export const listarIndicacoesPorIndicador = async (indicadorId) => {

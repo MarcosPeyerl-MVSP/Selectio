@@ -24,6 +24,10 @@ service cloud.firestore {
       return tipo in ['empresa', 'indicador'];
     }
 
+    function validVagaStatus(status) {
+      return status in ['aberta', 'pausada', 'encerrada'];
+    }
+
     function ownUserPayload(uid) {
       return isOwner(uid)
         && request.resource.data.uid == uid
@@ -114,132 +118,6 @@ service cloud.firestore {
         && data.empresaId == request.auth.uid;
     }
 
-    function sandboxPaymentCreate() {
-      return isEmpresa()
-        && request.resource.data.empresaId == request.auth.uid
-        && request.resource.data.ambiente == 'sandbox'
-        && request.resource.data.status == 'created'
-        && request.resource.data.creditado == false
-        && request.resource.data.valor is number
-        && request.resource.data.valor > 0
-        && request.resource.data.moeda == 'BRL'
-        && request.resource.data.keys().hasOnly([
-          'ambiente',
-          'atualizadoEm',
-          'candidatoId',
-          'candidatoNome',
-          'checkoutUrl',
-          'criadoEm',
-          'creditado',
-          'descricao',
-          'empresaId',
-          'externalReference',
-          'indicacaoId',
-          'indicadorId',
-          'indicadorNome',
-          'mercadoPagoPaymentId',
-          'mercadoPagoPreferenceId',
-          'moeda',
-          'sandboxCheckoutUrl',
-          'status',
-          'statusDetail',
-          'transacaoId',
-          'vagaId',
-          'vagaTitulo',
-          'valor'
-        ]);
-    }
-
-    function sandboxPaymentUpdate() {
-      return isEmpresaOwner(resource.data)
-        && resource.data.ambiente == 'sandbox'
-        && request.resource.data.ambiente == resource.data.ambiente
-        && request.resource.data.empresaId == resource.data.empresaId
-        && request.resource.data.indicadorId == resource.data.indicadorId
-        && request.resource.data.candidatoId == resource.data.candidatoId
-        && request.resource.data.vagaId == resource.data.vagaId
-        && request.resource.data.valor == resource.data.valor
-        && request.resource.data.moeda == resource.data.moeda
-        && request.resource.data.creditado == false
-        && request.resource.data.status in [
-          'created',
-          'pending',
-          'approved',
-          'rejected',
-          'cancelled',
-          'refunded',
-          'failed'
-        ]
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'aprovadoEm',
-          'atualizadoEm',
-          'checkoutUrl',
-          'encerradoEm',
-          'erroCriacao',
-          'mercadoPagoPaymentId',
-          'mercadoPagoPreferenceId',
-          'sandboxCheckoutUrl',
-          'status',
-          'statusDetail',
-          'transacaoEm'
-        ]);
-    }
-
-    function sandboxTransactionCreate() {
-      return isEmpresa()
-        && request.resource.data.empresaId == request.auth.uid
-        && request.resource.data.ambiente == 'sandbox'
-        && request.resource.data.status == 'created'
-        && request.resource.data.valor is number
-        && request.resource.data.valor > 0
-        && request.resource.data.moeda == 'BRL'
-        && request.resource.data.keys().hasOnly([
-          'ambiente',
-          'atualizadoEm',
-          'criadoEm',
-          'empresaId',
-          'encerradoEm',
-          'indicadorId',
-          'mercadoPagoPaymentId',
-          'mercadoPagoPreferenceId',
-          'moeda',
-          'pagamentoId',
-          'status',
-          'statusDetail',
-          'transacaoEm',
-          'valor'
-        ]);
-    }
-
-    function sandboxTransactionUpdate() {
-      return isEmpresaOwner(resource.data)
-        && resource.data.ambiente == 'sandbox'
-        && request.resource.data.ambiente == resource.data.ambiente
-        && request.resource.data.empresaId == resource.data.empresaId
-        && request.resource.data.indicadorId == resource.data.indicadorId
-        && request.resource.data.pagamentoId == resource.data.pagamentoId
-        && request.resource.data.valor == resource.data.valor
-        && request.resource.data.moeda == resource.data.moeda
-        && request.resource.data.status in [
-          'created',
-          'pending',
-          'approved',
-          'rejected',
-          'cancelled',
-          'refunded',
-          'failed'
-        ]
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'atualizadoEm',
-          'encerradoEm',
-          'mercadoPagoPaymentId',
-          'mercadoPagoPreferenceId',
-          'status',
-          'statusDetail',
-          'transacaoEm'
-        ]);
-    }
-
     function vagaEmpresaMatches(data) {
       return data.vagaId is string
         && data.empresaId is string
@@ -247,15 +125,28 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/vagas/$(data.vagaId)).data.empresaId == data.empresaId;
     }
 
+    function vagaAceitaIndicacoes(data) {
+      return vagaEmpresaMatches(data)
+        && (
+          !('status' in get(/databases/$(database)/documents/vagas/$(data.vagaId)).data)
+          || get(/databases/$(database)/documents/vagas/$(data.vagaId)).data.status == 'aberta'
+        )
+        && (
+          !('expiraEm' in get(/databases/$(database)/documents/vagas/$(data.vagaId)).data)
+          || get(/databases/$(database)/documents/vagas/$(data.vagaId)).data.expiraEm == null
+          || get(/databases/$(database)/documents/vagas/$(data.vagaId)).data.expiraEm > request.time
+        );
+    }
+
     function referencedCandidateMatches(data) {
       return data.candidatoId is string
         && data.empresaId is string
         && data.indicadorId is string
         && data.vagaId is string
-        && exists(/databases/$(database)/documents/candidatos/$(data.candidatoId))
-        && get(/databases/$(database)/documents/candidatos/$(data.candidatoId)).data.empresaId == data.empresaId
-        && get(/databases/$(database)/documents/candidatos/$(data.candidatoId)).data.indicadorId == data.indicadorId
-        && get(/databases/$(database)/documents/candidatos/$(data.candidatoId)).data.vagaId == data.vagaId;
+        && existsAfter(/databases/$(database)/documents/candidatos/$(data.candidatoId))
+        && getAfter(/databases/$(database)/documents/candidatos/$(data.candidatoId)).data.empresaId == data.empresaId
+        && getAfter(/databases/$(database)/documents/candidatos/$(data.candidatoId)).data.indicadorId == data.indicadorId
+        && getAfter(/databases/$(database)/documents/candidatos/$(data.candidatoId)).data.vagaId == data.vagaId;
     }
 
     function isNotificationOwner() {
@@ -455,6 +346,126 @@ service cloud.firestore {
         && request.resource.data.vagaId == resource.data.vagaId;
     }
 
+    function historyCandidate(data) {
+      return getAfter(/databases/$(database)/documents/candidatos/$(data.candidatoId)).data;
+    }
+
+    function historyCandidateMatches(data) {
+      return data.candidatoId is string
+        && data.empresaId is string
+        && data.indicadorId is string
+        && data.vagaId is string
+        && existsAfter(/databases/$(database)/documents/candidatos/$(data.candidatoId))
+        && historyCandidate(data).empresaId == data.empresaId
+        && historyCandidate(data).indicadorId == data.indicadorId
+        && historyCandidate(data).vagaId == data.vagaId;
+    }
+
+    function historyInterviewMatches(data) {
+      return data.entrevistaId is string
+        && existsAfter(/databases/$(database)/documents/entrevistas/$(data.entrevistaId))
+        && getAfter(/databases/$(database)/documents/entrevistas/$(data.entrevistaId)).data.candidatoId == data.candidatoId
+        && getAfter(/databases/$(database)/documents/entrevistas/$(data.entrevistaId)).data.empresaId == data.empresaId
+        && getAfter(/databases/$(database)/documents/entrevistas/$(data.entrevistaId)).data.indicadorId == data.indicadorId
+        && getAfter(/databases/$(database)/documents/entrevistas/$(data.entrevistaId)).data.vagaId == data.vagaId;
+    }
+
+    function historyPayloadIsValid() {
+      return request.resource.data.keys().hasOnly([
+          'candidatoId',
+          'candidatoNome',
+          'criadoEm',
+          'criadoPor',
+          'descricao',
+          'empresaId',
+          'entrevistaId',
+          'indicadorId',
+          'statusAnterior',
+          'statusAtual',
+          'tipo',
+          'titulo',
+          'vagaId',
+          'vagaTitulo'
+        ])
+        && request.resource.data.candidatoNome is string
+        && request.resource.data.vagaTitulo is string
+        && request.resource.data.entrevistaId is string
+        && request.resource.data.statusAnterior is string
+        && request.resource.data.statusAtual is string
+        && request.resource.data.tipo is string
+        && request.resource.data.titulo is string
+        && request.resource.data.descricao is string;
+    }
+
+    function historyCandidateWasCreated(data) {
+      return !exists(/databases/$(database)/documents/candidatos/$(data.candidatoId))
+        && historyCandidate(data).status == 'indicado';
+    }
+
+    function historyCandidateStatusChanged(data) {
+      return exists(/databases/$(database)/documents/candidatos/$(data.candidatoId))
+        && get(/databases/$(database)/documents/candidatos/$(data.candidatoId)).data.status != historyCandidate(data).status
+        && data.statusAnterior == get(/databases/$(database)/documents/candidatos/$(data.candidatoId)).data.status
+        && data.statusAtual == historyCandidate(data).status;
+    }
+
+    function historyInterviewTypeMatches(data) {
+      let status = getAfter(/databases/$(database)/documents/entrevistas/$(data.entrevistaId)).data.status;
+      return (status == 'agendada' && data.tipo == 'entrevista_agendada')
+        || (status == 'pendente' && data.tipo == 'entrevista_pendente')
+        || (status == 'realizada' && data.tipo == 'entrevista_realizada')
+        || (status == 'cancelada' && data.tipo == 'entrevista_cancelada');
+    }
+
+    function historyInterviewWasCreatedOrChanged(data) {
+      return historyInterviewTypeMatches(data)
+        && (
+          (
+            !exists(/databases/$(database)/documents/entrevistas/$(data.entrevistaId))
+            && data.tipo == 'entrevista_agendada'
+            && data.statusAnterior == ''
+          )
+          || (
+            exists(/databases/$(database)/documents/entrevistas/$(data.entrevistaId))
+            && get(/databases/$(database)/documents/entrevistas/$(data.entrevistaId)).data.status
+              != getAfter(/databases/$(database)/documents/entrevistas/$(data.entrevistaId)).data.status
+            && data.statusAnterior
+              == get(/databases/$(database)/documents/entrevistas/$(data.entrevistaId)).data.status
+          )
+        );
+    }
+
+    function historyCreateAllowed() {
+      return signedIn()
+        && request.resource.data.criadoPor == request.auth.uid
+        && request.resource.data.criadoEm == request.time
+        && historyPayloadIsValid()
+        && historyCandidateMatches(request.resource.data)
+        && (
+          (
+            request.resource.data.tipo == 'indicacao_criada'
+            && request.resource.data.indicadorId == request.auth.uid
+            && historyCandidateWasCreated(request.resource.data)
+          )
+          || (
+            request.resource.data.tipo == 'status_alterado'
+            && request.resource.data.empresaId == request.auth.uid
+            && historyCandidateStatusChanged(request.resource.data)
+          )
+          || (
+            request.resource.data.tipo in [
+              'entrevista_agendada',
+              'entrevista_pendente',
+              'entrevista_realizada',
+              'entrevista_cancelada'
+            ]
+            && request.resource.data.empresaId == request.auth.uid
+            && historyInterviewMatches(request.resource.data)
+            && historyInterviewWasCreatedOrChanged(request.resource.data)
+          )
+        );
+    }
+
     match /users/{uid} {
       allow read: if isOwner(uid);
       allow create: if ownUserPayload(uid);
@@ -479,11 +490,13 @@ service cloud.firestore {
 
       allow create: if isEmpresa()
         && request.resource.data.empresaId == request.auth.uid
+        && validVagaStatus(request.resource.data.status)
         && (!('empresaUid' in request.resource.data) || request.resource.data.empresaUid == request.auth.uid);
 
       allow update: if isEmpresa()
         && resource.data.empresaId == request.auth.uid
         && request.resource.data.empresaId == resource.data.empresaId
+        && validVagaStatus(request.resource.data.status)
         && (!('empresaUid' in request.resource.data)
           || request.resource.data.empresaUid == request.auth.uid);
 
@@ -499,7 +512,7 @@ service cloud.firestore {
         && (!('empresaUid' in request.resource.data)
           || request.resource.data.empresaUid == request.resource.data.empresaId)
         && request.resource.data.status == 'indicado'
-        && vagaEmpresaMatches(request.resource.data);
+        && vagaAceitaIndicacoes(request.resource.data);
 
       allow read: if isEmpresaOrIndicadorOwner(resource.data);
 
@@ -519,7 +532,7 @@ service cloud.firestore {
         && (!('empresaUid' in request.resource.data)
           || request.resource.data.empresaUid == request.resource.data.empresaId)
         && request.resource.data.status == 'indicado'
-        && vagaEmpresaMatches(request.resource.data)
+        && vagaAceitaIndicacoes(request.resource.data)
         && referencedCandidateMatches(request.resource.data);
 
       allow read: if isEmpresaOrIndicadorOwner(resource.data);
@@ -546,6 +559,12 @@ service cloud.firestore {
         && referencedCandidateMatches(request.resource.data);
 
       allow delete: if isEmpresaOwner(resource.data);
+    }
+
+    match /historicoProcesso/{eventoId} {
+      allow read: if isEmpresaOrIndicadorOwner(resource.data);
+      allow create: if historyCreateAllowed();
+      allow update, delete: if false;
     }
 
     match /pagamentos/{pagamentoId} {

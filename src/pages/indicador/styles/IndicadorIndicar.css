@@ -19,6 +19,10 @@
   animation: selectioFadeIn 0.36s ease both;
 }
 
+.indicar-page > .data-state {
+  max-width: 720px;
+}
+
 /* Cabeçalho com contexto, título, link de retorno e vaga selecionada. */
 .indicar-header {
   margin-bottom: 52px;

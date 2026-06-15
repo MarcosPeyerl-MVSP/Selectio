@@ -190,7 +190,7 @@ function IndicadorFinanceiro({ user }) {
 
       <article className="indicador-pagamentos-lista">
         <div className="indicador-pagamentos-lista-header">
-          <span><FaReceipt /> HistÃ³rico de recompensas</span>
+          <span><FaReceipt /> Histórico de recompensas</span>
           <strong>{recompensas.length}</strong>
         </div>
 
@@ -199,14 +199,14 @@ function IndicadorFinanceiro({ user }) {
             <div className="indicador-pagamento-item" key={recompensa.id}>
               <div>
                 <strong>{recompensa.candidatoNome || 'Candidato'}</strong>
-                <span>{recompensa.vagaTitulo || 'Vaga nÃ£o informada'} - {recompensa.empresaNome || 'Empresa'}</span>
+                <span>{recompensa.vagaTitulo || 'Vaga não informada'} - {recompensa.empresaNome || 'Empresa'}</span>
                 {recompensa.status === 'awaiting_company' ? (
                   <small>Candidato contratado. Recompensa aguardando pagamento da empresa.</small>
                 ) : (
                   <>
                     <small>Criado em {formatDateTime(recompensa.criadoEm)}</small>
                     {recompensa.transacaoEm && (
-                      <small>TransaÃ§Ã£o em {formatDateTime(recompensa.transacaoEm)}</small>
+                      <small>Transação em {formatDateTime(recompensa.transacaoEm)}</small>
                     )}
                     {recompensa.aprovadoEm && (
                       <small>Aprovado em {formatDateTime(recompensa.aprovadoEm)}</small>
@@ -230,7 +230,7 @@ function IndicadorFinanceiro({ user }) {
           <div className="indicador-pagamentos-vazio">
             <FaCreditCard />
             <strong>Nenhuma recompensa criada</strong>
-            <p>Quando uma empresa contratar um indicado ou criar um pagamento, o status aparecerÃ¡ aqui.</p>
+            <p>Quando uma empresa contratar um indicado ou criar um pagamento, o status aparecerá aqui.</p>
           </div>
         )}
       </article>
@@ -350,10 +350,10 @@ function formatCurrency(value) {
 }
 
 function formatDateTime(value) {
-  if (!value) return 'nÃ£o informado'
+  if (!value) return 'não informado'
 
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'nÃ£o informado'
+  if (Number.isNaN(date.getTime())) return 'não informado'
 
   return date.toLocaleString('pt-BR')
 }

@@ -19,6 +19,11 @@ import EditarVagaEmpresa from './pages/empresa/EmpresaEditarVaga'
 import VagaDetalhe from './pages/public/VagaDetalhe'
 import Indicar from './pages/indicador/IndicadorIndicar'
 import CandidatosIndicador from './pages/indicador/IndicadorCandidatos'
+import ProtectedRoute from './components/auth/ProtectedRoute'
+
+const proteger = (element, tipo) => (
+  <ProtectedRoute tipo={tipo}>{element}</ProtectedRoute>
+)
 
 function App() {
   return (
@@ -33,19 +38,19 @@ function App() {
         <Route path="/cadastro/indicador" element={<CadastroIndicador />} />
         <Route path="/cadastro/empresa" element={<CadastroEmpresa />} />
         {/* ROTA PAINEIS */}
-        <Route path="/painel/indicador" element={<PainelIndicador />} />
-        <Route path="/painel/empresa" element={<PainelEmpresa />} />
-        <Route path="/candidatos/empresa" element={<CandidatosEmpresa />} />
+        <Route path="/painel/indicador" element={proteger(<PainelIndicador />, 'indicador')} />
+        <Route path="/painel/empresa" element={proteger(<PainelEmpresa />, 'empresa')} />
+        <Route path="/candidatos/empresa" element={proteger(<CandidatosEmpresa />, 'empresa')} />
         {/* ROTA VAGAS */}
         <Route path="/vagas" element={<Vagas />} />
         <Route path="/vagas/indicador" element={<Navigate to="/vagas" replace />} />
         <Route path="/vagas/empresa" element={<Navigate to="/vagas" replace />} />
-        <Route path="/criar-vaga/empresa" element={<CriarVagaEmpresa />} />
-        <Route path="/editar-vaga/empresa/:id" element={<EditarVagaEmpresa />} />
+        <Route path="/criar-vaga/empresa" element={proteger(<CriarVagaEmpresa />, 'empresa')} />
+        <Route path="/editar-vaga/empresa/:id" element={proteger(<EditarVagaEmpresa />, 'empresa')} />
         {/* ROTA VAGA */}
-        <Route path="/vaga/:id" element={<VagaDetalhe />} />
-        <Route path="/indicar/:vagaId" element={<Indicar />} />
-        <Route path="/candidatos/indicador" element={<CandidatosIndicador />} />
+        <Route path="/vaga/:id" element={proteger(<VagaDetalhe />)} />
+        <Route path="/indicar/:vagaId" element={proteger(<Indicar />, 'indicador')} />
+        <Route path="/candidatos/indicador" element={proteger(<CandidatosIndicador />, 'indicador')} />
         {/* ROTA PAGE NOT FOUND */}
         <Route path="*" element={<h1>PAGE NOT FOUND</h1>} />
       </Routes>

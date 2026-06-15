@@ -1,5 +1,4 @@
 import {
-  addDoc,
   collection,
   doc,
   getDoc,
@@ -8,10 +7,12 @@ import {
   query,
   serverTimestamp,
   updateDoc,
+  writeBatch,
   where
 } from 'firebase/firestore'
 
 import { db } from './firebase'
+import { adicionarHistoricoAoBatch } from './firestoreHistorico'
 import { notificarEntrevistaAlterada } from './firestoreNotificacoes'
 
 const colecaoEntrevistas = collection(db, 'entrevistas')
@@ -72,11 +73,24 @@ export const criarEntrevista = async (dados) => {
     throw new Error('Candidato, empresa, data e horário são obrigatórios para agendar entrevista.')
   }
 
-  const docRef = await addDoc(colecaoEntrevistas, {
+  const docRef = doc(colecaoEntrevistas)
+  const batch = writeBatch(db)
+
+  batch.set(docRef, {
     ...entrevista,
     criadoEm: serverTimestamp(),
     atualizadoEm: serverTimestamp()
   })
+  adicionarHistoricoAoBatch(batch, {
+    ...entrevista,
+    entrevistaId: docRef.id,
+    tipo: 'entrevista_agendada',
+    titulo: 'Entrevista agendada',
+    descricao: `Entrevista agendada para ${entrevista.data} às ${entrevista.horaInicio}.`,
+    statusAtual: entrevista.status,
+    criadoPor: entrevista.empresaId
+  })
+  await batch.commit()
 
   const agora = new Date().toISOString()
 
@@ -173,7 +187,40 @@ export const atualizarStatusEntrevista = async (id, status) => {
   }
 
   const entrevistaAtual = await buscarEntrevistaPorId(id)
-  const entrevistaAtualizada = await atualizarEntrevista(id, { status })
+
+  if (!entrevistaAtual) {
+    throw new Error('Entrevista não encontrada.')
+  }
+
+  const batch = writeBatch(db)
+  const atualizadoEm = serverTimestamp()
+
+  batch.update(doc(db, 'entrevistas', id), {
+    status,
+    atualizadoEm
+  })
+  adicionarHistoricoAoBatch(batch, {
+    ...entrevistaAtual,
+    entrevistaId: id,
+    tipo: `entrevista_${status}`,
+    titulo: {
+      agendada: 'Entrevista agendada',
+      pendente: 'Entrevista pendente',
+      realizada: 'Entrevista realizada',
+      cancelada: 'Entrevista cancelada'
+    }[status],
+    descricao: `Status da entrevista alterado de ${entrevistaAtual.status || 'agendada'} para ${status}.`,
+    statusAnterior: entrevistaAtual.status || 'agendada',
+    statusAtual: status,
+    criadoPor: entrevistaAtual.empresaId
+  })
+  await batch.commit()
+
+  const entrevistaAtualizada = {
+    id,
+    status,
+    atualizadoEm: new Date().toISOString()
+  }
 
   if (entrevistaAtual && entrevistaAtual.status !== status) {
     await notificarEntrevistaAlterada({

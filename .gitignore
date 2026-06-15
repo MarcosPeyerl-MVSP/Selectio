@@ -12,8 +12,6 @@ dist
 dist-ssr
 *.local
 .env*
-!.env.example
-!scripts/.env.example
 env
 env*
 *.download

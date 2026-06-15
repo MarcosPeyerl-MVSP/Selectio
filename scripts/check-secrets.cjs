@@ -89,7 +89,7 @@ function runSelfTest() {
     throw new Error('Autoteste falhou ao detectar nome de service account.')
   }
 
-  scanContent('fixture.env.example', fakeSecret)
+  scanContent('fixture.env', fakeSecret)
 
   if (!findings.some((finding) => finding.reason.includes(secretKey))) {
     throw new Error('Autoteste falhou ao detectar valor sensivel.')
@@ -102,7 +102,7 @@ function runSelfTest() {
   }
 
   findings.length = 0
-  scanContent('fixture.env.example', `${secretKey}=SEU_WEBHOOK_SECRET_AQUI`)
+  scanContent('fixture.env', `${secretKey}=SEU_WEBHOOK_SECRET_AQUI`)
 
   if (findings.length) {
     throw new Error('Autoteste tratou placeholder como segredo real.')
