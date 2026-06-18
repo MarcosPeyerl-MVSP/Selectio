@@ -29,27 +29,3 @@ hook local que bloqueia commits com credenciais:
 ```bash
 npm run security:setup
 ```
-
-## Acesso administrativo
-
-O painel administrativo fica em `/admin` e não possui cadastro público.
-
-Para liberar uma conta:
-
-1. Crie o usuário no Firebase Authentication.
-2. No Firestore, crie manualmente o documento `users/{firebaseAuthUid}`.
-3. Use um campo administrativo explícito:
-
-```json
-{
-  "uid": "FIREBASE_AUTH_UID",
-  "tipo": "admin",
-  "nome": "Selectio Admin",
-  "email": "admin@exemplo.com"
-}
-```
-
-Também são reconhecidos `role: "admin"` ou `papel: "admin"`. As regras impedem
-que empresa ou indicador promovam a própria conta pelo navegador. O painel
-admin possui leitura global, mas não permite excluir registros, alterar saldos
-ou executar pagamentos.
