@@ -24,11 +24,17 @@ function Navbar() {
     ? { type: 'empresa', label: 'Empresa', user: perfil, painelPath: '/painel/empresa' }
     : perfil?.tipo === 'indicador'
       ? { type: 'indicador', label: 'Indicador', user: perfil, painelPath: '/painel/indicador' }
-      : { type: 'publico', label: '', user: null, painelPath: '/login' }
+      : perfil?.tipo === 'admin'
+        ? { type: 'admin', label: 'Administrador', user: perfil, painelPath: '/admin/visao-geral' }
+        : { type: 'publico', label: '', user: null, painelPath: '/login' }
   const userName = getUserName(session.user)
   const userEmail = getUserEmail(session.user)
-  const profilePath = `${session.painelPath}?secao=perfil`
-  const settingsPath = `${session.painelPath}?secao=configuracoes`
+  const profilePath = session.type === 'admin'
+    ? '/admin/visao-geral'
+    : `${session.painelPath}?secao=perfil`
+  const settingsPath = session.type === 'admin'
+    ? '/admin/configuracoes'
+    : `${session.painelPath}?secao=configuracoes`
 
   useEffect(() => {
     if (!profileMenuOpen) return undefined
@@ -66,6 +72,7 @@ function Navbar() {
     await signOut(auth).catch(() => {})
     localStorage.removeItem('empresaUser')
     localStorage.removeItem('indicadorUser')
+    localStorage.removeItem('adminUser')
     setProfileMenuOpen(false)
     toast.info('Sessão encerrada.')
     navigate('/login')

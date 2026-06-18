@@ -20,6 +20,16 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/indicadores/$(request.auth.uid));
     }
 
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && (
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tipo == 'admin'
+          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.papel == 'admin'
+        );
+    }
+
     function validUserTipo(tipo) {
       return tipo in ['empresa', 'indicador'];
     }
@@ -31,7 +41,9 @@ service cloud.firestore {
     function ownUserPayload(uid) {
       return isOwner(uid)
         && request.resource.data.uid == uid
-        && validUserTipo(request.resource.data.tipo);
+        && validUserTipo(request.resource.data.tipo)
+        && (!('role' in request.resource.data) || request.resource.data.role != 'admin')
+        && (!('papel' in request.resource.data) || request.resource.data.papel != 'admin');
     }
 
     function validOnboardingTourPayload() {
@@ -108,6 +120,8 @@ service cloud.firestore {
     function isEmpresaOrIndicadorOwner(data) {
       return signedIn()
         && (
+          isAdmin()
+          ||
           data.empresaId == request.auth.uid
           || data.indicadorId == request.auth.uid
         );
@@ -467,20 +481,20 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      allow read: if isOwner(uid);
+      allow read: if isOwner(uid) || isAdmin();
       allow create: if ownUserPayload(uid);
       allow update: if ownUserUpdatePayload(uid);
       allow delete: if false;
     }
 
     match /empresas/{uid} {
-      allow read: if isOwner(uid);
+      allow read: if isOwner(uid) || isAdmin();
       allow create, update: if ownEmpresaPayload(uid);
       allow delete: if false;
     }
 
     match /indicadores/{uid} {
-      allow read: if isOwner(uid);
+      allow read: if isOwner(uid) || isAdmin();
       allow create, update: if ownIndicadorPayload(uid);
       allow delete: if false;
     }
@@ -580,7 +594,7 @@ service cloud.firestore {
     }
 
     match /indicadorSaldos/{indicadorId} {
-      allow read: if isOwner(indicadorId);
+      allow read: if isOwner(indicadorId) || isAdmin();
       allow create, update, delete: if false;
     }
 
@@ -599,7 +613,8 @@ service cloud.firestore {
     }
 
     match /saques/{saqueId} {
-      allow read: if signedIn() && resource.data.indicadorId == request.auth.uid;
+      allow read: if signedIn()
+        && (resource.data.indicadorId == request.auth.uid || isAdmin());
       allow create, update, delete: if false;
     }
 

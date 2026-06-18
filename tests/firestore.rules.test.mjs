@@ -7,8 +7,10 @@ import {
   initializeTestEnvironment
 } from '@firebase/rules-unit-testing'
 import {
+  collection,
   doc,
   getDoc,
+  getDocs,
   serverTimestamp,
   setDoc,
   Timestamp,
@@ -43,6 +45,23 @@ beforeEach(async () => {
         uid: 'indicador-1',
         firebaseUid: 'indicador-1',
         tipo: 'indicador'
+      }),
+      setDoc(doc(db, 'users', 'admin-1'), {
+        uid: 'admin-1',
+        tipo: 'admin',
+        email: 'admin@selectio.test'
+      }),
+      setDoc(doc(db, 'users', 'admin-role'), {
+        uid: 'admin-role',
+        tipo: 'empresa',
+        role: 'admin',
+        email: 'admin-role@selectio.test'
+      }),
+      setDoc(doc(db, 'users', 'admin-papel'), {
+        uid: 'admin-papel',
+        tipo: 'indicador',
+        papel: 'admin',
+        email: 'admin-papel@selectio.test'
       }),
       setDoc(doc(db, 'vagas', 'vaga-1'), {
         empresaId: 'empresa-1',
@@ -268,6 +287,118 @@ test('usuario sem vinculo nao le candidato de terceiros', async () => {
   const db = testEnv.authenticatedContext('usuario-externo').firestore()
 
   await assertFails(getDoc(doc(db, 'candidatos', 'candidato-1')))
+})
+
+test('admin le colecoes globais sem receber permissao de escrita', async () => {
+  await criarProcessoSeletivo()
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore()
+
+    await Promise.all([
+      setDoc(doc(db, 'pagamentos', 'pagamento-admin'), {
+        empresaId: 'empresa-1',
+        indicadorId: 'indicador-1',
+        candidatoId: 'candidato-1',
+        vagaId: 'vaga-1',
+        status: 'approved',
+        valor: 500
+      }),
+      setDoc(doc(db, 'saques', 'saque-admin'), {
+        indicadorId: 'indicador-1',
+        status: 'solicitado',
+        valor: 200
+      }),
+      setDoc(doc(db, 'indicadorSaldos', 'indicador-1'), {
+        indicadorId: 'indicador-1',
+        saldoDisponivel: 300,
+        saldoPendente: 200
+      }),
+      setDoc(doc(db, 'movimentacoesFinanceiras', 'movimentacao-admin'), {
+        indicadorId: 'indicador-1',
+        empresaId: 'empresa-1',
+        tipo: 'credito_recompensa',
+        status: 'approved',
+        valor: 500
+      })
+    ])
+  })
+
+  const db = testEnv.authenticatedContext('admin-1').firestore()
+
+  await assertSucceeds(getDocs(collection(db, 'empresas')))
+  await assertSucceeds(getDocs(collection(db, 'users')))
+  await assertSucceeds(getDocs(collection(db, 'indicadores')))
+  await assertSucceeds(getDocs(collection(db, 'candidatos')))
+  await assertSucceeds(getDocs(collection(db, 'pagamentos')))
+  await assertSucceeds(getDocs(collection(db, 'saques')))
+  await assertSucceeds(getDocs(collection(db, 'indicadorSaldos')))
+  await assertSucceeds(getDocs(collection(db, 'movimentacoesFinanceiras')))
+  await assertFails(updateDoc(doc(db, 'candidatos', 'candidato-1'), {
+    status: 'contratado',
+    atualizadoEm: serverTimestamp()
+  }))
+  await assertFails(setDoc(doc(db, 'pagamentos', 'pagamento-manual-admin'), {
+    empresaId: 'empresa-1',
+    indicadorId: 'indicador-1',
+    candidatoId: 'candidato-1',
+    vagaId: 'vaga-1',
+    status: 'approved',
+    valor: 500
+  }))
+})
+
+test('campos role e papel tambem liberam somente leitura administrativa', async () => {
+  const roleDb = testEnv.authenticatedContext('admin-role').firestore()
+  const papelDb = testEnv.authenticatedContext('admin-papel').firestore()
+
+  await assertSucceeds(getDocs(collection(roleDb, 'empresas')))
+  await assertSucceeds(getDocs(collection(papelDb, 'indicadores')))
+  await assertFails(setDoc(doc(roleDb, 'pagamentos', 'pagamento-role-admin'), {
+    empresaId: 'empresa-1',
+    indicadorId: 'indicador-1',
+    status: 'approved',
+    valor: 100
+  }))
+})
+
+test('usuario nao pode se promover para admin durante o cadastro', async () => {
+  const db = testEnv.authenticatedContext('usuario-malicioso').firestore()
+
+  await assertFails(setDoc(doc(db, 'users', 'usuario-malicioso'), {
+    uid: 'usuario-malicioso',
+    tipo: 'empresa',
+    role: 'admin',
+    email: 'malicioso@example.com'
+  }))
+  await assertFails(setDoc(doc(db, 'users', 'usuario-malicioso'), {
+    uid: 'usuario-malicioso',
+    tipo: 'indicador',
+    papel: 'admin',
+    email: 'malicioso@example.com'
+  }))
+})
+
+test('usuario existente nao pode se promover para admin por atualizacao', async () => {
+  const db = testEnv.authenticatedContext('usuario-comum').firestore()
+  const userRef = doc(db, 'users', 'usuario-comum')
+
+  await assertSucceeds(setDoc(userRef, {
+    uid: 'usuario-comum',
+    tipo: 'empresa',
+    email: 'usuario@example.com'
+  }))
+  await assertFails(updateDoc(userRef, { role: 'admin' }))
+  await assertFails(updateDoc(userRef, { papel: 'admin' }))
+  await assertFails(updateDoc(userRef, { tipo: 'admin' }))
+})
+
+test('empresa e indicador nao fazem consultas administrativas globais', async () => {
+  const empresaDb = testEnv.authenticatedContext('empresa-1').firestore()
+  const indicadorDb = testEnv.authenticatedContext('indicador-1').firestore()
+
+  await assertFails(getDocs(collection(empresaDb, 'indicadores')))
+  await assertFails(getDocs(collection(indicadorDb, 'empresas')))
+  await assertFails(getDocs(collection(empresaDb, 'saques')))
 })
 
 test('cliente nao cria registros financeiros diretamente', async () => {

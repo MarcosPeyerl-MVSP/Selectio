@@ -38,6 +38,8 @@ function Login() {
       navigate(redirectTo || '/painel/indicador', { replace: true })
     } else if (perfilSessao.tipo === 'empresa') {
       navigate(redirectTo || '/painel/empresa', { replace: true })
+    } else if (perfilSessao.tipo === 'admin') {
+      navigate(redirectTo || '/admin/visao-geral', { replace: true })
     }
   }, [carregandoSessao, navigate, perfilSessao, redirectTo])
 
@@ -63,6 +65,12 @@ function Login() {
     if (perfil.tipo === 'empresa') {
       toast.success('Login realizado com sucesso.')
       navigate(redirectTo || '/painel/empresa')
+      return true
+    }
+
+    if (perfil.tipo === 'admin') {
+      toast.success('Acesso administrativo validado.')
+      navigate(redirectTo || '/admin/visao-geral')
       return true
     }
 

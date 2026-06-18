@@ -6,6 +6,12 @@ const collectionsByTipo = {
   indicador: 'indicadores'
 }
 
+export const isAdminProfile = (perfil) => (
+  perfil?.tipo === 'admin'
+  || perfil?.role === 'admin'
+  || perfil?.papel === 'admin'
+)
+
 const getCollectionByTipo = (tipo) => {
   const collectionName = collectionsByTipo[tipo]
 
@@ -105,6 +111,17 @@ export const buscarPerfilUsuario = async (uid) => {
 
   const userData = userSnapshot.data()
   const tipo = userData.tipo
+
+  if (isAdminProfile(userData)) {
+    return {
+      ...userData,
+      id: uid,
+      uid,
+      firebaseUid: uid,
+      tipo: 'admin'
+    }
+  }
+
   const collectionName = getCollectionByTipo(tipo)
   const perfilSnapshot = await getDoc(doc(db, collectionName, uid))
 
@@ -162,5 +179,7 @@ export const buscarTipoUsuario = async (uid) => {
     return null
   }
 
-  return userSnapshot.data().tipo || null
+  const userData = userSnapshot.data()
+
+  return isAdminProfile(userData) ? 'admin' : userData.tipo || null
 }

@@ -8,6 +8,7 @@ import { AuthContext } from './authContext'
 const limparPerfilLocal = () => {
   localStorage.removeItem('empresaUser')
   localStorage.removeItem('indicadorUser')
+  localStorage.removeItem('adminUser')
 }
 
 const salvarPerfilLocal = (perfil) => {
@@ -19,6 +20,10 @@ const salvarPerfilLocal = (perfil) => {
 
   if (perfil?.tipo === 'indicador') {
     localStorage.setItem('indicadorUser', JSON.stringify(perfil))
+  }
+
+  if (perfil?.tipo === 'admin') {
+    localStorage.setItem('adminUser', JSON.stringify(perfil))
   }
 }
 

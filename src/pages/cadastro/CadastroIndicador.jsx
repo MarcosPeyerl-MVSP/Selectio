@@ -199,6 +199,13 @@ function CadastroIndicador() {
       return
     }
 
+    if (perfil.tipo === 'admin') {
+      adotarPerfil(perfil)
+      toast.info('Esta conta Google possui acesso administrativo. Vamos te levar ao painel admin.')
+      navigate('/admin/visao-geral')
+      return
+    }
+
     toast.info('Esta conta Google já possui um cadastro no Selectio. Entre pelo login.')
     navigate('/login')
   }

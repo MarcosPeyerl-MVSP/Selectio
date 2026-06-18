@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom'
 
 import Home from './pages/public/Home'
@@ -20,9 +21,25 @@ import VagaDetalhe from './pages/public/VagaDetalhe'
 import Indicar from './pages/indicador/IndicadorIndicar'
 import CandidatosIndicador from './pages/indicador/IndicadorCandidatos'
 import ProtectedRoute from './components/auth/ProtectedRoute'
+import PageLoader from './components/ui/PageLoader'
+import AdminLayout from './components/admin/AdminLayout'
+
+const AdminVisaoGeral = lazy(() => import('./pages/admin/AdminVisaoGeral'))
+const AdminEmpresas = lazy(() => import('./pages/admin/AdminEmpresas'))
+const AdminIndicadores = lazy(() => import('./pages/admin/AdminIndicadores'))
+const AdminVagas = lazy(() => import('./pages/admin/AdminVagas'))
+const AdminCandidatos = lazy(() => import('./pages/admin/AdminCandidatos'))
+const AdminFinanceiro = lazy(() => import('./pages/admin/AdminFinanceiro'))
+const AdminConfiguracoesEmBreve = lazy(() => import('./pages/admin/AdminConfiguracoesEmBreve'))
 
 const proteger = (element, tipo) => (
   <ProtectedRoute tipo={tipo}>{element}</ProtectedRoute>
+)
+
+const adminPage = (element) => (
+  <Suspense fallback={<PageLoader label="Carregando painel administrativo..." />}>
+    {element}
+  </Suspense>
 )
 
 function App() {
@@ -51,6 +68,17 @@ function App() {
         <Route path="/vaga/:id" element={proteger(<VagaDetalhe />)} />
         <Route path="/indicar/:vagaId" element={proteger(<Indicar />, 'indicador')} />
         <Route path="/candidatos/indicador" element={proteger(<CandidatosIndicador />, 'indicador')} />
+        {/* ROTAS ADMINISTRATIVAS */}
+        <Route path="/admin" element={proteger(<AdminLayout />, 'admin')}>
+          <Route index element={<Navigate to="/admin/visao-geral" replace />} />
+          <Route path="visao-geral" element={adminPage(<AdminVisaoGeral />)} />
+          <Route path="empresas" element={adminPage(<AdminEmpresas />)} />
+          <Route path="indicadores" element={adminPage(<AdminIndicadores />)} />
+          <Route path="vagas" element={adminPage(<AdminVagas />)} />
+          <Route path="candidatos" element={adminPage(<AdminCandidatos />)} />
+          <Route path="financeiro" element={adminPage(<AdminFinanceiro />)} />
+          <Route path="configuracoes" element={adminPage(<AdminConfiguracoesEmBreve />)} />
+        </Route>
         {/* ROTA PAGE NOT FOUND */}
         <Route path="*" element={<h1>PAGE NOT FOUND</h1>} />
       </Routes>

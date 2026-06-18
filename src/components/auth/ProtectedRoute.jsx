@@ -26,14 +26,17 @@ function ProtectedRoute({ children, tipo }) {
   }
 
   if (tipo && perfil.tipo !== tipo) {
-    const painel = perfil.tipo === 'empresa'
-      ? '/painel/empresa'
-      : '/painel/indicador'
-
-    return <Navigate to={painel} replace />
+    return <Navigate to={getPainelPath(perfil.tipo)} replace />
   }
 
   return children
+}
+
+function getPainelPath(tipo) {
+  if (tipo === 'admin') return '/admin/visao-geral'
+  if (tipo === 'empresa') return '/painel/empresa'
+  if (tipo === 'indicador') return '/painel/indicador'
+  return '/login'
 }
 
 export default ProtectedRoute
