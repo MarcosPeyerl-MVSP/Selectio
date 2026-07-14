@@ -3,7 +3,12 @@ import { onAuthStateChanged } from 'firebase/auth'
 
 import { auth } from '../../services/firebase'
 import { buscarPerfilUsuario } from '../../services/firestoreUsers'
+import { getFirebaseUid, getStoredUser } from '../../services/identidadeFirebase'
 import { AuthContext } from './authContext'
+import {
+  perfilExigeSetorEmpresarial,
+  perfilTemSetorEmpresarial
+} from '../../utils/modoEmpresarial'
 
 const limparPerfilLocal = () => {
   localStorage.removeItem('empresaUser')
@@ -25,6 +30,26 @@ const salvarPerfilLocal = (perfil) => {
   if (perfil?.tipo === 'admin') {
     localStorage.setItem('adminUser', JSON.stringify(perfil))
   }
+}
+
+const prepararPerfilSessao = (perfilRemoto) => {
+  if (!perfilRemoto) return null
+
+  if (!perfilExigeSetorEmpresarial(perfilRemoto)) {
+    return perfilRemoto
+  }
+
+  const perfilLocal = getStoredUser('empresaUser')
+  const mesmoUsuario = getFirebaseUid(perfilLocal) === getFirebaseUid(perfilRemoto)
+
+  if (mesmoUsuario && perfilTemSetorEmpresarial(perfilLocal)) {
+    return {
+      ...perfilRemoto,
+      setorEmpresarial: perfilLocal.setorEmpresarial
+    }
+  }
+
+  return null
 }
 
 function AuthProvider({ children }) {
@@ -57,7 +82,7 @@ function AuthProvider({ children }) {
       const perfilAtual = await buscarPerfilUsuario(usuarioAtual.uid)
 
       if (auth.currentUser?.uid === usuarioAtual.uid) {
-        adotarPerfil(perfilAtual)
+        adotarPerfil(prepararPerfilSessao(perfilAtual))
       }
 
       return perfilAtual
@@ -81,7 +106,7 @@ function AuthProvider({ children }) {
       const perfilAtual = await buscarPerfilUsuario(usuarioAtual.uid)
 
       if (auth.currentUser?.uid === usuarioAtual.uid) {
-        adotarPerfil(perfilAtual)
+        adotarPerfil(prepararPerfilSessao(perfilAtual))
       }
     } catch {
       if (auth.currentUser?.uid === usuarioAtual.uid) {

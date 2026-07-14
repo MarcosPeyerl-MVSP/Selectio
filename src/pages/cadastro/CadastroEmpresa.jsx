@@ -22,6 +22,13 @@ import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from "../../services
 import { buscarPerfilUsuario, salvarPerfilUsuario } from "../../services/firestoreUsers";
 import { useToast } from "../../hooks/useToast";
 import { useAuth } from "../../hooks/useAuth";
+import {
+  MODO_EMPRESA_CLASSICO,
+  MODO_EMPRESA_EMPRESARIAL,
+  SETOR_ADMIN_EMPRESA,
+  criarPayloadSetoresEmpresariais,
+  setoresEmpresariais,
+} from "../../utils/modoEmpresarial";
 
 // Opções fixas de porte/tamanho da empresa.
 const tamanhoOptions = [
@@ -30,6 +37,11 @@ const tamanhoOptions = [
   "Média empresa",
   "Grande empresa",
 ];
+
+const createInitialSectorPasswords = () => setoresEmpresariais.reduce((passwords, setor) => ({
+  ...passwords,
+  [setor.id]: "",
+}), {});
 
 // Critérios usados para avaliar a força da senha.
 const passwordCriteria = [
@@ -86,6 +98,8 @@ export default function Cadastro() {
     tamanho: "",
     pagamento: "",
     dadosPagamento: "",
+    modoEmpresa: MODO_EMPRESA_CLASSICO,
+    senhasSetores: createInitialSectorPasswords(),
     senha: "",
     confirmarSenha: "",
     ia: false,
@@ -135,7 +149,11 @@ export default function Cadastro() {
   // Regra de envio: o cadastro só pode ser enviado com senha forte.
   const isPasswordStrong = passwordStrength?.strength === "forte";
   const isGoogleSignup = Boolean(googleSignupUser);
-  const canSubmit = (isGoogleSignup || isPasswordStrong) && !submitLoading;
+  const isModoEmpresarialSelecionado = form.modoEmpresa === MODO_EMPRESA_EMPRESARIAL;
+  const setoresComSenha = setoresEmpresariais.every((setor) => (
+    form.senhasSetores[setor.id]?.trim().length >= 4
+  ));
+  const canSubmit = !submitLoading;
 
   useEffect(() => {
     return () => {
@@ -232,6 +250,16 @@ export default function Cadastro() {
       ...form,
       [name]: type === "checkbox" ? checked : value,
     });
+  };
+
+  const handleSetorSenhaChange = (setorId, value) => {
+    setForm((currentForm) => ({
+      ...currentForm,
+      senhasSetores: {
+        ...currentForm.senhasSetores,
+        [setorId]: value,
+      },
+    }));
   };
 
   // Responsabilidade: formatar CNPJ digitado e limpar o status da consulta.
@@ -357,6 +385,11 @@ export default function Cadastro() {
       return;
     }
 
+    if (isModoEmpresarialSelecionado && !setoresComSenha) {
+      toast.warning("Defina uma senha com pelo menos 4 caracteres para cada setor empresarial.");
+      return;
+    }
+
     if (!isGoogleSignup) {
       if (!form.senha || !form.confirmarSenha) {
         toast.warning("Informe e confirme a senha da empresa.");
@@ -392,6 +425,9 @@ export default function Cadastro() {
       formaPagamento: form.pagamento,
       dadosPagamento: form.dadosPagamento,
       curadoriaIA: form.ia,
+      modoEmpresa: form.modoEmpresa,
+      modoOperacao: form.modoEmpresa,
+      fluxoEmpresarialAtivo: isModoEmpresarialSelecionado,
     };
 
     let firebaseUser = null;
@@ -431,6 +467,9 @@ export default function Cadastro() {
       }
 
       payload.firebaseUid = profileUid;
+      payload.setoresEmpresariais = isModoEmpresarialSelecionado
+        ? await criarPayloadSetoresEmpresariais(form.senhasSetores, profileUid)
+        : {};
 
       const perfilEmpresa = await salvarPerfilUsuario({
         uid: profileUid,
@@ -449,12 +488,25 @@ export default function Cadastro() {
           formaPagamento: payload.formaPagamento,
           dadosPagamento: payload.dadosPagamento,
           curadoriaIA: payload.curadoriaIA,
+          modoEmpresa: payload.modoEmpresa,
+          modoOperacao: payload.modoOperacao,
+          fluxoEmpresarialAtivo: payload.fluxoEmpresarialAtivo,
+          setoresEmpresariais: payload.setoresEmpresariais,
           plano: "Plano Electio"
         }
       });
 
       keepGoogleSessionRef.current = true;
-      adotarPerfil(perfilEmpresa);
+      adotarPerfil(isModoEmpresarialSelecionado
+        ? {
+          ...perfilEmpresa,
+          setorEmpresarial: {
+            id: SETOR_ADMIN_EMPRESA,
+            nome: "Administrador Empresa",
+            acessadoEm: new Date().toISOString(),
+          },
+        }
+        : perfilEmpresa);
       toast.success(isGoogleSignup
         ? "Cadastro concluído com Google."
         : verificationSent
@@ -646,6 +698,81 @@ export default function Cadastro() {
             </section>
 
             <section className="form-section">
+              <h2>Modo de uso</h2>
+
+              <div className="mode-options">
+                <label className={form.modoEmpresa === MODO_EMPRESA_CLASSICO ? "mode-option selected" : "mode-option"}>
+                  <input
+                    type="radio"
+                    name="modoEmpresa"
+                    value={MODO_EMPRESA_CLASSICO}
+                    checked={form.modoEmpresa === MODO_EMPRESA_CLASSICO}
+                    onChange={handleChange}
+                  />
+                  <span>
+                    <strong>Classico Selectio</strong>
+                    <small>Fluxo atual: a empresa cria, publica e gerencia vagas diretamente.</small>
+                  </span>
+                </label>
+
+                <label className={form.modoEmpresa === MODO_EMPRESA_EMPRESARIAL ? "mode-option selected" : "mode-option"}>
+                  <input
+                    type="radio"
+                    name="modoEmpresa"
+                    value={MODO_EMPRESA_EMPRESARIAL}
+                    checked={form.modoEmpresa === MODO_EMPRESA_EMPRESARIAL}
+                    onChange={handleChange}
+                  />
+                  <span>
+                    <strong>Empresarial</strong>
+                    <small>Fluxo com setores, aprovacao financeira e publicacao pelo RH.</small>
+                  </span>
+                </label>
+              </div>
+
+              {isModoEmpresarialSelecionado && (
+                <div className="modo-empresarial-card">
+                  <div>
+                    <span>Fluxo empresarial</span>
+                    <h3>Vagas passam por pedido, auditoria e RH</h3>
+                    <p>
+                      O Chefe de departamento solicita a vaga com todos os detalhes. A Reitoria ou Auditoria avalia salario, premiacao e observacoes financeiras. Depois da aprovacao, o Setor RH publica a vaga e administra os candidatos. O Administrador Empresa acompanha os setores e o dashboard geral.
+                    </p>
+                  </div>
+
+                  <ol>
+                    <li><strong>Chefe de departamento</strong> envia o pedido da vaga.</li>
+                    <li><strong>Reitoria ou Auditoria</strong> aprova ou devolve com comentarios.</li>
+                    <li><strong>Setor RH</strong> publica a vaga aprovada e acompanha candidatos.</li>
+                    <li><strong>Administrador Empresa</strong> observa o funcionamento dos setores.</li>
+                  </ol>
+
+                  <div className="sector-passwords">
+                    <h4>Senhas iniciais dos setores</h4>
+                    <p>Essas senhas serao solicitadas depois do login principal da empresa. Use pelo menos 4 caracteres em cada setor.</p>
+
+                    <div className="grid-2">
+                      {setoresEmpresariais.map((setor) => (
+                        <div key={setor.id}>
+                          <label className="field-label" htmlFor={`senha-${setor.id}`}>
+                            {setor.nome}
+                          </label>
+                          <input
+                            id={`senha-${setor.id}`}
+                            type="password"
+                            placeholder="Senha do setor"
+                            value={form.senhasSetores[setor.id]}
+                            onChange={(event) => handleSetorSenhaChange(setor.id, event.target.value)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            <section className="form-section">
               <h2>Acesso</h2>
 
               {isGoogleSignup && (
@@ -815,7 +942,7 @@ export default function Cadastro() {
             </div>
 
             <button type="submit" className="submit-button" disabled={!canSubmit}>
-              {submitLoading ? "Cadastrando..." : isGoogleSignup || isPasswordStrong ? "Cadastrar empresa" : "Complete a senha forte"}
+              {submitLoading ? "Cadastrando..." : "Cadastrar empresa"}
             </button>
 
             <div className="google-signup-area">

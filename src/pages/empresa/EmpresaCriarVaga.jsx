@@ -8,9 +8,15 @@ import { useNavigate } from 'react-router-dom'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import Footer from '../../components/layout/Footer'
+import EstadoDados from '../../components/ui/EstadoDados'
 import { criarVaga } from '../../services/firestoreVagas'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { useToast } from '../../hooks/useToast'
+import {
+  isModoEmpresarial,
+  obterSetorAtual,
+  podeSolicitarVagaEmpresarial
+} from '../../utils/modoEmpresarial'
 
 // Estado inicial do formulário de criação de vaga.
 const initialForm = {
@@ -61,6 +67,9 @@ function CriarVagaEmpresa() {
 
   // Armazena mensagens de erro ou sucesso do formulário.
   const [message, setMessage] = useState('')
+  const modoEmpresarialAtivo = isModoEmpresarial(empresa)
+  const setorAtual = obterSetorAtual(empresa)
+  const podeSolicitarVaga = podeSolicitarVagaEmpresarial(empresa)
 
   useEffect(() => {
     // Regra de acesso: sem empresa autenticada, redireciona para login.
@@ -123,6 +132,12 @@ function CriarVagaEmpresa() {
 
     if (!empresa) return
 
+    if (!podeSolicitarVaga) {
+      setMessage('Somente o Chefe de departamento pode solicitar vagas no modo empresarial.')
+      toast.warning('Somente o Chefe de departamento pode solicitar vagas no modo empresarial.')
+      return
+    }
+
     // Validação: campos principais obrigatórios da vaga.
     if (!form.titulo || !form.area || !form.descricaoLonga || !form.localizacao) {
       setMessage('Preencha título, área, descrição e localização.')
@@ -170,6 +185,7 @@ function CriarVagaEmpresa() {
       : 'A combinar'
 
     const empresaUid = getFirebaseUid(empresa)
+    const statusFinal = modoEmpresarialAtivo ? 'pausada' : status
 
     // Payload enviado ao Firestore com os dados da vaga.
     const payload = {
@@ -198,8 +214,21 @@ function CriarVagaEmpresa() {
       ].filter(Boolean),
       imagem: 'https://images.unsplash.com/photo-1497366216548-37526070297c',
       area: form.area,
-      status,
+      status: statusFinal,
       dataLimite: form.dataLimite,
+      modoEmpresa: modoEmpresarialAtivo ? 'empresarial' : 'classico',
+      statusAprovacao: modoEmpresarialAtivo ? 'solicitada' : '',
+      solicitanteSetor: modoEmpresarialAtivo ? {
+        id: setorAtual?.id || '',
+        nome: setorAtual?.nome || 'Chefe de departamento'
+      } : null,
+      historicoAprovacao: modoEmpresarialAtivo ? [{
+        statusAprovacao: 'solicitada',
+        comentario: '',
+        setor: setorAtual?.nome || 'Chefe de departamento',
+        usuario: empresa.nomeEmpresa || empresa.nome || '',
+        criadoEm: new Date().toISOString()
+      }] : [],
     }
 
     try {
@@ -208,14 +237,16 @@ function CriarVagaEmpresa() {
       // Integração: envia a nova vaga para cadastro no Firestore.
       await criarVaga(payload)
 
-      const mensagemSucesso = status === 'pausada'
-        ? 'Vaga salva como pausada.'
-        : 'Vaga criada e aberta para indicações.'
+      const mensagemSucesso = modoEmpresarialAtivo
+        ? 'Solicitacao enviada para Reitoria ou Auditoria.'
+        : status === 'pausada'
+          ? 'Vaga salva como pausada.'
+          : 'Vaga criada e aberta para indicações.'
 
       setMessage(mensagemSucesso)
       toast.success(mensagemSucesso)
       setForm(initialForm)
-      navigate('/vagas')
+      navigate(modoEmpresarialAtivo ? '/painel/empresa?secao=aprovacoes' : '/vagas')
     } catch {
       setMessage('Não foi possível salvar a vaga no Firestore.')
       toast.error('Não foi possível salvar a vaga no Firestore.')
@@ -229,6 +260,28 @@ function CriarVagaEmpresa() {
     return null
   }
 
+  if (modoEmpresarialAtivo && !podeSolicitarVaga) {
+    return (
+      <div className="empresa-vaga-page">
+        <Navbar />
+
+        <div className="empresa-vaga-layout">
+          <Sidebar type="empresa" user={empresa} />
+          <main className="empresa-vaga-content">
+            <EstadoDados
+              title="Criacao restrita ao departamento"
+              description="No modo empresarial, somente o Chefe de departamento pode solicitar uma vaga. Auditoria, RH e Administrador Empresa acompanham o fluxo pelo painel."
+              actionLabel="Voltar ao painel"
+              onAction={() => navigate('/painel/empresa')}
+            />
+          </main>
+        </div>
+
+        <Footer />
+      </div>
+    )
+  }
+
   return (
     <div className="empresa-vaga-page">
       {/* Componente de navegação principal. */}
@@ -240,13 +293,13 @@ function CriarVagaEmpresa() {
 
         <main className="empresa-vaga-content">
           <section className="empresa-vaga-intro">
-            <span>FASE DE RASCUNHO</span>
+            <span>{modoEmpresarialAtivo ? 'SOLICITACAO DE VAGA' : 'FASE DE RASCUNHO'}</span>
             <h1>
               Postar uma
               <br />
               nova <strong>Vaga.</strong>
             </h1>
-            <p>Crie anúncios de alto impacto que atraem os melhores talentos do mundo.</p>
+            <p>{modoEmpresarialAtivo ? 'Preencha o pedido para que Reitoria ou Auditoria valide salario e premiacao.' : 'Crie anúncios de alto impacto que atraem os melhores talentos do mundo.'}</p>
           </section>
 
           <form className="empresa-vaga-form" onSubmit={handleSubmit}>
@@ -480,16 +533,18 @@ function CriarVagaEmpresa() {
             {message && <p className="empresa-vaga-message">{message}</p>}
 
             <div className="form-actions">
-              <button
-                type="button"
-                className="draft-btn"
-                disabled={loading}
-                onClick={(event) => handleSubmit(event, 'pausada')}
-              >
-                Salvar pausada
-              </button>
+              {!modoEmpresarialAtivo && (
+                <button
+                  type="button"
+                  className="draft-btn"
+                  disabled={loading}
+                  onClick={(event) => handleSubmit(event, 'pausada')}
+                >
+                  Salvar pausada
+                </button>
+              )}
               <button type="submit" className="finish-btn" disabled={loading}>
-                {loading ? 'Salvando...' : 'Finalizar Vaga'}
+                {loading ? 'Salvando...' : modoEmpresarialAtivo ? 'Enviar para auditoria' : 'Finalizar Vaga'}
               </button>
             </div>
           </form>

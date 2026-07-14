@@ -7,8 +7,10 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   FaCalendarAlt,
   FaChartBar,
+  FaClipboardCheck,
   FaCreditCard,
   FaSuitcase,
+  FaUsersCog,
   FaUserFriends,
   FaUserTie
 } from 'react-icons/fa'
@@ -20,10 +22,19 @@ import DashboardLayout from '../../components/dashboard/DashboardLayout'
 import GuidedTour from '../../components/onboarding/GuidedTour'
 import PageLoader from '../../components/ui/PageLoader'
 import EmpresaEntrevistas from './EmpresaEntrevistas'
+import { EmpresaFluxoEmpresarial, EmpresaSetoresEmpresariais } from './EmpresaModoEmpresarial'
 import EmpresaPagamentos from './EmpresaPagamentos'
 import EmpresaPerfil from './EmpresaPerfil'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { buscarPerfilUsuario, marcarTourUsuarioConcluido } from '../../services/firestoreUsers'
+import {
+  SETOR_ADMIN_EMPRESA,
+  SETOR_CHEFE_DEPARTAMENTO,
+  SETOR_REITORIA_AUDITORIA,
+  SETOR_RH,
+  isModoEmpresarial,
+  obterSetorAtual
+} from '../../utils/modoEmpresarial'
 
 const empresaCards = [
   {
@@ -75,6 +86,118 @@ const empresaCards = [
     dataTour: 'empresa-card-pagamentos'
   }
 ]
+
+const getEmpresaCards = (empresa) => {
+  if (!isModoEmpresarial(empresa)) return empresaCards
+
+  const setorId = empresa?.setorEmpresarial?.id
+  const cardsBySetor = {
+    [SETOR_CHEFE_DEPARTAMENTO]: [
+      {
+        icon: FaSuitcase,
+        title: 'Solicitar vaga',
+        description: 'Preencha o pedido da vaga para que Reitoria ou Auditoria avalie a parte financeira.',
+        to: '/criar-vaga/empresa',
+        action: 'Nova solicitacao',
+        dataTour: 'empresa-card-vagas'
+      },
+      {
+        icon: FaClipboardCheck,
+        title: 'Minhas solicitacoes',
+        description: 'Acompanhe vagas enviadas, devolvidas e aprovadas no fluxo empresarial.',
+        to: '/painel/empresa?secao=aprovacoes',
+        action: 'Acompanhar'
+      }
+    ],
+    [SETOR_REITORIA_AUDITORIA]: [
+      {
+        icon: FaClipboardCheck,
+        title: 'Pedidos para analise',
+        description: 'Revise salario, premiacao e comentarios antes de liberar a vaga para o RH.',
+        to: '/painel/empresa?secao=aprovacoes',
+        action: 'Analisar pedidos',
+        dataTour: 'empresa-card-vagas'
+      },
+      {
+        icon: FaChartBar,
+        title: 'Dashboard',
+        description: 'Veja a visao geral das solicitacoes e do fluxo da empresa.',
+        to: '/painel/empresa',
+        action: 'Acompanhar'
+      }
+    ],
+    [SETOR_RH]: [
+      {
+        icon: FaClipboardCheck,
+        title: 'Publicar aprovadas',
+        description: 'Receba vagas aprovadas pela auditoria e publique para os indicadores.',
+        to: '/painel/empresa?secao=aprovacoes',
+        action: 'Ver aprovadas',
+        dataTour: 'empresa-card-vagas'
+      },
+      {
+        icon: FaUserFriends,
+        title: 'Candidatos',
+        description: 'Administre os candidatos das vagas publicadas pelo RH.',
+        to: '/candidatos/empresa',
+        action: 'Ver Candidatos',
+        dataTour: 'empresa-card-candidatos'
+      },
+      {
+        icon: FaCalendarAlt,
+        title: 'Entrevistas',
+        description: 'Organize entrevistas e acompanhe agendamentos com candidatos.',
+        to: '/painel/empresa?secao=entrevistas',
+        action: 'Minhas Entrevistas'
+      },
+      {
+        icon: FaCreditCard,
+        title: 'Pagamentos',
+        description: 'Acompanhe recompensas pagas aos indicadores por contratacoes.',
+        to: '/painel/empresa?secao=pagamentos',
+        action: 'Ver Pagamentos'
+      }
+    ],
+    [SETOR_ADMIN_EMPRESA]: [
+      {
+        icon: FaUsersCog,
+        title: 'Setores',
+        description: 'Acompanhe setores e redefina senhas de acesso do modo empresarial.',
+        to: '/painel/empresa?secao=setores',
+        action: 'Gerenciar setores',
+        dataTour: 'empresa-card-perfil'
+      },
+      {
+        icon: FaClipboardCheck,
+        title: 'Fluxo de vagas',
+        description: 'Observe pedidos, aprovacoes, devolucoes e publicacoes do RH.',
+        to: '/painel/empresa?secao=aprovacoes',
+        action: 'Ver fluxo',
+        dataTour: 'empresa-card-vagas'
+      },
+      {
+        icon: FaChartBar,
+        title: 'Dashboard',
+        description: 'Acompanhe o funcionamento geral da empresa no Selectio.',
+        to: '/painel/empresa',
+        action: 'Acompanhar',
+        dataTour: 'empresa-card-dashboard'
+      }
+    ]
+  }
+
+  return [
+    ...(cardsBySetor[setorId] || cardsBySetor[SETOR_ADMIN_EMPRESA]),
+    {
+      icon: FaUserTie,
+      title: 'Perfil',
+      description: 'Consulte dados da empresa e configuracoes do perfil.',
+      to: '/painel/empresa?secao=perfil',
+      action: 'Meu Perfil',
+      dataTour: 'empresa-card-perfil'
+    }
+  ]
+}
 
 const empresaTourSteps = [
   {
@@ -172,6 +295,12 @@ function PainelEmpresa() {
   if (!empresa || !perfilCarregado) return <PageLoader label="Carregando painel da empresa..." />
 
   const tourConcluido = Boolean(empresa.tourEmpresaConcluido || empresa.onboardingTour?.empresaConcluido)
+  const modoEmpresarialAtivo = isModoEmpresarial(empresa)
+  const setorAtual = obterSetorAtual(empresa)
+  const cards = getEmpresaCards(empresa)
+  const dashboardDescription = modoEmpresarialAtivo && setorAtual
+    ? `Voce esta acessando o setor ${setorAtual.nome}. Use o painel para acompanhar as tarefas desse setor no fluxo empresarial.`
+    : "Gerencie suas vagas, explore novas oportunidades e acompanhe seu crescimento em um sÃ³ lugar."
 
   const concluirTour = async () => {
     const atualizacao = {
@@ -201,22 +330,28 @@ function PainelEmpresa() {
         <EmpresaEntrevistas empresa={empresa} />
       ) : activeSection === 'pagamentos' ? (
         <EmpresaPagamentos empresa={empresa} />
+      ) : activeSection === 'aprovacoes' ? (
+        <EmpresaFluxoEmpresarial empresa={empresa} />
+      ) : activeSection === 'setores' ? (
+        <EmpresaSetoresEmpresariais empresa={empresa} onUserUpdate={setEmpresa} />
       ) : (
         <>
           <DashboardHeader
-            eyebrow="BOAS-VINDAS - Painel Central"
+            eyebrow={modoEmpresarialAtivo ? `MODO EMPRESARIAL - ${setorAtual?.nome || 'Setor'}` : "BOAS-VINDAS - Painel Central"}
             greeting="Bem-vinda,"
             name={empresa.nomeEmpresa}
-            description="Gerencie suas vagas, explore novas oportunidades e acompanhe seu crescimento em um só lugar."
+            description={dashboardDescription}
           />
 
           <section className="dashboard-cards">
-            {empresaCards.map((card) => (
+            {cards.map((card) => (
               <DashboardActionCard key={card.title} {...card} />
             ))}
           </section>
 
-          <Link className="dashboard-floating-btn" to="/criar-vaga/empresa">+</Link>
+          {(!modoEmpresarialAtivo || setorAtual?.id === SETOR_CHEFE_DEPARTAMENTO) && (
+            <Link className="dashboard-floating-btn" to="/criar-vaga/empresa">+</Link>
+          )}
 
           <GuidedTour
             key={`empresa-tour-${empresaUid}`}

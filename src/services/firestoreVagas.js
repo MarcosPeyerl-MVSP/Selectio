@@ -1,5 +1,6 @@
 import {
   addDoc,
+  arrayUnion,
   collection,
   doc,
   getDoc,
@@ -21,6 +22,13 @@ export const statusVagaLabels = {
   pausada: 'Pausada',
   encerrada: 'Encerrada',
   expirada: 'Expirada'
+}
+
+export const statusAprovacaoVagaLabels = {
+  solicitada: 'Aguardando auditoria',
+  devolvida: 'Devolvida ao departamento',
+  aprovada: 'Aprovada para RH',
+  publicada: 'Publicada pelo RH'
 }
 
 const timestampToValue = (value) => {
@@ -128,6 +136,42 @@ export const atualizarStatusVaga = async ({ vagaId, status }) => {
   })
 
   return status
+}
+
+export const atualizarFluxoAprovacaoVaga = async ({
+  vagaId,
+  statusAprovacao,
+  status,
+  comentario = '',
+  setor = '',
+  usuario = ''
+}) => {
+  if (!vagaId || !statusAprovacao) {
+    throw new Error('Dados de aprovaÃ§Ã£o da vaga invÃ¡lidos.')
+  }
+
+  const payload = {
+    statusAprovacao,
+    atualizadoEm: serverTimestamp()
+  }
+
+  if (status) payload.status = status
+  if (comentario.trim()) payload.comentarioAuditoria = comentario.trim()
+
+  payload.historicoAprovacao = arrayUnion({
+    statusAprovacao,
+    comentario: comentario.trim(),
+    setor,
+    usuario,
+    criadoEm: new Date().toISOString()
+  })
+
+  await updateDoc(doc(db, 'vagas', vagaId), payload)
+
+  return {
+    statusAprovacao,
+    status
+  }
 }
 
 export function obterStatusVaga(vaga) {

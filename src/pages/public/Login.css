@@ -76,6 +76,16 @@ html, body, #root {
   transition: border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast);
 }
 
+.login-form select {
+  min-height: 44px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text);
+  font: inherit;
+}
+
 /* Agrupa input e ícones posicionados dentro do campo. */
 .input-group {
   position: relative;
@@ -127,6 +137,12 @@ html, body, #root {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(182, 28, 47, 0.12);
   transform: translateY(-1px);
+}
+
+.login-form select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(182, 28, 47, 0.12);
 }
 
 /* Link visual de recuperação de senha. */
@@ -259,4 +275,30 @@ html, body, #root {
   font-weight: 700;
   line-height: 1.4;
   text-align: left;
+}
+
+.setor-login-form {
+  gap: 16px;
+}
+
+.setor-login-copy {
+  margin: -8px 0 4px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.sector-cancel-button {
+  min-height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--text);
+  font-weight: 800;
+}
+
+.sector-cancel-button:hover {
+  border-color: var(--primary);
+  color: var(--primary);
 }

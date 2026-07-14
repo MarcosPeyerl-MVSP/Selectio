@@ -14,6 +14,7 @@ import Paginacao from '../../components/ui/Paginacao'
 import { FiSearch } from 'react-icons/fi'
 import {
   listarVagas,
+  statusAprovacaoVagaLabels,
   statusVagaLabels,
   vagaAceitaIndicacoes
 } from '../../services/firestoreVagas'
@@ -250,6 +251,9 @@ function Vagas() {
             // Regra: empresa proprietária da vaga recebe ação de gerenciamento.
             const isOwnCompanyJob = session.type === 'empresa'
               && String(vaga.empresaId || vaga.empresaUid || '') === String(getFirebaseUid(session.user))
+            const statusLabel = isOwnCompanyJob && vaga.statusAprovacao
+              ? statusAprovacaoVagaLabels[vaga.statusAprovacao] || vaga.statusAprovacao
+              : statusVagaLabels[vaga.status] || vaga.status
             const empresaActionLabel = isOwnCompanyJob ? 'Gerenciar vaga' : 'Ver vaga'
 
             // Fluxo: usuários públicos são direcionados ao login antes de ver detalhes.
@@ -272,7 +276,7 @@ function Vagas() {
                     <div className="vaga-card-labels">
                       <span className="vaga-area">{vaga.area}</span>
                       <span className={`vaga-status-badge ${vaga.status}`}>
-                        {statusVagaLabels[vaga.status] || vaga.status}
+                        {statusLabel}
                       </span>
                     </div>
                     <h3>{vaga.titulo}</h3>

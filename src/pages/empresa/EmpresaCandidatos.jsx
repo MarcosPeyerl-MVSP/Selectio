@@ -25,6 +25,7 @@ import { atualizarStatusCandidato, listarCandidatosPorEmpresa } from '../../serv
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { listarPagamentosPorEmpresa } from '../../services/firestorePagamentos'
 import { useToast } from '../../hooks/useToast'
+import { isModoEmpresarial, podeGerenciarCandidatosEmpresa } from '../../utils/modoEmpresarial'
 
 // Abas de filtro exibidas na interface.
 const tabs = ['Todos', 'Indicado', 'Entrevista', 'Contratado', 'Cancelado']
@@ -208,6 +209,28 @@ function CandidatosEmpresa() {
   // Regra de acesso: sem empresa autenticada, redireciona para login.
   if (!empresa) {
     return <Navigate to="/login?redirect=/candidatos/empresa" replace />
+  }
+
+  if (isModoEmpresarial(empresa) && !podeGerenciarCandidatosEmpresa(empresa)) {
+    return (
+      <>
+        <Navbar />
+
+        <div className="empresa-candidatos-layout">
+          <Sidebar type="empresa" user={empresa} />
+          <main className="empresa-candidatos-page">
+            <EstadoDados
+              title="Candidatos sob responsabilidade do RH"
+              description="No modo empresarial, o Setor RH administra candidatos. Este setor pode acompanhar o fluxo de aprovacao pelo painel."
+              actionLabel="Voltar ao painel"
+              onAction={() => window.location.assign('/painel/empresa')}
+            />
+          </main>
+        </div>
+
+        <Footer />
+      </>
+    )
   }
 
   const tentarNovamente = () => {

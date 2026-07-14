@@ -100,6 +100,22 @@ export const atualizarPerfilUsuario = async ({ uid, tipo, dados }) => {
   }
 }
 
+export const atualizarSetoresEmpresariais = async ({ uid, setoresEmpresariais }) => {
+  if (!uid) {
+    throw new Error('UID do Firebase Ã© obrigatÃ³rio para atualizar os setores empresariais.')
+  }
+
+  await setDoc(doc(db, 'empresas', uid), {
+    setoresEmpresariais,
+    atualizadoEm: serverTimestamp()
+  }, { merge: true })
+
+  return {
+    setoresEmpresariais,
+    atualizadoEm: new Date().toISOString()
+  }
+}
+
 export const buscarPerfilUsuario = async (uid) => {
   if (!uid) return null
 

@@ -21,7 +21,7 @@ function Navbar() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const profileMenuRef = useRef(null)
   const session = perfil?.tipo === 'empresa'
-    ? { type: 'empresa', label: 'Empresa', user: perfil, painelPath: '/painel/empresa' }
+    ? { type: 'empresa', label: perfil.setorEmpresarial?.nome || 'Empresa', user: perfil, painelPath: '/painel/empresa' }
     : perfil?.tipo === 'indicador'
       ? { type: 'indicador', label: 'Indicador', user: perfil, painelPath: '/painel/indicador' }
       : perfil?.tipo === 'admin'

@@ -4,13 +4,22 @@ import {
   FaBriefcase,
   FaCalendarAlt,
   FaChartBar,
+  FaClipboardCheck,
   FaCog,
   FaCreditCard,
   FaMoneyBillWave,
   FaPlus,
   FaUserFriends,
   FaUserTie,
+  FaUsersCog,
 } from 'react-icons/fa'
+import {
+  SETOR_ADMIN_EMPRESA,
+  SETOR_CHEFE_DEPARTAMENTO,
+  SETOR_REITORIA_AUDITORIA,
+  SETOR_RH,
+  isModoEmpresarial
+} from '../../utils/modoEmpresarial'
 
 const sidebarConfig = {
   indicador: {
@@ -42,6 +51,64 @@ const sidebarConfig = {
   },
 }
 
+function getSidebarConfig(type, user) {
+  if (type !== 'empresa' || !isModoEmpresarial(user)) {
+    return sidebarConfig[type] || sidebarConfig.indicador
+  }
+
+  const setorId = user?.setorEmpresarial?.id
+  const commonItems = [
+    { to: '/painel/empresa', label: 'Dashboard', icon: FaChartBar, exact: true, tourKey: 'dashboard' },
+    { to: '/painel/empresa?secao=perfil', label: 'Perfil', icon: FaUserTie, tourKey: 'perfil' },
+    { to: '/painel/empresa?secao=configuracoes', label: 'Configuracoes', icon: FaCog },
+  ]
+
+  const configs = {
+    [SETOR_CHEFE_DEPARTAMENTO]: {
+      title: 'CHEFE DE DEPARTAMENTO',
+      userLabel: 'Departamento',
+      action: { to: '/criar-vaga/empresa', label: 'Solicitar vaga', icon: FaPlus },
+      items: [
+        { to: '/painel/empresa?secao=aprovacoes', label: 'Solicitacoes', icon: FaClipboardCheck, tourKey: 'vagas' },
+        ...commonItems
+      ]
+    },
+    [SETOR_REITORIA_AUDITORIA]: {
+      title: 'REITORIA OU AUDITORIA',
+      userLabel: 'Auditoria',
+      action: { to: '/painel/empresa?secao=aprovacoes', label: 'Analisar', icon: FaClipboardCheck },
+      items: [
+        { to: '/painel/empresa?secao=aprovacoes', label: 'Aprovacoes', icon: FaClipboardCheck, tourKey: 'vagas' },
+        ...commonItems
+      ]
+    },
+    [SETOR_RH]: {
+      title: 'SETOR RH',
+      userLabel: 'RH',
+      action: { to: '/painel/empresa?secao=aprovacoes', label: 'Publicar', icon: FaClipboardCheck },
+      items: [
+        { to: '/painel/empresa?secao=aprovacoes', label: 'Aprovadas', icon: FaClipboardCheck, tourKey: 'vagas' },
+        { to: '/candidatos/empresa', label: 'Candidatos', icon: FaUserFriends, activeOn: ['/candidatos/empresa'], tourKey: 'candidatos' },
+        { to: '/painel/empresa?secao=pagamentos', label: 'Pagamentos', icon: FaCreditCard, tourKey: 'pagamentos' },
+        { to: '/painel/empresa?secao=entrevistas', label: 'Entrevistas', icon: FaCalendarAlt, tourKey: 'entrevistas' },
+        ...commonItems
+      ]
+    },
+    [SETOR_ADMIN_EMPRESA]: {
+      title: 'ADMINISTRADOR EMPRESA',
+      userLabel: 'Administrador',
+      action: { to: '/painel/empresa?secao=setores', label: 'Setores', icon: FaUsersCog },
+      items: [
+        { to: '/painel/empresa?secao=setores', label: 'Setores', icon: FaUsersCog, tourKey: 'perfil' },
+        { to: '/painel/empresa?secao=aprovacoes', label: 'Fluxo de vagas', icon: FaClipboardCheck, tourKey: 'vagas' },
+        ...commonItems
+      ]
+    }
+  }
+
+  return configs[setorId] || configs[SETOR_ADMIN_EMPRESA]
+}
+
 function Sidebar({ type, user }) {
   const session = getSession()
   const { pathname, search } = useLocation()
@@ -49,7 +116,7 @@ function Sidebar({ type, user }) {
   const activeUser = user || session.user
   if (!activeType || activeType === 'publico') return null
 
-  const config = sidebarConfig[activeType] || sidebarConfig.indicador
+  const config = getSidebarConfig(activeType, activeUser)
   const ActionIcon = config.action.icon
   const userName = activeUser?.nome || activeUser?.nomeEmpresa || config.userLabel
   const userInfo = activeUser?.email || activeUser?.cnpj || config.userLabel
