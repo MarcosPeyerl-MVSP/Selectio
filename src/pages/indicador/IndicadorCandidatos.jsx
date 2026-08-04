@@ -8,10 +8,13 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   FaCheckCircle,
   FaClock,
+  FaEdit,
   FaExclamationTriangle,
   FaExternalLinkAlt,
+  FaPaperPlane,
   FaPlus,
   FaSearch,
+  FaTrashAlt,
   FaWallet,
 } from 'react-icons/fa'
 import Navbar from '../../components/layout/Navbar'
@@ -23,15 +26,22 @@ import CardEsqueleto from '../../components/ui/CardEsqueleto'
 import EstadoDados from '../../components/ui/EstadoDados'
 import Paginacao from '../../components/ui/Paginacao'
 import { listarCandidatosPorIndicador } from '../../services/firestoreCandidatos'
+import {
+  excluirCandidatoPreSalvo,
+  listarCandidatosPreSalvos
+} from '../../services/firestoreCandidatosPreSalvos'
 import { listarPagamentosPorIndicador } from '../../services/firestorePagamentos'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
+import { useAuth } from '../../hooks/useAuth'
+import { useConfirmacao } from '../../hooks/useConfirmacao'
 import { useToast } from '../../hooks/useToast'
 
 // Status disponíveis para filtro na interface.
-const statusTabs = ['Todos', 'Indicado', 'Entrevista', 'Contratado', 'Cancelado']
+const statusTabs = ['Todos', 'Pré-salvo', 'Indicado', 'Entrevista', 'Contratado', 'Cancelado']
 
 // Mapeia os status recebidos do Firestore para os textos exibidos ao usuário.
 const statusLabels = {
+  pre_salvo: 'Pré-salvo',
   indicado: 'Indicado',
   entrevista: 'Entrevista',
   contratado: 'Contratado',
@@ -41,6 +51,7 @@ const statusLabels = {
 
 // Mapeia os status exibidos para classes CSS usadas nos cards.
 const statusClass = {
+  'Pré-salvo': 'pre-salvo',
   Indicado: 'indicado',
   Entrevista: 'entrevista',
   Contratado: 'contratado',
@@ -109,20 +120,6 @@ const avatars = [
 
 const PAGE_SIZE = 6
 
-// Responsabilidade: recuperar o indicador autenticado no localStorage.
-function getIndicador() {
-  const stored = localStorage.getItem('indicadorUser')
-  if (!stored) return null
-
-  try {
-    return JSON.parse(stored)
-  } catch {
-    // Fluxo de segurança: remove a sessão se o dado salvo não for um JSON válido.
-    localStorage.removeItem('indicadorUser')
-    return null
-  }
-}
-
 // Responsabilidade: formatar datas para exibição no padrão brasileiro.
 function formatDate(value) {
   if (!value) return 'Não informado'
@@ -147,12 +144,13 @@ function normalizeText(value) {
 
 function Candidatos() {
   const toast = useToast()
-  // Mantém os dados do indicador autenticado durante a renderização da página.
-  const [indicador] = useState(getIndicador)
+  const confirm = useConfirmacao()
+  const { perfil: indicador } = useAuth()
   const indicadorUid = getFirebaseUid(indicador)
 
   // Armazena candidatos retornados pelo Firestore.
   const [candidatos, setCandidatos] = useState([])
+  const [candidatosPreSalvos, setCandidatosPreSalvos] = useState([])
 
   // Armazena pagamentos de recompensa vinculados ao indicador.
   const [pagamentos, setPagamentos] = useState([])
@@ -174,6 +172,7 @@ function Candidatos() {
 
   // Controla o candidato exibido no painel de perfil.
   const [selectedCandidate, setSelectedCandidate] = useState(null)
+  const [excluindoId, setExcluindoId] = useState('')
 
   useEffect(() => {
     // Responsabilidade: buscar candidatos vinculados ao indicador autenticado.
@@ -185,6 +184,7 @@ function Candidatos() {
 
       if (!indicadorUid) {
         setCandidatos([])
+        setCandidatosPreSalvos([])
         setPagamentos([])
         setError('Perfil do indicador sem UID do Firebase.')
         toast.warning('Perfil do indicador sem UID do Firebase.')
@@ -194,8 +194,9 @@ function Candidatos() {
 
       try {
         setError('')
-        const [candidatosData, pagamentosData] = await Promise.all([
+        const [candidatosData, preSalvosData, pagamentosData] = await Promise.all([
           listarCandidatosPorIndicador(indicadorUid),
+          listarCandidatosPreSalvos(indicadorUid),
           listarPagamentosPorIndicador(indicadorUid).catch((err) => {
             console.warn('Não foi possível carregar pagamentos do indicador:', err)
             toast.warning('Não foi possível carregar o status financeiro das indicações.')
@@ -204,6 +205,7 @@ function Candidatos() {
         ])
 
         setCandidatos(candidatosData)
+        setCandidatosPreSalvos(preSalvosData)
         setPagamentos(pagamentosData)
       } catch (err) {
         setError(err.message)
@@ -216,16 +218,37 @@ function Candidatos() {
     fetchCandidatos()
   }, [indicador, indicadorUid, toast, reloadKey])
 
+  const registros = useMemo(() => ([
+    ...candidatos.map((candidato) => ({
+      ...candidato,
+      tipoRegistro: 'indicacao',
+      registroKey: `indicacao-${candidato.id}`
+    })),
+    ...candidatosPreSalvos.map((candidato) => ({
+      ...candidato,
+      status: 'pre_salvo',
+      tipoRegistro: 'pre_salvo',
+      registroKey: `pre-salvo-${candidato.id}`
+    }))
+  ].sort((a, b) => {
+    const dataA = new Date(a.atualizadoEm || a.updatedAt || a.criadoEm || a.createdAt || a.aplicadoEm || 0).getTime()
+    const dataB = new Date(b.atualizadoEm || b.updatedAt || b.criadoEm || b.createdAt || b.aplicadoEm || 0).getTime()
+    return dataB - dataA
+  })), [candidatos, candidatosPreSalvos])
+
   // Filtra candidatos por status selecionado e termo de busca.
   const candidatosFiltrados = useMemo(() => {
     const termo = normalizeText(busca)
 
-    return candidatos.filter((candidato) => {
+    return registros.filter((candidato) => {
       const status = statusLabels[candidato.status] || 'Indicado'
       const matchesStatus = activeStatus === 'Todos' || status === activeStatus
-      const matchesVaga = filtroVaga === 'Todas' || candidato.vagaTitulo === filtroVaga
+      const matchesVaga = filtroVaga === 'Todas'
+        || (filtroVaga === 'Sem vaga' && candidato.tipoRegistro === 'pre_salvo')
+        || candidato.vagaTitulo === filtroVaga
       const matchesBusca = !termo || [
         candidato.nome,
+        candidato.email,
         candidato.cargoAtual,
         candidato.vagaTitulo,
         candidato.vagaEmpresa,
@@ -233,7 +256,7 @@ function Candidatos() {
 
       return matchesStatus && matchesVaga && matchesBusca
     })
-  }, [activeStatus, busca, candidatos, filtroVaga])
+  }, [activeStatus, busca, filtroVaga, registros])
 
   const vagasDisponiveis = useMemo(() => (
     [...new Set(candidatos.map((candidato) => candidato.vagaTitulo).filter(Boolean))]
@@ -280,6 +303,32 @@ function Candidatos() {
     setPagina(1)
   }
 
+  const excluirPreSalvo = async (candidato) => {
+    const confirmado = await confirm({
+      title: 'Excluir candidato pré-salvo?',
+      description: `${candidato.nome || 'Este candidato'} será removido da sua base privada. Indicações já enviadas não serão alteradas.`,
+      confirmLabel: 'Excluir'
+    })
+
+    if (!confirmado) return
+
+    setExcluindoId(candidato.id)
+
+    try {
+      await excluirCandidatoPreSalvo({
+        candidatoId: candidato.id,
+        indicadorId: indicadorUid
+      })
+      setCandidatosPreSalvos((atuais) => atuais.filter((item) => item.id !== candidato.id))
+      setSelectedCandidate((atual) => atual?.id === candidato.id ? null : atual)
+      toast.success('Candidato pré-salvo excluído.')
+    } catch (err) {
+      toast.error(err.message || 'Não foi possível excluir o candidato.')
+    } finally {
+      setExcluindoId('')
+    }
+  }
+
   return (
     <>
       {/* Componente de navegação principal. */}
@@ -320,6 +369,7 @@ function Candidatos() {
                 }}
               >
                 <option value="Todas">Todas as vagas</option>
+                {candidatosPreSalvos.length > 0 && <option value="Sem vaga">Sem vaga (pré-salvos)</option>}
                 {vagasDisponiveis.map((vagaTitulo) => (
                   <option key={vagaTitulo} value={vagaTitulo}>{vagaTitulo}</option>
                 ))}
@@ -359,30 +409,31 @@ function Candidatos() {
             />
           )}
 
-          {!loading && !error && !candidatosFiltrados.length && (
-            <EstadoDados
-              actionLabel={candidatos.length ? 'Limpar filtros' : ''}
-              description={candidatos.length
-                ? 'Ajuste a busca, a vaga ou a etapa para visualizar outros resultados.'
-                : 'Escolha uma vaga aberta e faça sua primeira indicação.'}
-              onAction={limparFiltros}
-              title={candidatos.length ? 'Nenhum candidato encontrado' : 'Você ainda não fez indicações'}
-            />
-          )}
-
-          {!loading && !error && candidatosFiltrados.length > 0 && (
+          {!loading && !error && (
             <>
+              {!candidatosFiltrados.length && (
+                <EstadoDados
+                  actionLabel={registros.length ? 'Limpar filtros' : ''}
+                  description={registros.length
+                    ? 'Ajuste a busca, a vaga ou a etapa para visualizar outros resultados.'
+                    : 'Cadastre um talento para mantê-lo na sua base ou escolha uma vaga para fazer uma indicação.'}
+                  onAction={registros.length ? limparFiltros : undefined}
+                  title={registros.length ? 'Nenhum candidato encontrado' : 'Sua base de candidatos ainda está vazia'}
+                />
+              )}
+
               <section className="candidate-grid">
               {candidatosPaginados.map((candidato, index) => {
                 const status = statusLabels[candidato.status] || 'Indicado'
                 const cardClass = statusClass[status] || 'indicado'
+                const isPreSalvo = candidato.tipoRegistro === 'pre_salvo'
                 const pagamento = pagamentosPorCandidato.get(candidato.id)
                 const financeiro = status === 'Contratado'
                   ? getResumoFinanceiroIndicacao(pagamento)
                   : null
 
                 return (
-                  <article className={`candidate-card ${cardClass}`} key={candidato.id}>
+                  <article className={`candidate-card ${cardClass}`} key={candidato.registroKey}>
                     <div className="candidate-card-top">
                       <div className="candidate-avatar-wrap">
                         <img src={avatars[index % avatars.length]} alt={candidato.nome} />
@@ -392,34 +443,53 @@ function Candidatos() {
                     </div>
 
                     <h2>{candidato.nome}</h2>
-                    <p>{candidato.cargoAtual || candidato.vagaTitulo || 'Candidato indicado'}</p>
+                    <p>{candidato.cargoAtual || candidato.vagaTitulo || (isPreSalvo ? 'Talento pré-salvo' : 'Candidato indicado')}</p>
+                    {isPreSalvo && candidato.email && <small className="candidate-card-email">{candidato.email}</small>}
 
                     <div className="candidate-meta">
                       <div>
                         <span>Origem</span>
-                        <strong>{candidato.origem}</strong>
+                        <strong>{candidato.origem === 'csv' ? 'CSV' : candidato.origem === 'manual' ? 'Manual' : candidato.origem}</strong>
                       </div>
                       <div>
-                        <span>{status === 'Contratado' ? 'Contratado em' : 'Aplicado em'}</span>
-                        <strong>{formatDate(candidato.aplicadoEm)}</strong>
+                        <span>{isPreSalvo ? 'Salvo em' : status === 'Contratado' ? 'Contratado em' : 'Aplicado em'}</span>
+                        <strong>{formatDate(candidato.aplicadoEm || candidato.criadoEm || candidato.createdAt)}</strong>
                       </div>
                     </div>
 
-                    <LinhaStatusCandidato status={candidato.status || 'indicado'} variant="compact" />
+                    {!isPreSalvo && <LinhaStatusCandidato status={candidato.status || 'indicado'} variant="compact" />}
 
                     {financeiro && <ResumoFinanceiroIndicacao info={financeiro} />}
 
                     <div className="candidate-card-actions">
-                      <button type="button" onClick={() => setSelectedCandidate(candidato)}>
-                        Ver Perfil
+                      <button className="candidate-action-secondary" type="button" onClick={() => setSelectedCandidate(candidato)}>
+                        Ver perfil
                       </button>
+                      {isPreSalvo && (
+                        <>
+                          <Link className="candidate-action-secondary" to={`/candidatos/indicador/${candidato.id}/editar`}>
+                            <FaEdit /> Editar
+                          </Link>
+                          <Link className="candidate-action-primary" to={`/vagas?candidatoPreSalvoId=${encodeURIComponent(candidato.id)}`}>
+                            <FaPaperPlane /> Indicar
+                          </Link>
+                          <button
+                            aria-label={`Excluir ${candidato.nome}`}
+                            className="candidate-action-danger"
+                            disabled={excluindoId === candidato.id}
+                            onClick={() => excluirPreSalvo(candidato)}
+                            type="button"
+                          >
+                            <FaTrashAlt /> {excluindoId === candidato.id ? 'Excluindo...' : 'Excluir'}
+                          </button>
+                        </>
+                      )}
                     </div>
                   </article>
                 )
               })}
 
-              {/* Link para a página de vagas, usada como entrada para adicionar candidato. */}
-              <Link className="candidate-add-card" to="/vagas">
+              <Link className="candidate-add-card" to="/candidatos/indicador/novo">
                 <span>
                   <FaPlus />
                 </span>
@@ -427,12 +497,14 @@ function Candidatos() {
                 <small>Manualmente ou via CSV</small>
               </Link>
               </section>
-              <Paginacao
-                page={paginaAtual}
-                pageSize={PAGE_SIZE}
-                total={candidatosFiltrados.length}
-                onPageChange={setPagina}
-              />
+              {candidatosFiltrados.length > 0 && (
+                <Paginacao
+                  page={paginaAtual}
+                  pageSize={PAGE_SIZE}
+                  total={candidatosFiltrados.length}
+                  onPageChange={setPagina}
+                />
+              )}
             </>
           )}
         </main>
@@ -443,6 +515,7 @@ function Candidatos() {
           key={selectedCandidate.id}
           candidato={selectedCandidate}
           onClose={() => setSelectedCandidate(null)}
+          variant={selectedCandidate.tipoRegistro === 'pre_salvo' ? 'preSalvo' : 'processo'}
         />
       )}
 

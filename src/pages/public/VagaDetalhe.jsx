@@ -3,7 +3,7 @@
 // redireciona usuários públicos para login e exibe ações diferentes para empresa e indicador.
 
 import './VagaDetalhe.css'
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
@@ -26,6 +26,8 @@ import { useAuth } from '../../hooks/useAuth'
 function Vaga() {
   // Identificador da vaga recebido pela rota.
   const { id } = useParams()
+  const [searchParams] = useSearchParams()
+  const candidatoPreSalvoId = searchParams.get('candidatoPreSalvoId') || ''
 
   // Armazena os dados da vaga carregada.
   const [vaga, setVaga] = useState(null)
@@ -45,6 +47,9 @@ function Vaga() {
     vagasPath: '/vagas',
     painelPath: usuario?.tipo === 'empresa' ? '/painel/empresa' : '/painel/indicador'
   }
+  const vagasPath = candidatoPreSalvoId
+    ? `${perfil.vagasPath}?candidatoPreSalvoId=${encodeURIComponent(candidatoPreSalvoId)}`
+    : perfil.vagasPath
 
   useEffect(() => {
     // Responsabilidade: buscar os detalhes da vaga no Firestore.
@@ -104,7 +109,7 @@ function Vaga() {
             title={navigator.onLine ? 'Não foi possível carregar a vaga' : 'Você está sem conexão'}
             tone={navigator.onLine ? 'error' : 'offline'}
           />
-          <Link className="detail-return-link" to={perfil.vagasPath}>Voltar à lista de vagas</Link>
+          <Link className="detail-return-link" to={vagasPath}>Voltar à lista de vagas</Link>
         </main>
         <Footer />
       </>
@@ -146,7 +151,7 @@ function Vaga() {
 
         <main className="vaga-detail-content">
           <div className="page-header">
-            <Link className="back-link" to={perfil.vagasPath}>
+            <Link className="back-link" to={vagasPath}>
               <FaRegClock /> Voltar para listagem de vagas
             </Link>
             <span className={`tag status status-${vaga.status}`}>
@@ -217,7 +222,14 @@ function Vaga() {
                       : 'Esta vaga foi publicada por outra empresa e está disponível apenas para visualização.'}
                   </p>
                   {perfil.tipo === 'indicador' && aceitaIndicacoes && (
-                    <Link className="btn-primary" to={`/indicar/${id}`}>Fazer Indicação</Link>
+                    <Link
+                      className="btn-primary"
+                      to={`/indicar/${id}${candidatoPreSalvoId
+                        ? `?candidatoPreSalvoId=${encodeURIComponent(candidatoPreSalvoId)}`
+                        : ''}`}
+                    >
+                      Fazer Indicação
+                    </Link>
                   )}
                   {perfil.tipo === 'indicador' && !aceitaIndicacoes && (
                     <div className="indication-unavailable" role="status">

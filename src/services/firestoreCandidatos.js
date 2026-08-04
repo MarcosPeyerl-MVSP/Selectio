@@ -13,8 +13,10 @@ import { db } from './firebase'
 import { getFirebaseUid } from './identidadeFirebase'
 import {
   adicionarIndicacaoAoBatch,
-  adicionarStatusIndicacaoAoBatch
+  adicionarStatusIndicacaoAoBatch,
+  listarIndicacoesPorIndicador
 } from './firestoreIndicacoes'
+import { buscarCandidatoPreSalvoPorId } from './firestoreCandidatosPreSalvos'
 import { adicionarHistoricoAoBatch } from './firestoreHistorico'
 import {
   notificarNovoCandidatoIndicado,
@@ -93,9 +95,23 @@ const sortByCreatedDesc = (a, b) => {
 
 const getEmpresaUidFromVaga = (vaga) => String(vaga?.empresaId || vaga?.empresaUid || '')
 
-export const criarCandidatoIndicado = async ({ dados, indicador, vaga }) => {
+const getIndicacaoPreSalvaId = ({ candidatoPreSalvoId, indicadorId, vagaId }) => (
+  `${indicadorId}__${vagaId}__${candidatoPreSalvoId}`
+)
+
+const erroIndicacaoPreSalvaDuplicada = () => (
+  new Error('Este candidato já foi indicado para esta vaga.')
+)
+
+export const criarCandidatoIndicado = async ({
+  dados,
+  indicador,
+  vaga,
+  candidatoPreSalvoId = ''
+}) => {
   const indicadorId = getFirebaseUid(indicador)
   const empresaId = getEmpresaUidFromVaga(vaga)
+  const preSalvoId = String(candidatoPreSalvoId || '').trim()
 
   if (!indicadorId) {
     throw new Error('UID do indicador e obrigatório para criar candidato.')
@@ -107,6 +123,27 @@ export const criarCandidatoIndicado = async ({ dados, indicador, vaga }) => {
 
   if (!vagaAceitaIndicacoes(vaga)) {
     throw new Error('Esta vaga não está aberta para novas indicações.')
+  }
+
+  if (preSalvoId) {
+    const candidatoPreSalvo = await buscarCandidatoPreSalvoPorId({
+      candidatoId: preSalvoId,
+      indicadorId
+    })
+
+    if (!candidatoPreSalvo) {
+      throw new Error('Candidato pré-salvo não encontrado.')
+    }
+
+    const indicacoes = await listarIndicacoesPorIndicador(indicadorId)
+    const jaIndicado = indicacoes.some((indicacao) => (
+      indicacao.candidatoPreSalvoId === preSalvoId
+      && indicacao.vagaId === vaga.id
+    ))
+
+    if (jaIndicado) {
+      throw erroIndicacaoPreSalvaDuplicada()
+    }
   }
 
   const recompensaValor = getFixedRewardValue(vaga)
@@ -128,6 +165,7 @@ export const criarCandidatoIndicado = async ({ dados, indicador, vaga }) => {
     recompensaValorFixo: recompensaValor,
     status: 'indicado',
     origem: getOrigem(dados),
+    ...(preSalvoId ? { candidatoPreSalvoId: preSalvoId } : {}),
     aplicadoEm: serverTimestamp(),
     criadoEm: serverTimestamp(),
     atualizadoEm: serverTimestamp()
@@ -137,6 +175,14 @@ export const criarCandidatoIndicado = async ({ dados, indicador, vaga }) => {
   const batch = writeBatch(db)
 
   batch.set(candidatoRef, candidato)
+  const indicacaoId = preSalvoId
+    ? getIndicacaoPreSalvaId({
+        candidatoPreSalvoId: preSalvoId,
+        indicadorId,
+        vagaId: vaga.id
+      })
+    : ''
+
   adicionarIndicacaoAoBatch(batch, {
     candidatoId: candidatoRef.id,
     candidatoNome: dados.nome || '',
@@ -152,8 +198,9 @@ export const criarCandidatoIndicado = async ({ dados, indicador, vaga }) => {
     recompensaTipo: vaga.recompensaTipo || (recompensaValor ? 'fixo' : 'personalizado'),
     recompensaValor,
     recompensaValorFixo: recompensaValor,
-    status: 'indicado'
-  })
+    status: 'indicado',
+    ...(preSalvoId ? { candidatoPreSalvoId: preSalvoId } : {})
+  }, indicacaoId)
   adicionarHistoricoAoBatch(batch, {
     candidatoId: candidatoRef.id,
     candidatoNome: dados.nome || '',
@@ -167,7 +214,15 @@ export const criarCandidatoIndicado = async ({ dados, indicador, vaga }) => {
     statusAtual: 'indicado',
     criadoPor: indicadorId
   })
-  await batch.commit()
+  try {
+    await batch.commit()
+  } catch (error) {
+    if (preSalvoId && error?.code === 'permission-denied') {
+      throw erroIndicacaoPreSalvaDuplicada()
+    }
+
+    throw error
+  }
 
   const now = new Date().toISOString()
   const candidatoCriado = {

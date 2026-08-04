@@ -20,6 +20,7 @@ import EditarVagaEmpresa from './pages/empresa/EmpresaEditarVaga'
 import VagaDetalhe from './pages/public/VagaDetalhe'
 import Indicar from './pages/indicador/IndicadorIndicar'
 import CandidatosIndicador from './pages/indicador/IndicadorCandidatos'
+import CandidatoCadastroIndicador from './pages/indicador/IndicadorCandidatoCadastro'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import PageLoader from './components/ui/PageLoader'
 import AdminLayout from './components/admin/AdminLayout'
@@ -67,6 +68,8 @@ function App() {
         {/* ROTA VAGA */}
         <Route path="/vaga/:id" element={proteger(<VagaDetalhe />)} />
         <Route path="/indicar/:vagaId" element={proteger(<Indicar />, 'indicador')} />
+        <Route path="/candidatos/indicador/novo" element={proteger(<CandidatoCadastroIndicador />, 'indicador')} />
+        <Route path="/candidatos/indicador/:candidatoId/editar" element={proteger(<CandidatoCadastroIndicador />, 'indicador')} />
         <Route path="/candidatos/indicador" element={proteger(<CandidatosIndicador />, 'indicador')} />
         {/* ROTAS ADMINISTRATIVAS */}
         <Route path="/admin" element={proteger(<AdminLayout />, 'admin')}>

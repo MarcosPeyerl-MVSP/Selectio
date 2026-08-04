@@ -152,6 +152,209 @@ service cloud.firestore {
         );
     }
 
+    function validPreSavedCandidatePayload(candidatoId) {
+      return request.resource.data.keys().hasOnly([
+          'anosExperiencia',
+          'avisoPrevio',
+          'cargoAtual',
+          'createdAt',
+          'curriculo',
+          'curriculoNome',
+          'dataNascimento',
+          'destaquesProjetos',
+          'email',
+          'emailNormalizado',
+          'escolaridade',
+          'expectativaSalarial',
+          'fitCultural',
+          'genero',
+          'github',
+          'hardSkills',
+          'id',
+          'indicadorId',
+          'indicadorUid',
+          'linkedin',
+          'modeloTrabalho',
+          'narrativa',
+          'nome',
+          'observacoesProfissionais',
+          'origem',
+          'pontosFortes',
+          'portfolio',
+          'proficienciaIdiomas',
+          'softSkills',
+          'status',
+          'telefone',
+          'updatedAt'
+        ])
+        && request.resource.data.keys().hasAll([
+          'createdAt',
+          'email',
+          'emailNormalizado',
+          'hardSkills',
+          'id',
+          'indicadorId',
+          'indicadorUid',
+          'nome',
+          'origem',
+          'softSkills',
+          'status',
+          'updatedAt'
+        ])
+        && request.resource.data.id == candidatoId
+        && request.resource.data.indicadorId == request.auth.uid
+        && request.resource.data.indicadorUid == request.auth.uid
+        && request.resource.data.id is string
+        && request.resource.data.indicadorId is string
+        && request.resource.data.indicadorUid is string
+        && request.resource.data.nome is string
+        && request.resource.data.nome.size() > 0
+        && request.resource.data.nome.size() <= 200
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 3
+        && request.resource.data.email.size() <= 320
+        && request.resource.data.emailNormalizado is string
+        && request.resource.data.email == request.resource.data.emailNormalizado
+        && request.resource.data.email.matches('^[^@/]+@[^@/]+[.][^@/]+$')
+        && (!('anosExperiencia' in request.resource.data)
+          || request.resource.data.anosExperiencia is string)
+        && (!('avisoPrevio' in request.resource.data)
+          || request.resource.data.avisoPrevio is string)
+        && (!('cargoAtual' in request.resource.data)
+          || request.resource.data.cargoAtual is string)
+        && (!('curriculoNome' in request.resource.data)
+          || request.resource.data.curriculoNome is string)
+        && (!('dataNascimento' in request.resource.data)
+          || request.resource.data.dataNascimento is string)
+        && (!('destaquesProjetos' in request.resource.data)
+          || request.resource.data.destaquesProjetos is string)
+        && (!('escolaridade' in request.resource.data)
+          || request.resource.data.escolaridade is string)
+        && (!('expectativaSalarial' in request.resource.data)
+          || request.resource.data.expectativaSalarial is string)
+        && (!('fitCultural' in request.resource.data)
+          || request.resource.data.fitCultural is string)
+        && (!('genero' in request.resource.data)
+          || request.resource.data.genero is string)
+        && (!('github' in request.resource.data)
+          || request.resource.data.github is string)
+        && request.resource.data.hardSkills is list
+        && request.resource.data.hardSkills.size() <= 100
+        && (!('linkedin' in request.resource.data)
+          || request.resource.data.linkedin is string)
+        && (!('modeloTrabalho' in request.resource.data)
+          || request.resource.data.modeloTrabalho is string)
+        && (!('narrativa' in request.resource.data)
+          || request.resource.data.narrativa is string)
+        && (!('observacoesProfissionais' in request.resource.data)
+          || request.resource.data.observacoesProfissionais is string)
+        && (!('pontosFortes' in request.resource.data)
+          || request.resource.data.pontosFortes is string)
+        && (!('portfolio' in request.resource.data)
+          || request.resource.data.portfolio is string)
+        && (!('proficienciaIdiomas' in request.resource.data)
+          || request.resource.data.proficienciaIdiomas is string)
+        && request.resource.data.softSkills is list
+        && request.resource.data.softSkills.size() <= 100
+        && (!('telefone' in request.resource.data)
+          || request.resource.data.telefone is string)
+        && request.resource.data.curriculo is map
+        && request.resource.data.curriculo.keys().hasOnly([
+          'caminho',
+          'nome',
+          'tamanho',
+          'tipo',
+          'url'
+        ])
+        && (!('caminho' in request.resource.data.curriculo)
+          || request.resource.data.curriculo.caminho is string)
+        && (!('nome' in request.resource.data.curriculo)
+          || request.resource.data.curriculo.nome is string)
+        && (!('tamanho' in request.resource.data.curriculo)
+          || request.resource.data.curriculo.tamanho is number)
+        && (!('tipo' in request.resource.data.curriculo)
+          || request.resource.data.curriculo.tipo is string)
+        && (!('url' in request.resource.data.curriculo)
+          || request.resource.data.curriculo.url is string)
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.origem in ['manual', 'csv']
+        && request.resource.data.status == 'pre_salvo';
+    }
+
+    function validPreSavedCandidateCreate(candidatoId) {
+      return validPreSavedCandidatePayload(candidatoId)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    function validPreSavedCandidateUpdate(candidatoId) {
+      return validPreSavedCandidatePayload(candidatoId)
+        && resource.data.indicadorId == request.auth.uid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.origem == resource.data.origem
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    function hasPreSavedCandidateReference(data) {
+      return 'candidatoPreSalvoId' in data;
+    }
+
+    function preSavedCandidateReferenceMatchesOwner(data) {
+      return !hasPreSavedCandidateReference(data)
+        || (
+          data.candidatoPreSalvoId is string
+          && data.candidatoPreSalvoId.size() > 0
+          && existsAfter(/databases/$(database)/documents/candidatosPreSalvos/$(data.candidatoPreSalvoId))
+          && getAfter(/databases/$(database)/documents/candidatosPreSalvos/$(data.candidatoPreSalvoId)).data.indicadorId
+            == data.indicadorId
+        );
+    }
+
+    function indicationPreSavedReferenceMatchesCandidate(data) {
+      let candidate = getAfter(/databases/$(database)/documents/candidatos/$(data.candidatoId)).data;
+      return (
+          !hasPreSavedCandidateReference(data)
+          && !hasPreSavedCandidateReference(candidate)
+        )
+        || (
+          hasPreSavedCandidateReference(data)
+          && hasPreSavedCandidateReference(candidate)
+          && data.candidatoPreSalvoId == candidate.candidatoPreSalvoId
+          && preSavedCandidateReferenceMatchesOwner(data)
+        );
+    }
+
+    function canonicalPreSavedIndicationId(indicacaoId, data) {
+      return !hasPreSavedCandidateReference(data)
+        || indicacaoId == data.indicadorId
+          + '__'
+          + data.vagaId
+          + '__'
+          + data.candidatoPreSalvoId;
+    }
+
+    function candidateCanonicalPreSavedIndicationMatches(candidatoId, data) {
+      let indicacaoId = data.indicadorId
+        + '__'
+        + data.vagaId
+        + '__'
+        + data.candidatoPreSalvoId;
+      let indicacao = getAfter(/databases/$(database)/documents/indicacoes/$(indicacaoId)).data;
+      return existsAfter(/databases/$(database)/documents/indicacoes/$(indicacaoId))
+        && indicacao.candidatoId == candidatoId
+        && indicacao.candidatoPreSalvoId == data.candidatoPreSalvoId
+        && indicacao.indicadorId == data.indicadorId
+        && indicacao.empresaId == data.empresaId
+        && indicacao.vagaId == data.vagaId;
+    }
+
+    function candidateHasCanonicalPreSavedIndication(candidatoId, data) {
+      return !hasPreSavedCandidateReference(data)
+        || candidateCanonicalPreSavedIndicationMatches(candidatoId, data);
+    }
+
     function referencedCandidateMatches(data) {
       return data.candidatoId is string
         && data.empresaId is string
@@ -526,6 +729,8 @@ service cloud.firestore {
         && (!('empresaUid' in request.resource.data)
           || request.resource.data.empresaUid == request.resource.data.empresaId)
         && request.resource.data.status == 'indicado'
+        && preSavedCandidateReferenceMatchesOwner(request.resource.data)
+        && candidateHasCanonicalPreSavedIndication(candidatoId, request.resource.data)
         && vagaAceitaIndicacoes(request.resource.data);
 
       allow read: if isEmpresaOrIndicadorOwner(resource.data);
@@ -538,6 +743,20 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /candidatosPreSalvos/{candidatoId} {
+      allow create: if isIndicador()
+        && validPreSavedCandidateCreate(candidatoId);
+
+      allow read: if isIndicador()
+        && resource.data.indicadorId == request.auth.uid;
+
+      allow update: if isIndicador()
+        && validPreSavedCandidateUpdate(candidatoId);
+
+      allow delete: if isIndicador()
+        && resource.data.indicadorId == request.auth.uid;
+    }
+
     match /indicacoes/{indicacaoId} {
       allow create: if isIndicador()
         && request.resource.data.indicadorId == request.auth.uid
@@ -547,7 +766,9 @@ service cloud.firestore {
           || request.resource.data.empresaUid == request.resource.data.empresaId)
         && request.resource.data.status == 'indicado'
         && vagaAceitaIndicacoes(request.resource.data)
-        && referencedCandidateMatches(request.resource.data);
+        && referencedCandidateMatches(request.resource.data)
+        && indicationPreSavedReferenceMatchesCandidate(request.resource.data)
+        && canonicalPreSavedIndicationId(indicacaoId, request.resource.data);
 
       allow read: if isEmpresaOrIndicadorOwner(resource.data);
 

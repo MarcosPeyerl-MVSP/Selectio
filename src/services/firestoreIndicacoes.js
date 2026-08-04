@@ -70,8 +70,10 @@ const montarIndicacao = (dados) => ({
   atualizadoEm: serverTimestamp()
 })
 
-export const adicionarIndicacaoAoBatch = (batch, dados) => {
-  const docRef = doc(indicacoesCollection)
+export const adicionarIndicacaoAoBatch = (batch, dados, indicacaoId = '') => {
+  const docRef = indicacaoId
+    ? doc(indicacoesCollection, indicacaoId)
+    : doc(indicacoesCollection)
 
   batch.set(docRef, montarIndicacao(dados))
   return docRef

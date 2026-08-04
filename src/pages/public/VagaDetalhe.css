@@ -4,10 +4,10 @@
 
 /* Layout principal da página de detalhes com sidebar e conteúdo. */
 .vaga-detail-page {
-  padding: 60px 20px;
   display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 24px;
+  grid-template-columns: 255px minmax(0, 1fr);
+  min-height: calc(100vh - 72px);
+  background: var(--background);
 }
 
 /* Layout alternativo previsto para visualização pública. */
@@ -137,6 +137,8 @@
 
 /* Conteúdo principal da vaga. */
 .vaga-detail-content {
+  min-width: 0;
+  padding: 60px 20px;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -379,18 +381,20 @@
 
 /* Ajustes para telas médias. */
 @media (max-width: 1100px) {
-  .vaga-detail-page {
+  .detail-grid {
     grid-template-columns: 1fr;
   }
+}
 
-  .detail-grid {
+@media (max-width: 900px) {
+  .vaga-detail-page {
     grid-template-columns: 1fr;
   }
 }
 
 /* Ajustes para telas pequenas. */
 @media (max-width: 720px) {
-  .vaga-detail-page {
+  .vaga-detail-content {
     padding: 30px 16px;
   }
 

@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import assert from 'node:assert/strict'
 import { after, before, beforeEach, test } from 'node:test'
 
 import {
@@ -8,13 +9,18 @@ import {
 } from '@firebase/rules-unit-testing'
 import {
   collection,
+  deleteDoc,
   doc,
+  documentId,
   getDoc,
   getDocs,
+  limit,
+  query,
   serverTimestamp,
   setDoc,
   Timestamp,
   updateDoc,
+  where,
   writeBatch
 } from 'firebase/firestore'
 
@@ -46,6 +52,11 @@ beforeEach(async () => {
         firebaseUid: 'indicador-1',
         tipo: 'indicador'
       }),
+      setDoc(doc(db, 'indicadores', 'indicador-2'), {
+        uid: 'indicador-2',
+        firebaseUid: 'indicador-2',
+        tipo: 'indicador'
+      }),
       setDoc(doc(db, 'users', 'admin-1'), {
         uid: 'admin-1',
         tipo: 'admin',
@@ -67,6 +78,13 @@ beforeEach(async () => {
         empresaId: 'empresa-1',
         empresaUid: 'empresa-1',
         titulo: 'Desenvolvedor',
+        status: 'aberta',
+        expiraEm: Timestamp.fromMillis(Date.now() + 86_400_000)
+      }),
+      setDoc(doc(db, 'vagas', 'vaga-2'), {
+        empresaId: 'empresa-1',
+        empresaUid: 'empresa-1',
+        titulo: 'Desenvolvedor Front-end',
         status: 'aberta',
         expiraEm: Timestamp.fromMillis(Date.now() + 86_400_000)
       })
@@ -108,6 +126,202 @@ test('criacao da indicacao falha quando o candidato nao faz parte do batch', asy
     doc(db, 'indicacoes', 'indicacao-sem-candidato'),
     indicacaoPayload({ candidatoId: 'candidato-inexistente' })
   ))
+})
+
+test('indicador proprietario cria, le, atualiza e exclui candidato pre-salvo', async () => {
+  const db = testEnv.authenticatedContext('indicador-1').firestore()
+  const candidatoRef = doc(db, 'candidatosPreSalvos', 'pre-salvo-crud')
+
+  await assertSucceeds(setDoc(
+    candidatoRef,
+    candidatoPreSalvoPayload({ id: 'pre-salvo-crud' })
+  ))
+  await assertSucceeds(getDoc(candidatoRef))
+  await assertSucceeds(updateDoc(candidatoRef, {
+    nome: 'Pessoa Candidata Atualizada',
+    updatedAt: serverTimestamp()
+  }))
+  await assertSucceeds(deleteDoc(candidatoRef))
+})
+
+test('candidatos pre-salvos ficam privados ao indicador proprietario', async () => {
+  await criarCandidatoPreSalvoComRegras('pre-salvo-privado')
+
+  const outroIndicadorDb = testEnv.authenticatedContext('indicador-2').firestore()
+  const empresaDb = testEnv.authenticatedContext('empresa-1').firestore()
+  const adminDb = testEnv.authenticatedContext('admin-1').firestore()
+  const anonimoDb = testEnv.unauthenticatedContext().firestore()
+
+  await assertFails(getDoc(doc(outroIndicadorDb, 'candidatosPreSalvos', 'pre-salvo-privado')))
+  await assertFails(getDoc(doc(empresaDb, 'candidatosPreSalvos', 'pre-salvo-privado')))
+  await assertFails(getDoc(doc(adminDb, 'candidatosPreSalvos', 'pre-salvo-privado')))
+  await assertFails(getDoc(doc(anonimoDb, 'candidatosPreSalvos', 'pre-salvo-privado')))
+  await assertFails(updateDoc(
+    doc(outroIndicadorDb, 'candidatosPreSalvos', 'pre-salvo-privado'),
+    { nome: 'Acesso indevido', updatedAt: serverTimestamp() }
+  ))
+  await assertFails(deleteDoc(doc(empresaDb, 'candidatosPreSalvos', 'pre-salvo-privado')))
+})
+
+test('consulta de candidatos pre-salvos exige filtro pelo indicador autenticado', async () => {
+  await Promise.all([
+    criarCandidatoPreSalvoComRegras('pre-salvo-lista-1'),
+    criarCandidatoPreSalvoComRegras('pre-salvo-lista-2')
+  ])
+
+  const db = testEnv.authenticatedContext('indicador-1').firestore()
+
+  await assertSucceeds(getDocs(query(
+    collection(db, 'candidatosPreSalvos'),
+    where('indicadorId', '==', 'indicador-1')
+  )))
+  await assertFails(getDocs(collection(db, 'candidatosPreSalvos')))
+  await assertFails(getDocs(query(
+    collection(db, 'candidatosPreSalvos'),
+    where('indicadorId', '==', 'indicador-2')
+  )))
+})
+
+test('busca individual filtrada pelo dono retorna vazio sem erro para id inexistente', async () => {
+  const db = testEnv.authenticatedContext('indicador-1').firestore()
+  const snapshot = await assertSucceeds(getDocs(query(
+    collection(db, 'candidatosPreSalvos'),
+    where('indicadorId', '==', 'indicador-1'),
+    where(documentId(), '==', 'pre-salvo-inexistente'),
+    limit(1)
+  )))
+
+  assert.equal(snapshot.empty, true)
+})
+
+test('candidato pre-salvo rejeita dono, id, origem e timestamps forjados', async () => {
+  const db = testEnv.authenticatedContext('indicador-1').firestore()
+
+  await assertFails(setDoc(
+    doc(db, 'candidatosPreSalvos', 'pre-salvo-dono-forjado'),
+    candidatoPreSalvoPayload({
+      id: 'pre-salvo-dono-forjado',
+      indicadorId: 'indicador-2',
+      indicadorUid: 'indicador-2'
+    })
+  ))
+  await assertFails(setDoc(
+    doc(db, 'candidatosPreSalvos', 'pre-salvo-id-forjado'),
+    candidatoPreSalvoPayload({ id: 'outro-id' })
+  ))
+  await assertFails(setDoc(
+    doc(db, 'candidatosPreSalvos', 'pre-salvo-origem-forjada'),
+    candidatoPreSalvoPayload({
+      id: 'pre-salvo-origem-forjada',
+      origem: 'indicacao'
+    })
+  ))
+  await assertFails(setDoc(
+    doc(db, 'candidatosPreSalvos', 'pre-salvo-tempo-forjado'),
+    candidatoPreSalvoPayload({
+      id: 'pre-salvo-tempo-forjado',
+      createdAt: Timestamp.fromMillis(Date.now() - 60_000)
+    })
+  ))
+})
+
+test('indicacao nao referencia candidato pre-salvo de outro indicador', async () => {
+  const outroIndicadorDb = testEnv.authenticatedContext('indicador-2').firestore()
+  await assertSucceeds(setDoc(
+    doc(outroIndicadorDb, 'candidatosPreSalvos', 'pre-salvo-alheio'),
+    candidatoPreSalvoPayload({
+      id: 'pre-salvo-alheio',
+      indicadorId: 'indicador-2',
+      indicadorUid: 'indicador-2'
+    })
+  ))
+
+  const db = testEnv.authenticatedContext('indicador-1').firestore()
+
+  await assertFails(setDoc(
+    doc(db, 'candidatos', 'candidato-ref-alheia'),
+    candidatoPayload({ candidatoPreSalvoId: 'pre-salvo-alheio' })
+  ))
+})
+
+test('snapshot de candidato pre-salvo exige indicacao canonica no mesmo batch', async () => {
+  await criarCandidatoPreSalvoComRegras('pre-salvo-sem-indicacao')
+  const db = testEnv.authenticatedContext('indicador-1').firestore()
+
+  await assertFails(setDoc(
+    doc(db, 'candidatos', 'candidato-pre-salvo-orfao'),
+    candidatoPayload({ candidatoPreSalvoId: 'pre-salvo-sem-indicacao' })
+  ))
+})
+
+test('mesmo candidato pre-salvo nao pode ser indicado duas vezes para a mesma vaga', async () => {
+  await criarCandidatoPreSalvoComRegras('pre-salvo-unico')
+  await assertSucceeds(criarIndicacaoPreSalvaBatch({
+    candidatoId: 'candidato-pre-salvo-1',
+    candidatoPreSalvoId: 'pre-salvo-unico',
+    historicoId: 'historico-pre-salvo-1',
+    indicacaoId: 'indicador-1__vaga-1__pre-salvo-unico'
+  }).commit())
+
+  await assertFails(criarIndicacaoPreSalvaBatch({
+    candidatoId: 'candidato-pre-salvo-duplicado',
+    candidatoPreSalvoId: 'pre-salvo-unico',
+    historicoId: 'historico-pre-salvo-duplicado',
+    indicacaoId: 'indicador-1__vaga-1__pre-salvo-unico'
+  }).commit())
+
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    const snapshot = await getDoc(doc(
+      context.firestore(),
+      'candidatos',
+      'candidato-pre-salvo-duplicado'
+    ))
+    assert.equal(snapshot.exists(), false)
+  })
+})
+
+test('mesmo candidato pre-salvo pode ser indicado para vagas diferentes', async () => {
+  await criarCandidatoPreSalvoComRegras('pre-salvo-multivaga')
+
+  await assertSucceeds(criarIndicacaoPreSalvaBatch({
+    candidatoId: 'candidato-multivaga-1',
+    candidatoPreSalvoId: 'pre-salvo-multivaga',
+    historicoId: 'historico-multivaga-1',
+    indicacaoId: 'indicador-1__vaga-1__pre-salvo-multivaga'
+  }).commit())
+  await assertSucceeds(criarIndicacaoPreSalvaBatch({
+    candidatoId: 'candidato-multivaga-2',
+    candidatoPreSalvoId: 'pre-salvo-multivaga',
+    historicoId: 'historico-multivaga-2',
+    indicacaoId: 'indicador-1__vaga-2__pre-salvo-multivaga',
+    vagaId: 'vaga-2',
+    vagaTitulo: 'Desenvolvedor Front-end'
+  }).commit())
+})
+
+test('indicacao mantem master privado e libera apenas snapshot para empresa', async () => {
+  await criarCandidatoPreSalvoComRegras('pre-salvo-snapshot')
+  await assertSucceeds(criarIndicacaoPreSalvaBatch({
+    candidatoId: 'candidato-snapshot',
+    candidatoPreSalvoId: 'pre-salvo-snapshot',
+    historicoId: 'historico-snapshot',
+    indicacaoId: 'indicador-1__vaga-1__pre-salvo-snapshot'
+  }).commit())
+
+  const indicadorDb = testEnv.authenticatedContext('indicador-1').firestore()
+  const empresaDb = testEnv.authenticatedContext('empresa-1').firestore()
+
+  await assertSucceeds(getDoc(doc(
+    indicadorDb,
+    'candidatosPreSalvos',
+    'pre-salvo-snapshot'
+  )))
+  await assertFails(getDoc(doc(
+    empresaDb,
+    'candidatosPreSalvos',
+    'pre-salvo-snapshot'
+  )))
+  await assertSucceeds(getDoc(doc(empresaDb, 'candidatos', 'candidato-snapshot')))
 })
 
 test('empresa atualiza candidato e indicacao atomicamente', async () => {
@@ -425,6 +639,61 @@ async function criarProcessoSeletivo() {
       }))
     ])
   })
+}
+
+async function criarCandidatoPreSalvoComRegras(candidatoId) {
+  const db = testEnv.authenticatedContext('indicador-1').firestore()
+
+  return setDoc(
+    doc(db, 'candidatosPreSalvos', candidatoId),
+    candidatoPreSalvoPayload({ id: candidatoId })
+  )
+}
+
+function criarIndicacaoPreSalvaBatch({
+  candidatoId,
+  candidatoPreSalvoId,
+  historicoId,
+  indicacaoId,
+  vagaId = 'vaga-1',
+  vagaTitulo = 'Desenvolvedor'
+}) {
+  const db = testEnv.authenticatedContext('indicador-1').firestore()
+  const batch = writeBatch(db)
+
+  batch.set(
+    doc(db, 'candidatos', candidatoId),
+    candidatoPayload({ candidatoPreSalvoId, vagaId })
+  )
+  batch.set(
+    doc(db, 'indicacoes', indicacaoId),
+    indicacaoPayload({ candidatoId, candidatoPreSalvoId, vagaId })
+  )
+  batch.set(
+    doc(db, 'historicoProcesso', historicoId),
+    historicoPayload({ candidatoId, vagaId, vagaTitulo })
+  )
+
+  return batch
+}
+
+function candidatoPreSalvoPayload(overrides = {}) {
+  return {
+    id: 'pre-salvo-1',
+    indicadorId: 'indicador-1',
+    indicadorUid: 'indicador-1',
+    nome: 'Pessoa Pre-salva',
+    email: 'pessoa.pre-salva@example.com',
+    emailNormalizado: 'pessoa.pre-salva@example.com',
+    hardSkills: ['React'],
+    softSkills: ['Comunicacao'],
+    curriculo: {},
+    origem: 'manual',
+    status: 'pre_salvo',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    ...overrides
+  }
 }
 
 function candidatoPayload(overrides = {}) {

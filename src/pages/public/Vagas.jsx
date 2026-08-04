@@ -4,7 +4,7 @@
 
 import './Vagas.css'
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import Footer from '../../components/layout/Footer'
@@ -68,6 +68,7 @@ const getSession = (perfil) => {
 function Vagas() {
   const toast = useToast()
   const { perfil } = useAuth()
+  const [searchParams] = useSearchParams()
   // Estado dos filtros aplicados à listagem.
   const [filtro, setFiltro] = useState({ busca: '', salario: '', area: '', status: 'todos' })
 
@@ -85,6 +86,9 @@ function Vagas() {
 
   // Define o tipo de usuário atual para ajustar layout e ações.
   const session = getSession(perfil)
+  const candidatoPreSalvoId = session.type === 'indicador'
+    ? searchParams.get('candidatoPreSalvoId') || ''
+    : ''
 
   useEffect(() => {
     // Responsabilidade: buscar a lista de vagas cadastradas.
@@ -257,9 +261,12 @@ function Vagas() {
             const empresaActionLabel = isOwnCompanyJob ? 'Gerenciar vaga' : 'Ver vaga'
 
             // Fluxo: usuários públicos são direcionados ao login antes de ver detalhes.
+            const candidatoQuery = candidatoPreSalvoId
+              ? `?candidatoPreSalvoId=${encodeURIComponent(candidatoPreSalvoId)}`
+              : ''
             const detailPath = session.type === 'publico'
               ? `/login?redirect=/vaga/${vaga.id}`
-              : `/vaga/${vaga.id}`
+              : `/vaga/${vaga.id}${candidatoQuery}`
             const empresaActionPath = isOwnCompanyJob
               ? `/editar-vaga/empresa/${vaga.id}`
               : `/vaga/${vaga.id}`
@@ -287,8 +294,8 @@ function Vagas() {
 
                 <div className="vaga-actions">
                   {session.type === 'indicador' && (
-                    <Link to={`/vaga/${vaga.id}`} className="vaga-action-primary">
-                      Ver vaga
+                    <Link to={detailPath} className="vaga-action-primary">
+                      {candidatoPreSalvoId ? 'Escolher esta vaga' : 'Ver vaga'}
                     </Link>
                   )}
 

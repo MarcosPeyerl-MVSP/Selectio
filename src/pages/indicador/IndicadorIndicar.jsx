@@ -3,8 +3,8 @@
 // do candidato indicado e envia a indicação para o Firestore.
 
 import './styles/IndicadorIndicar.css'
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   FaBold,
   FaCheckCircle,
@@ -22,6 +22,10 @@ import EstadoDados from '../../components/ui/EstadoDados'
 import PageLoader from '../../components/ui/PageLoader'
 import { buscarVagaPorId, vagaAceitaIndicacoes } from '../../services/firestoreVagas'
 import { criarCandidatoIndicado } from '../../services/firestoreCandidatos'
+import { listarCandidatosPreSalvos } from '../../services/firestoreCandidatosPreSalvos'
+import { getFirebaseUid } from '../../services/identidadeFirebase'
+import { useAuth } from '../../hooks/useAuth'
+import { useConfirmacao } from '../../hooks/useConfirmacao'
 import { useToast } from '../../hooks/useToast'
 
 // Estado inicial do formulário de indicação.
@@ -43,12 +47,58 @@ const initialForm = {
   fitCultural: '',
   destaquesProjetos: '',
   narrativa: '',
-  hardSkills: ['Figma', 'React'],
-  softSkills: ['Liderança', 'Comunicação'],
+  hardSkills: [],
+  softSkills: [],
   expectativaSalarial: '',
   modeloTrabalho: '',
   avisoPrevio: '',
-  curriculoNome: ''
+  curriculoNome: '',
+  curriculoTipo: '',
+  curriculoTamanho: 0,
+  curriculo: null
+}
+
+const profileFields = [
+  'nome',
+  'email',
+  'dataNascimento',
+  'genero',
+  'telefone',
+  'cargoAtual',
+  'anosExperiencia',
+  'escolaridade',
+  'proficienciaIdiomas',
+  'linkedin',
+  'portfolio',
+  'github',
+  'hardSkills',
+  'softSkills',
+  'expectativaSalarial',
+  'modeloTrabalho',
+  'avisoPrevio',
+  'curriculoNome',
+  'curriculoTipo',
+  'curriculoTamanho',
+  'curriculo'
+]
+
+const indicationFields = ['pontosFortes', 'fitCultural', 'destaquesProjetos', 'narrativa']
+const comparableProfileFields = profileFields.filter((field) => field !== 'curriculo')
+const maxResumeSize = 10 * 1024 * 1024
+const allowedResumeExtensions = new Set(['pdf', 'doc', 'docx', 'rtf'])
+const allowedResumeTypes = new Set([
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/rtf',
+  'application/x-rtf',
+  'text/rtf'
+])
+const resumeTypeByExtension = {
+  pdf: 'application/pdf',
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  rtf: 'application/rtf'
 }
 
 // Responsabilidade: formatar valores monetários como moeda brasileira.
@@ -76,18 +126,148 @@ const formatPhone = (value) => {
   return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7)}`
 }
 
-// Responsabilidade: recuperar o indicador autenticado salvo no localStorage.
-function getIndicador() {
-  const stored = localStorage.getItem('indicadorUser')
-  if (!stored) return null
+const normalizeText = (value) => String(value || '')
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase()
+  .trim()
 
-  try {
-    return JSON.parse(stored)
-  } catch {
-    // Fluxo de segurança: remove a sessão caso o JSON salvo esteja inválido.
-    localStorage.removeItem('indicadorUser')
-    return null
+const toText = (value) => {
+  if (value === null || value === undefined) return ''
+  if (Array.isArray(value)) return value.filter(Boolean).join(', ')
+  if (typeof value === 'object') return ''
+  return String(value)
+}
+
+const firstText = (...values) => {
+  const value = values.find((item) => toText(item).trim())
+  return value === undefined ? '' : toText(value)
+}
+
+const normalizeSkills = (value) => {
+  const skills = Array.isArray(value)
+    ? value
+    : String(value || '').split(/[,;|]/)
+
+  return [...new Set(skills.map((skill) => String(skill).trim()).filter(Boolean))]
+}
+
+const getResumeMetadata = (candidato) => {
+  const storedResume = candidato?.curriculo
+  const resume = storedResume && typeof storedResume === 'object' && !Array.isArray(storedResume)
+    ? storedResume
+    : {}
+  const nome = firstText(
+    resume.nome,
+    resume.nomeArquivo,
+    resume.name,
+    candidato?.curriculoNome
+  )
+  const tipo = firstText(
+    resume.tipo,
+    resume.contentType,
+    resume.type,
+    candidato?.curriculoTipo
+  )
+  const rawSize = resume.tamanho ?? resume.size ?? candidato?.curriculoTamanho ?? 0
+  const tamanho = Number.isFinite(Number(rawSize)) ? Number(rawSize) : 0
+  const hasStoredResume = Object.values(resume).some((value) => (
+    value !== null && value !== undefined && String(value).trim() !== '' && value !== 0
+  ))
+
+  if (!nome && !hasStoredResume) {
+    return { curriculoNome: '', curriculoTipo: '', curriculoTamanho: 0, curriculo: null }
   }
+
+  return {
+    curriculoNome: nome,
+    curriculoTipo: tipo,
+    curriculoTamanho: tamanho,
+    curriculo: {
+      ...resume,
+      nome,
+      tipo,
+      tamanho
+    }
+  }
+}
+
+const mapSavedCandidateToForm = (candidato) => {
+  const salario = candidato?.expectativaSalarial
+  const salarioFormatado = typeof salario === 'number'
+    ? formatCurrency(String(salario))
+    : toText(salario)
+
+  return {
+    ...initialForm,
+    nome: firstText(candidato?.nome, candidato?.nomeCompleto),
+    email: toText(candidato?.email),
+    dataNascimento: toText(candidato?.dataNascimento),
+    genero: toText(candidato?.genero),
+    telefone: formatPhone(toText(candidato?.telefone)),
+    cargoAtual: toText(candidato?.cargoAtual),
+    anosExperiencia: toText(candidato?.anosExperiencia),
+    escolaridade: toText(candidato?.escolaridade),
+    proficienciaIdiomas: firstText(candidato?.proficienciaIdiomas, candidato?.idiomas),
+    linkedin: toText(candidato?.linkedin),
+    portfolio: toText(candidato?.portfolio),
+    github: firstText(candidato?.github, candidato?.githubBehance),
+    hardSkills: normalizeSkills(candidato?.hardSkills),
+    softSkills: normalizeSkills(candidato?.softSkills),
+    expectativaSalarial: salarioFormatado,
+    modeloTrabalho: toText(candidato?.modeloTrabalho),
+    avisoPrevio: toText(candidato?.avisoPrevio),
+    pontosFortes: toText(candidato?.pontosFortes),
+    fitCultural: toText(candidato?.fitCultural),
+    destaquesProjetos: toText(candidato?.destaquesProjetos),
+    narrativa: firstText(candidato?.narrativa, candidato?.observacoesProfissionais),
+    ...getResumeMetadata(candidato)
+  }
+}
+
+const hasValue = (value) => {
+  if (Array.isArray(value)) return value.length > 0
+  if (value && typeof value === 'object') return Object.keys(value).length > 0
+  return String(value ?? '').trim() !== '' && value !== 0
+}
+
+const comparableValue = (value) => {
+  if (Array.isArray(value)) {
+    return [...value].map(normalizeText).sort().join('|')
+  }
+
+  return normalizeText(value)
+}
+
+const getProfileConflicts = (current, incoming) => comparableProfileFields.filter((field) => (
+  hasValue(current[field])
+  && hasValue(incoming[field])
+  && comparableValue(current[field]) !== comparableValue(incoming[field])
+))
+
+const mergeSavedCandidate = (current, incoming) => {
+  const next = { ...current }
+
+  profileFields.forEach((field) => {
+    if (hasValue(incoming[field])) {
+      next[field] = incoming[field]
+    }
+  })
+  indicationFields.forEach((field) => {
+    if (!hasValue(current[field]) && hasValue(incoming[field])) {
+      next[field] = incoming[field]
+    }
+  })
+
+  return next
+}
+
+const getResumeExtension = (fileName) => String(fileName || '').split('.').pop()?.toLowerCase() || ''
+
+const formatFileSize = (size) => {
+  if (!size) return ''
+  if (size < 1024 * 1024) return `${Math.ceil(size / 1024)} KB`
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`
 }
 
 function Indicar() {
@@ -96,10 +276,13 @@ function Indicar() {
 
   // Hook usado para redirecionar após envio da indicação.
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const { perfil: indicador } = useAuth()
+  const confirm = useConfirmacao()
   const toast = useToast()
-
-  // Mantém os dados do indicador autenticado.
-  const [indicador] = useState(getIndicador)
+  const indicadorId = getFirebaseUid(indicador)
+  const requestedSavedCandidateId = searchParams.get('candidatoPreSalvoId') || ''
+  const automaticSelectionRef = useRef('')
 
   // Armazena os dados da vaga carregada pelo Firestore.
   const [vaga, setVaga] = useState(null)
@@ -117,11 +300,23 @@ function Indicar() {
   const [message, setMessage] = useState('')
   const [loadError, setLoadError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
+  const [savedCandidates, setSavedCandidates] = useState([])
+  const [savedCandidatesLoading, setSavedCandidatesLoading] = useState(true)
+  const [savedCandidatesError, setSavedCandidatesError] = useState('')
+  const [savedCandidatesReloadKey, setSavedCandidatesReloadKey] = useState(0)
+  const [savedCandidateSearch, setSavedCandidateSearch] = useState('')
+  const [selectedSavedId, setSelectedSavedId] = useState('')
 
   useEffect(() => {
     // Responsabilidade: buscar os dados da vaga selecionada antes de exibir o formulário.
+    let active = true
+
     const fetchVaga = async () => {
-      if (!indicador) return
+      if (!indicadorId) {
+        setLoadError('Perfil do indicador sem UID do Firebase.')
+        setLoading(false)
+        return
+      }
 
       try {
         setLoadError('')
@@ -135,20 +330,161 @@ function Indicar() {
           throw new Error('Esta vaga não está aberta para novas indicações.')
         }
 
-        setVaga(data)
+        if (active) setVaga(data)
       } catch (err) {
-        setLoadError(err.message)
+        if (active) setLoadError(err.message || 'Não foi possível carregar a vaga.')
       } finally {
-        setLoading(false)
+        if (active) setLoading(false)
       }
     }
 
     fetchVaga()
-  }, [indicador, vagaId, reloadKey])
+
+    return () => {
+      active = false
+    }
+  }, [indicadorId, vagaId, reloadKey])
+
+  useEffect(() => {
+    let active = true
+
+    const fetchSavedCandidates = async () => {
+      if (!indicadorId) {
+        setSavedCandidates([])
+        setSavedCandidatesError('Perfil do indicador sem UID do Firebase.')
+        setSavedCandidatesLoading(false)
+        return
+      }
+
+      setSavedCandidatesLoading(true)
+      setSavedCandidatesError('')
+
+      try {
+        const data = await listarCandidatosPreSalvos(indicadorId)
+
+        if (active) {
+          setSavedCandidates(Array.isArray(data) ? data : [])
+        }
+      } catch (err) {
+        if (active) {
+          setSavedCandidates([])
+          setSavedCandidatesError(err.message || 'Não foi possível carregar os candidatos pré-salvos.')
+        }
+      } finally {
+        if (active) setSavedCandidatesLoading(false)
+      }
+    }
+
+    fetchSavedCandidates()
+
+    return () => {
+      active = false
+    }
+  }, [indicadorId, savedCandidatesReloadKey])
+
+  const visibleSavedCandidates = useMemo(() => {
+    const search = normalizeText(savedCandidateSearch)
+    if (!search) return savedCandidates
+
+    return savedCandidates.filter((candidate) => [
+      candidate.nome,
+      candidate.nomeCompleto,
+      candidate.email,
+      candidate.cargoAtual
+    ].some((value) => normalizeText(value).includes(search)))
+  }, [savedCandidateSearch, savedCandidates])
+
+  const selectedSavedCandidate = useMemo(() => (
+    savedCandidates.find((candidate) => candidate.id === selectedSavedId) || null
+  ), [savedCandidates, selectedSavedId])
+
+  const savedCandidateOptions = useMemo(() => {
+    if (!selectedSavedCandidate || visibleSavedCandidates.some((candidate) => candidate.id === selectedSavedId)) {
+      return visibleSavedCandidates
+    }
+
+    return [selectedSavedCandidate, ...visibleSavedCandidates]
+  }, [selectedSavedCandidate, selectedSavedId, visibleSavedCandidates])
+
+  const applySavedCandidate = useCallback(async (candidate) => {
+    if (!candidate) return false
+
+    const incoming = mapSavedCandidateToForm(candidate)
+    const conflicts = getProfileConflicts(form, incoming)
+
+    if (conflicts.length) {
+      const confirmed = await confirm({
+        title: 'Substituir dados do candidato?',
+        description: `${conflicts.length} ${conflicts.length === 1 ? 'campo preenchido possui' : 'campos preenchidos possuem'} valores diferentes. Os dados de perfil serão substituídos, mas os textos específicos desta indicação serão preservados.`,
+        confirmLabel: 'Usar pré-salvo',
+        cancelLabel: 'Manter formulário'
+      })
+
+      if (!confirmed) return false
+    }
+
+    setForm((current) => mergeSavedCandidate(current, incoming))
+    setSelectedSavedId(candidate.id)
+    setSavedCandidateSearch('')
+    setMessage('')
+    return true
+  }, [confirm, form])
+
+  useEffect(() => {
+    if (!requestedSavedCandidateId) {
+      automaticSelectionRef.current = ''
+      return
+    }
+
+    if (
+      savedCandidatesLoading
+      || savedCandidatesError
+      || automaticSelectionRef.current === requestedSavedCandidateId
+    ) return
+
+    const requestedCandidate = savedCandidates.find((candidate) => candidate.id === requestedSavedCandidateId)
+
+    if (!requestedCandidate) {
+      automaticSelectionRef.current = requestedSavedCandidateId
+      toast.warning('O candidato pré-salvo solicitado não foi encontrado.')
+      return
+    }
+
+    const selectionTimer = window.setTimeout(() => {
+      automaticSelectionRef.current = requestedSavedCandidateId
+      void applySavedCandidate(requestedCandidate)
+    }, 0)
+
+    return () => window.clearTimeout(selectionTimer)
+  }, [
+    applySavedCandidate,
+    requestedSavedCandidateId,
+    savedCandidates,
+    savedCandidatesError,
+    savedCandidatesLoading,
+    toast
+  ])
 
   const tentarNovamente = () => {
     setLoading(true)
     setReloadKey((value) => value + 1)
+  }
+
+  const tentarCarregarPreSalvosNovamente = () => {
+    setSavedCandidatesLoading(true)
+    setSavedCandidatesReloadKey((value) => value + 1)
+  }
+
+  const handleSavedCandidateSelection = async (event) => {
+    const candidateId = event.target.value
+
+    if (!candidateId) {
+      setSelectedSavedId('')
+      return
+    }
+
+    const candidate = savedCandidates.find((item) => item.id === candidateId)
+    await applySavedCandidate(candidate)
   }
 
   // Regra de acesso: sem indicador autenticado, redireciona para login.
@@ -198,15 +534,51 @@ function Indicar() {
     event.currentTarget.value = ''
   }
 
-  // Responsabilidade: registrar o nome do arquivo de currículo selecionado.
+  // Responsabilidade: validar e registrar os metadados do currículo selecionado.
   const handleFile = (event) => {
     const file = event.target.files?.[0]
-    setForm((current) => ({ ...current, curriculoNome: file?.name || '' }))
+    if (!file) return
+
+    const extension = getResumeExtension(file.name)
+    const browserType = String(file.type || '').toLowerCase()
+    const contentType = !browserType || browserType === 'application/octet-stream'
+      ? resumeTypeByExtension[extension] || ''
+      : browserType
+    const hasValidExtension = allowedResumeExtensions.has(extension)
+    const hasValidType = allowedResumeTypes.has(contentType)
+
+    if (!hasValidExtension || !hasValidType) {
+      event.target.value = ''
+      toast.warning('Selecione um currículo em PDF, DOC, DOCX ou RTF.')
+      return
+    }
+
+    if (file.size > maxResumeSize) {
+      event.target.value = ''
+      toast.warning('O currículo deve ter no máximo 10 MB.')
+      return
+    }
+
+    const curriculo = {
+      nome: file.name,
+      tipo: contentType,
+      tamanho: file.size
+    }
+
+    setForm((current) => ({
+      ...current,
+      curriculoNome: curriculo.nome,
+      curriculoTipo: curriculo.tipo,
+      curriculoTamanho: curriculo.tamanho,
+      curriculo
+    }))
   }
 
   // Responsabilidade: enviar a indicação do candidato para o Firestore.
   const handleSubmit = async (event) => {
     event.preventDefault()
+    if (saving) return
+
     setSaving(true)
     setMessage('')
 
@@ -218,7 +590,12 @@ function Indicar() {
     }
 
     try {
-      await criarCandidatoIndicado({ dados: form, indicador, vaga })
+      await criarCandidatoIndicado({
+        dados: form,
+        indicador,
+        vaga,
+        candidatoPreSalvoId: selectedSavedId
+      })
       toast.success('Indicação enviada com sucesso.')
 
       // Após criar a indicação, retorna para a página da vaga.
@@ -354,9 +731,10 @@ function Indicar() {
                       {form.curriculoNome ? (
                         <>
                           <FaCheckCircle /> {form.curriculoNome}
+                          {form.curriculoTamanho ? ` (${formatFileSize(form.curriculoTamanho)})` : ''}
                         </>
                       ) : (
-                        'PDF, DOCX ou RTF (Máx. 10MB)'
+                        'PDF, DOC, DOCX ou RTF (Máx. 10MB)'
                       )}
                     </small>
                     <input type="file" accept=".pdf,.doc,.docx,.rtf" onChange={handleFile} />
@@ -381,18 +759,94 @@ function Indicar() {
                 </div>
               </div>
 
-              <aside className="saved-candidate-card">
+              <aside className="saved-candidate-card" aria-labelledby="saved-candidate-title">
                 <div className="saved-icon">
-                  <FaSearch />
+                  <FaSearch aria-hidden="true" />
                 </div>
-                <h2>Adicionar candidato já pré-salvo</h2>
-                <p>Selecione um talento da sua base de indicações anteriores para agilizar o processo.</p>
-                <label>
-                  Selecionar candidato
-                  <select>
-                    <option>Escolha na lista...</option>
-                  </select>
-                </label>
+                <h2 id="saved-candidate-title">Adicionar candidato já pré-salvo</h2>
+                <p className="saved-candidate-intro">
+                  Selecione um talento da sua base de candidatos para agilizar o processo.
+                </p>
+
+                {savedCandidatesLoading ? (
+                  <div className="saved-candidate-state" role="status" aria-live="polite">
+                    <span className="saved-candidate-spinner" aria-hidden="true" />
+                    <p>Carregando candidatos...</p>
+                  </div>
+                ) : savedCandidatesError ? (
+                  <div className="saved-candidate-state saved-candidate-error" role="alert">
+                    <p>{savedCandidatesError}</p>
+                    <button type="button" onClick={tentarCarregarPreSalvosNovamente}>
+                      Tentar novamente
+                    </button>
+                  </div>
+                ) : !savedCandidates.length ? (
+                  <div className="saved-candidate-state saved-candidate-empty">
+                    <p>Você ainda não possui candidatos pré-salvos.</p>
+                    <Link to="/candidatos/indicador/novo">Cadastrar candidato</Link>
+                  </div>
+                ) : (
+                  <>
+                    <label className="saved-candidate-search">
+                      Buscar candidato
+                      <span>
+                        <FaSearch aria-hidden="true" />
+                        <input
+                          type="search"
+                          value={savedCandidateSearch}
+                          onChange={(event) => setSavedCandidateSearch(event.target.value)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter') event.preventDefault()
+                          }}
+                          placeholder="Nome, e-mail ou cargo"
+                          autoComplete="off"
+                        />
+                      </span>
+                    </label>
+
+                    <label className="saved-candidate-select">
+                      Selecionar candidato
+                      <select
+                        value={selectedSavedId}
+                        onChange={handleSavedCandidateSelection}
+                        aria-describedby="saved-candidate-help"
+                      >
+                        <option value="">Escolha na lista...</option>
+                        {savedCandidateOptions.map((candidate) => (
+                          <option key={candidate.id} value={candidate.id}>
+                            {[
+                              candidate.nome || candidate.nomeCompleto || 'Sem nome',
+                              candidate.email,
+                              candidate.cargoAtual
+                            ].filter(Boolean).join(' — ')}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <p id="saved-candidate-help" className="saved-candidate-help">
+                      Os dados poderão ser revisados antes do envio.
+                    </p>
+
+                    {savedCandidateSearch.trim() && !visibleSavedCandidates.length && (
+                      <p className="saved-candidate-no-results" role="status">
+                        Nenhum candidato corresponde à busca.
+                      </p>
+                    )}
+
+                    {selectedSavedCandidate && (
+                      <div className="saved-candidate-selected" aria-live="polite">
+                        <span>Candidato selecionado</span>
+                        <strong>{selectedSavedCandidate.nome || selectedSavedCandidate.nomeCompleto}</strong>
+                        <small>
+                          {[selectedSavedCandidate.email, selectedSavedCandidate.cargoAtual]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </small>
+                      </div>
+                    )}
+                  </>
+                )}
               </aside>
             </form>
           )}

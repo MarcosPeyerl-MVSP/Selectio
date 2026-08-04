@@ -80,6 +80,11 @@
   font-size: 12px;
 }
 
+.candidate-profile-modal.pre-salvo .candidate-profile-header strong {
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+  color: var(--primary);
+}
+
 .candidate-profile-section {
   margin-top: 18px;
   padding: 18px;

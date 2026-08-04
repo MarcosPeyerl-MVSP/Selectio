@@ -25,7 +25,7 @@ const sidebarConfig = {
   indicador: {
     title: 'PAINEL DO INDICADOR',
     userLabel: 'Indicador',
-    action: { to: '/vagas', label: 'Candidato', icon: FaPlus },
+    action: { to: '/candidatos/indicador/novo', label: 'Candidato', icon: FaPlus },
     items: [
       { to: '/vagas', label: 'Vagas', icon: FaBriefcase, activeOn: ['/vagas'], tourKey: 'vagas' },
       { to: '/candidatos/indicador', label: 'Candidatos', icon: FaUserFriends, activeOn: ['/candidatos/indicador', '/indicar'], tourKey: 'candidatos' },

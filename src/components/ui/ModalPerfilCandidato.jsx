@@ -23,6 +23,7 @@ import { listarHistoricoCandidato } from '../../services/firestoreHistorico'
 const emptyValue = 'Não informado'
 
 const statusLabels = {
+  pre_salvo: 'Pré-salvo',
   indicado: 'Indicado',
   entrevista: 'Entrevista',
   contratado: 'Contratado',
@@ -64,10 +65,12 @@ function formatDateTime(value) {
 function ModalPerfilCandidato({
   candidato,
   onClose,
+  variant = 'processo',
   editableStatus = false,
   onChangeStatus,
   loadingStatus = false
 }) {
+  const isPreSalvo = variant === 'preSalvo'
   const [historico, setHistorico] = useState([])
   const [loadingHistorico, setLoadingHistorico] = useState(true)
   const [erroHistorico, setErroHistorico] = useState('')
@@ -83,7 +86,7 @@ function ModalPerfilCandidato({
   }, [onClose])
 
   useEffect(() => {
-    if (!candidato?.id) return undefined
+    if (!candidato?.id || isPreSalvo) return undefined
 
     let ativo = true
 
@@ -101,7 +104,7 @@ function ModalPerfilCandidato({
     return () => {
       ativo = false
     }
-  }, [candidato?.id, historicoReloadKey])
+  }, [candidato?.id, historicoReloadKey, isPreSalvo])
 
   const carregarHistoricoNovamente = () => {
     setLoadingHistorico(true)
@@ -111,28 +114,39 @@ function ModalPerfilCandidato({
 
   if (!candidato) return null
 
-  const status = candidato.status || 'indicado'
+  const status = isPreSalvo ? 'pre_salvo' : candidato.status || 'indicado'
   const details = [
     { icon: FaEnvelope, label: 'E-mail', value: candidato.email },
     { icon: FaPhone, label: 'Telefone', value: candidato.telefone },
+    { icon: FaCalendarAlt, label: 'Nascimento', value: formatDate(candidato.dataNascimento) },
+    { icon: FaUser, label: 'Gênero', value: candidato.genero },
     { icon: FaLink, label: 'LinkedIn', value: candidato.linkedin },
+    { icon: FaLink, label: 'Portfólio', value: candidato.portfolio },
+    { icon: FaLink, label: 'GitHub / Behance', value: candidato.github },
     { icon: FaBriefcase, label: 'Cargo atual', value: candidato.cargoAtual },
     { icon: FaUserTie, label: 'Experiência', value: candidato.anosExperiencia },
     { icon: FaFileAlt, label: 'Escolaridade', value: candidato.escolaridade },
+    { icon: FaFileAlt, label: 'Idiomas', value: candidato.proficienciaIdiomas },
     { icon: FaMoneyBillWave, label: 'Expectativa salarial', value: candidato.expectativaSalarial },
     { icon: FaBriefcase, label: 'Modelo de trabalho', value: candidato.modeloTrabalho },
     { icon: FaCalendarAlt, label: 'Aviso previo', value: candidato.avisoPrevio },
-    { icon: FaBriefcase, label: 'Vaga relacionada', value: candidato.vagaTitulo },
-    { icon: FaBriefcase, label: 'Empresa', value: candidato.vagaEmpresa || candidato.empresaNome },
+    ...(!isPreSalvo ? [
+      { icon: FaBriefcase, label: 'Vaga relacionada', value: candidato.vagaTitulo },
+      { icon: FaBriefcase, label: 'Empresa', value: candidato.vagaEmpresa || candidato.empresaNome }
+    ] : []),
     { icon: FaUser, label: 'Indicador', value: candidato.indicadorNome },
-    { icon: FaCalendarAlt, label: 'Data da indicação', value: formatDate(candidato.aplicadoEm || candidato.criadoEm) },
+    {
+      icon: FaCalendarAlt,
+      label: isPreSalvo ? 'Salvo em' : 'Data da indicação',
+      value: formatDate(candidato.aplicadoEm || candidato.criadoEm || candidato.createdAt)
+    },
     { icon: FaFileAlt, label: 'Currículo', value: candidato.curriculoNome }
   ]
 
   return (
     <div className="candidate-profile-backdrop" role="presentation" onMouseDown={onClose}>
       <aside
-        className="candidate-profile-modal"
+        className={`candidate-profile-modal ${isPreSalvo ? 'pre-salvo' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="candidate-profile-title"
@@ -145,24 +159,26 @@ function ModalPerfilCandidato({
         <header className="candidate-profile-header">
           <span>Perfil do candidato</span>
           <h2 id="candidate-profile-title">{candidato.nome || emptyValue}</h2>
-          <p>{candidato.cargoAtual || candidato.vagaTitulo || 'Candidato indicado'}</p>
+          <p>{candidato.cargoAtual || candidato.vagaTitulo || (isPreSalvo ? 'Candidato pré-salvo' : 'Candidato indicado')}</p>
           <strong>{statusLabels[status] || statusLabels.indicado}</strong>
         </header>
 
-        <section className="candidate-profile-section">
-          <div className="candidate-profile-section-title">
-            <span>Status</span>
-            <p>Acompanhamento do processo seletivo</p>
-          </div>
-          <LinhaStatusCandidato
-            status={status}
-            editable={editableStatus}
-            loading={loadingStatus}
-            onChangeStatus={onChangeStatus}
-          />
-        </section>
+        {!isPreSalvo && (
+          <section className="candidate-profile-section">
+            <div className="candidate-profile-section-title">
+              <span>Status</span>
+              <p>Acompanhamento do processo seletivo</p>
+            </div>
+            <LinhaStatusCandidato
+              status={status}
+              editable={editableStatus}
+              loading={loadingStatus}
+              onChangeStatus={onChangeStatus}
+            />
+          </section>
+        )}
 
-        <section className="candidate-profile-section">
+        {!isPreSalvo && <section className="candidate-profile-section">
           <div className="candidate-profile-section-title candidate-history-title">
             <div>
               <span>Histórico do processo</span>
@@ -204,7 +220,7 @@ function ModalPerfilCandidato({
               title="Nenhum evento registrado"
             />
           )}
-        </section>
+        </section>}
 
         <section className="candidate-profile-grid">
           {details.map((item) => {
@@ -215,7 +231,7 @@ function ModalPerfilCandidato({
               <div className="candidate-profile-detail" key={item.label}>
                 <Icon />
                 <span>{item.label}</span>
-                {item.label === 'LinkedIn' && item.value ? (
+                {['LinkedIn', 'Portfólio', 'GitHub / Behance'].includes(item.label) && item.value ? (
                   <a href={String(item.value).startsWith('http') ? item.value : `https://${item.value}`} target="_blank" rel="noreferrer">
                     {item.value}
                   </a>
@@ -230,6 +246,7 @@ function ModalPerfilCandidato({
         <ProfileText title="Pontos fortes" value={candidato.pontosFortes} />
         <ProfileText title="Fit cultural" value={candidato.fitCultural} />
         <ProfileText title="Narrativa" value={candidato.narrativa || candidato.mensagem} />
+        <ProfileText title="Observações profissionais" value={candidato.observacoes || candidato.observacoesProfissionais} />
         <ProfileTags title="Hard skills" values={candidato.hardSkills} />
         <ProfileTags title="Soft skills" values={candidato.softSkills} />
       </aside>

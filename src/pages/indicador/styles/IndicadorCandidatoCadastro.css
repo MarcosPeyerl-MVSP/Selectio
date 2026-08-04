@@ -1,0 +1,951 @@
+.candidate-registration-layout {
+  display: grid;
+  grid-template-columns: 255px minmax(0, 1fr);
+  min-height: calc(100vh - 72px);
+  background: var(--background);
+}
+
+.candidate-registration-page {
+  width: 100%;
+  min-width: 0;
+  padding: 38px 38px 80px;
+  color: var(--text);
+  animation: selectioFadeIn 0.36s ease both;
+}
+
+.candidate-registration-page > .page-loader,
+.candidate-registration-page > .data-state,
+.candidate-registration-header,
+.candidate-registration-panel {
+  width: min(1120px, 100%);
+}
+
+.candidate-registration-header {
+  margin-bottom: 30px;
+  animation: selectioSlideUp 0.44s var(--ease-premium) both;
+}
+
+.candidate-registration-header > span {
+  display: block;
+  margin-bottom: 9px;
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.candidate-registration-header h1 {
+  margin: 0 0 10px;
+  color: var(--text-heading);
+  font-size: clamp(34px, 4vw, 48px);
+  line-height: 1;
+}
+
+.candidate-registration-header p {
+  max-width: 700px;
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.candidate-registration-header a {
+  display: inline-flex;
+  align-items: center;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.candidate-registration-header a::before {
+  content: '‹';
+  margin-right: 6px;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.candidate-registration-header a:hover {
+  color: var(--primary-dark);
+}
+
+.candidate-registration-panel {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  animation: selectioSlideUp 0.44s var(--ease-premium) 0.05s both;
+}
+
+.candidate-registration-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-muted);
+}
+
+.candidate-registration-tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast);
+}
+
+.candidate-registration-tabs button:hover:not(:disabled) {
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.candidate-registration-tabs button.active {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--primary);
+  box-shadow: var(--shadow-soft);
+}
+
+.candidate-registration-tabs button:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.candidate-registration-form {
+  display: grid;
+}
+
+.candidate-registration-section {
+  display: grid;
+  gap: 20px;
+  padding: 30px 34px;
+  border-bottom: 1px solid var(--border);
+}
+
+.candidate-registration-section h2 {
+  margin: 0;
+  color: var(--text-heading);
+  font-size: 20px;
+}
+
+.candidate-registration-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 24px;
+}
+
+.candidate-registration-grid.three-columns {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.candidate-registration-field {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.candidate-registration-field.full {
+  grid-column: 1 / -1;
+}
+
+.candidate-registration-field > span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.candidate-registration-field > span small {
+  color: var(--primary);
+  font-size: inherit;
+}
+
+.candidate-registration-field input,
+.candidate-registration-field select,
+.candidate-registration-field textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: background var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast);
+}
+
+.candidate-registration-field input,
+.candidate-registration-field select {
+  min-height: 46px;
+  padding: 0 14px;
+}
+
+.candidate-registration-field textarea {
+  min-height: 130px;
+  padding: 14px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.candidate-registration-field input::placeholder,
+.candidate-registration-field textarea::placeholder,
+.candidate-registration-skills input::placeholder {
+  color: color-mix(in srgb, var(--muted) 82%, transparent);
+}
+
+.candidate-registration-field input:focus,
+.candidate-registration-field select:focus,
+.candidate-registration-field textarea:focus {
+  border-color: color-mix(in srgb, var(--primary) 48%, var(--border));
+  background: var(--surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
+  transform: translateY(-1px);
+}
+
+.candidate-registration-field.has-error input {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+}
+
+.candidate-registration-field-error,
+.candidate-registration-inline-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.candidate-registration-help {
+  margin: -8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.candidate-registration-skills {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 50px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  transition: background var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast);
+}
+
+.candidate-registration-skills:focus-within {
+  border-color: color-mix(in srgb, var(--primary) 48%, var(--border));
+  background: var(--surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.candidate-registration-skills button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.candidate-registration-skills button:hover {
+  background: color-mix(in srgb, var(--primary) 20%, var(--surface));
+  transform: translateY(-1px);
+}
+
+.candidate-registration-skills input {
+  flex: 1;
+  min-width: 210px;
+  min-height: 30px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+}
+
+.candidate-registration-resume {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 104px;
+  padding: 20px;
+  border: 1px dashed color-mix(in srgb, var(--primary) 38%, var(--border));
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+
+.candidate-registration-resume > svg {
+  color: var(--primary);
+  font-size: 28px;
+}
+
+.candidate-registration-resume strong,
+.candidate-registration-resume p {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.candidate-registration-resume strong {
+  color: var(--text-heading);
+  font-size: 14px;
+}
+
+.candidate-registration-resume p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.candidate-registration-resume.has-file {
+  border-color: var(--success);
+  background: var(--success-bg);
+}
+
+.candidate-registration-resume.has-file > svg {
+  color: var(--success);
+}
+
+.candidate-registration-resume.has-error {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+}
+
+.candidate-registration-file-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.candidate-registration-file-button:hover,
+.candidate-registration-file-button:focus-within {
+  border-color: color-mix(in srgb, var(--primary) 42%, var(--border));
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+.candidate-registration-file-button input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.candidate-registration-remove-file {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--border));
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--danger);
+  cursor: pointer;
+}
+
+.candidate-registration-remove-file:hover {
+  background: var(--danger-bg);
+  transform: translateY(-1px);
+}
+
+.candidate-registration-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 24px 34px 0;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--danger) 28%, var(--border));
+  border-radius: 10px;
+  background: var(--danger-bg);
+  color: var(--text);
+}
+
+.candidate-registration-alert > svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--danger);
+}
+
+.candidate-registration-alert strong {
+  color: var(--text-heading);
+  font-size: 14px;
+}
+
+.candidate-registration-alert p,
+.candidate-registration-alert ul {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.candidate-registration-alert ul {
+  padding-left: 18px;
+}
+
+.candidate-registration-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 26px 34px 30px;
+}
+
+.candidate-registration-primary-button,
+.candidate-registration-secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast);
+}
+
+.candidate-registration-primary-button {
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: var(--white);
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+
+.candidate-registration-primary-button:hover:not(:disabled) {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px color-mix(in srgb, var(--primary) 24%, transparent);
+}
+
+.candidate-registration-primary-button:disabled {
+  opacity: 0.58;
+  cursor: wait;
+  box-shadow: none;
+}
+
+.candidate-registration-secondary-button {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.candidate-registration-secondary-button:hover {
+  border-color: color-mix(in srgb, var(--primary) 34%, var(--border));
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.candidate-csv-panel {
+  display: grid;
+  gap: 24px;
+  padding: 32px 34px;
+}
+
+.candidate-csv-panel > .candidate-registration-alert {
+  margin: 0;
+}
+
+.candidate-csv-panel > .candidate-registration-actions {
+  padding: 0;
+}
+
+.candidate-csv-intro {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.candidate-csv-intro span {
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.candidate-csv-intro h2 {
+  margin: 6px 0 8px;
+  color: var(--text-heading);
+  font-size: 24px;
+}
+
+.candidate-csv-intro p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.candidate-csv-dropzone {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  min-height: 250px;
+  padding: 32px;
+  overflow: hidden;
+  border: 2px dashed color-mix(in srgb, var(--primary) 32%, var(--border));
+  border-radius: 14px;
+  background: var(--surface-soft);
+  color: var(--text);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--motion-fast), background var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast);
+}
+
+.candidate-csv-dropzone > svg {
+  margin-bottom: 4px;
+  color: var(--primary);
+  font-size: 38px;
+}
+
+.candidate-csv-dropzone strong {
+  color: var(--text-heading);
+  font-size: 16px;
+}
+
+.candidate-csv-dropzone small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.candidate-csv-dropzone:hover,
+.candidate-csv-dropzone:focus-within,
+.candidate-csv-dropzone.drag-active {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 6%, var(--surface));
+  transform: translateY(-2px);
+  box-shadow: 0 20px 36px color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+.candidate-csv-dropzone input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.candidate-csv-summary,
+.candidate-csv-result {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 22px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+
+.candidate-csv-summary > div:first-child,
+.candidate-csv-result > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.candidate-csv-summary > div:first-child > svg,
+.candidate-csv-result > div:first-child > svg {
+  flex: 0 0 auto;
+  color: var(--primary);
+  font-size: 24px;
+}
+
+.candidate-csv-result > div:first-child > svg {
+  color: var(--success);
+}
+
+.candidate-csv-summary span,
+.candidate-csv-result span {
+  min-width: 0;
+}
+
+.candidate-csv-summary strong,
+.candidate-csv-result strong,
+.candidate-csv-summary small,
+.candidate-csv-result small {
+  display: block;
+}
+
+.candidate-csv-summary strong,
+.candidate-csv-result strong {
+  overflow: hidden;
+  color: var(--text-heading);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.candidate-csv-summary small,
+.candidate-csv-result small {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.candidate-csv-summary dl,
+.candidate-csv-result dl {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+}
+
+.candidate-csv-summary dl div,
+.candidate-csv-result dl div {
+  min-width: 82px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: var(--surface);
+  text-align: center;
+}
+
+.candidate-csv-summary dt,
+.candidate-csv-result dt {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.candidate-csv-summary dd,
+.candidate-csv-result dd {
+  margin: 3px 0 0;
+  color: var(--text-heading);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.candidate-csv-summary > button {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.candidate-csv-summary > button:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+  transform: translateY(-1px);
+}
+
+.candidate-csv-summary > button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.candidate-csv-table-wrap {
+  width: 100%;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.candidate-csv-table {
+  width: 100%;
+  min-width: 820px;
+  border-collapse: collapse;
+  background: var(--surface);
+  font-size: 12px;
+}
+
+.candidate-csv-table th,
+.candidate-csv-table td {
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  text-align: left;
+  vertical-align: top;
+}
+
+.candidate-csv-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface-muted);
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.candidate-csv-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.candidate-csv-table tr.invalid td {
+  background: color-mix(in srgb, var(--danger-bg) 72%, var(--surface));
+}
+
+.candidate-csv-status.valid {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--success);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.candidate-csv-errors {
+  display: grid;
+  gap: 3px;
+}
+
+.candidate-csv-errors small {
+  color: var(--danger);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.candidate-csv-result {
+  grid-template-columns: minmax(0, 1fr) auto;
+  border-color: color-mix(in srgb, var(--success) 38%, var(--border));
+  background: var(--success-bg);
+}
+
+.candidate-csv-result details {
+  grid-column: 1 / -1;
+  padding-top: 14px;
+  border-top: 1px solid color-mix(in srgb, var(--success) 24%, var(--border));
+}
+
+.candidate-csv-result summary {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.candidate-csv-result ul {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding-left: 20px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.candidate-registration-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.candidate-registration-tabs button:focus-visible,
+.candidate-registration-primary-button:focus-visible,
+.candidate-registration-secondary-button:focus-visible,
+.candidate-registration-remove-file:focus-visible,
+.candidate-csv-summary > button:focus-visible,
+.candidate-csv-result summary:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 34%, transparent);
+  outline-offset: 2px;
+}
+
+:root[data-theme='dark'] .candidate-registration-header a,
+:root[data-theme='dark'] .candidate-registration-tabs button.active,
+:root[data-theme='dark'] .candidate-registration-skills button,
+:root[data-theme='dark'] .candidate-registration-file-button,
+:root[data-theme='dark'] .candidate-csv-intro span,
+:root[data-theme='dark'] .candidate-csv-summary > button {
+  color: var(--primary-dark);
+}
+
+:root[data-theme='dark'] .candidate-registration-primary-button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--primary) 84%, var(--primary-dark));
+}
+
+@media (max-width: 1100px) {
+  .candidate-registration-grid.three-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .candidate-csv-summary {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .candidate-csv-summary > button {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+}
+
+@media (max-width: 900px) {
+  .candidate-registration-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .candidate-registration-page {
+    padding: 32px 24px 64px;
+  }
+}
+
+@media (max-width: 720px) {
+  .candidate-registration-page {
+    padding: 26px 16px 52px;
+  }
+
+  .candidate-registration-header h1 {
+    font-size: 34px;
+  }
+
+  .candidate-registration-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .candidate-registration-tabs button {
+    padding: 0 10px;
+    font-size: 11px;
+  }
+
+  .candidate-registration-section,
+  .candidate-csv-panel {
+    padding: 24px 18px;
+  }
+
+  .candidate-registration-grid,
+  .candidate-registration-grid.three-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .candidate-registration-resume {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .candidate-registration-file-button {
+    grid-column: 1 / -1;
+  }
+
+  .candidate-registration-alert {
+    margin: 20px 18px 0;
+  }
+
+  .candidate-registration-actions {
+    flex-direction: column-reverse;
+    padding: 22px 18px 26px;
+  }
+
+  .candidate-registration-primary-button,
+  .candidate-registration-secondary-button {
+    width: 100%;
+  }
+
+  .candidate-csv-panel > .candidate-registration-actions {
+    padding: 0;
+  }
+
+  .candidate-csv-intro {
+    display: grid;
+  }
+
+  .candidate-csv-intro .candidate-registration-secondary-button {
+    width: 100%;
+  }
+
+  .candidate-csv-dropzone {
+    min-height: 210px;
+    padding: 24px 18px;
+  }
+
+  .candidate-csv-summary,
+  .candidate-csv-result {
+    grid-template-columns: 1fr;
+  }
+
+  .candidate-csv-summary dl,
+  .candidate-csv-result dl {
+    width: 100%;
+  }
+
+  .candidate-csv-summary dl div,
+  .candidate-csv-result dl div {
+    flex: 1;
+  }
+
+  .candidate-csv-summary > button,
+  .candidate-csv-result details {
+    grid-column: auto;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .candidate-registration-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .candidate-registration-resume {
+    grid-template-columns: 1fr auto;
+  }
+
+  .candidate-registration-resume > svg {
+    display: none;
+  }
+
+  .candidate-registration-file-button {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .candidate-registration-page,
+  .candidate-registration-header,
+  .candidate-registration-panel {
+    animation: none;
+  }
+}
