@@ -1,3 +1,34 @@
+.sidebar-mobile-trigger,
+.sidebar-mobile-overlay {
+  display: none;
+}
+
+:is(
+  .dashboard-shell,
+  .vagas-layout,
+  .vaga-detail-page,
+  .empresa-vaga-layout,
+  .empresa-candidatos-layout,
+  .candidate-registration-layout,
+  .candidatos-layout,
+  .indicar-layout
+) {
+  transition: grid-template-columns var(--motion-base);
+}
+
+:is(
+  .dashboard-shell,
+  .vagas-layout,
+  .vaga-detail-page,
+  .empresa-vaga-layout,
+  .empresa-candidatos-layout,
+  .candidate-registration-layout,
+  .candidatos-layout,
+  .indicar-layout
+):has(> .app-sidebar.collapsed) {
+  grid-template-columns: 82px minmax(0, 1fr);
+}
+
 .app-sidebar {
   width: 255px;
   min-height: 100vh;
@@ -6,14 +37,54 @@
   padding: 24px 14px;
   display: flex;
   flex-direction: column;
+  transition: width var(--motion-base), padding var(--motion-base), transform var(--motion-base), box-shadow var(--motion-base);
+}
+
+.app-sidebar.retractable {
+  position: sticky;
+  top: 72px;
+  height: calc(100vh - 72px);
+  min-height: 560px;
+  overflow: hidden auto;
+}
+
+.app-sidebar-toggle {
+  position: absolute;
+  z-index: 2;
+  top: 20px;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--muted);
+  box-shadow: var(--shadow-soft);
+}
+
+.app-sidebar-toggle:hover {
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.sidebar-expand-icon,
+.sidebar-mobile-close-icon {
+  display: none;
 }
 
 .app-sidebar-title {
+  min-height: 50px;
+  padding-right: 36px;
   font-size: 22px;
   font-weight: 800;
   color: var(--primary);
   line-height: 1.15;
   margin-bottom: 24px;
+  overflow: hidden;
+  transition: opacity var(--motion-fast), transform var(--motion-base);
 }
 
 .app-sidebar-user {
@@ -25,9 +96,12 @@
   border-radius: 8px;
   padding: 12px;
   margin-bottom: 28px;
+  overflow: hidden;
+  transition: padding var(--motion-base), gap var(--motion-base), background var(--motion-fast);
 }
 
 .app-sidebar-user svg {
+  flex: 0 0 auto;
   color: var(--primary);
   font-size: 15px;
 }
@@ -74,7 +148,17 @@
   transition: color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
 }
 
+.app-sidebar-menu a span,
+.app-sidebar-btn span {
+  overflow: hidden;
+  white-space: nowrap;
+  transition: opacity var(--motion-fast), max-width var(--motion-base);
+}
+
 .app-sidebar-menu a svg {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
   color: var(--muted);
   font-size: 12px;
   transition: color 0.25s ease;
@@ -112,7 +196,7 @@
 }
 
 .app-sidebar-btn {
-  margin-top: 28px;
+  margin-top: auto;
   min-height: 46px;
   border-radius: 8px;
   background: var(--surface);
@@ -128,6 +212,10 @@
   transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
 }
 
+.app-sidebar-btn svg {
+  flex: 0 0 auto;
+}
+
 .app-sidebar-btn:hover {
   background: var(--primary);
   color: var(--white);
@@ -135,20 +223,213 @@
   box-shadow: 0 8px 18px rgba(195, 56, 61, 0.22);
 }
 
+.app-sidebar.collapsed {
+  width: 82px;
+  padding-right: 12px;
+  padding-left: 12px;
+}
+
+.app-sidebar.collapsed .app-sidebar-toggle {
+  right: 50%;
+  transform: translateX(50%);
+}
+
+.app-sidebar.collapsed .app-sidebar-toggle:hover {
+  transform: translateX(50%) translateY(-1px);
+}
+
+.app-sidebar.collapsed .sidebar-collapse-icon {
+  display: none;
+}
+
+.app-sidebar.collapsed .sidebar-expand-icon {
+  display: block;
+}
+
+.app-sidebar.collapsed .app-sidebar-title {
+  opacity: 0;
+  transform: translateX(-10px);
+  pointer-events: none;
+}
+
+.app-sidebar.collapsed .app-sidebar-user {
+  justify-content: center;
+  gap: 0;
+  padding: 12px 8px;
+}
+
+.app-sidebar.collapsed .app-sidebar-user > div {
+  display: none;
+}
+
+.app-sidebar.collapsed .app-sidebar-user svg {
+  width: 18px;
+  height: 18px;
+}
+
+.app-sidebar.collapsed .app-sidebar-menu a,
+.app-sidebar.collapsed .app-sidebar-btn {
+  justify-content: center;
+  gap: 0;
+  padding-right: 10px;
+  padding-left: 10px;
+}
+
+.app-sidebar.collapsed .app-sidebar-menu a span,
+.app-sidebar.collapsed .app-sidebar-btn span {
+  max-width: 0;
+  opacity: 0;
+}
+
+.app-sidebar.collapsed .app-sidebar-menu a:hover {
+  transform: translateY(-1px);
+}
+
+.app-sidebar.collapsed .app-sidebar-menu a.active::before {
+  left: -5px;
+}
+
 @media (max-width: 900px) {
+  .sidebar-mobile-trigger {
+    position: fixed;
+    z-index: 1090;
+    left: 18px;
+    bottom: 22px;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--border));
+    border-radius: 50%;
+    background: var(--primary);
+    color: var(--white);
+    box-shadow: 0 14px 30px rgba(182, 28, 47, 0.28);
+  }
+
+  .sidebar-mobile-trigger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 34px rgba(182, 28, 47, 0.34);
+  }
+
+  .sidebar-mobile-overlay {
+    position: fixed;
+    z-index: 1110;
+    inset: 0;
+    display: block;
+    background: rgba(17, 17, 17, 0.5);
+    backdrop-filter: blur(5px);
+  }
+
+  :is(
+    .dashboard-shell,
+    .vagas-layout,
+    .vaga-detail-page,
+    .empresa-vaga-layout,
+    .empresa-candidatos-layout,
+    .candidate-registration-layout,
+    .candidatos-layout,
+    .indicar-layout
+  ):has(> .app-sidebar.collapsed) {
+    grid-template-columns: 1fr;
+  }
+
   .app-sidebar {
+    position: static;
     width: 100%;
+    height: auto;
     min-height: auto;
     border-right: 0;
     border-bottom: 1px solid var(--border);
+    box-shadow: none;
+    transform: none;
   }
 
-  .app-sidebar-menu {
+  .app-sidebar.retractable {
+    position: fixed;
+    z-index: 1120;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(310px, 88vw);
+    height: 100vh;
+    min-height: 0;
+    padding: 24px 14px;
+    border-right: 1px solid var(--border);
+    box-shadow: 24px 0 54px rgba(0, 0, 0, 0.22);
+    transform: translateX(-105%);
+  }
+
+  .app-sidebar.retractable.mobile-open,
+  .app-sidebar.retractable.collapsed.mobile-open {
+    width: min(310px, 88vw);
+    padding: 24px 14px;
+    transform: translateX(0);
+  }
+
+  .app-sidebar .app-sidebar-toggle,
+  .app-sidebar.collapsed .app-sidebar-toggle {
+    right: 12px;
+    transform: none;
+  }
+
+  .app-sidebar .app-sidebar-toggle:hover,
+  .app-sidebar.collapsed .app-sidebar-toggle:hover {
+    transform: translateY(-1px);
+  }
+
+  .app-sidebar .sidebar-collapse-icon,
+  .app-sidebar .sidebar-expand-icon {
+    display: none;
+  }
+
+  .app-sidebar .sidebar-mobile-close-icon {
+    display: block;
+  }
+
+  .app-sidebar.collapsed .app-sidebar-title {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  .app-sidebar.collapsed .app-sidebar-user {
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .app-sidebar.collapsed .app-sidebar-user > div {
+    display: block;
+  }
+
+  .app-sidebar.collapsed .app-sidebar-menu a,
+  .app-sidebar.collapsed .app-sidebar-btn {
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .app-sidebar.collapsed .app-sidebar-menu a span,
+  .app-sidebar.collapsed .app-sidebar-btn span {
+    max-width: 220px;
+    opacity: 1;
+  }
+
+  .app-sidebar:not(.retractable) .app-sidebar-menu {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
   }
 
-  .app-sidebar-btn {
+  .app-sidebar.retractable .app-sidebar-menu {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .app-sidebar:not(.retractable) .app-sidebar-btn {
     margin-top: 18px;
+  }
+
+  .app-sidebar.retractable .app-sidebar-btn {
+    margin-top: auto;
   }
 }

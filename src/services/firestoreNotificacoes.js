@@ -369,7 +369,7 @@ export const notificarPagamentoAlterado = async ({ pagamento, statusAnterior = '
       tipo: info.tipo,
       titulo: info.tituloIndicador || info.titulo,
       mensagem,
-      link: '/painel/indicador?secao=financeiro',
+      link: '/painel/indicador/dashboard?secao=financeiro',
       metadata
     }))
   }

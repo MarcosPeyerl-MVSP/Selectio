@@ -560,7 +560,7 @@ function ResumoFinanceiroIndicacao({ info }) {
       )}
 
       {info.showFinanceLink && (
-        <Link className="candidate-payment-link" to="/painel/indicador?secao=financeiro">
+        <Link className="candidate-payment-link" to="/painel/indicador/dashboard?secao=financeiro">
           <FaExternalLinkAlt /> Abrir financeiro
         </Link>
       )}

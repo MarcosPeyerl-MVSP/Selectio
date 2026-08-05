@@ -1,9 +1,13 @@
 import './Sidebar.css'
+import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
+  FaBars,
   FaBriefcase,
   FaCalendarAlt,
   FaChartBar,
+  FaChevronLeft,
+  FaChevronRight,
   FaClipboardCheck,
   FaCog,
   FaCreditCard,
@@ -12,6 +16,7 @@ import {
   FaUserFriends,
   FaUserTie,
   FaUsersCog,
+  FaTimes,
 } from 'react-icons/fa'
 import {
   SETOR_ADMIN_EMPRESA,
@@ -29,10 +34,10 @@ const sidebarConfig = {
     items: [
       { to: '/vagas', label: 'Vagas', icon: FaBriefcase, activeOn: ['/vagas'], tourKey: 'vagas' },
       { to: '/candidatos/indicador', label: 'Candidatos', icon: FaUserFriends, activeOn: ['/candidatos/indicador', '/indicar'], tourKey: 'candidatos' },
-      { to: '/painel/indicador', label: 'Dashboard', icon: FaChartBar, exact: true, tourKey: 'dashboard' },
-      { to: '/painel/indicador?secao=perfil', label: 'Perfil', icon: FaUserTie, tourKey: 'perfil' },
-      { to: '/painel/indicador?secao=financeiro', label: 'Financeiro', icon: FaMoneyBillWave, tourKey: 'financeiro' },
-      { to: '/painel/indicador?secao=configuracoes', label: 'Configurações', icon: FaCog },
+      { to: '/painel/indicador/dashboard', label: 'Dashboard', icon: FaChartBar, exact: true, tourKey: 'dashboard' },
+      { to: '/painel/indicador/dashboard?secao=perfil', label: 'Perfil', icon: FaUserTie, tourKey: 'perfil' },
+      { to: '/painel/indicador/dashboard?secao=financeiro', label: 'Financeiro', icon: FaMoneyBillWave, tourKey: 'financeiro' },
+      { to: '/painel/indicador/dashboard?secao=configuracoes', label: 'Configurações', icon: FaCog },
     ],
   },
   empresa: {
@@ -110,10 +115,30 @@ function getSidebarConfig(type, user) {
 }
 
 function Sidebar({ type, user }) {
+  const [collapsed, setCollapsed] = useState(() => (
+    localStorage.getItem('selectioSidebarCollapsed') === 'true'
+  ))
+  const [mobileOpen, setMobileOpen] = useState(false)
   const session = getSession()
   const { pathname, search } = useLocation()
   const activeType = type || session.type
   const activeUser = user || session.user
+
+  useEffect(() => {
+    localStorage.setItem('selectioSidebarCollapsed', String(collapsed))
+  }, [collapsed])
+
+  useEffect(() => {
+    if (!mobileOpen) return undefined
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setMobileOpen(false)
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [mobileOpen])
+
   if (!activeType || activeType === 'publico') return null
 
   const config = getSidebarConfig(activeType, activeUser)
@@ -122,7 +147,44 @@ function Sidebar({ type, user }) {
   const userInfo = activeUser?.email || activeUser?.cnpj || config.userLabel
 
   return (
-    <aside className="app-sidebar" data-tour={`${activeType}-sidebar`}>
+    <>
+      <button
+        type="button"
+        className="sidebar-mobile-trigger"
+        onClick={() => setMobileOpen(true)}
+        aria-label="Abrir menu lateral"
+        aria-controls="selectio-sidebar"
+        aria-expanded={mobileOpen}
+      >
+        <FaBars />
+      </button>
+
+      {mobileOpen && (
+        <button
+          type="button"
+          className="sidebar-mobile-overlay"
+          onClick={() => setMobileOpen(false)}
+          aria-label="Fechar menu lateral"
+        />
+      )}
+
+    <aside
+      id="selectio-sidebar"
+      className={`app-sidebar retractable ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`.trim()}
+      data-tour={`${activeType}-sidebar`}
+    >
+      <button
+        type="button"
+        className="app-sidebar-toggle"
+        onClick={() => mobileOpen ? setMobileOpen(false) : setCollapsed((current) => !current)}
+        aria-label={mobileOpen ? 'Fechar menu lateral' : collapsed ? 'Expandir barra lateral' : 'Recolher barra lateral'}
+        aria-expanded={mobileOpen || !collapsed}
+      >
+        <FaChevronLeft className="sidebar-collapse-icon" />
+        <FaChevronRight className="sidebar-expand-icon" />
+        <FaTimes className="sidebar-mobile-close-icon" />
+      </button>
+
       <h2 className="app-sidebar-title">{config.title}</h2>
 
       <div className="app-sidebar-user">
@@ -143,17 +205,26 @@ function Sidebar({ type, user }) {
               to={item.to}
               className={() => isItemActive(item, pathname, search) ? 'active' : ''}
               data-tour={item.tourKey ? `${activeType}-nav-${item.tourKey}` : undefined}
+              title={collapsed ? item.label : undefined}
+              onClick={() => setMobileOpen(false)}
             >
-              <Icon /> {item.label}
+              <Icon /> <span>{item.label}</span>
             </NavLink>
           )
         })}
       </nav>
 
-      <NavLink className={() => 'app-sidebar-btn'} to={config.action.to} data-tour={`${activeType}-nav-action`}>
-        <ActionIcon /> {config.action.label}
+      <NavLink
+        className={() => 'app-sidebar-btn'}
+        to={config.action.to}
+        data-tour={`${activeType}-nav-action`}
+        title={collapsed ? config.action.label : undefined}
+        onClick={() => setMobileOpen(false)}
+      >
+        <ActionIcon /> <span>{config.action.label}</span>
       </NavLink>
     </aside>
+    </>
   )
 }
 

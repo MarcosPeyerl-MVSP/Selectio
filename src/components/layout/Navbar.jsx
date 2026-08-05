@@ -29,12 +29,15 @@ function Navbar() {
         : { type: 'publico', label: '', user: null, painelPath: '/login' }
   const userName = getUserName(session.user)
   const userEmail = getUserEmail(session.user)
+  const accountPanelPath = session.type === 'indicador'
+    ? '/painel/indicador/dashboard'
+    : session.painelPath
   const profilePath = session.type === 'admin'
     ? '/admin/visao-geral'
-    : `${session.painelPath}?secao=perfil`
+    : `${accountPanelPath}?secao=perfil`
   const settingsPath = session.type === 'admin'
     ? '/admin/configuracoes'
-    : `${session.painelPath}?secao=configuracoes`
+    : `${accountPanelPath}?secao=configuracoes`
 
   useEffect(() => {
     if (!profileMenuOpen) return undefined

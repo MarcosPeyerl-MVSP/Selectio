@@ -8,7 +8,8 @@ import CadastroEscolha from './pages/cadastro/CadastroEscolha'
 import CadastroIndicador from './pages/cadastro/CadastroIndicador'
 import CadastroEmpresa from './pages/cadastro/CadastroEmpresa'
 //PAINEIS
-import PainelIndicador from './pages/indicador/IndicadorPainel'
+import PainelIndicador from './pages/indicador/PainelIndicador'
+import IndicadorPainelInterno from './pages/indicador/IndicadorPainel'
 import PainelEmpresa from './pages/empresa/EmpresaPainel'
 import CandidatosEmpresa from './pages/empresa/EmpresaCandidatos'
 // VAGAS
@@ -57,6 +58,7 @@ function App() {
         <Route path="/cadastro/empresa" element={<CadastroEmpresa />} />
         {/* ROTA PAINEIS */}
         <Route path="/painel/indicador" element={proteger(<PainelIndicador />, 'indicador')} />
+        <Route path="/painel/indicador/dashboard" element={proteger(<IndicadorPainelInterno />, 'indicador')} />
         <Route path="/painel/empresa" element={proteger(<PainelEmpresa />, 'empresa')} />
         <Route path="/candidatos/empresa" element={proteger(<CandidatosEmpresa />, 'empresa')} />
         {/* ROTA VAGAS */}

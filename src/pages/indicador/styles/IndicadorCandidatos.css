@@ -12,7 +12,9 @@
 /* Área principal da página. */
 .candidatos-page {
   width: 100%;
+  max-width: none;
   min-width: 0;
+  margin: 0;
   padding: 38px 38px 80px;
   background: var(--surface);
   animation: selectioFadeIn 0.36s ease both;

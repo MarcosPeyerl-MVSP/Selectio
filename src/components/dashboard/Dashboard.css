@@ -3,6 +3,7 @@
   grid-template-columns: 255px minmax(0, 1fr);
   min-height: calc(100vh - 72px);
   background: var(--background);
+  transition: grid-template-columns var(--motion-base);
 }
 
 .dashboard-content {

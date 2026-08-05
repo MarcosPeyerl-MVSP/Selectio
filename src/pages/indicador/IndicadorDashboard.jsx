@@ -212,7 +212,7 @@ function IndicadorDashboard({ user }) {
                   ? `${formatCurrency(resumo.valorPendente)} aguardando criação ou aprovação do pagamento.`
                   : 'Nenhuma recompensa pendente. Seu financeiro está em dia.'}
               </p>
-              <Link to="/painel/indicador?secao=financeiro">
+              <Link to="/painel/indicador/dashboard?secao=financeiro">
                 Abrir financeiro <FaArrowRight />
               </Link>
             </article>
@@ -460,7 +460,7 @@ function montarProximosPassos({ resumo, user }) {
       icon: FaMoneyBillWave,
       title: 'Recompensas em acompanhamento',
       description: `${resumo.premiosPendentes} ${resumo.premiosPendentes === 1 ? 'pagamento precisa' : 'pagamentos precisam'} de atenção.`,
-      to: '/painel/indicador?secao=financeiro',
+      to: '/painel/indicador/dashboard?secao=financeiro',
     })
   }
 
@@ -469,7 +469,7 @@ function montarProximosPassos({ resumo, user }) {
       icon: FaUserTie,
       title: 'Fortaleça seu perfil',
       description: 'Adicione LinkedIn e especialidades para deixar sua atuação mais completa.',
-      to: '/painel/indicador?secao=perfil',
+      to: '/painel/indicador/dashboard?secao=perfil',
     })
   }
 
