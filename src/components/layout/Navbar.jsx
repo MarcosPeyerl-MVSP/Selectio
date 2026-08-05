@@ -3,7 +3,7 @@ import './Navbar.css'
 import logoVermelho from '../../assets/Selectio_vermelho_sem_fundo.png'
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { FaCog, FaMoon, FaSignOutAlt, FaSun, FaUserAlt, FaUserCircle } from 'react-icons/fa'
+import { FaCog, FaExchangeAlt, FaMoon, FaSignOutAlt, FaSun, FaUserAlt, FaUserCircle } from 'react-icons/fa'
 import { signOut } from 'firebase/auth'
 import { auth } from '../../services/firebase'
 import { useTema } from '../../hooks/useTema'
@@ -11,14 +11,17 @@ import { useConfirmacao } from '../../hooks/useConfirmacao'
 import { useToast } from '../../hooks/useToast'
 import MenuNotificacoes from '../notificacoes/MenuNotificacoes'
 import { useAuth } from '../../hooks/useAuth'
+import { perfilExigeSetorEmpresarial } from '../../utils/modoEmpresarial'
+import ModalAlterarSetor from './ModalAlterarSetor'
 
 function Navbar() {
   const navigate = useNavigate()
   const { isDark, toggleTheme } = useTema()
   const confirm = useConfirmacao()
   const toast = useToast()
-  const { perfil, carregando: carregandoSessao } = useAuth()
+  const { perfil, carregando: carregandoSessao, adotarPerfil } = useAuth()
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const [sectorModalOpen, setSectorModalOpen] = useState(false)
   const profileMenuRef = useRef(null)
   const session = perfil?.tipo === 'empresa'
     ? { type: 'empresa', label: perfil.setorEmpresarial?.nome || 'Empresa', user: perfil, painelPath: '/painel/empresa' }
@@ -38,6 +41,7 @@ function Navbar() {
   const settingsPath = session.type === 'admin'
     ? '/admin/configuracoes'
     : `${accountPanelPath}?secao=configuracoes`
+  const podeAlterarSetor = perfilExigeSetorEmpresarial(session.user)
 
   useEffect(() => {
     if (!profileMenuOpen) return undefined
@@ -79,6 +83,16 @@ function Navbar() {
     setProfileMenuOpen(false)
     toast.info('Sessão encerrada.')
     navigate('/login')
+  }
+
+  const handleSectorChange = (perfilAtualizado, setor) => {
+    adotarPerfil(perfilAtualizado)
+    window.dispatchEvent(new CustomEvent('selectio:empresa-setor-alterado', {
+      detail: perfilAtualizado
+    }))
+    setSectorModalOpen(false)
+    toast.success(`Acesso alterado para ${setor.nome}.`)
+    navigate('/painel/empresa')
   }
 
   return (
@@ -147,6 +161,19 @@ function Navbar() {
                       <FaCog />
                       <span>Configurações</span>
                     </Link>
+                    {podeAlterarSetor && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setProfileMenuOpen(false)
+                          setSectorModalOpen(true)
+                        }}
+                      >
+                        <FaExchangeAlt />
+                        <span>Alterar setor</span>
+                      </button>
+                    )}
                   </div>
 
                   <div className="profile-menu-section">
@@ -168,6 +195,14 @@ function Navbar() {
           </div>
         )}
       </div>
+
+      {sectorModalOpen && podeAlterarSetor && (
+        <ModalAlterarSetor
+          empresa={session.user}
+          onClose={() => setSectorModalOpen(false)}
+          onSuccess={handleSectorChange}
+        />
+      )}
     </header>
   )
 }

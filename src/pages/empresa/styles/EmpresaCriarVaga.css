@@ -21,6 +21,10 @@
   grid-template-columns: minmax(220px, 330px) minmax(520px, 720px);
   gap: 72px;
   align-items: start;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  margin: 0;
   padding: 56px 56px 72px;
   background: var(--surface);
 }

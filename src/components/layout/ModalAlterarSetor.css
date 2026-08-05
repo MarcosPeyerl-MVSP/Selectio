@@ -1,0 +1,230 @@
+.sector-switch-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(17, 17, 17, 0.52);
+  backdrop-filter: blur(8px);
+  animation: sectorSwitchFade 180ms ease both;
+}
+
+.sector-switch-modal {
+  position: relative;
+  width: min(460px, 100%);
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.24);
+  animation: sectorSwitchIn 240ms var(--ease-premium) both;
+}
+
+.sector-switch-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.sector-switch-close:hover:not(:disabled) {
+  background: var(--surface-soft);
+  color: var(--primary);
+}
+
+.sector-switch-modal > header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-right: 34px;
+}
+
+.sector-switch-modal > header > span {
+  display: grid;
+  place-items: center;
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  color: var(--primary);
+}
+
+.sector-switch-modal > header small {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.sector-switch-modal h2 {
+  color: var(--text-heading);
+  font-size: 24px;
+}
+
+.sector-switch-modal > p {
+  margin: 18px 0 20px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.sector-switch-modal form {
+  display: grid;
+  gap: 18px;
+}
+
+.sector-switch-modal label {
+  display: grid;
+  gap: 8px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.sector-switch-modal select,
+.sector-switch-password {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--input-bg);
+  color: var(--text);
+}
+
+.sector-switch-modal select {
+  padding: 0 13px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.sector-switch-password {
+  display: grid;
+  grid-template-columns: 18px 1fr 38px;
+  gap: 9px;
+  align-items: center;
+  padding: 0 8px 0 13px;
+}
+
+.sector-switch-password > svg {
+  color: var(--muted);
+}
+
+.sector-switch-password input {
+  min-width: 0;
+  height: 46px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+
+.sector-switch-password button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.sector-switch-password button:hover:not(:disabled) {
+  background: var(--surface-soft);
+  color: var(--primary);
+}
+
+.sector-switch-modal select:focus-visible,
+.sector-switch-password:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 14%, transparent);
+  outline: 0;
+}
+
+.sector-switch-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.sector-switch-actions button {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 800;
+}
+
+.sector-switch-actions button[type='submit'] {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--white);
+  box-shadow: 0 12px 26px rgba(182, 28, 47, 0.18);
+}
+
+.sector-switch-actions button:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.sector-switch-actions button[type='submit']:hover:not(:disabled) {
+  background: var(--primary-dark);
+  color: var(--white);
+}
+
+.sector-switch-modal button:disabled,
+.sector-switch-modal select:disabled,
+.sector-switch-modal input:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+@keyframes sectorSwitchFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sectorSwitchIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 520px) {
+  .sector-switch-backdrop {
+    align-items: end;
+    padding: 12px;
+  }
+
+  .sector-switch-modal {
+    padding: 24px 20px 20px;
+    border-radius: 18px;
+  }
+
+  .sector-switch-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}

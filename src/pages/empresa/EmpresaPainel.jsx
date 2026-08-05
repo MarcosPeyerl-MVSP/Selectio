@@ -251,6 +251,15 @@ function PainelEmpresa() {
   const [perfilCarregado, setPerfilCarregado] = useState(() => !empresaUid)
 
   useEffect(() => {
+    const handleSetorAlterado = (event) => {
+      if (event.detail?.tipo === 'empresa') setEmpresa(event.detail)
+    }
+
+    window.addEventListener('selectio:empresa-setor-alterado', handleSetorAlterado)
+    return () => window.removeEventListener('selectio:empresa-setor-alterado', handleSetorAlterado)
+  }, [])
+
+  useEffect(() => {
     if (!empresaUid) return undefined
 
     let ativo = true
@@ -264,6 +273,7 @@ function PainelEmpresa() {
           const merged = {
             ...empresaAtual,
             ...perfil,
+            setorEmpresarial: empresaAtual?.setorEmpresarial || perfil.setorEmpresarial,
             id: perfil.id || empresaUid,
             uid: empresaUid,
             firebaseUid: empresaUid
