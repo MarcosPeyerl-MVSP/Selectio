@@ -9,6 +9,7 @@
     "sandbox:mercado-pago": "npm run payments:local",
     "build": "vite build",
     "lint": "eslint .",
+    "prepare": "npm run security:setup",
     "test:rules": "firebase emulators:exec --only firestore \"node --test tests/firestore.rules.test.mjs\"",
     "preview": "vite preview",
     "security:check": "node scripts/check-secrets.cjs",

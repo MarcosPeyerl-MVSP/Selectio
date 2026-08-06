@@ -24,7 +24,8 @@ Em outro terminal, rode o frontend:
 npm run dev
 ```
 
-hook local que bloqueia commits com credenciais:
+O hook local que bloqueia commits e pushes com credenciais é configurado
+automaticamente pelo `npm install`. Para reconfigurá-lo manualmente:
 
 ```bash
 npm run security:setup

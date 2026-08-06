@@ -11,10 +11,8 @@ import {
   collection,
   deleteDoc,
   doc,
-  documentId,
   getDoc,
   getDocs,
-  limit,
   query,
   serverTimestamp,
   setDoc,
@@ -182,16 +180,14 @@ test('consulta de candidatos pre-salvos exige filtro pelo indicador autenticado'
   )))
 })
 
-test('busca individual filtrada pelo dono retorna vazio sem erro para id inexistente', async () => {
+test('candidato pre-salvo inexistente nao contorna a verificacao de propriedade', async () => {
   const db = testEnv.authenticatedContext('indicador-1').firestore()
-  const snapshot = await assertSucceeds(getDocs(query(
-    collection(db, 'candidatosPreSalvos'),
-    where('indicadorId', '==', 'indicador-1'),
-    where(documentId(), '==', 'pre-salvo-inexistente'),
-    limit(1)
-  )))
 
-  assert.equal(snapshot.empty, true)
+  await assertFails(getDoc(doc(
+    db,
+    'candidatosPreSalvos',
+    'pre-salvo-inexistente'
+  )))
 })
 
 test('candidato pre-salvo rejeita dono, id, origem e timestamps forjados', async () => {

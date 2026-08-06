@@ -2,9 +2,8 @@ import {
   collection,
   deleteDoc,
   doc,
-  documentId,
+  getDoc,
   getDocs,
-  limit,
   query,
   serverTimestamp,
   updateDoc,
@@ -280,18 +279,18 @@ export const buscarCandidatoPreSalvoPorId = async ({ candidatoId, indicadorId })
 
   if (!candidatoId) return null
 
-  const snapshot = await getDocs(query(
-    candidatosPreSalvosCollection,
-    where('indicadorId', '==', indicadorId),
-    where(documentId(), '==', candidatoId),
-    limit(1)
-  ))
-  const candidato = snapshot.docs.length
-    ? mapCandidatoPreSalvoDoc(snapshot.docs[0])
-    : null
+  try {
+    const snapshot = await getDoc(doc(candidatosPreSalvosCollection, candidatoId))
+    const candidato = mapCandidatoPreSalvoDoc(snapshot)
 
-  if (!candidato || candidato.indicadorId !== indicadorId) return null
-  return candidato
+    if (!candidato || candidato.indicadorId !== indicadorId) return null
+    return candidato
+  } catch (error) {
+    // As regras negam por padrao tanto documentos alheios quanto inexistentes,
+    // pois em ambos os casos nao ha um proprietario que possa ser comprovado.
+    if (error?.code === 'permission-denied') return null
+    throw error
+  }
 }
 
 export const criarCandidatoPreSalvo = async ({ dados, indicadorId }) => {
