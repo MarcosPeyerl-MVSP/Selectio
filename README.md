@@ -29,3 +29,9 @@ hook local que bloqueia commits com credenciais:
 ```bash
 npm run security:setup
 ```
+
+powershell
+
+```bash
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
