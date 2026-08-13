@@ -19,7 +19,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['scripts/**/*.cjs'],
+    files: ['scripts/**/*.cjs', 'functions/**/*.cjs'],
     extends: [js.configs.recommended],
     languageOptions: {
       globals: {

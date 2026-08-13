@@ -17,7 +17,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Setup Java
@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Functions dependencies
+        run: npm --prefix functions ci
+
       - name: Check committed secrets
         run: npm run security:check
 
@@ -38,11 +41,17 @@ jobs:
       - name: Test Firestore rules
         run: npm run test:rules
 
+      - name: Test Cloud Functions API
+        run: npm run test:functions
+
       - name: Check translation catalogs
         run: npm run i18n:check
 
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
+
+      - name: Audit Functions dependencies
+        run: npm --prefix functions audit --omit=dev --audit-level=high
 
       - name: Build
         run: npm run build

@@ -1,38 +1,45 @@
 # Selectio
 
-MVP SaaS de recrutamento e indicacao de talentos feito com React + Vite e Firebase.
+MVP SaaS de recrutamento e indicacao de talentos feito com React, Vite e
+Firebase.
 
-## Rodar Local
+## Rodar localmente
 
-tem um arquivo novo q precisa colocar, ta tudo no drive, o env e o serviceaccount é na raiz e o env local é no scripts
+Instale as dependencias do frontend e das Functions:
 
-Instale dependencias:
-
-```bash
+```powershell
 npm install
+npm run functions:install
 ```
 
-Em um terminal, rode o backend local Mercado Pago:
+Inicie o frontend:
 
-```bash
-npm run sandbox:mercado-pago
-```
-
-Em outro terminal, rode o frontend:
-
-```bash
+```powershell
 npm run dev
 ```
 
-O hook local que bloqueia commits e pushes com credenciais é configurado
-automaticamente pelo `npm install`. Para reconfigurá-lo manualmente:
+O frontend fica em `http://localhost:5173` e usa por padrao a Cloud Function
+publicada. O antigo servidor da porta 8787 nao e mais utilizado. Para trabalhar
+totalmente offline com o Emulator Suite, consulte a documentacao abaixo.
 
-```bash
-npm run security:setup
+## Mercado Pago
+
+Consulte [docs/mercado-pago-functions.md](docs/mercado-pago-functions.md) para
+configurar secrets, webhook, emuladores e deploy.
+
+## Qualidade e seguranca
+
+```powershell
+npm run lint
+npm run build
+npm run test:functions
+npm run test:rules
+npm run security:check
 ```
 
-powershell
+O hook que bloqueia commits e pushes com credenciais e configurado durante o
+`npm install`. Para reconfigura-lo:
 
-```bash
-Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+```powershell
+npm run security:setup
 ```

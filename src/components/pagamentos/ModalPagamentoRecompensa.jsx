@@ -1,6 +1,6 @@
 import './ModalPagamentoRecompensa.css'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FaCreditCard, FaExternalLinkAlt, FaTimes } from 'react-icons/fa'
 
@@ -8,7 +8,8 @@ import { useConfirmacao } from '../../hooks/useConfirmacao'
 import { useToast } from '../../hooks/useToast'
 import {
   criarPagamentoRecompensa,
-  obterCheckoutUrlPagamento
+  obterCheckoutUrlPagamento,
+  sincronizarPagamentoMercadoPago
 } from '../../services/firestorePagamentos'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { formatCurrency } from '../../i18n/formatters'
@@ -21,6 +22,26 @@ function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onCl
   const recompensaFixa = useMemo(() => obterRecompensaFixa(candidato), [candidato])
   const valorRecompensa = recompensaFixa.valor
   const [carregando, setCarregando] = useState(false)
+  const sincronizacaoTentada = useRef('')
+
+  useEffect(() => {
+    const pagamentoId = pagamentoExistente?.id
+    if (!pagamentoId || pagamentoExistente.status !== 'pending' || !empresaId) return
+    if (sincronizacaoTentada.current === pagamentoId) return
+    sincronizacaoTentada.current = pagamentoId
+
+    sincronizarPagamentoMercadoPago({
+      pagamentoId,
+      preferenceId: pagamentoExistente.mercadoPagoPreferenceId,
+      empresaId
+    }).then((resultado) => {
+      if (resultado?.status && resultado.status !== pagamentoExistente.status) {
+        onCreated?.({ ...pagamentoExistente, ...resultado, id: pagamentoId })
+      }
+    }).catch((error) => {
+      console.error('Falha ao sincronizar o pagamento pendente:', error)
+    })
+  }, [empresaId, onCreated, pagamentoExistente])
 
   if (!candidato) return null
 
@@ -29,8 +50,39 @@ function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onCl
   const recompensaPaga = statusPagamento === 'approved'
   const pagamentoPendente = statusPagamento === 'pending' && checkoutUrl
 
-  const abrirCheckoutExistente = () => {
-    if (checkoutUrl) abrirCheckout(checkoutUrl, toast, t)
+  const montarDadosPagamento = () => ({
+    empresaId,
+    candidatoId: candidato.id,
+    candidatoNome: candidato.nome || '',
+    indicacaoId: candidato.indicacaoId || '',
+    vagaId: candidato.vagaId || '',
+    vagaTitulo: candidato.vagaTitulo || '',
+    indicadorId: candidato.indicadorId || candidato.indicadorUid || '',
+    indicadorNome: candidato.indicadorNome || '',
+    valor: valorRecompensa,
+    descricao: t('payments.modal.rewardDescription', {
+      job: candidato.vagaTitulo || t('payments.modal.jobFallback'),
+      candidate: candidato.nome || t('payments.modal.candidateFallback')
+    })
+  })
+
+  const abrirCheckoutExistente = async () => {
+    setCarregando(true)
+
+    try {
+      const pagamento = await criarPagamentoRecompensa(montarDadosPagamento())
+      onCreated?.(pagamento)
+      const url = pagamento.sandboxInitPoint || pagamento.checkoutUrl || pagamento.initPoint
+
+      if (!url) throw new Error('URL de checkout ausente.')
+
+      abrirCheckout(url, toast, t)
+    } catch (error) {
+      console.error('Falha ao continuar o checkout:', error)
+      toast.error(t('payments.modal.createError'))
+    } finally {
+      setCarregando(false)
+    }
   }
 
   const handleSubmit = async (event) => {
@@ -56,21 +108,7 @@ function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onCl
     setCarregando(true)
 
     try {
-      const pagamento = await criarPagamentoRecompensa({
-        empresaId,
-        candidatoId: candidato.id,
-        candidatoNome: candidato.nome || '',
-        indicacaoId: candidato.indicacaoId || '',
-        vagaId: candidato.vagaId || '',
-        vagaTitulo: candidato.vagaTitulo || '',
-        indicadorId: candidato.indicadorId || candidato.indicadorUid || '',
-        indicadorNome: candidato.indicadorNome || '',
-        valor: valorRecompensa,
-        descricao: t('payments.modal.rewardDescription', {
-          job: candidato.vagaTitulo || t('payments.modal.jobFallback'),
-          candidate: candidato.nome || t('payments.modal.candidateFallback')
-        })
-      })
+      const pagamento = await criarPagamentoRecompensa(montarDadosPagamento())
 
       onCreated?.(pagamento)
 
@@ -88,7 +126,8 @@ function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onCl
 
       toast.success(t('payments.modal.preferenceCreated'))
       onClose()
-    } catch {
+    } catch (error) {
+      console.error('Falha ao criar o checkout:', error)
       toast.error(t('payments.modal.createError'))
     } finally {
       setCarregando(false)
@@ -174,8 +213,8 @@ function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onCl
               </button>
 
               {pagamentoPendente ? (
-                <button type="button" onClick={abrirCheckoutExistente}>
-                  <FaExternalLinkAlt /> {t('payments.continueCheckout')}
+                <button type="button" onClick={abrirCheckoutExistente} disabled={carregando}>
+                  <FaExternalLinkAlt /> {carregando ? t('payments.modal.creating') : t('payments.continueCheckout')}
                 </button>
               ) : (
                 <button type="submit" disabled={carregando || !recompensaFixa.disponivel}>

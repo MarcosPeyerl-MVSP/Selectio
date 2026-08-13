@@ -261,8 +261,9 @@ function CandidatosEmpresa() {
         current?.id === candidatoId ? { ...current, status } : current
       ))
       toast.success(t('candidates.statusUpdated'))
-    } catch {
-      toast.error(t('candidates.statusUpdateError'))
+    } catch (error) {
+      console.error('Falha ao atualizar o status do candidato:', error)
+      toast.error(error?.message || t('candidates.statusUpdateError'))
     } finally {
       setUpdatingId(null)
     }

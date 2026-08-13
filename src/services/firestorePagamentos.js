@@ -8,12 +8,12 @@ import {
   where
 } from 'firebase/firestore'
 
-import { auth, db } from './firebase'
+import { db } from './firebase'
+import { chamarFirebaseFunction, obterFunctionsApiUrl } from './firebaseFunctions'
 
 const pagamentosCollection = collection(db, 'pagamentos')
 const movimentacoesCollection = collection(db, 'movimentacoesFinanceiras')
 const transacoesPagamentoCollection = collection(db, 'transacoesPagamento')
-const mercadoPagoBackendUrl = String(import.meta.env.VITE_MERCADO_PAGO_SANDBOX_URL || '').replace(/\/$/, '')
 
 const converterTimestamp = (valor) => {
   if (!valor) return null
@@ -45,10 +45,10 @@ const ordenarPorCriacao = (a, b) => {
   return dataB - dataA
 }
 
-export const obterMercadoPagoBackendUrl = () => mercadoPagoBackendUrl
+export const obterMercadoPagoBackendUrl = obterFunctionsApiUrl
 
 export const criarPagamentoRecompensa = async (payload) => (
-  chamarBackendMercadoPago('/criar-preferencia', {
+  chamarFirebaseFunction('/criar-preferencia', {
     ...payload,
     appUrl: import.meta.env.VITE_APP_URL || window.location.origin
   }, 'Nao foi possivel criar o pagamento.')
@@ -57,7 +57,7 @@ export const criarPagamentoRecompensa = async (payload) => (
 export const sincronizarPagamentoMercadoPago = async ({ paymentId, pagamentoId, preferenceId, empresaId }) => {
   if (!paymentId && !pagamentoId && !preferenceId) return null
 
-  return chamarBackendMercadoPago('/sincronizar-pagamento', {
+  return chamarFirebaseFunction('/sincronizar-pagamento', {
     paymentId: paymentId ? String(paymentId) : '',
     pagamentoId: pagamentoId || '',
     preferenceId: preferenceId || '',
@@ -144,45 +144,10 @@ export const listarMovimentacoesIndicador = async (indicadorId) => {
 }
 
 export const solicitarSaqueIndicador = async ({ indicadorId, valor, chavePix, observacao }) => (
-  chamarBackendMercadoPago('/solicitar-saque', {
+  chamarFirebaseFunction('/solicitar-saque', {
     indicadorId,
     valor,
     chavePix,
     observacao
   }, 'Nao foi possivel solicitar o saque.')
 )
-
-async function chamarBackendMercadoPago(caminho, payload, fallback) {
-  if (!mercadoPagoBackendUrl) {
-    throw new Error('Backend local de pagamentos nao configurado. Defina VITE_MERCADO_PAGO_SANDBOX_URL no .env.')
-  }
-
-  const currentUser = auth.currentUser
-  if (!currentUser) {
-    throw new Error('Sua sessao expirou. Entre novamente para continuar.')
-  }
-
-  const idToken = await currentUser.getIdToken()
-  let resposta
-
-  try {
-    resposta = await fetch(`${mercadoPagoBackendUrl}${caminho}`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${idToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    })
-  } catch {
-    throw new Error(`Backend local de pagamentos indisponivel em ${mercadoPagoBackendUrl}. Execute npm run sandbox:mercado-pago.`)
-  }
-
-  const dados = await resposta.json().catch(() => ({}))
-
-  if (!resposta.ok) {
-    throw new Error(dados.error || fallback)
-  }
-
-  return dados
-}

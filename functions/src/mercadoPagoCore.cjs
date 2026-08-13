@@ -1,45 +1,18 @@
 const crypto = require('node:crypto')
-const fs = require('node:fs')
-const http = require('node:http')
-const path = require('node:path')
+const { getApp, getApps, initializeApp } = require('firebase-admin/app')
+const { getAuth } = require('firebase-admin/auth')
+const { FieldValue, Timestamp, getFirestore } = require('firebase-admin/firestore')
 
-const raizProjeto = path.resolve(__dirname, '..')
-carregarEnvEmProcesso([
-  path.join(raizProjeto, '.env'),
-  path.join(raizProjeto, '.env.local'),
-  path.join(__dirname, '.env'),
-  path.join(__dirname, '.env.local')
-])
-
-const admin = require('firebase-admin')
-
-const host = process.env.MERCADO_PAGO_SANDBOX_HOST || '127.0.0.1'
-const port = Number(process.env.MERCADO_PAGO_SANDBOX_PORT || process.env.PORT || 8787)
-const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN
-const mpEnvironment = textoSeguro(process.env.MP_ENVIRONMENT, 'sandbox').toLowerCase()
-const appUrlPadrao = textoSeguro(process.env.APP_URL, 'http://localhost:5173').replace(/\/$/, '')
-const projectId = textoSeguro(process.env.FIREBASE_PROJECT_ID, 'selectio-1f022')
 const moedaPadrao = 'BRL'
 const statusEncerrados = new Set(['approved', 'rejected', 'cancelled', 'refunded', 'failed'])
-const hostsLocais = new Set(['127.0.0.1', 'localhost', '::1'])
 
-if (!accessToken) {
-  throw new Error('MERCADO_PAGO_ACCESS_TOKEN nao configurado no backend local.')
-}
+if (!getApps().length) initializeApp()
 
-if (!hostsLocais.has(host)) {
-  throw new Error('O backend local de pagamentos deve escutar apenas em localhost.')
-}
+const db = getFirestore()
 
-inicializarFirebaseAdmin()
-
-const db = admin.firestore()
-const FieldValue = admin.firestore.FieldValue
-const Timestamp = admin.firestore.Timestamp
-
-const servidor = http.createServer(async (req, res) => {
+async function handleMercadoPagoRequest(req, res) {
   const origem = req.headers.origin || ''
-  const requestUrl = new URL(req.url, `http://${host}:${port}`)
+  const requestUrl = new URL(req.url, 'https://selectio.invalid')
   const pathname = requestUrl.pathname
 
   if (origem && !origemPermitida(origem)) {
@@ -59,9 +32,9 @@ const servidor = http.createServer(async (req, res) => {
     if (req.method === 'GET' && ['/health', '/status'].includes(pathname)) {
       responderJson(res, 200, {
         ok: true,
-        service: 'selectio-mercado-pago-local',
-        ambiente: mpEnvironment,
-        firestoreProjectId: projectId
+        service: 'selectio-mercado-pago-functions',
+        ambiente: obterMpEnvironment(),
+        firestoreProjectId: obterProjectId()
       })
       return
     }
@@ -69,6 +42,12 @@ const servidor = http.createServer(async (req, res) => {
     if (req.method === 'POST' && pathname === '/criar-preferencia') {
       const usuario = await autenticarRequisicao(req)
       await criarPreferencia(req, res, usuario)
+      return
+    }
+
+    if (req.method === 'POST' && pathname === '/atualizar-status-candidato') {
+      const usuario = await autenticarRequisicao(req)
+      await atualizarStatusCandidato(req, res, usuario)
       return
     }
 
@@ -94,7 +73,7 @@ const servidor = http.createServer(async (req, res) => {
 
     responderJson(res, 404, { error: 'Rota nao encontrada.' })
   } catch (error) {
-    console.error('Erro no backend local Mercado Pago:', error)
+    console.error('Erro na API Mercado Pago:', error)
     const status = Number(error.status) || 500
     responderJson(res, status, {
       error: status < 500
@@ -102,11 +81,7 @@ const servidor = http.createServer(async (req, res) => {
         : 'Nao foi possivel processar a operacao.'
     })
   }
-})
-
-servidor.listen(port, host, () => {
-  console.log(`Backend local Mercado Pago disponivel em http://${host}:${port}`)
-})
+}
 
 async function criarPreferencia(req, res, usuario) {
   const dados = await lerJson(req)
@@ -134,8 +109,14 @@ async function criarPreferencia(req, res, usuario) {
   }
 
   if (existente?.pendente && obterCheckoutUrlPagamento(existente.pendente)) {
-    responderJson(res, 200, respostaPagamentoExistente(existente.pendente))
-    return
+    const pagamentoReutilizavel = await validarPagamentoPendente(existente.pendente)
+
+    if (pagamentoReutilizavel) {
+      responderJson(res, 200, respostaPagamentoExistente(pagamentoReutilizavel))
+      return
+    }
+
+    await invalidarPagamentoPendente(existente.pendente)
   }
 
   const pagamentoValidado = await validarPagamento({
@@ -155,11 +136,12 @@ async function criarPreferencia(req, res, usuario) {
   })
   const appUrl = obterAppUrl(dados.appUrl)
   const agora = FieldValue.serverTimestamp()
+  const tentativaPreferenciaId = crypto.randomUUID()
 
   await db.batch()
     .set(pagamentoRef, {
       ...pagamentoValidado,
-      ambiente: mpEnvironment,
+      ambiente: obterMpEnvironment(),
       mercadoPagoPreferenceId: '',
       mercadoPagoPaymentId: '',
       status: 'created',
@@ -167,6 +149,7 @@ async function criarPreferencia(req, res, usuario) {
       checkoutUrl: '',
       sandboxCheckoutUrl: '',
       externalReference: referenciaExterna,
+      tentativaPreferenciaId,
       transacaoId: transacaoRef.id,
       creditado: false,
       criadoEm: agora,
@@ -176,11 +159,12 @@ async function criarPreferencia(req, res, usuario) {
       pagamentoId: pagamentoRef.id,
       empresaId: pagamentoValidado.empresaId,
       indicadorId: pagamentoValidado.indicadorId,
-      ambiente: mpEnvironment,
+      ambiente: obterMpEnvironment(),
       status: 'created',
       statusDetail: '',
       mercadoPagoPreferenceId: '',
       mercadoPagoPaymentId: '',
+      tentativaPreferenciaId,
       valor: pagamentoValidado.valor,
       moeda: moedaPadrao,
       criadoEm: agora,
@@ -195,6 +179,7 @@ async function criarPreferencia(req, res, usuario) {
   try {
     preferencia = await criarPreferenciaMercadoPago({
       pagamentoId: pagamentoRef.id,
+      tentativaPreferenciaId,
       pagamento: pagamentoValidado,
       referenciaExterna,
       appUrl
@@ -259,7 +244,7 @@ async function criarPreferencia(req, res, usuario) {
     externalReference: referenciaExterna,
     status: 'pending',
     valor: pagamentoValidado.valor,
-    ambiente: mpEnvironment
+    ambiente: obterMpEnvironment()
   })
 }
 
@@ -460,6 +445,202 @@ async function buscarPagamentoAberto({ empresaId, candidatoId }) {
   }
 }
 
+async function atualizarStatusCandidato(req, res, usuario) {
+  const dados = await lerJson(req)
+  const candidatoId = textoSeguro(dados.candidatoId)
+  const empresaId = textoSeguro(dados.empresaId)
+  const status = textoSeguro(dados.status)
+  const statusPermitidos = new Set(['indicado', 'entrevista', 'contratado', 'cancelado', 'recusado'])
+
+  if (!candidatoId || !empresaId) erro(400, 'Candidato e empresa sao obrigatorios.')
+  if (empresaId !== usuario.uid) erro(403, 'Esta empresa nao pode alterar este candidato.')
+  if (!statusPermitidos.has(status)) erro(400, 'Status de candidato invalido.')
+
+  const candidatoRef = db.collection('candidatos').doc(candidatoId)
+  const candidatoDoc = await candidatoRef.get()
+  if (!candidatoDoc.exists) erro(404, 'Candidato nao encontrado.')
+
+  const candidato = candidatoDoc.data() || {}
+  const candidatoEmpresaId = textoSeguro(candidato.empresaId || candidato.empresaUid)
+  if (candidatoEmpresaId !== empresaId) erro(403, 'Esta empresa nao pode alterar este candidato.')
+
+  const statusAnterior = textoSeguro(candidato.status, 'indicado')
+  if (statusAnterior === status) {
+    responderJson(res, 200, { id: candidatoId, ...candidato, reused: true })
+    return
+  }
+
+  const indicadorId = textoSeguro(candidato.indicadorId || candidato.indicadorUid)
+  const vagaId = textoSeguro(candidato.vagaId)
+  const indicacoes = await db.collection('indicacoes')
+    .where('candidatoId', '==', candidatoId)
+    .where('empresaId', '==', empresaId)
+    .limit(10)
+    .get()
+  const agora = FieldValue.serverTimestamp()
+  const historicoRef = db.collection('historicoProcesso').doc()
+  const batch = db.batch()
+
+  batch.update(candidatoRef, { status, atualizadoEm: agora })
+  indicacoes.docs.forEach((indicacao) => batch.update(indicacao.ref, { status, atualizadoEm: agora }))
+  batch.set(historicoRef, montarHistoricoStatus({
+    candidatoId,
+    candidato,
+    empresaId,
+    indicadorId,
+    vagaId,
+    statusAnterior,
+    status,
+    agora
+  }))
+  await batch.commit()
+
+  await notificarStatusCandidatoBackend({
+    candidatoId,
+    candidato,
+    empresaId,
+    indicadorId,
+    vagaId,
+    statusAnterior,
+    status
+  })
+
+  responderJson(res, 200, {
+    id: candidatoId,
+    ...candidato,
+    status,
+    atualizadoEm: new Date().toISOString()
+  })
+}
+
+function montarHistoricoStatus({ candidatoId, candidato, empresaId, indicadorId, vagaId, statusAnterior, status, agora }) {
+  const titulo = status === 'contratado'
+    ? 'Candidato contratado'
+    : status === 'recusado'
+      ? 'Candidato recusado'
+      : status === 'cancelado'
+        ? 'Processo cancelado'
+        : 'Status do candidato atualizado'
+  const tituloKey = status === 'contratado'
+    ? 'notifications.messages.candidate.contratadoTitle'
+    : status === 'recusado'
+      ? 'notifications.messages.candidate.recusadoTitle'
+      : status === 'cancelado'
+        ? 'notifications.messages.candidate.canceladoTitle'
+        : 'candidateProfile.historyEvents.candidateStatusTitle'
+
+  return {
+    candidatoId,
+    candidatoNome: textoSeguro(candidato.nome),
+    vagaId,
+    vagaTitulo: textoSeguro(candidato.vagaTitulo),
+    empresaId,
+    indicadorId,
+    entrevistaId: '',
+    tipo: 'status_alterado',
+    titulo,
+    tituloKey,
+    tituloParams: {},
+    descricao: `Status alterado de ${statusAnterior} para ${status}.`,
+    descricaoKey: 'candidateProfile.historyEvents.statusChanged',
+    descricaoParams: { fromStatus: statusAnterior, toStatus: status },
+    statusAnterior,
+    statusAtual: status,
+    criadoPor: empresaId,
+    criadoEm: agora
+  }
+}
+
+async function notificarStatusCandidatoBackend({ candidatoId, candidato, empresaId, indicadorId, vagaId, statusAnterior, status }) {
+  const candidatoNome = textoSeguro(candidato.nome || candidato.candidatoNome, 'Candidato')
+  const vagaTitulo = textoSeguro(candidato.vagaTitulo, 'vaga informada')
+  const info = {
+    entrevista: ['candidato_entrevista', 'Candidato em entrevista', 'avancou para entrevista'],
+    contratado: ['candidato_contratado', 'Candidato contratado', 'foi contratado'],
+    recusado: ['candidato_recusado', 'Candidato recusado', 'foi recusado'],
+    cancelado: ['candidato_cancelado', 'Processo cancelado', 'teve o processo cancelado'],
+    indicado: ['candidato_indicado', 'Candidato indicado', 'voltou para indicado']
+  }[status]
+  if (!info) return
+
+  const metadata = { candidatoId, vagaId, empresaId, indicadorId, statusAnterior, statusAtual: status }
+  const tarefas = []
+
+  if (indicadorId) tarefas.push(registrarNotificacao(
+    ['candidato', candidatoId, 'indicador', status],
+    {
+      userId: indicadorId,
+      tipo: info[0],
+      titulo: info[1],
+      mensagem: `${candidatoNome} ${info[2]} na vaga ${vagaTitulo}.`,
+      link: '/candidatos/indicador',
+      metadata
+    }
+  ))
+
+  if (status === 'contratado') tarefas.push(registrarNotificacao(
+    ['candidato', candidatoId, 'empresa', 'recompensa-pendente'],
+    {
+      userId: empresaId,
+      tipo: 'recompensa_pendente',
+      titulo: 'Recompensa pendente',
+      mensagem: `${candidatoNome} foi contratado. Agora a recompensa do indicador pode ser paga.`,
+      link: '/candidatos/empresa',
+      metadata
+    }
+  ))
+
+  await Promise.allSettled(tarefas)
+}
+
+async function validarPagamentoPendente(pagamento) {
+  const preferenceId = textoSeguro(pagamento?.mercadoPagoPreferenceId)
+  if (!preferenceId) return null
+
+  let preferencia
+
+  try {
+    preferencia = await chamarMercadoPago(`/checkout/preferences/${encodeURIComponent(preferenceId)}`)
+  } catch (error) {
+    if ([401, 404].includes(error.mercadoPagoStatus)) return null
+    throw error
+  }
+
+  const checkoutUrl = escolherCheckoutUrl(preferencia)
+  if (!checkoutUrl) return null
+
+  const pagamentoAtualizado = {
+    ...pagamento,
+    checkoutUrl,
+    sandboxCheckoutUrl: preferencia.sandbox_init_point || ''
+  }
+
+  await db.collection('pagamentos').doc(pagamento.id).set({
+    checkoutUrl: pagamentoAtualizado.checkoutUrl,
+    sandboxCheckoutUrl: pagamentoAtualizado.sandboxCheckoutUrl,
+    atualizadoEm: FieldValue.serverTimestamp()
+  }, { merge: true })
+
+  return pagamentoAtualizado
+}
+
+async function invalidarPagamentoPendente(pagamento) {
+  const atualizacao = {
+    status: 'expired',
+    statusDetail: 'preference_invalid_or_inaccessible',
+    atualizadoEm: FieldValue.serverTimestamp()
+  }
+
+  await db.batch()
+    .set(db.collection('pagamentos').doc(pagamento.id), atualizacao, { merge: true })
+    .set(
+      db.collection('transacoesPagamento').doc(pagamento.transacaoId || pagamento.id),
+      atualizacao,
+      { merge: true }
+    )
+    .commit()
+}
+
 async function sincronizarPagamentoMercadoPago({ pagamentoId, preferenceId, paymentId, empresaId = '' }) {
   const contexto = await resolverPagamentoInterno({ pagamentoId, preferenceId, paymentId })
 
@@ -478,6 +659,7 @@ async function sincronizarPagamentoMercadoPago({ pagamentoId, preferenceId, paym
   const pagamentoMp = contexto.paymentId
     ? await chamarMercadoPago(`/v1/payments/${contexto.paymentId}`)
     : await buscarPagamentoPorReferencia(contexto.pagamento.externalReference)
+      || await buscarPagamentoPorPreferencia(contexto.pagamento.mercadoPagoPreferenceId)
 
   if (!pagamentoMp) {
     return {
@@ -550,6 +732,14 @@ async function processarPagamentoMercadoPago({ pagamentoId, pagamentoMp }) {
   const mercadoPagoPaymentId = String(pagamentoMp.id || '')
   const statusDetail = textoSeguro(pagamentoMp.status_detail)
   const valorPago = Number(pagamentoMp.transaction_amount || 0)
+  const pagamentoInicialDoc = await pagamentoRef.get()
+
+  if (!pagamentoInicialDoc.exists) {
+    erro(404, 'Registro interno do pagamento nao encontrado.')
+  }
+
+  const pagamentoInicial = pagamentoInicialDoc.data() || {}
+  const valorEsperadoAtual = await obterValorAtualPagamento(pagamentoInicial)
   let resultado
   let notificacaoContexto
 
@@ -561,7 +751,7 @@ async function processarPagamentoMercadoPago({ pagamentoId, pagamentoMp }) {
     }
 
     const pagamento = pagamentoDoc.data() || {}
-    const valorEsperado = Number(pagamento.valor || 0)
+    const valorEsperado = valorEsperadoAtual
     let status = statusOriginal
     let detalhe = statusDetail
 
@@ -578,6 +768,7 @@ async function processarPagamentoMercadoPago({ pagamentoId, pagamentoMp }) {
       : null
     const atualizacaoPagamento = {
       mercadoPagoPaymentId,
+      valor: valorEsperado,
       status,
       statusDetail: detalhe,
       transacaoEm,
@@ -597,7 +788,7 @@ async function processarPagamentoMercadoPago({ pagamentoId, pagamentoMp }) {
       pagamentoId,
       empresaId: pagamento.empresaId,
       indicadorId: pagamento.indicadorId,
-      ambiente: pagamento.ambiente || mpEnvironment,
+      ambiente: pagamento.ambiente || obterMpEnvironment(),
       status,
       statusDetail: detalhe,
       mercadoPagoPreferenceId: pagamento.mercadoPagoPreferenceId || '',
@@ -651,7 +842,7 @@ async function processarPagamentoMercadoPago({ pagamentoId, pagamentoMp }) {
       statusDetail: detalhe,
       mercadoPagoPaymentId,
       valor: valorEsperado,
-      ambiente: pagamento.ambiente || mpEnvironment,
+      ambiente: pagamento.ambiente || obterMpEnvironment(),
       externalReference: pagamento.externalReference || '',
       transacaoEm: pagamentoMp.date_created || null,
       aprovadoEm: pagamentoMp.date_approved || null,
@@ -679,11 +870,11 @@ async function processarPagamentoMercadoPago({ pagamentoId, pagamentoMp }) {
   return resultado
 }
 
-async function criarPreferenciaMercadoPago({ pagamentoId, pagamento, referenciaExterna, appUrl }) {
+async function criarPreferenciaMercadoPago({ pagamentoId, tentativaPreferenciaId, pagamento, referenciaExterna, appUrl }) {
   return chamarMercadoPago('/checkout/preferences', {
     method: 'POST',
     headers: {
-      'X-Idempotency-Key': pagamentoId
+      'X-Idempotency-Key': `${pagamentoId}-${tentativaPreferenciaId}`
     },
     body: JSON.stringify({
       items: [{
@@ -698,9 +889,10 @@ async function criarPreferenciaMercadoPago({ pagamentoId, pagamento, referenciaE
         pending: `${appUrl}/painel/empresa?secao=pagamentos&status=pending`
       },
       binary_mode: false,
+      notification_url: obterWebhookUrl(),
       external_reference: referenciaExterna,
       metadata: {
-        ambiente: mpEnvironment,
+        ambiente: obterMpEnvironment(),
         pagamentoId,
         candidatoId: pagamento.candidatoId,
         empresaId: pagamento.empresaId,
@@ -709,6 +901,12 @@ async function criarPreferenciaMercadoPago({ pagamentoId, pagamento, referenciaE
       }
     })
   })
+}
+
+function obterWebhookUrl() {
+  const projectId = textoSeguro(process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT)
+  const region = textoSeguro(process.env.FUNCTION_REGION, 'southamerica-east1')
+  return `https://${region}-${projectId}.cloudfunctions.net/mercadoPagoApi/webhook/mercado-pago`
 }
 
 async function buscarPagamentoPorReferencia(externalReference) {
@@ -729,6 +927,50 @@ async function buscarPagamentoPorReferencia(externalReference) {
   const resultado = await chamarMercadoPago(`/v1/payments/search?${parametros}`)
 
   return Array.isArray(resultado.results) ? resultado.results[0] || null : null
+}
+
+async function buscarPagamentoPorPreferencia(preferenceId) {
+  if (!preferenceId) return null
+
+  const resultado = await chamarMercadoPago(
+    `/merchant_orders/search?preference_id=${encodeURIComponent(preferenceId)}`
+  )
+  const pagamentos = (resultado.elements || [])
+    .flatMap((ordem) => ordem.payments || [])
+    .filter((pagamento) => pagamento?.id)
+    .sort((a, b) => prioridadeStatusPagamento(b.status) - prioridadeStatusPagamento(a.status))
+  const pagamento = pagamentos[0]
+
+  if (!pagamento?.id) return null
+  return chamarMercadoPago(`/v1/payments/${encodeURIComponent(pagamento.id)}`)
+}
+
+function prioridadeStatusPagamento(status) {
+  return {
+    approved: 5,
+    authorized: 4,
+    in_process: 3,
+    pending: 2,
+    rejected: 1,
+    cancelled: 0,
+    refunded: 0
+  }[status] ?? -1
+}
+
+async function obterValorAtualPagamento(pagamento) {
+  const candidatoDoc = pagamento.candidatoId
+    ? await db.collection('candidatos').doc(pagamento.candidatoId).get()
+    : null
+  const candidato = candidatoDoc?.exists ? candidatoDoc.data() || {} : {}
+  const vagaId = textoSeguro(candidato.vagaId || pagamento.vagaId)
+  const vagaDoc = vagaId ? await db.collection('vagas').doc(vagaId).get() : null
+  const vaga = vagaDoc?.exists ? vagaDoc.data() || {} : {}
+
+  try {
+    return obterValorRecompensaFixa({ vaga, candidato })
+  } catch {
+    return Number(pagamento.valor || 0)
+  }
 }
 
 async function marcarPagamentoComoFalhou({ pagamentoRef, transacaoRef, pagamento, detalhe }) {
@@ -871,9 +1113,12 @@ function valorMonetario(valor) {
   const texto = String(valor || '').replace(/[^\d,.-]/g, '')
   if (!texto) return null
 
+  const pontosSaoMilhar = /^\d{1,3}(\.\d{3})+$/.test(texto)
   const normalizado = texto.includes(',')
     ? texto.replace(/\./g, '').replace(',', '.')
-    : texto
+    : pontosSaoMilhar
+      ? texto.replace(/\./g, '')
+      : texto
   const numero = Number(normalizado)
 
   return Number.isFinite(numero) && numero > 0 ? Number(numero.toFixed(2)) : null
@@ -898,7 +1143,7 @@ function respostaPagamentoExistente(pagamento) {
     externalReference: pagamento.externalReference || '',
     status: pagamento.status,
     valor: Number(pagamento.valor || 0),
-    ambiente: pagamento.ambiente || mpEnvironment,
+    ambiente: pagamento.ambiente || obterMpEnvironment(),
     reused: true
   }
 }
@@ -908,7 +1153,7 @@ function obterCheckoutUrlPagamento(pagamento) {
 }
 
 function escolherCheckoutUrl(preferencia) {
-  if (mpEnvironment === 'sandbox') {
+  if (obterMpEnvironment() === 'sandbox') {
     return preferencia.sandbox_init_point || preferencia.init_point || ''
   }
 
@@ -1018,6 +1263,12 @@ function infoStatusPagamento(status) {
 }
 
 async function chamarMercadoPago(caminho, opcoes = {}) {
+  const accessToken = textoSeguro(process.env.MERCADO_PAGO_ACCESS_TOKEN)
+
+  if (!accessToken) {
+    erro(500, 'Credencial do Mercado Pago nao configurada.')
+  }
+
   const resposta = await fetch(`https://api.mercadopago.com${caminho}`, {
     ...opcoes,
     headers: {
@@ -1035,34 +1286,11 @@ async function chamarMercadoPago(caminho, opcoes = {}) {
       || 'O Mercado Pago recusou a operacao.'
     )
     error.status = resposta.status >= 400 && resposta.status < 500 ? 400 : 502
+    error.mercadoPagoStatus = resposta.status
     throw error
   }
 
   return corpo
-}
-
-function inicializarFirebaseAdmin() {
-  if (admin.apps.length) return
-
-  const credenciaisPath = textoSeguro(process.env.GOOGLE_APPLICATION_CREDENTIALS)
-
-  if (credenciaisPath) {
-    const caminhoResolvido = path.isAbsolute(credenciaisPath)
-      ? credenciaisPath
-      : path.join(raizProjeto, credenciaisPath)
-    const serviceAccount = JSON.parse(fs.readFileSync(caminhoResolvido, 'utf8'))
-
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      projectId: projectId || serviceAccount.project_id
-    })
-    return
-  }
-
-  admin.initializeApp({
-    credential: admin.credential.applicationDefault(),
-    projectId
-  })
 }
 
 async function autenticarRequisicao(req) {
@@ -1074,7 +1302,7 @@ async function autenticarRequisicao(req) {
   }
 
   try {
-    return await admin.auth().verifyIdToken(match[1], true)
+    return await getAuth().verifyIdToken(match[1], true)
   } catch {
     erro(401, 'Sessao Firebase invalida ou expirada.')
   }
@@ -1115,29 +1343,6 @@ function validarWebhookMercadoPago(req, requestUrl, dados) {
   )
 }
 
-function carregarEnvEmProcesso(arquivos) {
-  arquivos.forEach((arquivo) => {
-    if (!fs.existsSync(arquivo)) return
-
-    fs.readFileSync(arquivo, 'utf8')
-      .split(/\r?\n/)
-      .forEach((linha) => {
-        const conteudo = linha.trim()
-        if (!conteudo || conteudo.startsWith('#')) return
-
-        const separador = conteudo.indexOf('=')
-        if (separador < 1) return
-
-        const chave = conteudo.slice(0, separador).trim()
-        const valor = conteudo.slice(separador + 1).trim().replace(/^(['"])(.*)\1$/, '$2')
-
-        if (!(chave in process.env)) {
-          process.env[chave] = valor
-        }
-      })
-  })
-}
-
 function aplicarCors(res, origem) {
   if (origem) res.setHeader('Access-Control-Allow-Origin', origem)
   res.setHeader('Vary', 'Origin')
@@ -1148,7 +1353,7 @@ function aplicarCors(res, origem) {
 function origemPermitida(origem) {
   try {
     const url = new URL(origem)
-    const appUrl = new URL(appUrlPadrao)
+    const appUrl = new URL(obterAppUrlPadrao())
     return ['localhost', '127.0.0.1'].includes(url.hostname)
       || url.origin === appUrl.origin
   } catch {
@@ -1157,10 +1362,10 @@ function origemPermitida(origem) {
 }
 
 function obterAppUrl(valor) {
-  const appUrl = textoSeguro(valor, appUrlPadrao).replace(/\/$/, '')
+  const appUrl = textoSeguro(valor, obterAppUrlPadrao()).replace(/\/$/, '')
 
   if (!origemPermitida(appUrl)) {
-    erro(400, 'URL local do aplicativo invalida.')
+    erro(400, 'URL do aplicativo invalida.')
   }
 
   return appUrl
@@ -1193,12 +1398,42 @@ function textoSeguro(valor, fallback = '') {
   return texto || fallback
 }
 
+function obterMpEnvironment() {
+  return textoSeguro(process.env.MP_ENVIRONMENT, 'sandbox').toLowerCase()
+}
+
+function obterAppUrlPadrao() {
+  return textoSeguro(process.env.APP_URL, 'http://localhost:5173').replace(/\/$/, '')
+}
+
+function obterProjectId() {
+  return textoSeguro(
+    process.env.GCLOUD_PROJECT
+      || process.env.GCP_PROJECT
+      || process.env.FIREBASE_PROJECT_ID
+      || getApp().options.projectId,
+    'selectio-1f022'
+  )
+}
+
 function responderJson(res, status, corpo) {
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' })
   res.end(JSON.stringify(corpo))
 }
 
 function lerJson(req) {
+  if (req.body !== undefined && req.body !== null) {
+    if (Buffer.isBuffer(req.body)) {
+      try {
+        return Promise.resolve(req.body.length ? JSON.parse(req.body.toString('utf8')) : {})
+      } catch {
+        return Promise.reject(new Error('JSON invalido.'))
+      }
+    }
+
+    if (typeof req.body === 'object') return Promise.resolve(req.body)
+  }
+
   return new Promise((resolve, reject) => {
     let corpo = ''
 
@@ -1226,4 +1461,8 @@ function erro(status, message) {
   const error = new Error(message)
   error.status = status
   throw error
+}
+
+module.exports = {
+  handleMercadoPagoRequest
 }

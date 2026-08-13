@@ -100,7 +100,7 @@
     "title": "Reward payments",
     "description": "Track paid, pending, and approved rewards for referrers linked to hired candidates.",
     "localEnvironment": "Local Mercado Pago environment",
-    "backendNotConfigured": "VITE_MERCADO_PAGO_SANDBOX_URL is not configured",
+    "backendNotConfigured": "The payments Cloud Function is not configured",
     "approvedVolume": "Approved volume",
     "pendingVolume": "Pending volume",
     "totalCreated": "Total created",

@@ -13,16 +13,15 @@ import { db } from './firebase'
 import { getFirebaseUid } from './identidadeFirebase'
 import {
   adicionarIndicacaoAoBatch,
-  adicionarStatusIndicacaoAoBatch,
   listarIndicacoesPorIndicador
 } from './firestoreIndicacoes'
 import { buscarCandidatoPreSalvoPorId } from './firestoreCandidatosPreSalvos'
 import { adicionarHistoricoAoBatch } from './firestoreHistorico'
 import {
-  notificarNovoCandidatoIndicado,
-  notificarStatusCandidatoAlterado
+  notificarNovoCandidatoIndicado
 } from './firestoreNotificacoes'
 import { vagaAceitaIndicacoes } from './firestoreVagas'
+import { chamarFirebaseFunction } from './firebaseFunctions'
 
 const candidatosCollection = collection(db, 'candidatos')
 const statusPermitidos = ['indicado', 'entrevista', 'contratado', 'cancelado', 'recusado']
@@ -274,75 +273,9 @@ export const atualizarStatusCandidato = async ({ candidatoId, status, empresaId 
     throw new Error('Status de candidato inválido.')
   }
 
-  const candidato = await buscarCandidatoPorId(candidatoId)
-
-  if (!candidato) {
-    throw new Error('Candidato não encontrado.')
-  }
-
-  const candidatoEmpresaId = String(candidato.empresaId || candidato.empresaUid || '')
-
-  if (!empresaId || candidatoEmpresaId !== String(empresaId)) {
-    throw new Error('Esta empresa não pode alterar este candidato.')
-  }
-
-  const batch = writeBatch(db)
-
-  batch.update(doc(db, 'candidatos', candidatoId), {
-    status,
-    atualizadoEm: serverTimestamp()
-  })
-  await adicionarStatusIndicacaoAoBatch({
-    batch,
+  return chamarFirebaseFunction('/atualizar-status-candidato', {
     candidatoId,
     status,
     empresaId
-  })
-  adicionarHistoricoAoBatch(batch, {
-    candidatoId,
-    candidatoNome: candidato.nome || '',
-    vagaId: candidato.vagaId || '',
-    vagaTitulo: candidato.vagaTitulo || '',
-    empresaId,
-    indicadorId: candidato.indicadorId || candidato.indicadorUid || '',
-    tipo: 'status_alterado',
-    titulo: status === 'contratado'
-      ? 'Candidato contratado'
-      : status === 'recusado'
-        ? 'Candidato recusado'
-        : status === 'cancelado'
-          ? 'Processo cancelado'
-        : 'Status do candidato atualizado',
-    tituloKey: status === 'contratado'
-      ? 'notifications.messages.candidate.contratadoTitle'
-      : status === 'recusado'
-        ? 'notifications.messages.candidate.recusadoTitle'
-        : status === 'cancelado'
-          ? 'notifications.messages.candidate.canceladoTitle'
-          : 'candidateProfile.historyEvents.candidateStatusTitle',
-    descricao: `Status alterado de ${candidato.status || 'indicado'} para ${status}.`,
-    descricaoKey: 'candidateProfile.historyEvents.statusChanged',
-    descricaoParams: {
-      fromStatus: candidato.status || 'indicado',
-      toStatus: status
-    },
-    statusAnterior: candidato.status || 'indicado',
-    statusAtual: status,
-    criadoPor: empresaId
-  })
-  await batch.commit()
-
-  const candidatoAtualizado = {
-    ...candidato,
-    status,
-    atualizadoEm: new Date().toISOString()
-  }
-
-  await notificarStatusCandidatoAlterado({
-    candidato: candidatoAtualizado,
-    statusAnterior: candidato.status || 'indicado',
-    statusAtual: status
-  })
-
-  return candidatoAtualizado
+  }, 'Não foi possível atualizar o status.')
 }
