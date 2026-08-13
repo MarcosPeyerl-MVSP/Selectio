@@ -2,6 +2,7 @@ import './styles/AdminPages.css'
 
 import { useMemo, useState } from 'react'
 import { FaChartLine, FaClock, FaMoneyBillWave, FaReceipt } from 'react-icons/fa'
+import { useTranslation } from 'react-i18next'
 
 import {
   AdminDetailGrid,
@@ -26,19 +27,10 @@ import {
 } from './adminFormatters'
 import { useAdminData } from './useAdminData'
 
-const withdrawalStatusLabels = {
-  solicitado: 'Pendente',
-  pendente: 'Pendente',
-  em_analise: 'Em análise',
-  pago: 'Pago',
-  aprovado: 'Aprovado',
-  recusado: 'Recusado',
-  erro: 'Erro',
-}
-
 const pendingWithdrawalStatuses = new Set(['solicitado', 'pendente'])
 
 function AdminFinanceiro() {
+  const { t } = useTranslation(['admin', 'common'])
   const toast = useToast()
   const { data, loading, error, reload } = useAdminData(buscarFinanceiroAdmin)
   const [search, setSearch] = useState('')
@@ -63,35 +55,35 @@ function AdminFinanceiro() {
     })
   }, [data, search, status])
 
-  if (loading) return <AdminLoading label="Carregando financeiro global..." />
+  if (loading) return <AdminLoading label={t('finance.loading')} />
   if (error) return <AdminError message={error} onRetry={reload} />
 
-  const futureAction = () => toast.info('Ação financeira disponível em uma versão futura. Nenhuma alteração foi realizada.')
+  const futureAction = () => toast.info(t('finance.futureAction'))
   const columns = [
     {
       key: 'indicador',
-      label: 'Indicador',
+      label: t('finance.referrer'),
       render: (saque) => (
         <div className="admin-entity">
-          <span className="admin-entity-avatar">{initials(saque.indicadorNome)}</span>
-          <div><strong>{saque.indicadorNome}</strong><span>{saque.indicadorEmail || saque.indicadorId}</span></div>
+          <span className="admin-entity-avatar">{initials(saque.indicadorNome || t('finance.referrer'))}</span>
+          <div><strong>{saque.indicadorNome || t('finance.referrer')}</strong><span>{saque.indicadorEmail || saque.indicadorId}</span></div>
         </div>
       ),
     },
-    { key: 'valor', label: 'Valor', render: (saque) => formatCurrency(saque.valor) },
-    { key: 'pix', label: 'Dados Pix', render: (saque) => saque.chavePix || 'Não informado' },
+    { key: 'valor', label: t('finance.value'), render: (saque) => formatCurrency(saque.valor) },
+    { key: 'pix', label: t('finance.pixData'), render: (saque) => saque.chavePix || t('common:generic.notProvided') },
     {
       key: 'status',
-      label: 'Status',
-      render: (saque) => <AdminStatusBadge status={saque.status} label={withdrawalStatusLabels[saque.status] || saque.status} />,
+      label: t('finance.status'),
+      render: (saque) => <AdminStatusBadge status={saque.status} label={t(`common:statuses.withdrawals.${saque.status}`, { defaultValue: saque.status })} />,
     },
-    { key: 'data', label: 'Data', render: (saque) => formatDate(saque.dataSolicitacao) },
+    { key: 'data', label: t('finance.date'), render: (saque) => formatDate(saque.dataSolicitacao) },
     {
       key: 'acoes',
-      label: 'Ação',
+      label: t('finance.action'),
       render: (saque) => (
         <button className="admin-table-action" type="button" onClick={() => setSelected(saque)}>
-          Ver detalhes
+          {t('finance.viewDetails')}
         </button>
       ),
     },
@@ -100,92 +92,92 @@ function AdminFinanceiro() {
   return (
     <>
       <AdminPageHeader
-        eyebrow="Gestão de payouts • Somente leitura"
-        title="Financeiro"
-        description="Acompanhe pagamentos, solicitações de saque e a eficiência do fluxo financeiro sem executar payouts automáticos."
+        eyebrow={t('finance.eyebrow')}
+        title={t('finance.title')}
+        description={t('finance.description')}
       />
 
       <AdminMetrics>
-        <AdminMetricCard icon={FaClock} label="Total em aberto" value={formatCurrency(data.metricas.totalEmAberto)} helper="Saques aguardando análise" />
-        <AdminMetricCard icon={FaMoneyBillWave} label="Pago no mês" value={formatCurrency(data.metricas.totalPagoMes)} tone="primary" />
-        <AdminMetricCard icon={FaChartLine} label="Eficiência" value={`${data.metricas.eficiencia}%`} helper="Aprovados entre pagamentos encerrados" />
-        <AdminMetricCard icon={FaReceipt} label="Pagamentos pendentes" value={formatNumber(data.metricas.pagamentosPendentes)} />
+        <AdminMetricCard icon={FaClock} label={t('finance.totalOpen')} value={formatCurrency(data.metricas.totalEmAberto)} helper={t('finance.awaitingReview')} />
+        <AdminMetricCard icon={FaMoneyBillWave} label={t('finance.paidThisMonth')} value={formatCurrency(data.metricas.totalPagoMes)} tone="primary" />
+        <AdminMetricCard icon={FaChartLine} label={t('finance.efficiency')} value={`${data.metricas.eficiencia}%`} helper={t('finance.efficiencyDescription')} />
+        <AdminMetricCard icon={FaReceipt} label={t('finance.pendingPayments')} value={formatNumber(data.metricas.pagamentosPendentes)} />
       </AdminMetrics>
 
       <AdminToolbar
         search={search}
         onSearch={setSearch}
-        placeholder="Filtrar por indicador ou chave Pix..."
+        placeholder={t('finance.searchPlaceholder')}
         onClear={() => { setSearch(''); setStatus('todos') }}
       >
         <select value={status} onChange={(event) => setStatus(event.target.value)}>
-          <option value="todos">Todos os status</option>
-          <option value="pendentes">Pendentes</option>
-          <option value="em_analise">Em análise</option>
-          <option value="pago">Pagos</option>
-          <option value="aprovado">Aprovados</option>
-          <option value="recusado">Recusados</option>
+          <option value="todos">{t('finance.allStatuses')}</option>
+          <option value="pendentes">{t('finance.pendingPlural')}</option>
+          <option value="em_analise">{t('finance.underReview')}</option>
+          <option value="pago">{t('finance.paidPlural')}</option>
+          <option value="aprovado">{t('finance.approvedPlural')}</option>
+          <option value="recusado">{t('finance.rejectedPlural')}</option>
         </select>
       </AdminToolbar>
 
       <AdminTable
         columns={columns}
         rows={rows}
-        emptyTitle="Nenhuma solicitação de saque"
-        emptyDescription="Solicitações feitas por indicadores aparecerão aqui."
+        emptyTitle={t('finance.emptyTitle')}
+        emptyDescription={t('finance.emptyDescription')}
       />
 
       <div className="admin-finance-grid">
         <article className="admin-section-card">
           <div className="admin-section-heading">
             <div>
-              <h2>Pagamentos recentes</h2>
-              <span>Últimos registros de recompensas</span>
+              <h2>{t('finance.recentPayments')}</h2>
+              <span>{t('finance.latestRewards')}</span>
             </div>
           </div>
           <div className="admin-payment-list">
             {data.pagamentos.length ? data.pagamentos.map((pagamento) => (
               <article className="admin-payment-item" key={pagamento.id}>
                 <div>
-                  <strong>{pagamento.candidatoNome || 'Candidato'}</strong>
-                  <span>{pagamento.vagaTitulo || 'Vaga'} • {pagamento.indicadorNome || 'Indicador'}</span>
-                  <AdminStatusBadge status={pagamento.status} label={pagamento.status} />
+                  <strong>{pagamento.candidatoNome || t('finance.candidate')}</strong>
+                  <span>{pagamento.vagaTitulo || t('finance.job')} • {pagamento.indicadorNome || t('finance.referrer')}</span>
+                  <AdminStatusBadge status={pagamento.status} label={t(`common:statuses.payments.${pagamento.status}`, { defaultValue: pagamento.status })} />
                 </div>
                 <strong>{formatCurrency(pagamento.valor)}</strong>
               </article>
-            )) : <p>Nenhum pagamento registrado.</p>}
+            )) : <p>{t('finance.noPayments')}</p>}
           </div>
         </article>
 
         <article className="admin-section-card">
           <div className="admin-section-heading">
             <div>
-              <h2>Operações seguras</h2>
-              <span>Ações financeiras estão bloqueadas</span>
+              <h2>{t('finance.safeOperations')}</h2>
+              <span>{t('finance.actionsBlocked')}</span>
             </div>
           </div>
-          <p>Nenhum payout ou saldo pode ser alterado por esta interface administrativa.</p>
+          <p>{t('finance.readOnlyDescription')}</p>
           <button className="admin-table-action" type="button" onClick={futureAction}>
-            Exportar relatório
+            {t('finance.exportReport')}
           </button>
         </article>
       </div>
 
       {selected && (
-        <AdminModal title={`Saque de ${selected.indicadorNome}`} eyebrow="Solicitação financeira" onClose={() => setSelected(null)}>
+        <AdminModal title={t('finance.withdrawalTitle', { name: selected.indicadorNome || t('finance.referrer') })} eyebrow={t('finance.financialRequest')} onClose={() => setSelected(null)}>
           <AdminDetailGrid items={[
-            { label: 'Indicador', value: selected.indicadorNome },
-            { label: 'E-mail', value: selected.indicadorEmail },
-            { label: 'Valor', value: formatCurrency(selected.valor) },
-            { label: 'Chave Pix', value: selected.chavePix },
-            { label: 'Status', value: withdrawalStatusLabels[selected.status] || selected.status },
-            { label: 'Solicitado em', value: formatDate(selected.dataSolicitacao) },
-            { label: 'Observação', value: selected.observacao },
+            { label: t('finance.referrer'), value: selected.indicadorNome || t('finance.referrer') },
+            { label: t('finance.email'), value: selected.indicadorEmail },
+            { label: t('finance.value'), value: formatCurrency(selected.valor) },
+            { label: t('finance.pixKey'), value: selected.chavePix },
+            { label: t('finance.status'), value: t(`common:statuses.withdrawals.${selected.status}`, { defaultValue: selected.status }) },
+            { label: t('finance.requestedAt'), value: formatDate(selected.dataSolicitacao) },
+            { label: t('finance.note'), value: selected.observacao },
             { label: 'ID', value: selected.id },
           ]} />
           <section className="admin-modal-section">
             <button className="admin-table-action" type="button" onClick={futureAction}>
-              Marcar como analisado
+              {t('finance.markReviewed')}
             </button>
           </section>
         </AdminModal>

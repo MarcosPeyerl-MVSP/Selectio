@@ -1,6 +1,7 @@
 import './PainelEntrevistas.css'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   FaCalendarAlt,
   FaChevronLeft,
@@ -38,20 +39,11 @@ import {
   somarMinutosAoHorario
 } from '../../utils/linksGoogleMeet'
 
-const diasDaSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']
 const statusQueBloqueiamAgendamento = ['agendada', 'pendente']
 const statusAgendaveis = ['entrevista', 'indicado']
 const prioridadeStatus = {
   entrevista: 0,
   indicado: 1
-}
-
-const rotulosStatus = {
-  todos: 'Todos',
-  agendada: 'Agendada',
-  realizada: 'Realizada',
-  cancelada: 'Cancelada',
-  pendente: 'Pendente'
 }
 
 const opcoesStatus = ['todos', 'agendada', 'pendente', 'realizada', 'cancelada']
@@ -64,20 +56,20 @@ const formatarChaveData = (data) => {
   return `${ano}-${mes}-${dia}`
 }
 
-const formatarData = (valor) => {
-  if (!valor) return 'Data não informada'
+const formatarData = (valor, locale, fallback) => {
+  if (!valor) return fallback
 
   const data = new Date(`${valor}T12:00:00`)
   if (Number.isNaN(data.getTime())) return valor
 
-  return data.toLocaleDateString('pt-BR', {
+  return data.toLocaleDateString(locale, {
     weekday: 'long',
     day: '2-digit',
     month: 'long'
   })
 }
 
-const formatarMes = (data) => data.toLocaleDateString('pt-BR', {
+const formatarMes = (data, locale) => data.toLocaleDateString(locale, {
   month: 'long',
   year: 'numeric'
 })
@@ -94,10 +86,10 @@ const normalizarStatusCandidato = (candidato) => {
   return candidato?.status || 'indicado'
 }
 
-const obterNomeCandidato = (candidato) => candidato?.nome || candidato?.candidatoNome || 'Candidato'
+const obterNomeCandidato = (candidato, fallback = 'Candidato') => candidato?.nome || candidato?.candidatoNome || fallback
 
-const obterNomeEmpresa = (candidato, empresa) => (
-  empresa?.nomeEmpresa || candidato?.empresaNome || candidato?.vagaEmpresa || 'Empresa Selectio'
+const obterNomeEmpresa = (candidato, empresa, fallback = 'Empresa Selectio') => (
+  empresa?.nomeEmpresa || candidato?.empresaNome || candidato?.vagaEmpresa || fallback
 )
 
 const ordenarCandidatosAgendaveis = (primeiroCandidato, segundoCandidato) => {
@@ -113,9 +105,30 @@ const ordenarCandidatosAgendaveis = (primeiroCandidato, segundoCandidato) => {
 }
 
 function PainelEntrevistas({ empresa }) {
+  const { t, i18n } = useTranslation('common')
   const empresaId = getFirebaseUid(empresa)
   const toast = useToast()
   const confirm = useConfirmacao()
+  const locale = i18n.resolvedLanguage || i18n.language
+  const diasDaSemana = useMemo(() => Array.from({ length: 7 }, (_, index) => (
+    new Intl.DateTimeFormat(locale, { weekday: 'short' })
+      .format(new Date(2024, 0, 7 + index))
+      .replace('.', '')
+  )), [locale])
+  const calendarLabels = {
+    defaultTitle: t('interviews.calendar.defaultTitle'),
+    candidate: t('interviews.calendar.candidate'),
+    candidateLine: (value) => t('interviews.calendar.candidateLine', { value }),
+    emailLine: (value) => t('interviews.calendar.emailLine', { value }),
+    jobLine: (value) => t('interviews.calendar.jobLine', { value }),
+    companyLine: (value) => t('interviews.calendar.companyLine', { value }),
+    referrerLine: (value) => t('interviews.calendar.referrerLine', { value }),
+    notesLine: (value) => t('interviews.calendar.notesLine', { value }),
+    notProvided: t('interviews.calendar.notProvided'),
+    notProvidedFemale: t('interviews.calendar.notProvidedFemale'),
+    generated: t('interviews.calendar.generated'),
+    fallbackDescription: t('interviews.calendar.fallbackDescription')
+  }
 
   const hoje = useMemo(() => formatarChaveData(new Date()), [])
   const [mesAtual, setMesAtual] = useState(() => new Date())
@@ -160,11 +173,11 @@ function PainelEntrevistas({ empresa }) {
 
         setEntrevistas(entrevistasDaEmpresa)
         setCandidatos(candidatosDaEmpresa)
-      } catch (error) {
+      } catch {
         if (!ativo) return
 
-        setErroCarregamento(error.message || 'Não foi possível carregar entrevistas.')
-        toast.error(error.message || 'Não foi possível carregar entrevistas.')
+        setErroCarregamento(t('interviews.loadError'))
+        toast.error(t('interviews.loadError'))
       } finally {
         if (ativo) setCarregando(false)
       }
@@ -175,7 +188,7 @@ function PainelEntrevistas({ empresa }) {
     return () => {
       ativo = false
     }
-  }, [empresaId, reloadKey, toast])
+  }, [empresaId, reloadKey, t, toast])
 
   const entrevistasPorData = useMemo(() => entrevistas.reduce((acumulador, entrevista) => {
     if (!entrevista.data) return acumulador
@@ -250,7 +263,7 @@ function PainelEntrevistas({ empresa }) {
   }), [candidatosParaAgendar.length, entrevistas, hoje])
 
   const tituloPreview = candidatoEmAgendamento
-    ? montarTituloMeet(candidatoEmAgendamento.vagaTitulo, obterNomeCandidato(candidatoEmAgendamento))
+    ? montarTituloMeet(candidatoEmAgendamento.vagaTitulo, obterNomeCandidato(candidatoEmAgendamento, t('interviews.candidate')), calendarLabels)
     : ''
 
   const mudarMes = (offset) => {
@@ -280,14 +293,15 @@ function PainelEntrevistas({ empresa }) {
       formularioAgendamento.horaInicio,
       formularioAgendamento.duracaoMinutos
     )
-    const titulo = montarTituloMeet(candidato.vagaTitulo, obterNomeCandidato(candidato))
+    const titulo = montarTituloMeet(candidato.vagaTitulo, obterNomeCandidato(candidato, t('interviews.candidate')), calendarLabels)
     const descricao = montarDescricaoEntrevista({
-      candidatoNome: obterNomeCandidato(candidato),
+      candidatoNome: obterNomeCandidato(candidato, t('interviews.candidate')),
       candidatoEmail: candidato.email,
       vagaTitulo: candidato.vagaTitulo,
-      empresaNome: obterNomeEmpresa(candidato, empresa),
+      empresaNome: obterNomeEmpresa(candidato, empresa, t('interviews.company')),
       indicadorNome: candidato.indicadorNome,
-      observacoes: formularioAgendamento.observacoes
+      observacoes: formularioAgendamento.observacoes,
+      labels: calendarLabels
     })
 
     return {
@@ -300,7 +314,8 @@ function PainelEntrevistas({ empresa }) {
         horaInicio: formularioAgendamento.horaInicio,
         horaFim,
         duracaoMinutos: formularioAgendamento.duracaoMinutos,
-        descricao
+        descricao,
+        labels: calendarLabels
       })
     }
   }
@@ -316,12 +331,12 @@ function PainelEntrevistas({ empresa }) {
       const calendario = montarCalendarDoCandidato(candidatoEmAgendamento)
       const entrevista = await criarEntrevista({
         candidatoId: candidatoEmAgendamento.id,
-        candidatoNome: obterNomeCandidato(candidatoEmAgendamento),
+        candidatoNome: obterNomeCandidato(candidatoEmAgendamento, t('interviews.candidate')),
         candidatoEmail: candidatoEmAgendamento.email || '',
         vagaId: candidatoEmAgendamento.vagaId || '',
         vagaTitulo: candidatoEmAgendamento.vagaTitulo || '',
         empresaId,
-        empresaNome: obterNomeEmpresa(candidatoEmAgendamento, empresa),
+        empresaNome: obterNomeEmpresa(candidatoEmAgendamento, empresa, t('interviews.company')),
         indicadorId: candidatoEmAgendamento.indicadorId || candidatoEmAgendamento.indicadorUid || '',
         indicadorNome: candidatoEmAgendamento.indicadorNome || '',
         data: formularioAgendamento.data,
@@ -348,9 +363,9 @@ function PainelEntrevistas({ empresa }) {
         candidato.id === candidatoEmAgendamento.id ? { ...candidato, status: 'entrevista' } : candidato
       )))
       setCandidatoEmAgendamento(null)
-      toast.success('Entrevista agendada com sucesso.')
-    } catch (error) {
-      toast.error(error.message || 'Não foi possível agendar a entrevista.')
+      toast.success(t('interviews.scheduled'))
+    } catch {
+      toast.error(t('interviews.scheduleError'))
     } finally {
       setAcaoEmAndamento(null)
     }
@@ -364,14 +379,15 @@ function PainelEntrevistas({ empresa }) {
   }
 
   const montarCalendarDaEntrevista = (entrevista) => {
-    const titulo = entrevista.meetTitulo || montarTituloMeet(entrevista.vagaTitulo, entrevista.candidatoNome)
+    const titulo = entrevista.meetTitulo || montarTituloMeet(entrevista.vagaTitulo, entrevista.candidatoNome, calendarLabels)
     const descricao = montarDescricaoEntrevista({
       candidatoNome: entrevista.candidatoNome,
       candidatoEmail: entrevista.candidatoEmail,
       vagaTitulo: entrevista.vagaTitulo,
       empresaNome: entrevista.empresaNome,
       indicadorNome: entrevista.indicadorNome,
-      observacoes: entrevista.observacoes
+      observacoes: entrevista.observacoes,
+      labels: calendarLabels
     })
 
     return {
@@ -382,7 +398,8 @@ function PainelEntrevistas({ empresa }) {
         horaInicio: entrevista.horaInicio,
         horaFim: entrevista.horaFim,
         duracaoMinutos: entrevista.duracaoMinutos,
-        descricao
+        descricao,
+        labels: calendarLabels
       })
     }
   }
@@ -412,8 +429,8 @@ function PainelEntrevistas({ empresa }) {
           : item
       )))
       window.open(calendario.url, '_blank', 'noopener,noreferrer')
-    } catch (error) {
-      toast.error(error.message || 'Não foi possível abrir o Google Calendar.')
+    } catch {
+      toast.error(t('interviews.calendarError'))
     } finally {
       setAcaoEmAndamento(null)
     }
@@ -427,9 +444,9 @@ function PainelEntrevistas({ empresa }) {
       setEntrevistas((entrevistasAtuais) => entrevistasAtuais.map((item) => (
         item.id === entrevista.id ? { ...item, status, atualizadoEm: new Date().toISOString() } : item
       )))
-      toast.success('Status da entrevista atualizado.')
-    } catch (error) {
-      toast.error(error.message || 'Não foi possível atualizar a entrevista.')
+      toast.success(t('interviews.statusUpdated'))
+    } catch {
+      toast.error(t('interviews.updateError'))
     } finally {
       setAcaoEmAndamento(null)
     }
@@ -437,10 +454,10 @@ function PainelEntrevistas({ empresa }) {
 
   const cancelarEntrevistaAgendada = async (entrevista) => {
     const confirmado = await confirm({
-      title: 'Cancelar entrevista',
-      description: `Deseja cancelar a entrevista com ${entrevista.candidatoNome || 'este candidato'}?`,
-      confirmLabel: 'Cancelar entrevista',
-      cancelLabel: 'Voltar'
+      title: t('interviews.cancelTitle'),
+      description: t('interviews.cancelDescription', { name: entrevista.candidatoNome || t('interviews.thisCandidate') }),
+      confirmLabel: t('interviews.cancelInterview'),
+      cancelLabel: t('interviews.back')
     })
 
     if (!confirmado) return
@@ -452,9 +469,9 @@ function PainelEntrevistas({ empresa }) {
       setEntrevistas((entrevistasAtuais) => entrevistasAtuais.map((item) => (
         item.id === entrevista.id ? { ...item, status: 'cancelada', atualizadoEm: new Date().toISOString() } : item
       )))
-      toast.success('Entrevista cancelada.')
-    } catch (error) {
-      toast.error(error.message || 'Não foi possível cancelar a entrevista.')
+      toast.success(t('interviews.cancelled'))
+    } catch {
+      toast.error(t('interviews.cancelError'))
     } finally {
       setAcaoEmAndamento(null)
     }
@@ -463,7 +480,7 @@ function PainelEntrevistas({ empresa }) {
   if (carregando) {
     return (
       <section className="painel-entrevistas">
-        <PageLoader label="Carregando entrevistas..." compact />
+        <PageLoader label={t('interviews.loading')} compact />
         <div className="entrevistas-carregando-grid">
           <CardEsqueleto count={3} lines={3} />
         </div>
@@ -475,13 +492,13 @@ function PainelEntrevistas({ empresa }) {
     return (
       <section className="painel-entrevistas">
         <EstadoDados
-          actionLabel="Tentar novamente"
+          actionLabel={t('interviews.retry')}
           description={erroCarregamento}
           onAction={() => {
             setCarregando(true)
             setReloadKey((value) => value + 1)
           }}
-          title={navigator.onLine ? 'Não foi possível carregar as entrevistas' : 'Você está sem conexão'}
+          title={navigator.onLine ? t('interviews.loadTitle') : t('interviews.offline')}
           tone={navigator.onLine ? 'error' : 'offline'}
         />
       </section>
@@ -492,9 +509,9 @@ function PainelEntrevistas({ empresa }) {
     <section className="painel-entrevistas">
       <header className="entrevistas-cabecalho">
         <div>
-          <span>Agenda inteligente</span>
-          <h1>Painel de Entrevistas</h1>
-          <p>Agende conversas com candidatos das suas vagas e acompanhe o dia pelo calendário.</p>
+          <span>{t('interviews.eyebrow')}</span>
+          <h1>{t('interviews.title')}</h1>
+          <p>{t('interviews.description')}</p>
         </div>
 
         <button
@@ -503,23 +520,23 @@ function PainelEntrevistas({ empresa }) {
           onClick={() => candidatosParaAgendar[0] && abrirAgendamento(candidatosParaAgendar[0])}
           disabled={!candidatosParaAgendar.length}
         >
-          <FaPlus /> Agendar entrevista
+          <FaPlus /> {t('interviews.schedule')}
         </button>
       </header>
 
-      <section className="entrevistas-metricas" aria-label="Resumo de entrevistas">
-        <CartaoMetrica label="Hoje" value={metricas.hoje} />
-        <CartaoMetrica label="Agendadas" value={metricas.agendadas} />
-        <CartaoMetrica label="Realizadas" value={metricas.realizadas} />
-        <CartaoMetrica label="Prontos para agenda" value={metricas.aguardando} />
+      <section className="entrevistas-metricas" aria-label={t('interviews.summary')}>
+        <CartaoMetrica label={t('interviews.today')} value={metricas.hoje} />
+        <CartaoMetrica label={t('interviews.scheduledMetric')} value={metricas.agendadas} />
+        <CartaoMetrica label={t('interviews.completedMetric')} value={metricas.realizadas} />
+        <CartaoMetrica label={t('interviews.readyMetric')} value={metricas.aguardando} />
       </section>
 
-      <section className="entrevistas-filtros" aria-label="Filtros de entrevistas">
+      <section className="entrevistas-filtros" aria-label={t('interviews.filters')}>
         <label>
           <FaFilter />
           <select value={filtroStatus} onChange={(event) => setFiltroStatus(event.target.value)}>
             {opcoesStatus.map((status) => (
-              <option value={status} key={status}>{rotulosStatus[status]}</option>
+              <option value={status} key={status}>{t(`statuses.interviews.${status}`, { defaultValue: status })}</option>
             ))}
           </select>
         </label>
@@ -527,7 +544,7 @@ function PainelEntrevistas({ empresa }) {
         <label>
           <FaCalendarAlt />
           <select value={filtroVaga} onChange={(event) => setFiltroVaga(event.target.value)}>
-            <option value="todos">Todas as vagas</option>
+            <option value="todos">{t('interviews.allJobs')}</option>
             {opcoesVaga.map((vaga) => (
               <option value={vaga.id} key={vaga.id}>{vaga.titulo}</option>
             ))}
@@ -538,11 +555,11 @@ function PainelEntrevistas({ empresa }) {
       <div className="entrevistas-grade-principal">
         <article className="entrevistas-calendario-card">
           <div className="entrevistas-calendario-cabecalho">
-            <button type="button" onClick={() => mudarMes(-1)} aria-label="Mês anterior">
+            <button type="button" onClick={() => mudarMes(-1)} aria-label={t('interviews.previousMonth')}>
               <FaChevronLeft />
             </button>
-            <strong>{formatarMes(mesAtual)}</strong>
-            <button type="button" onClick={() => mudarMes(1)} aria-label="Próximo mes">
+            <strong>{formatarMes(mesAtual, locale)}</strong>
+            <button type="button" onClick={() => mudarMes(1)} aria-label={t('interviews.nextMonth')}>
               <FaChevronRight />
             </button>
           </div>
@@ -577,8 +594,8 @@ function PainelEntrevistas({ empresa }) {
 
         <article className="entrevistas-agenda-card">
           <div className="entrevistas-titulo-secao">
-            <span><FaClock /> Agenda do dia</span>
-            <strong>{formatarData(dataSelecionada)}</strong>
+            <span><FaClock /> {t('interviews.dayAgenda')}</span>
+            <strong>{formatarData(dataSelecionada, locale, t('interviews.dateNotProvided'))}</strong>
           </div>
 
           {entrevistasDoDiaSelecionado.length ? (
@@ -596,8 +613,8 @@ function PainelEntrevistas({ empresa }) {
             </div>
           ) : (
             <EstadoVazio
-              title="Nenhuma entrevista neste dia"
-            description="Escolha outro dia no calendário ou agende uma nova conversa com um candidato."
+              title={t('interviews.emptyDay')}
+              description={t('interviews.emptyDayDescription')}
             />
           )}
         </article>
@@ -605,7 +622,7 @@ function PainelEntrevistas({ empresa }) {
 
       <article className="entrevistas-aguardando-card">
         <div className="entrevistas-titulo-secao">
-          <span><FaUserFriends /> Prontos para agendamento</span>
+          <span><FaUserFriends /> {t('interviews.readyTitle')}</span>
           <strong>{candidatosParaAgendar.length}</strong>
         </div>
 
@@ -614,21 +631,21 @@ function PainelEntrevistas({ empresa }) {
             {candidatosParaAgendar.map((candidato) => (
               <div className="entrevistas-aguardando-item" key={candidato.id}>
                 <div>
-                  <strong>{obterNomeCandidato(candidato)}</strong>
-                  <span>{candidato.vagaTitulo || 'Vaga não informada'}</span>
-                  <small>{normalizarStatusCandidato(candidato) === 'entrevista' ? 'Status: entrevista' : 'Status: indicado'}</small>
+                  <strong>{obterNomeCandidato(candidato, t('interviews.candidate'))}</strong>
+                  <span>{candidato.vagaTitulo || t('interviews.jobNotProvided')}</span>
+                  <small>{t('interviews.candidateStatus', { status: t(`statuses.candidates.${normalizarStatusCandidato(candidato)}`) })}</small>
                 </div>
 
                 <button type="button" onClick={() => abrirAgendamento(candidato)}>
-                  <FaCalendarAlt /> Agendar
+                  <FaCalendarAlt /> {t('interviews.scheduleAction')}
                 </button>
               </div>
             ))}
           </div>
         ) : (
           <EstadoVazio
-            title="Sem candidatos prontos para agendar"
-            description="Candidatos com status entrevista aparecem aqui quando ainda não possuem entrevista agendada ou pendente."
+            title={t('interviews.noReady')}
+            description={t('interviews.noReadyDescription')}
           />
         )}
       </article>
@@ -669,6 +686,7 @@ function EstadoVazio({ title, description }) {
 }
 
 function CartaoEntrevista({ entrevista, carregando, onAbrir, onRealizada, onCancelar }) {
+  const { t } = useTranslation('common')
   const status = entrevista.status || 'agendada'
   const desabilitado = carregando || status === 'cancelada'
 
@@ -680,25 +698,25 @@ function CartaoEntrevista({ entrevista, carregando, onAbrir, onRealizada, onCanc
       </div>
 
       <div className="entrevistas-card-conteudo">
-        <strong>{entrevista.candidatoNome || 'Candidato sem nome'}</strong>
-        <p>{entrevista.vagaTitulo || 'Vaga não informada'}</p>
-        <span>{rotulosStatus[status] || status}</span>
+        <strong>{entrevista.candidatoNome || t('interviews.unnamedCandidate')}</strong>
+        <p>{entrevista.vagaTitulo || t('interviews.jobNotProvided')}</p>
+        <span>{t(`statuses.interviews.${status}`, { defaultValue: status })}</span>
       </div>
 
       <div className="entrevistas-card-acoes">
         <button type="button" onClick={onAbrir} disabled={carregando}>
-          <FaExternalLinkAlt /> Abrir no Google Calendar
+          <FaExternalLinkAlt /> {t('interviews.openCalendar')}
         </button>
 
         {status !== 'realizada' && status !== 'cancelada' && (
           <button type="button" className="secundario" onClick={onRealizada} disabled={desabilitado}>
-            Realizada
+            {t('interviews.completed')}
           </button>
         )}
 
         {status !== 'cancelada' && (
           <button type="button" className="perigo" onClick={onCancelar} disabled={carregando}>
-            Cancelar
+            {t('interviews.cancel')}
           </button>
         )}
       </div>
@@ -716,6 +734,8 @@ function ModalAgendamento({
   onAbrirPreview,
   onSubmit
 }) {
+  const { t } = useTranslation('common')
+
   return (
     <div className="entrevistas-modal-fundo" role="presentation" onMouseDown={onClose}>
       <section
@@ -725,25 +745,25 @@ function ModalAgendamento({
         aria-labelledby="entrevistas-modal-title"
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <button type="button" className="entrevistas-modal-fechar" onClick={onClose} aria-label="Fechar agendamento">
+        <button type="button" className="entrevistas-modal-fechar" onClick={onClose} aria-label={t('interviews.close')}>
           <FaTimes />
         </button>
 
         <header>
-          <span><FaVideo /> Nova entrevista</span>
-          <h2 id="entrevistas-modal-title">Agendar conversa</h2>
-          <p>O Google Calendar será aberto com os dados preenchidos. O Meet pode ser criado ao salvar o evento.</p>
+          <span><FaVideo /> {t('interviews.newInterview')}</span>
+          <h2 id="entrevistas-modal-title">{t('interviews.scheduleConversation')}</h2>
+          <p>{t('interviews.modalDescription')}</p>
         </header>
 
         <form onSubmit={onSubmit}>
           <div className="entrevistas-candidato-resumo">
-            <strong>{obterNomeCandidato(candidato)}</strong>
-            <span>{candidato.vagaTitulo || 'Vaga não informada'}</span>
+            <strong>{obterNomeCandidato(candidato, t('interviews.candidate'))}</strong>
+            <span>{candidato.vagaTitulo || t('interviews.jobNotProvided')}</span>
           </div>
 
           <div className="entrevistas-formulario-grid">
             <label>
-              Data
+              {t('interviews.date')}
               <input
                 type="date"
                 value={formulario.data}
@@ -753,7 +773,7 @@ function ModalAgendamento({
             </label>
 
             <label>
-              Início
+              {t('interviews.start')}
               <input
                 type="time"
                 value={formulario.horaInicio}
@@ -763,43 +783,42 @@ function ModalAgendamento({
             </label>
 
             <label>
-              Duração
+              {t('interviews.duration')}
               <select
                 value={formulario.duracaoMinutos}
                 onChange={(event) => onChange('duracaoMinutos', event.target.value)}
               >
-                <option value="30">30 min</option>
-                <option value="45">45 min</option>
-                <option value="60">60 min</option>
-                <option value="90">90 min</option>
+                {[30, 45, 60, 90].map((minutes) => (
+                  <option key={minutes} value={minutes}>{t('interviews.minutes', { count: minutes })}</option>
+                ))}
               </select>
             </label>
           </div>
 
           <label className="entrevistas-campo-inteiro">
-            Observações
+            {t('interviews.notes')}
             <textarea
               value={formulario.observacoes}
               onChange={(event) => onChange('observacoes', event.target.value)}
-              placeholder="Pontos para abordar, contexto da vaga ou combinados..."
+              placeholder={t('interviews.notesPlaceholder')}
               rows="4"
             />
           </label>
 
           <div className="entrevistas-titulo-preview">
-            <span>Título no Google Calendar</span>
+            <span>{t('interviews.calendarTitle')}</span>
             <strong>{tituloPreview}</strong>
           </div>
 
           <div className="entrevistas-modal-acoes">
             <button type="button" className="secundario" onClick={onClose}>
-              Cancelar
+              {t('interviews.cancel')}
             </button>
             <button type="button" className="calendario" onClick={onAbrirPreview}>
-              <FaExternalLinkAlt /> Abrir preview
+              <FaExternalLinkAlt /> {t('interviews.openPreview')}
             </button>
             <button type="submit" disabled={carregando}>
-              {carregando ? 'Salvando...' : 'Salvar entrevista'}
+              {carregando ? t('interviews.saving') : t('interviews.save')}
             </button>
           </div>
         </form>

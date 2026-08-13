@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { FaCog, FaExchangeAlt, FaMoon, FaSignOutAlt, FaSun, FaUserAlt, FaUserCircle } from 'react-icons/fa'
 import { signOut } from 'firebase/auth'
+import { useTranslation } from 'react-i18next'
 import { auth } from '../../services/firebase'
 import { useTema } from '../../hooks/useTema'
 import { useConfirmacao } from '../../hooks/useConfirmacao'
@@ -13,8 +14,10 @@ import MenuNotificacoes from '../notificacoes/MenuNotificacoes'
 import { useAuth } from '../../hooks/useAuth'
 import { perfilExigeSetorEmpresarial } from '../../utils/modoEmpresarial'
 import ModalAlterarSetor from './ModalAlterarSetor'
+import LanguageSwitcher from './LanguageSwitcher'
 
 function Navbar() {
+  const { t } = useTranslation(['common', 'auth'])
   const navigate = useNavigate()
   const { isDark, toggleTheme } = useTema()
   const confirm = useConfirmacao()
@@ -24,11 +27,18 @@ function Navbar() {
   const [sectorModalOpen, setSectorModalOpen] = useState(false)
   const profileMenuRef = useRef(null)
   const session = perfil?.tipo === 'empresa'
-    ? { type: 'empresa', label: perfil.setorEmpresarial?.nome || 'Empresa', user: perfil, painelPath: '/painel/empresa' }
+    ? {
+      type: 'empresa',
+      label: perfil.setorEmpresarial?.id
+        ? t(`auth:sectors.${perfil.setorEmpresarial.id}`, { defaultValue: perfil.setorEmpresarial.nome })
+        : t('account.company'),
+      user: perfil,
+      painelPath: '/painel/empresa'
+    }
     : perfil?.tipo === 'indicador'
-      ? { type: 'indicador', label: 'Indicador', user: perfil, painelPath: '/painel/indicador' }
+      ? { type: 'indicador', label: t('account.referrer'), user: perfil, painelPath: '/painel/indicador' }
       : perfil?.tipo === 'admin'
-        ? { type: 'admin', label: 'Administrador', user: perfil, painelPath: '/admin/visao-geral' }
+        ? { type: 'admin', label: t('account.administrator'), user: perfil, painelPath: '/admin/visao-geral' }
         : { type: 'publico', label: '', user: null, painelPath: '/login' }
   const userName = getUserName(session.user)
   const userEmail = getUserEmail(session.user)
@@ -69,9 +79,9 @@ function Navbar() {
     if (session.type === 'publico') return
 
     const confirmed = await confirm({
-      title: 'Sair da conta?',
-      description: 'Sua sessão local será encerrada neste navegador.',
-      confirmLabel: 'Sair'
+      title: t('account.logoutTitle'),
+      description: t('account.logoutDescription'),
+      confirmLabel: t('account.logout')
     })
 
     if (!confirmed) return
@@ -81,7 +91,7 @@ function Navbar() {
     localStorage.removeItem('indicadorUser')
     localStorage.removeItem('adminUser')
     setProfileMenuOpen(false)
-    toast.info('Sessão encerrada.')
+    toast.info(t('account.sessionEnded'))
     navigate('/login')
   }
 
@@ -91,7 +101,9 @@ function Navbar() {
       detail: perfilAtualizado
     }))
     setSectorModalOpen(false)
-    toast.success(`Acesso alterado para ${setor.nome}.`)
+    toast.success(t('account.accessChanged', {
+      sector: t(`auth:sectors.${setor.id}`, { defaultValue: setor.nome })
+    }))
     navigate('/painel/empresa')
   }
 
@@ -100,39 +112,43 @@ function Navbar() {
       <img className="logo-img" src={logoVermelho} alt="Selectio" />
 
       <nav className="nav-links">
-        <NavLink to="/">Home</NavLink>
-        <NavLink to="/vagas">Vagas</NavLink>
+        <NavLink to="/">{t('navigation.home')}</NavLink>
+        <NavLink to="/vagas">{t('navigation.jobs')}</NavLink>
         {session.type !== 'publico' && (
-          <NavLink to={session.painelPath}>Painel</NavLink>
+          <NavLink to={session.painelPath}>{t('navigation.dashboard')}</NavLink>
         )}
       </nav>
 
       <div className="navbar-right">
         {!carregandoSessao && session.type === 'publico' ? (
           <>
-            <button
-              type="button"
-              className="theme-toggle"
-              onClick={toggleTheme}
-              aria-label={isDark ? 'Ativar tema claro' : 'Ativar tema escuro'}
-              title={isDark ? 'Tema claro' : 'Tema escuro'}
-            >
-              {isDark ? <FaSun /> : <FaMoon />}
-            </button>
+            <div className="user-actions">
+              <LanguageSwitcher />
+              <button
+                type="button"
+                className="icon-button theme-toggle"
+                onClick={toggleTheme}
+                aria-label={isDark ? t('theme.activateLight') : t('theme.activateDark')}
+                title={isDark ? t('theme.light') : t('theme.dark')}
+              >
+                {isDark ? <FaSun /> : <FaMoon />}
+              </button>
+            </div>
             <nav className="nav-auth">
-              <Link className="btn-primary" to="/cadastro">Cadastre-se</Link>
-              <Link className="btn-secondary" to="/login">Login</Link>
+              <Link className="btn-primary" to="/cadastro">{t('navigation.signUp')}</Link>
+              <Link className="btn-secondary" to="/login">{t('navigation.login')}</Link>
             </nav>
           </>
         ) : (
           <div className="user-actions" data-tour="navbar-account-actions">
+            <LanguageSwitcher />
             <MenuNotificacoes user={session.user} />
             <div className="profile-menu-wrapper" ref={profileMenuRef}>
               <button
                 type="button"
                 className="icon-button profile-trigger"
                 onClick={() => setProfileMenuOpen((current) => !current)}
-                aria-label="Abrir menu de perfil"
+                aria-label={t('account.openProfileMenu')}
                 aria-haspopup="menu"
                 aria-expanded={profileMenuOpen}
               >
@@ -140,13 +156,13 @@ function Navbar() {
               </button>
 
               {profileMenuOpen && (
-                <section className="profile-menu" role="menu" aria-label="Menu de perfil">
+                <section className="profile-menu" role="menu" aria-label={t('account.profileMenu')}>
                   <header className="profile-menu-header">
                     <div className="profile-menu-avatar">
                       <FaUserAlt />
                     </div>
                     <div>
-                      <strong>{userName || 'Usuário Selectio'}</strong>
+                      <strong>{userName || t('account.selectioUser')}</strong>
                       {userEmail && <span>{userEmail}</span>}
                       <small>{session.label}</small>
                     </div>
@@ -155,11 +171,11 @@ function Navbar() {
                   <div className="profile-menu-section">
                     <Link to={profilePath} role="menuitem" onClick={() => setProfileMenuOpen(false)}>
                       <FaUserCircle />
-                      <span>Meu perfil</span>
+                      <span>{t('account.myProfile')}</span>
                     </Link>
                     <Link to={settingsPath} role="menuitem" onClick={() => setProfileMenuOpen(false)}>
                       <FaCog />
-                      <span>Configurações</span>
+                      <span>{t('account.settings')}</span>
                     </Link>
                     {podeAlterarSetor && (
                       <button
@@ -171,7 +187,7 @@ function Navbar() {
                         }}
                       >
                         <FaExchangeAlt />
-                        <span>Alterar setor</span>
+                        <span>{t('account.changeSector')}</span>
                       </button>
                     )}
                   </div>
@@ -179,14 +195,16 @@ function Navbar() {
                   <div className="profile-menu-section">
                     <button type="button" role="menuitem" onClick={toggleTheme}>
                       {isDark ? <FaSun /> : <FaMoon />}
-                      <span>Tema: {isDark ? 'escuro' : 'claro'}</span>
+                      <span>{t('theme.current', {
+                        theme: isDark ? t('theme.darkValue') : t('theme.lightValue')
+                      })}</span>
                     </button>
                   </div>
 
                   <div className="profile-menu-section">
                     <button type="button" className="logout-item" role="menuitem" onClick={handleLogout}>
                       <FaSignOutAlt />
-                      <span>Sair</span>
+                      <span>{t('account.logout')}</span>
                     </button>
                   </div>
                 </section>

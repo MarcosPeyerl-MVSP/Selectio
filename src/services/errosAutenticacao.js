@@ -20,10 +20,36 @@ const firebaseAuthMessages = {
   'auth/user-token-expired': 'Sua sessão expirou. Entre novamente para continuar.'
 }
 
+const firebaseAuthTranslationKeys = {
+  'auth/email-already-in-use': 'errors.firebase.emailAlreadyInUse',
+  'auth/weak-password': 'errors.firebase.weakPassword',
+  'auth/user-not-found': 'errors.firebase.userNotFound',
+  'auth/wrong-password': 'errors.firebase.wrongPassword',
+  'auth/invalid-credential': 'errors.firebase.invalidCredential',
+  'auth/invalid-email': 'errors.firebase.invalidEmail',
+  'auth/missing-password': 'errors.firebase.missingPassword',
+  'auth/network-request-failed': 'errors.firebase.networkRequestFailed',
+  'auth/too-many-requests': 'errors.firebase.tooManyRequests',
+  'auth/operation-not-allowed': 'errors.firebase.operationNotAllowed',
+  'auth/popup-closed-by-user': 'errors.firebase.popupClosed',
+  'auth/cancelled-popup-request': 'errors.firebase.cancelledPopup',
+  'auth/popup-blocked': 'errors.firebase.popupBlocked',
+  'auth/account-exists-with-different-credential': 'errors.firebase.accountDifferentCredential',
+  'auth/provider-already-linked': 'errors.firebase.providerAlreadyLinked',
+  'auth/credential-already-in-use': 'errors.firebase.credentialAlreadyInUse',
+  'auth/requires-recent-login': 'errors.firebase.requiresRecentLogin',
+  'auth/missing-email': 'errors.firebase.missingEmail',
+  'auth/user-token-expired': 'errors.firebase.userTokenExpired'
+}
+
 export const getFirebaseAuthErrorMessage = (error) => {
   const code = error?.code
 
   return firebaseAuthMessages[code] || 'Não foi possível autenticar com o Firebase. Tente novamente.'
+}
+
+export const getFirebaseAuthErrorKey = (error) => {
+  return firebaseAuthTranslationKeys[error?.code] || 'errors.firebase.fallback'
 }
 
 export const isFirebaseAuthError = (error) => {

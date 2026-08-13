@@ -2,6 +2,7 @@ import './styles/PainelIndicador.css'
 import '../../components/dashboard/Dashboard.css'
 
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   FaBriefcase,
   FaChartBar,
@@ -20,49 +21,50 @@ import { useAuth } from '../../hooks/useAuth'
 const painelCards = [
   {
     icon: FaBriefcase,
-    title: 'Vagas',
-    description: 'Explore oportunidades abertas e encontre a vaga certa para cada talento da sua rede.',
+    titleKey: 'panel.cards.jobs.title',
+    descriptionKey: 'panel.cards.jobs.description',
     to: '/vagas',
-    action: 'Explorar vagas',
+    actionKey: 'panel.cards.jobs.action',
   },
   {
     icon: FaUserFriends,
-    title: 'Candidatos',
-    description: 'Cadastre profissionais e acompanhe todas as indicações enviadas às empresas.',
+    titleKey: 'panel.cards.candidates.title',
+    descriptionKey: 'panel.cards.candidates.description',
     to: '/candidatos/indicador',
-    action: 'Ver candidatos',
+    actionKey: 'panel.cards.candidates.action',
   },
   {
     icon: FaUserTie,
-    title: 'Perfil',
-    description: 'Atualize seus dados, especialidades e informações profissionais na plataforma.',
+    titleKey: 'panel.cards.profile.title',
+    descriptionKey: 'panel.cards.profile.description',
     to: '/painel/indicador/dashboard?secao=perfil',
-    action: 'Meu perfil',
+    actionKey: 'panel.cards.profile.action',
   },
   {
     icon: FaChartBar,
-    title: 'Dashboard',
-    description: 'Acompanhe indicações, conversões, contratações e o desempenho da sua rede.',
+    titleKey: 'panel.cards.dashboard.title',
+    descriptionKey: 'panel.cards.dashboard.description',
     to: '/painel/indicador/dashboard',
-    action: 'Acompanhar',
+    actionKey: 'panel.cards.dashboard.action',
   },
   {
     icon: FaMoneyBillWave,
-    title: 'Financeiro',
-    description: 'Consulte recompensas, pagamentos aprovados, saldo disponível e movimentações.',
+    titleKey: 'panel.cards.finance.title',
+    descriptionKey: 'panel.cards.finance.description',
     to: '/painel/indicador/dashboard?secao=financeiro',
-    action: 'Ver financeiro',
+    actionKey: 'panel.cards.finance.action',
   },
   {
     icon: FaCog,
-    title: 'Configurações',
-    description: 'Gerencie sua conta, preferências de acesso e opções de segurança.',
+    titleKey: 'panel.cards.settings.title',
+    descriptionKey: 'panel.cards.settings.description',
     to: '/painel/indicador/dashboard?secao=configuracoes',
-    action: 'Configurar conta',
+    actionKey: 'panel.cards.settings.action',
   },
 ]
 
 function PainelIndicador() {
+  const { t } = useTranslation('referrer')
   const { perfil } = useAuth()
   const [searchParams] = useSearchParams()
   const secaoLegada = searchParams.get('secao')
@@ -75,23 +77,29 @@ function PainelIndicador() {
     <DashboardLayout sidebarType="indicador" user={perfil}>
       <section className="indicador-central-panel">
         <DashboardHeader
-          eyebrow="BOAS-VINDAS - Painel Central"
-          greeting="Bem-vindo,"
-          name={perfil?.nome || perfil?.nomeCompleto || 'Indicador'}
-          description="Explore oportunidades, gerencie seus candidatos e acompanhe seu crescimento em um só lugar."
+          eyebrow={t('panel.eyebrow')}
+          greeting={t('panel.greeting')}
+          name={perfil?.nome || perfil?.nomeCompleto || t('panel.defaultName')}
+          description={t('panel.description')}
         />
 
-        <section className="dashboard-cards" aria-label="Atalhos do painel do indicador">
+        <section className="dashboard-cards" aria-label={t('panel.shortcuts')}>
           {painelCards.map((card) => (
-            <DashboardActionCard key={card.title} {...card} />
+            <DashboardActionCard
+              key={card.titleKey}
+              {...card}
+              title={t(card.titleKey)}
+              description={t(card.descriptionKey)}
+              action={t(card.actionKey)}
+            />
           ))}
         </section>
 
         <Link
           className="dashboard-floating-btn"
           to="/candidatos/indicador/novo"
-          aria-label="Cadastrar candidato"
-          title="Cadastrar candidato"
+          aria-label={t('panel.registerCandidate')}
+          title={t('panel.registerCandidate')}
         >
           <FaPlus aria-hidden="true" />
         </Link>

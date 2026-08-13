@@ -2,6 +2,7 @@ import './styles/IndicadorDashboard.css'
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   FaArrowRight,
   FaBriefcase,
@@ -34,16 +35,14 @@ import {
 } from '../../services/firestorePagamentos'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { montarResumoDashboard } from './indicadorDashboardDados'
-
-const statusLabels = {
-  indicado: 'Indicado',
-  entrevista: 'Entrevista',
-  contratado: 'Contratado',
-  cancelado: 'Cancelado',
-  recusado: 'Recusado',
-}
+import {
+  formatCurrency,
+  formatDate,
+  formatPercent
+} from '../../i18n/formatters'
 
 function IndicadorDashboard({ user }) {
+  const { t, i18n } = useTranslation(['referrer', 'common'])
   const indicadorId = getFirebaseUid(user)
   const [dados, setDados] = useState({
     candidatos: [],
@@ -60,7 +59,7 @@ function IndicadorDashboard({ user }) {
     const carregarDashboard = async () => {
       if (!indicadorId) {
         if (ativo) {
-          setErro('Perfil do indicador sem UID do Firebase.')
+          setErro(t('dashboard.missingUid'))
           setCarregando(false)
         }
         return
@@ -77,9 +76,9 @@ function IndicadorDashboard({ user }) {
 
         if (!ativo) return
         setDados({ candidatos, pagamentos, movimentacoes })
-      } catch (error) {
+      } catch {
         if (ativo) {
-          setErro(error.message || 'Não foi possível carregar os dados do dashboard.')
+          setErro(t('dashboard.loadError'))
         }
       } finally {
         if (ativo) setCarregando(false)
@@ -91,32 +90,32 @@ function IndicadorDashboard({ user }) {
     return () => {
       ativo = false
     }
-  }, [indicadorId, reloadKey])
+  }, [indicadorId, reloadKey, t])
 
   const resumo = useMemo(
-    () => montarResumoDashboard(dados),
-    [dados],
+    () => montarResumoDashboard(dados, new Date(), i18n.resolvedLanguage || i18n.language),
+    [dados, i18n.language, i18n.resolvedLanguage],
   )
 
   const proximosPassos = useMemo(
-    () => montarProximosPassos({ resumo, user }),
-    [resumo, user],
+    () => montarProximosPassos({ resumo, user, t }),
+    [resumo, t, user],
   )
 
   if (carregando) {
-    return <PageLoader label="Montando seu dashboard..." compact />
+    return <PageLoader label={t('dashboard.loading')} compact />
   }
 
   if (erro) {
     return (
       <EstadoDados
-        actionLabel="Tentar novamente"
+        actionLabel={t('dashboard.retry')}
         description={erro}
         onAction={() => {
           setCarregando(true)
           setReloadKey((value) => value + 1)
         }}
-        title={navigator.onLine ? 'Dashboard indisponível' : 'Você está sem conexão'}
+        title={navigator.onLine ? t('dashboard.unavailable') : t('dashboard.offline')}
         tone={navigator.onLine ? 'error' : 'offline'}
       />
     )
@@ -126,47 +125,48 @@ function IndicadorDashboard({ user }) {
     <section className="indicador-dashboard">
       <header className="indicador-dashboard-header">
         <div>
-          <span>Visão geral da rede</span>
-          <h1>Performance do Indicador</h1>
-          <p>
-            Olá, {primeiroNome(user?.nome)}. Acompanhe indicações, conversões e recompensas em um só lugar.
-          </p>
+          <span>{t('dashboard.networkOverview')}</span>
+          <h1>{t('dashboard.title')}</h1>
+          <p>{t('dashboard.greeting', {
+            name: primeiroNome(user?.nome, t('panel.defaultName'))
+          })}</p>
         </div>
 
         <Link className="indicador-dashboard-primary-action" to="/vagas">
-          Nova indicação <FaArrowRight />
+          {t('dashboard.newReferral')} <FaArrowRight />
         </Link>
       </header>
 
       <section
         className="indicador-dashboard-metrics"
         data-tour="indicador-dashboard-metricas"
-        aria-label="Métricas do indicador"
+        aria-label={t('dashboard.metricsLabel')}
       >
         <MetricCard
           icon={FaUserFriends}
-          label="Total de indicações"
+          label={t('dashboard.totalReferrals')}
           value={resumo.totalIndicacoes}
-          helper={`${resumo.totalAvancaram} avançaram no processo`}
+          helper={t('dashboard.advanced', { count: resumo.totalAvancaram })}
         />
         <MetricCard
           icon={FaUserCheck}
-          label="Contratações"
+          label={t('dashboard.hires')}
           value={resumo.totalContratacoes}
-          helper={`${formatPercent(resumo.taxaContratacao)} de conversão`}
+          helper={t('dashboard.conversionHelper', { value: formatPercent(resumo.taxaContratacao) })}
         />
         <MetricCard
           icon={FaMoneyBillWave}
-          label="Total em prêmios"
+          label={t('dashboard.totalRewards')}
           value={formatCurrency(resumo.totalPremios)}
-          helper="Pagamentos aprovados"
+          helper={t('dashboard.approvedPayments')}
           tone="primary"
+          badge={t('dashboard.finance')}
         />
         <MetricCard
           icon={FaClock}
-          label="Indicações ativas"
+          label={t('dashboard.activeReferrals')}
           value={resumo.totalAtivas}
-          helper={`${resumo.totalEntrevistas} em entrevista`}
+          helper={t('dashboard.inInterview', { count: resumo.totalEntrevistas })}
         />
       </section>
 
@@ -176,44 +176,44 @@ function IndicadorDashboard({ user }) {
             <article className="indicador-dashboard-card indicador-network-card">
               <div className="indicador-dashboard-card-heading">
                 <div>
-                  <span>Conversão</span>
-                  <h2>Performance da rede</h2>
+                  <span>{t('dashboard.conversion')}</span>
+                  <h2>{t('dashboard.networkPerformance')}</h2>
                 </div>
                 <FaChartLine />
               </div>
 
               <ConversionRow
-                label="Indicações → entrevistas"
+                label={t('dashboard.referralsToInterviews')}
                 value={resumo.taxaEntrevista}
-                detail={`${resumo.totalAvancaram} de ${resumo.totalIndicacoes}`}
+                detail={t('dashboard.ratio', { part: resumo.totalAvancaram, total: resumo.totalIndicacoes })}
               />
               <ConversionRow
-                label="Entrevistas → contratações"
+                label={t('dashboard.interviewsToHires')}
                 value={resumo.taxaEntrevistaContratacao}
-                detail={`${resumo.totalContratacoes} de ${resumo.totalAvancaram}`}
+                detail={t('dashboard.ratio', { part: resumo.totalContratacoes, total: resumo.totalAvancaram })}
               />
             </article>
 
             <article className="indicador-dashboard-card indicador-pending-card">
               <div className="indicador-dashboard-card-heading">
                 <div>
-                  <span>Em acompanhamento</span>
-                  <h2>Prêmios pendentes</h2>
+                  <span>{t('dashboard.tracking')}</span>
+                  <h2>{t('dashboard.pendingRewards')}</h2>
                 </div>
                 <FaMoneyBillWave />
               </div>
 
               <div className="indicador-pending-value">
                 <strong>{resumo.premiosPendentes}</strong>
-                <span>{resumo.premiosPendentes === 1 ? 'recompensa' : 'recompensas'}</span>
+                <span>{t('dashboard.reward', { count: resumo.premiosPendentes })}</span>
               </div>
               <p>
                 {resumo.premiosPendentes
-                  ? `${formatCurrency(resumo.valorPendente)} aguardando criação ou aprovação do pagamento.`
-                  : 'Nenhuma recompensa pendente. Seu financeiro está em dia.'}
+                  ? t('dashboard.pendingValue', { value: formatCurrency(resumo.valorPendente) })
+                  : t('dashboard.noPending')}
               </p>
               <Link to="/painel/indicador/dashboard?secao=financeiro">
-                Abrir financeiro <FaArrowRight />
+                {t('dashboard.openFinance')} <FaArrowRight />
               </Link>
             </article>
           </section>
@@ -224,10 +224,10 @@ function IndicadorDashboard({ user }) {
           >
             <div className="indicador-dashboard-card-heading">
               <div>
-                <span>Pipeline</span>
-                <h2>Indicações recentes</h2>
+                <span>{t('dashboard.pipeline')}</span>
+                <h2>{t('dashboard.recentReferrals')}</h2>
               </div>
-              <Link to="/candidatos/indicador">Ver todas <FaArrowRight /></Link>
+              <Link to="/candidatos/indicador">{t('dashboard.viewAll')} <FaArrowRight /></Link>
             </div>
 
             {resumo.recentes.length ? (
@@ -235,11 +235,11 @@ function IndicadorDashboard({ user }) {
                 <table className="indicador-recent-table">
                   <thead>
                     <tr>
-                      <th>Candidato</th>
-                      <th>Vaga</th>
-                      <th>Empresa</th>
-                      <th>Data</th>
-                      <th>Status</th>
+                      <th>{t('dashboard.candidate')}</th>
+                      <th>{t('dashboard.job')}</th>
+                      <th>{t('dashboard.company')}</th>
+                      <th>{t('dashboard.date')}</th>
+                      <th>{t('dashboard.status')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -248,17 +248,17 @@ function IndicadorDashboard({ user }) {
                         <td>
                           <Link to="/candidatos/indicador" className="indicador-candidate-cell">
                             <span className={`indicador-candidate-initial tone-${index % 4}`}>
-                              {iniciais(candidato.nome)}
+                              {iniciais(candidato.nome, t('dashboard.candidate'))}
                             </span>
-                            <strong>{candidato.nome || 'Candidato'}</strong>
+                            <strong>{candidato.nome || t('dashboard.candidate')}</strong>
                           </Link>
                         </td>
-                        <td>{candidato.vagaTitulo || 'Vaga não informada'}</td>
-                        <td>{candidato.vagaEmpresa || candidato.empresaNome || 'Empresa'}</td>
+                        <td>{candidato.vagaTitulo || t('dashboard.jobNotProvided')}</td>
+                        <td>{candidato.vagaEmpresa || candidato.empresaNome || t('dashboard.company')}</td>
                         <td>{formatDate(candidato.aplicadoEm || candidato.criadoEm)}</td>
                         <td>
                           <span className={`indicador-status-badge ${candidato.status || 'indicado'}`}>
-                            {statusLabels[candidato.status] || statusLabels.indicado}
+                            {t(`common:statuses.candidates.${candidato.status || 'indicado'}`)}
                           </span>
                         </td>
                       </tr>
@@ -270,10 +270,10 @@ function IndicadorDashboard({ user }) {
               <div className="indicador-dashboard-empty">
                 <FaUserFriends />
                 <div>
-                  <strong>Sua rede começa com a primeira indicação</strong>
-                  <p>Explore as vagas abertas e conecte um talento à oportunidade certa.</p>
+                  <strong>{t('dashboard.firstReferralTitle')}</strong>
+                  <p>{t('dashboard.firstReferralDescription')}</p>
                 </div>
-                <Link to="/vagas">Explorar vagas</Link>
+                <Link to="/vagas">{t('dashboard.exploreJobs')}</Link>
               </div>
             )}
           </article>
@@ -284,11 +284,11 @@ function IndicadorDashboard({ user }) {
           >
             <div className="indicador-dashboard-card-heading">
               <div>
-                <span>Últimos seis meses</span>
-                <h2>Ganhos por mês</h2>
+                <span>{t('dashboard.lastSixMonths')}</span>
+                <h2>{t('dashboard.monthlyEarnings')}</h2>
               </div>
               <div className="indicador-chart-total">
-                <span>Total no período</span>
+                <span>{t('dashboard.periodTotal')}</span>
                 <strong>{formatCurrency(resumo.totalPeriodoGrafico)}</strong>
               </div>
             </div>
@@ -313,7 +313,7 @@ function IndicadorDashboard({ user }) {
                     <YAxis
                       axisLine={false}
                       tick={{ fill: 'var(--muted)', fontSize: 10 }}
-                      tickFormatter={formatAxisCurrency}
+                      tickFormatter={(value) => formatCurrency(value, { notation: 'compact', maximumFractionDigits: 1 })}
                       tickLine={false}
                       width={70}
                     />
@@ -325,19 +325,23 @@ function IndicadorDashboard({ user }) {
             ) : (
               <div className="indicador-chart-empty">
                 <FaChartLine />
-                <strong>O gráfico cresce com suas recompensas</strong>
-                <p>Pagamentos aprovados aparecerão aqui, agrupados pelo mês de recebimento.</p>
+                <strong>{t('dashboard.chartEmptyTitle')}</strong>
+                <p>{t('dashboard.chartEmptyDescription')}</p>
               </div>
             )}
 
             <footer className="indicador-chart-footer">
               <span>
-                Fonte: {resumo.fonteGanhos === 'movimentacoes'
-                  ? 'créditos em movimentações financeiras'
-                  : 'pagamentos aprovados'}
+                {t('dashboard.source', {
+                  source: resumo.fonteGanhos === 'movimentacoes'
+                    ? t('dashboard.transactionCredits')
+                    : t('dashboard.approvedPayments').toLocaleLowerCase(i18n.resolvedLanguage || i18n.language)
+                })}
               </span>
               {resumo.ultimoCredito && (
-                <span>Último crédito: {formatDate(resumo.ultimoCredito)}</span>
+                <span>{t('dashboard.lastCredit', { date: formatDate(resumo.ultimoCredito, {
+                  day: '2-digit', month: 'short', year: 'numeric'
+                }) })}</span>
               )}
             </footer>
           </article>
@@ -345,24 +349,22 @@ function IndicadorDashboard({ user }) {
 
         <aside className="indicador-dashboard-aside">
           <article className="indicador-editorial-card">
-            <span><FaLightbulb /> Dica do editor</span>
-            <h2>Como aumentar suas chances de sucesso?</h2>
-            <p>
-              Uma indicação forte explica por que a pessoa combina com a vaga, não apenas onde ela trabalhou.
-            </p>
+            <span><FaLightbulb /> {t('dashboard.editorTip')}</span>
+            <h2>{t('dashboard.successTitle')}</h2>
+            <p>{t('dashboard.successDescription')}</p>
             <ul>
-              <li>Conecte experiências aos requisitos da vaga.</li>
-              <li>Destaque resultados e contexto de colaboração.</li>
-              <li>Mantenha LinkedIn e currículo atualizados.</li>
+              <li>{t('dashboard.tipExperience')}</li>
+              <li>{t('dashboard.tipResults')}</li>
+              <li>{t('dashboard.tipProfile')}</li>
             </ul>
-            <Link to="/vagas">Encontrar oportunidade <FaArrowRight /></Link>
+            <Link to="/vagas">{t('dashboard.findOpportunity')} <FaArrowRight /></Link>
           </article>
 
           <article className="indicador-next-steps-card">
             <div className="indicador-dashboard-card-heading">
               <div>
-                <span>Agora</span>
-                <h2>Próximos passos</h2>
+                <span>{t('dashboard.now')}</span>
+                <h2>{t('dashboard.nextSteps')}</h2>
               </div>
             </div>
 
@@ -389,12 +391,12 @@ function IndicadorDashboard({ user }) {
   )
 }
 
-function MetricCard({ helper, icon: Icon, label, tone = '', value }) {
+function MetricCard({ badge, helper, icon: Icon, label, tone = '', value }) {
   return (
     <article className={`indicador-metric-card ${tone}`}>
       <div className="indicador-metric-card-top">
         <span><Icon /></span>
-        {tone === 'primary' && <small>Financeiro</small>}
+        {tone === 'primary' && <small>{badge}</small>}
       </div>
       <p>{label}</p>
       <strong>{value}</strong>
@@ -433,15 +435,15 @@ function GanhosTooltip({ active, payload }) {
   )
 }
 
-function montarProximosPassos({ resumo, user }) {
+function montarProximosPassos({ resumo, user, t }) {
   const passos = []
   const perfilIncompleto = !user?.linkedin || !user?.especialidades
 
   if (!resumo.totalIndicacoes) {
     passos.push({
       icon: FaBriefcase,
-      title: 'Faça sua primeira indicação',
-      description: 'Explore as vagas abertas e escolha um talento da sua rede.',
+      title: t('dashboard.next.firstTitle'),
+      description: t('dashboard.next.firstDescription'),
       to: '/vagas',
     })
   }
@@ -449,8 +451,8 @@ function montarProximosPassos({ resumo, user }) {
   if (resumo.totalAtivas) {
     passos.push({
       icon: FaCalendarCheck,
-      title: 'Acompanhe processos ativos',
-      description: `${resumo.totalAtivas} ${resumo.totalAtivas === 1 ? 'indicação está' : 'indicações estão'} em andamento.`,
+      title: t('dashboard.next.activeTitle'),
+      description: t('dashboard.next.activeDescription', { count: resumo.totalAtivas }),
       to: '/candidatos/indicador',
     })
   }
@@ -458,8 +460,8 @@ function montarProximosPassos({ resumo, user }) {
   if (resumo.premiosPendentes) {
     passos.push({
       icon: FaMoneyBillWave,
-      title: 'Recompensas em acompanhamento',
-      description: `${resumo.premiosPendentes} ${resumo.premiosPendentes === 1 ? 'pagamento precisa' : 'pagamentos precisam'} de atenção.`,
+      title: t('dashboard.next.rewardsTitle'),
+      description: t('dashboard.next.rewardsDescription', { count: resumo.premiosPendentes }),
       to: '/painel/indicador/dashboard?secao=financeiro',
     })
   }
@@ -467,8 +469,8 @@ function montarProximosPassos({ resumo, user }) {
   if (perfilIncompleto) {
     passos.push({
       icon: FaUserTie,
-      title: 'Fortaleça seu perfil',
-      description: 'Adicione LinkedIn e especialidades para deixar sua atuação mais completa.',
+      title: t('dashboard.next.profileTitle'),
+      description: t('dashboard.next.profileDescription'),
       to: '/painel/indicador/dashboard?secao=perfil',
     })
   }
@@ -476,8 +478,8 @@ function montarProximosPassos({ resumo, user }) {
   if (passos.length < 3) {
     passos.push({
       icon: FaCheckCircle,
-      title: 'Revise suas indicações',
-      description: 'Mantenha dados e contexto dos candidatos sempre atualizados.',
+      title: t('dashboard.next.reviewTitle'),
+      description: t('dashboard.next.reviewDescription'),
       to: '/candidatos/indicador',
     })
   }
@@ -485,8 +487,8 @@ function montarProximosPassos({ resumo, user }) {
   if (passos.length < 3) {
     passos.push({
       icon: FaBriefcase,
-      title: 'Amplie sua rede de oportunidades',
-      description: 'Veja as vagas mais recentes publicadas pelas empresas.',
+      title: t('dashboard.next.networkTitle'),
+      description: t('dashboard.next.networkDescription'),
       to: '/vagas',
     })
   }
@@ -494,47 +496,12 @@ function montarProximosPassos({ resumo, user }) {
   return passos.slice(0, 3)
 }
 
-function formatCurrency(value) {
-  return Number(value || 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0,
-  })
+function primeiroNome(nome, fallback) {
+  return String(nome || fallback).trim().split(/\s+/)[0]
 }
 
-function formatAxisCurrency(value) {
-  const numero = Number(value || 0)
-
-  if (Math.abs(numero) >= 1000) {
-    return `R$ ${(numero / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mil`
-  }
-
-  return `R$ ${numero.toLocaleString('pt-BR')}`
-}
-
-function formatPercent(value) {
-  return `${Number(value || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`
-}
-
-function formatDate(value) {
-  if (!value) return 'Não informado'
-
-  const data = new Date(value)
-  if (Number.isNaN(data.getTime())) return 'Não informado'
-
-  return data.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).replace('.', '')
-}
-
-function primeiroNome(nome) {
-  return String(nome || 'Indicador').trim().split(/\s+/)[0]
-}
-
-function iniciais(nome) {
-  const partes = String(nome || 'Candidato').trim().split(/\s+/).filter(Boolean)
+function iniciais(nome, fallback) {
+  const partes = String(nome || fallback).trim().split(/\s+/).filter(Boolean)
   return partes.slice(0, 2).map((parte) => parte[0]).join('').toUpperCase()
 }
 

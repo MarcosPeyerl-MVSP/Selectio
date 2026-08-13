@@ -1,6 +1,7 @@
 import './styles/EmpresaPerfil.css'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import {
   FaBriefcase,
@@ -20,8 +21,8 @@ import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { atualizarPerfilUsuario } from '../../services/firestoreUsers'
 import { listarVagasPorEmpresa } from '../../services/firestoreVagas'
 import { useToast } from '../../hooks/useToast'
-
-const emptyValue = 'Não informado'
+import { formatDate as formatLocalizedDate } from '../../i18n/formatters'
+import { formatCompanyIndustry, formatCompanySize } from '../../i18n/domainFormatters'
 
 const getInitialForm = (empresa) => ({
   nomeEmpresa: empresa?.nomeEmpresa || '',
@@ -32,17 +33,11 @@ const getInitialForm = (empresa) => ({
   endereco: empresa?.endereco || ''
 })
 
-const formatDate = (value) => {
-  if (!value) return emptyValue
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return emptyValue
-
-  return date.toLocaleDateString('pt-BR', {
+const formatDate = (value, fallback) => formatLocalizedDate(value, {
     day: '2-digit',
     month: 'short',
     year: 'numeric'
-  }).replace('.', '')
-}
+  }) || fallback
 
 const isActiveJob = (vaga) => {
   const status = String(vaga.status || vaga.situacao || 'ativa').toLowerCase()
@@ -50,6 +45,7 @@ const isActiveJob = (vaga) => {
 }
 
 function EmpresaPerfil({ empresa, onUserUpdate }) {
+  const { t } = useTranslation(['company', 'common'])
   const toast = useToast()
   const empresaUid = getFirebaseUid(empresa)
   const [vagas, setVagas] = useState([])
@@ -58,6 +54,7 @@ function EmpresaPerfil({ empresa, onUserUpdate }) {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState(() => getInitialForm(empresa))
+  const emptyValue = t('profile.notProvided')
 
   useEffect(() => {
     let active = true
@@ -78,7 +75,7 @@ function EmpresaPerfil({ empresa, onUserUpdate }) {
         setVagas(vagasData)
         setCandidatos(candidatosData)
       } catch {
-        toast.error('Não foi possível carregar os dados do perfil da empresa.')
+        toast.error(t('profile.loadError'))
       } finally {
         if (active) setLoading(false)
       }
@@ -89,7 +86,7 @@ function EmpresaPerfil({ empresa, onUserUpdate }) {
     return () => {
       active = false
     }
-  }, [empresaUid, toast])
+  }, [empresaUid, t, toast])
 
   const metrics = useMemo(() => {
     const contratados = candidatos.filter((candidato) => candidato.status === 'contratado').length
@@ -113,7 +110,7 @@ function EmpresaPerfil({ empresa, onUserUpdate }) {
     event.preventDefault()
 
     if (!empresaUid) {
-      toast.warning('Perfil sem UID do Firebase. Entre novamente antes de salvar.')
+      toast.warning(t('profile.missingUid'))
       return
     }
 
@@ -135,16 +132,16 @@ function EmpresaPerfil({ empresa, onUserUpdate }) {
       localStorage.setItem('empresaUser', JSON.stringify(updatedEmpresa))
       onUserUpdate?.(updatedEmpresa)
       setEditing(false)
-      toast.success('Perfil da empresa atualizado.')
+      toast.success(t('profile.saved'))
     } catch {
-      toast.error('Não foi possível salvar o perfil da empresa.')
+      toast.error(t('profile.saveError'))
     } finally {
       setSaving(false)
     }
   }
 
   if (loading) {
-    return <PageLoader label="Carregando perfil da empresa..." />
+    return <PageLoader label={t('profile.loading')} />
   }
 
   const companyInitial = (empresa?.nomeEmpresa || empresa?.nome || 'S').charAt(0).toUpperCase()
@@ -154,88 +151,88 @@ function EmpresaPerfil({ empresa, onUserUpdate }) {
   return (
     <section className="empresa-profile">
       <header className="profile-page-header">
-        <span>PERFIL CORPORATIVO</span>
-        <h1>Perfil da Empresa</h1>
-        <p>Gerencie a identidade e as informações corporativas da sua organização na plataforma Selectio.</p>
+        <span>{t('profile.eyebrow')}</span>
+        <h1>{t('profile.title')}</h1>
+        <p>{t('profile.description')}</p>
       </header>
 
       <section className="empresa-profile-hero">
         <div className="empresa-profile-avatar">{companyInitial}</div>
         <div>
-          <span>{empresa?.setor || 'Organização Selectio'}</span>
+          <span>{formatCompanyIndustry(empresa?.setor, t) || t('profile.defaultOrganization')}</span>
           <h2>{empresa?.nomeEmpresa || emptyValue}</h2>
-          <p>Na plataforma desde {formatDate(empresa?.criadoEm)}</p>
+          <p>{t('profile.memberSince', { date: formatDate(empresa?.criadoEm, emptyValue) })}</p>
         </div>
         <div className="empresa-profile-actions">
           <button type="button" onClick={() => setEditing((current) => !current)}>
-            <FaEdit /> {editing ? 'Cancelar edição' : 'Editar informações'}
+            <FaEdit /> {editing ? t('profile.cancelEdit') : t('profile.edit')}
           </button>
           <button type="button" className="ghost" disabled>
-            <FaExternalLinkAlt /> Ver perfil publico
+            <FaExternalLinkAlt /> {t('profile.viewPublic')}
           </button>
         </div>
       </section>
 
       {editing && (
         <form className="empresa-profile-form" onSubmit={handleSave}>
-          <ProfileField label="Nome da empresa" name="nomeEmpresa" value={form.nomeEmpresa} onChange={handleChange} />
-          <ProfileField label="Telefone" name="telefone" value={form.telefone} onChange={handleChange} />
+          <ProfileField label={t('profile.companyName')} name="nomeEmpresa" value={form.nomeEmpresa} onChange={handleChange} />
+          <ProfileField label={t('profile.phone')} name="telefone" value={form.telefone} onChange={handleChange} />
           <ProfileField label="Site" name="site" value={form.site} onChange={handleChange} />
-          <ProfileField label="Setor" name="setor" value={form.setor} onChange={handleChange} />
-          <ProfileField label="Tamanho" name="tamanho" value={form.tamanho} onChange={handleChange} />
-          <ProfileField label="Endereco" name="endereco" value={form.endereco} onChange={handleChange} />
+          <ProfileField label={t('profile.sector')} name="setor" value={form.setor} onChange={handleChange} />
+          <ProfileField label={t('profile.size')} name="tamanho" value={form.tamanho} onChange={handleChange} />
+          <ProfileField label={t('profile.address')} name="endereco" value={form.endereco} onChange={handleChange} />
           <button type="submit" disabled={saving}>
-            <FaSave /> {saving ? 'Salvando...' : 'Salvar alterações'}
+            <FaSave /> {saving ? t('profile.saving') : t('profile.save')}
           </button>
         </form>
       )}
 
       <section className="empresa-profile-metrics">
-        <MetricCard icon={FaBriefcase} label="Vagas publicadas" value={metrics.vagasPublicadas} />
-        <MetricCard icon={FaCheckCircle} label="Vagas ativas" value={metrics.vagasAtivas} />
-        <MetricCard icon={FaUsers} label="Candidatos recebidos" value={metrics.candidatosRecebidos} />
-        <MetricCard icon={FaBuilding} label="Contratados" value={metrics.candidatosContratados} />
-        <MetricCard icon={FaCalendarAlt} label="Em entrevista" value={metrics.candidatosEntrevista} />
+        <MetricCard icon={FaBriefcase} label={t('profile.publishedJobs')} value={metrics.vagasPublicadas} />
+        <MetricCard icon={FaCheckCircle} label={t('profile.activeJobs')} value={metrics.vagasAtivas} />
+        <MetricCard icon={FaUsers} label={t('profile.candidatesReceived')} value={metrics.candidatosRecebidos} />
+        <MetricCard icon={FaBuilding} label={t('profile.hired')} value={metrics.candidatosContratados} />
+        <MetricCard icon={FaCalendarAlt} label={t('profile.inInterview')} value={metrics.candidatosEntrevista} />
       </section>
 
       <section className="empresa-profile-grid">
-        <InfoCard title="Contato corporativo" items={[
-          ['E-mail', empresa?.email],
-          ['Telefone', empresa?.telefone],
+        <InfoCard title={t('profile.corporateContact')} emptyValue={emptyValue} items={[
+          [t('profile.email'), empresa?.email],
+          [t('profile.phone'), empresa?.telefone],
           ['Site', empresa?.site]
         ]} />
-        <InfoCard title="Dados institucionais" items={[
-          ['Razao social', empresa?.razaoSocial],
+        <InfoCard title={t('profile.institutionalData')} emptyValue={emptyValue} items={[
+          [t('profile.legalName'), empresa?.razaoSocial],
           ['CNPJ', empresa?.cnpj],
-          ['Plano', empresa?.plano || 'Plano não informado']
+          [t('profile.plan'), empresa?.plano || t('profile.planNotProvided')]
         ]} />
-        <InfoCard title="Setor e estrutura" items={[
-          ['Setor', empresa?.setor],
-          ['Tamanho', empresa?.tamanho],
-          ['Atualizado em', formatDate(empresa?.atualizadoEm)]
+        <InfoCard title={t('profile.sectorStructure')} emptyValue={emptyValue} items={[
+          [t('profile.sector'), formatCompanyIndustry(empresa?.setor, t)],
+          [t('profile.size'), formatCompanySize(empresa?.tamanho, t)],
+          [t('profile.updatedAt'), formatDate(empresa?.atualizadoEm, emptyValue)]
         ]} />
-        <InfoCard title="Endereco" icon={FaMapMarkerAlt} items={[
-          ['Endereco', empresa?.endereco]
+        <InfoCard title={t('profile.address')} icon={FaMapMarkerAlt} emptyValue={emptyValue} items={[
+          [t('profile.address'), empresa?.endereco]
         ]} />
       </section>
 
       <section className="empresa-profile-lists">
         <RecentList
-          title="Ultimas vagas publicadas"
-          empty="Nenhuma vaga publicada ainda."
+          title={t('profile.recentJobs')}
+          empty={t('profile.noJobs')}
           items={recentJobs.map((vaga) => ({
-            title: vaga.titulo || 'Vaga sem titulo',
-            meta: `${vaga.area || emptyValue} - ${formatDate(vaga.criadoEm)}`,
+            title: vaga.titulo || t('profile.untitledJob'),
+            meta: `${vaga.area || emptyValue} - ${formatDate(vaga.criadoEm, emptyValue)}`,
             to: `/vaga/${vaga.id}`
           }))}
         />
         <RecentList
-          title="Ultimos candidatos recebidos"
-          empty="Nenhum candidato recebido ainda."
+          title={t('profile.recentCandidates')}
+          empty={t('profile.noCandidates')}
           items={recentCandidates.map((candidato) => ({
-            title: candidato.nome || 'Candidato sem nome',
-            meta: `${candidato.vagaTitulo || emptyValue} - ${formatDate(candidato.aplicadoEm)}`,
-            badge: candidato.status || 'indicado'
+            title: candidato.nome || t('profile.unnamedCandidate'),
+            meta: `${candidato.vagaTitulo || emptyValue} - ${formatDate(candidato.aplicadoEm, emptyValue)}`,
+            badge: t(`common:statuses.candidates.${candidato.status || 'indicado'}`, { defaultValue: candidato.status || t('common:statuses.candidates.indicado') })
           }))}
         />
       </section>
@@ -262,7 +259,7 @@ function MetricCard({ icon: Icon, label, value }) {
   )
 }
 
-function InfoCard({ title, icon: Icon = FaBuilding, items }) {
+function InfoCard({ title, icon: Icon = FaBuilding, items, emptyValue }) {
   return (
     <article className="empresa-info-card">
       <div>

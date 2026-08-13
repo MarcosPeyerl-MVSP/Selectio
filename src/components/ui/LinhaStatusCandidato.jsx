@@ -1,16 +1,17 @@
 import './LinhaStatusCandidato.css'
 
 import { FaBan, FaBriefcase, FaCheck, FaComments, FaUserCheck } from 'react-icons/fa'
+import { useTranslation } from 'react-i18next'
 
 const steps = [
-  { value: 'indicado', label: 'Indicado', icon: FaUserCheck },
-  { value: 'entrevista', label: 'Entrevista', icon: FaComments },
-  { value: 'contratado', label: 'Contratado', icon: FaBriefcase }
+  { value: 'indicado', labelKey: 'candidateStatus.referred', icon: FaUserCheck },
+  { value: 'entrevista', labelKey: 'candidateStatus.interview', icon: FaComments },
+  { value: 'contratado', labelKey: 'candidateStatus.hired', icon: FaBriefcase }
 ]
 
 const negativeCopy = {
-  cancelado: 'Processo cancelado',
-  recusado: 'Candidato recusado'
+  cancelado: 'candidateStatus.cancelled',
+  recusado: 'candidateStatus.rejected'
 }
 
 const normalizeStatus = (status) => {
@@ -26,6 +27,7 @@ function LinhaStatusCandidato({
   onChangeStatus,
   variant = 'default'
 }) {
+  const { t } = useTranslation('common')
   const normalizedStatus = normalizeStatus(status)
   const isNegative = normalizedStatus === 'cancelado' || normalizedStatus === 'recusado'
   const activeIndex = isNegative ? 0 : steps.findIndex((step) => step.value === normalizedStatus)
@@ -37,7 +39,7 @@ function LinhaStatusCandidato({
 
   return (
     <div className={`candidate-status-timeline ${variant} ${isNegative ? 'negative' : ''}`}>
-      <div className="timeline-track" aria-label="Status do candidato">
+      <div className="timeline-track" aria-label={t('candidateStatus.label')}>
         {steps.map((step, index) => {
           const Icon = step.icon
           const state = isNegative
@@ -57,7 +59,7 @@ function LinhaStatusCandidato({
               <span className="timeline-node">
                 {state === 'completed' ? <FaCheck /> : <Icon />}
               </span>
-              <span className="timeline-label">{step.label}</span>
+              <span className="timeline-label">{t(step.labelKey)}</span>
             </button>
           )
         })}
@@ -66,7 +68,7 @@ function LinhaStatusCandidato({
       {isNegative ? (
         <div className="timeline-negative-badge">
           <FaBan />
-          {negativeCopy[normalizedStatus]}
+          {t(negativeCopy[normalizedStatus])}
         </div>
       ) : editable && (
         <div className="timeline-negative-actions">
@@ -76,7 +78,7 @@ function LinhaStatusCandidato({
             onClick={() => handleClick('recusado')}
             disabled={loading}
           >
-            Recusar candidato
+            {t('candidateStatus.rejectAction')}
           </button>
           <button
             type="button"
@@ -84,7 +86,7 @@ function LinhaStatusCandidato({
             onClick={() => handleClick('cancelado')}
             disabled={loading}
           >
-            Cancelar processo
+            {t('candidateStatus.cancelAction')}
           </button>
         </div>
       )}

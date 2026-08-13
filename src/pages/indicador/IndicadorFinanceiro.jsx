@@ -1,12 +1,14 @@
 import './styles/IndicadorFinanceiro.css'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FaCreditCard, FaMoneyBillWave, FaReceipt, FaWallet } from 'react-icons/fa'
 
 import CardSaldo from '../../components/pagamentos/CardSaldo'
 import PageLoader from '../../components/ui/PageLoader'
 import { useConfirmacao } from '../../hooks/useConfirmacao'
 import { useToast } from '../../hooks/useToast'
+import { formatCurrency, formatDate } from '../../i18n/formatters'
 import { listarCandidatosPorIndicador } from '../../services/firestoreCandidatos'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import {
@@ -17,22 +19,10 @@ import {
 } from '../../services/firestorePagamentos'
 import { listarNotificacoesUsuario } from '../../services/firestoreNotificacoes'
 
-const statusPagamentoLabels = {
-  awaiting_company: 'Aguardando empresa',
-  created: 'Pendente',
-  pending: 'Pendente',
-  in_process: 'Pendente',
-  authorized: 'Pendente',
-  approved: 'Recebido',
-  rejected: 'Recusado',
-  cancelled: 'Cancelado',
-  refunded: 'Estornado',
-  failed: 'Falhou'
-}
-
 const statusPendente = new Set(['created', 'pending', 'in_process', 'authorized'])
 
 function IndicadorFinanceiro({ user }) {
+  const { t, i18n } = useTranslation(['referrer', 'common'])
   const toast = useToast()
   const confirm = useConfirmacao()
   const indicadorId = getFirebaseUid(user)
@@ -46,6 +36,16 @@ function IndicadorFinanceiro({ user }) {
   const [valor, setValor] = useState('')
   const [chavePix, setChavePix] = useState(user?.pix || '')
   const [enviando, setEnviando] = useState(false)
+  const language = i18n.resolvedLanguage || i18n.language
+  const formatDateTime = (value) => formatDate(value, {
+    dateStyle: 'short',
+    timeStyle: 'short'
+  }) || t('finance.notProvided')
+  const getPaymentStatus = (status) => (
+    status === 'approved'
+      ? t('finance.receivedStatus')
+      : t(`common:statuses.payments.${status}`, { defaultValue: status })
+  )
 
   useEffect(() => {
     let ativo = true
@@ -78,8 +78,8 @@ function IndicadorFinanceiro({ user }) {
         setNotificacoes(notificacoesData.filter((notificacao) => notificacao.tipo === 'pagamento_aprovado'))
         setPagamentos(pagamentosData)
         setCandidatos(candidatosData)
-      } catch (error) {
-        toast.error(error.message || 'Não foi possível carregar o financeiro.')
+      } catch {
+        toast.error(t('finance.loadError'))
       } finally {
         if (ativo) setCarregando(false)
       }
@@ -90,7 +90,7 @@ function IndicadorFinanceiro({ user }) {
     return () => {
       ativo = false
     }
-  }, [indicadorId, toast])
+  }, [indicadorId, t, toast])
 
   const notificacoesRecentes = useMemo(() => notificacoes.slice(0, 4), [notificacoes])
   const metricasPagamentos = useMemo(() => ({
@@ -109,28 +109,28 @@ function IndicadorFinanceiro({ user }) {
   const enviarSaque = async (event) => {
     event.preventDefault()
 
-    const valorNumerico = Number(String(valor).replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.'))
+    const valorNumerico = parseLocalizedNumber(valor, language)
 
     if (!valorNumerico || valorNumerico <= 0) {
-      toast.warning('Informe um valor válido para saque.')
+      toast.warning(t('finance.invalidWithdrawal'))
       return
     }
 
     if (valorNumerico > Number(saldo?.saldoDisponivel || 0)) {
-      toast.warning('Valor maior que o saldo disponível.')
+      toast.warning(t('finance.exceedsBalance'))
       return
     }
 
     if (!chavePix.trim()) {
-      toast.warning('Informe uma chave Pix.')
+      toast.warning(t('finance.pixRequired'))
       return
     }
 
     const confirmado = await confirm({
-      title: 'Solicitar saque?',
-      description: 'A equipe Selectio fará a validação manual desta solicitação.',
-      confirmLabel: 'Solicitar saque',
-      cancelLabel: 'Voltar'
+      title: t('finance.confirmTitle'),
+      description: t('finance.confirmDescription'),
+      confirmLabel: t('finance.requestWithdrawal'),
+      cancelLabel: t('finance.back')
     })
 
     if (!confirmado) return
@@ -151,46 +151,46 @@ function IndicadorFinanceiro({ user }) {
       }))
       setModalAberto(false)
       setValor('')
-      toast.success('Solicitação de saque enviada. A equipe Selectio fará a validação.')
-    } catch (error) {
-      toast.error(error.message || 'Não foi possível solicitar o saque.')
+      toast.success(t('finance.requestSent'))
+    } catch {
+      toast.error(t('finance.requestError'))
     } finally {
       setEnviando(false)
     }
   }
 
-  if (carregando) return <PageLoader label="Carregando financeiro..." compact />
+  if (carregando) return <PageLoader label={t('finance.loading')} compact />
 
   return (
     <section className="indicador-financeiro">
       <header className="indicador-financeiro-header">
         <div>
-          <span>Carteira Selectio</span>
-          <h1>Financeiro</h1>
-          <p>Acompanhe recompensas recebidas, saldo disponível e solicitações de saque.</p>
+          <span>{t('finance.wallet')}</span>
+          <h1>{t('finance.title')}</h1>
+          <p>{t('finance.description')}</p>
         </div>
 
         <button type="button" onClick={() => setModalAberto(true)} disabled={!Number(saldo?.saldoDisponivel || 0)}>
-          <FaWallet /> Solicitar saque
+          <FaWallet /> {t('finance.requestWithdrawal')}
         </button>
       </header>
 
       <section className="indicador-saldo-grid">
-        <CardSaldo label="Saldo disponível" value={saldo?.saldoDisponivel} helper="Pode ser solicitado para saque manual." tone="primary" />
-        <CardSaldo label="Saldo pendente" value={saldo?.saldoPendente} helper="Valores em validação de saque." />
-        <CardSaldo label="Total recebido" value={saldo?.totalRecebido} helper="Recompensas aprovadas por contratação." />
-        <CardSaldo label="Total sacado" value={saldo?.totalSacado} helper="Soma de saques pagos futuramente." />
+        <CardSaldo label={t('finance.availableBalance')} value={saldo?.saldoDisponivel} helper={t('finance.availableHelper')} tone="primary" />
+        <CardSaldo label={t('finance.pendingBalance')} value={saldo?.saldoPendente} helper={t('finance.pendingHelper')} />
+        <CardSaldo label={t('finance.totalReceived')} value={saldo?.totalRecebido} helper={t('finance.receivedHelper')} />
+        <CardSaldo label={t('finance.totalWithdrawn')} value={saldo?.totalSacado} helper={t('finance.withdrawnHelper')} />
       </section>
 
       <section className="indicador-pagamentos-metricas">
-        <MetricCard label="Volume aprovado" value={formatCurrency(metricasPagamentos.totalAprovado)} />
-        <MetricCard label="Volume pendente" value={formatCurrency(metricasPagamentos.totalPendente)} />
-        <MetricCard label="Total criado" value={formatCurrency(metricasPagamentos.totalCriado)} />
+        <MetricCard label={t('finance.approvedVolume')} value={formatCurrency(metricasPagamentos.totalAprovado)} />
+        <MetricCard label={t('finance.pendingVolume')} value={formatCurrency(metricasPagamentos.totalPendente)} />
+        <MetricCard label={t('finance.totalCreated')} value={formatCurrency(metricasPagamentos.totalCriado)} />
       </section>
 
       <article className="indicador-pagamentos-lista">
         <div className="indicador-pagamentos-lista-header">
-          <span><FaReceipt /> Histórico de recompensas</span>
+          <span><FaReceipt /> {t('finance.rewardHistory')}</span>
           <strong>{recompensas.length}</strong>
         </div>
 
@@ -198,21 +198,21 @@ function IndicadorFinanceiro({ user }) {
           recompensas.map((recompensa) => (
             <div className="indicador-pagamento-item" key={recompensa.id}>
               <div>
-                <strong>{recompensa.candidatoNome || 'Candidato'}</strong>
-                <span>{recompensa.vagaTitulo || 'Vaga não informada'} - {recompensa.empresaNome || 'Empresa'}</span>
+                <strong>{recompensa.candidatoNome || t('finance.candidate')}</strong>
+                <span>{recompensa.vagaTitulo || t('finance.jobNotProvided')} - {recompensa.empresaNome || t('finance.company')}</span>
                 {recompensa.status === 'awaiting_company' ? (
-                  <small>Candidato contratado. Recompensa aguardando pagamento da empresa.</small>
+                  <small>{t('finance.awaitingCompany')}</small>
                 ) : (
                   <>
-                    <small>Criado em {formatDateTime(recompensa.criadoEm)}</small>
+                    <small>{t('finance.createdAt', { date: formatDateTime(recompensa.criadoEm) })}</small>
                     {recompensa.transacaoEm && (
-                      <small>Transação em {formatDateTime(recompensa.transacaoEm)}</small>
+                      <small>{t('finance.transactionAt', { date: formatDateTime(recompensa.transacaoEm) })}</small>
                     )}
                     {recompensa.aprovadoEm && (
-                      <small>Aprovado em {formatDateTime(recompensa.aprovadoEm)}</small>
+                      <small>{t('finance.approvedAt', { date: formatDateTime(recompensa.aprovadoEm) })}</small>
                     )}
                     {recompensa.encerradoEm && recompensa.status !== 'approved' && (
-                      <small>Encerrado em {formatDateTime(recompensa.encerradoEm)}</small>
+                      <small>{t('finance.closedAt', { date: formatDateTime(recompensa.encerradoEm) })}</small>
                     )}
                   </>
                 )}
@@ -221,7 +221,7 @@ function IndicadorFinanceiro({ user }) {
               <div className="indicador-pagamento-meta">
                 <strong>{formatCurrency(recompensa.valor)}</strong>
                 <span className={`indicador-pagamento-status ${recompensa.status}`}>
-                  {statusPagamentoLabels[recompensa.status] || recompensa.status}
+                  {getPaymentStatus(recompensa.status)}
                 </span>
               </div>
             </div>
@@ -229,8 +229,8 @@ function IndicadorFinanceiro({ user }) {
         ) : (
           <div className="indicador-pagamentos-vazio">
             <FaCreditCard />
-            <strong>Nenhuma recompensa criada</strong>
-            <p>Quando uma empresa contratar um indicado ou criar um pagamento, o status aparecerá aqui.</p>
+            <strong>{t('finance.noRewardTitle')}</strong>
+            <p>{t('finance.noRewardDescription')}</p>
           </div>
         )}
       </article>
@@ -238,7 +238,7 @@ function IndicadorFinanceiro({ user }) {
       <div className="indicador-financeiro-grid">
         <article className="indicador-financeiro-card">
           <div className="indicador-financeiro-card-title">
-            <span><FaMoneyBillWave /> Movimentações</span>
+            <span><FaMoneyBillWave /> {t('finance.transactions')}</span>
             <strong>{movimentacoes.length}</strong>
           </div>
 
@@ -246,20 +246,20 @@ function IndicadorFinanceiro({ user }) {
             movimentacoes.map((movimentacao) => (
               <div className="indicador-movimentacao-item" key={movimentacao.id}>
                 <div>
-                  <strong>{rotuloMovimentacao(movimentacao.tipo)}</strong>
-                  <span>{movimentacao.descricao || 'Movimentação financeira'}</span>
+                  <strong>{t(`finance.movement.${movimentacao.tipo}`, { defaultValue: t('finance.movement.fallback') })}</strong>
+                  <span>{movimentacao.descricao || t('finance.transactionFallback')}</span>
                 </div>
                 <strong>{formatCurrency(movimentacao.valor)}</strong>
               </div>
             ))
           ) : (
-            <EstadoVazio title="Sem movimentações" description="Pagamentos aprovados e saques solicitados aparecem aqui." />
+            <EstadoVazio title={t('finance.noTransactions')} description={t('finance.noTransactionsDescription')} />
           )}
         </article>
 
         <article className="indicador-financeiro-card">
           <div className="indicador-financeiro-card-title">
-            <span>Pagamentos recebidos</span>
+            <span>{t('finance.receivedPayments')}</span>
             <strong>{notificacoesRecentes.length}</strong>
           </div>
 
@@ -271,7 +271,7 @@ function IndicadorFinanceiro({ user }) {
               </div>
             ))
           ) : (
-            <EstadoVazio title="Nenhum pagamento recebido" description="Quando uma recompensa for aprovada, você será avisado aqui." />
+            <EstadoVazio title={t('finance.noPayments')} description={t('finance.noPaymentsDescription')} />
           )}
         </article>
       </div>
@@ -280,28 +280,28 @@ function IndicadorFinanceiro({ user }) {
         <div className="saque-modal-backdrop" role="presentation" onMouseDown={() => setModalAberto(false)}>
           <section className="saque-modal" role="dialog" aria-modal="true" onMouseDown={(event) => event.stopPropagation()}>
             <header>
-              <span>Solicitação manual</span>
-              <h2>Solicitar saque</h2>
-              <p>O valor sai do saldo disponível e fica pendente até a validação da equipe Selectio.</p>
+              <span>{t('finance.manualRequest')}</span>
+              <h2>{t('finance.requestWithdrawal')}</h2>
+              <p>{t('finance.modalDescription')}</p>
             </header>
 
             <form onSubmit={enviarSaque}>
               <label>
-                Valor
-                <input value={valor} onChange={(event) => setValor(event.target.value)} placeholder="Ex: 500" inputMode="decimal" />
+                {t('finance.value')}
+                <input value={valor} onChange={(event) => setValor(event.target.value)} placeholder={t('finance.valuePlaceholder')} inputMode="decimal" />
               </label>
 
               <label>
-                Chave Pix
-                <input value={chavePix} onChange={(event) => setChavePix(event.target.value)} placeholder="CPF, e-mail, telefone ou chave aleatória" />
+                {t('finance.pixKey')}
+                <input value={chavePix} onChange={(event) => setChavePix(event.target.value)} placeholder={t('finance.pixPlaceholder')} />
               </label>
 
               <div className="saque-modal-actions">
                 <button type="button" className="secondary" onClick={() => setModalAberto(false)}>
-                  Cancelar
+                  {t('finance.cancel')}
                 </button>
                 <button type="submit" disabled={enviando}>
-                  {enviando ? 'Enviando...' : 'Solicitar saque'}
+                  {enviando ? t('finance.sending') : t('finance.requestWithdrawal')}
                 </button>
               </div>
             </form>
@@ -330,32 +330,14 @@ function EstadoVazio({ title, description }) {
   )
 }
 
-function rotuloMovimentacao(tipo) {
-  const labels = {
-    credito_recompensa: 'Crédito de recompensa',
-    saque_solicitado: 'Saque solicitado',
-    saque_aprovado: 'Saque aprovado',
-    saque_recusado: 'Saque recusado',
-    estorno: 'Estorno'
+function parseLocalizedNumber(value, language) {
+  const normalized = String(value || '').replace(/[^\d,.-]/g, '')
+
+  if (String(language).toLowerCase().startsWith('en')) {
+    return Number(normalized.replace(/,/g, ''))
   }
 
-  return labels[tipo] || 'Movimentação'
-}
-
-function formatCurrency(value) {
-  return Number(value || 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  })
-}
-
-function formatDateTime(value) {
-  if (!value) return 'não informado'
-
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'não informado'
-
-  return date.toLocaleString('pt-BR')
+  return Number(normalized.replace(/\./g, '').replace(',', '.'))
 }
 
 function montarRecompensasFinanceiras({ candidatos, pagamentos }) {

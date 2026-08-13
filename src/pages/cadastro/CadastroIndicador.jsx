@@ -6,6 +6,7 @@ import './CadastroIndicador.css'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FaCheck, FaEye, FaEyeSlash, FaGoogle, FaTimes } from 'react-icons/fa'
+import { useTranslation } from 'react-i18next'
 import {
   createUserWithEmailAndPassword,
   deleteUser,
@@ -17,34 +18,34 @@ import {
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import { auth } from '../../services/firebase'
-import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from '../../services/errosAutenticacao'
+import { getFirebaseAuthErrorKey, isFirebaseAuthError } from '../../services/errosAutenticacao'
 import { buscarPerfilUsuario, salvarPerfilUsuario } from '../../services/firestoreUsers'
 import { useToast } from '../../hooks/useToast'
 import { useAuth } from '../../hooks/useAuth'
 
 // Critérios exibidos e validados para classificar a força da senha.
 const passwordCriteria = [
-  { key: 'length', label: '12+ caracteres' },
-  { key: 'uppercase', label: 'Maiúscula' },
-  { key: 'lowercase', label: 'Minúscula' },
-  { key: 'numbers', label: 'Número' },
-  { key: 'special', label: 'Símbolo' },
-  { key: 'noSequence', label: 'Sem repetição' }
+  { key: 'length', labelKey: 'registration.passwordCriteria.length' },
+  { key: 'uppercase', labelKey: 'registration.passwordCriteria.uppercase' },
+  { key: 'lowercase', labelKey: 'registration.passwordCriteria.lowercase' },
+  { key: 'numbers', labelKey: 'registration.passwordCriteria.numbers' },
+  { key: 'special', labelKey: 'registration.passwordCriteria.special' },
+  { key: 'noSequence', labelKey: 'registration.passwordCriteria.noSequence' }
 ]
 
 // Textos auxiliares exibidos conforme a classificação da senha.
 const strengthCopy = {
   fraca: {
-    label: 'fraca',
-    hint: 'Comece combinando tamanho, letras e números.'
+    labelKey: 'registration.passwordStrength.weakLabel',
+    hintKey: 'registration.passwordStrength.weakHint'
   },
   média: {
-    label: 'média',
-    hint: 'Boa direção. Adicione mais variedade para proteger melhor.'
+    labelKey: 'registration.passwordStrength.mediumLabel',
+    hintKey: 'registration.passwordStrength.mediumHint'
   },
   forte: {
-    label: 'forte',
-    hint: 'Excelente. Sua senha está pronta para criar a conta.'
+    labelKey: 'registration.passwordStrength.strongLabel',
+    hintKey: 'registration.passwordStrength.strongHint'
   }
 }
 
@@ -59,6 +60,7 @@ const rollbackFirebaseUser = async (firebaseUser) => {
 }
 
 function CadastroIndicador() {
+  const { t } = useTranslation('auth')
   // Hook usado para redirecionar o usuário após cadastro bem-sucedido.
   const navigate = useNavigate()
   const toast = useToast()
@@ -187,26 +189,26 @@ function CadastroIndicador() {
 
     if (perfil.tipo === 'indicador') {
       adotarPerfil(perfil)
-      toast.info('Esta conta Google já está cadastrada. Vamos te levar ao painel do indicador.')
+      toast.info(t('referrerRegistration.existingReferrer'))
       navigate('/painel/indicador')
       return
     }
 
     if (perfil.tipo === 'empresa') {
       adotarPerfil(perfil)
-      toast.info('Esta conta Google já está cadastrada como empresa. Vamos te levar ao painel correto.')
+      toast.info(t('referrerRegistration.existingCompany'))
       navigate('/painel/empresa')
       return
     }
 
     if (perfil.tipo === 'admin') {
       adotarPerfil(perfil)
-      toast.info('Esta conta Google possui acesso administrativo. Vamos te levar ao painel admin.')
+      toast.info(t('referrerRegistration.existingAdmin'))
       navigate('/admin/visao-geral')
       return
     }
 
-    toast.info('Esta conta Google já possui um cadastro no Selectio. Entre pelo login.')
+    toast.info(t('referrerRegistration.existingAccount'))
     navigate('/login')
   }
 
@@ -263,20 +265,20 @@ function CadastroIndicador() {
         senha: '',
         confirmarSenha: ''
       }))
-      setGoogleMessage('Google vinculado temporariamente. Complete os dados e finalize o cadastro.')
-      toast.success('Google vinculado temporariamente. Complete os dados e finalize o cadastro.')
+      setGoogleMessage(t('referrerRegistration.googleTemporaryLinked'))
+      toast.success(t('referrerRegistration.googleTemporaryLinked'))
     } catch (error) {
       if (pendingGoogleUidRef.current && auth.currentUser?.uid === pendingGoogleUidRef.current) {
         await signOut(auth).catch(() => {})
       }
 
       if (isFirebaseAuthError(error)) {
-        const message = getFirebaseAuthErrorMessage(error)
+        const message = t(getFirebaseAuthErrorKey(error))
         setGoogleMessage(message)
         toast.warning(message)
       } else {
-        setGoogleMessage('Não foi possível continuar com Google. Tente novamente.')
-        toast.warning('Não foi possível continuar com Google. Tente novamente.')
+        setGoogleMessage(t('referrerRegistration.googleFailed'))
+        toast.warning(t('referrerRegistration.googleFailed'))
       }
     } finally {
       setGoogleLoading(false)
@@ -289,19 +291,19 @@ function CadastroIndicador() {
     // Validação: senha e confirmação precisam ser iguais.
     if (!isGoogleSignup) {
       if (form.senha !== form.confirmarSenha) {
-        toast.warning('As senhas não conferem.')
+        toast.warning(t('referrerRegistration.passwordMismatch'))
         return
       }
 
       if (!isPasswordStrong) {
-        toast.warning('Crie uma senha forte antes de cadastrar.')
+        toast.warning(t('referrerRegistration.strongPasswordRequired'))
         return
       }
     }
 
     // Validação: CPF informado precisa ser válido.
     if (form.cpf && !validarCPF(form.cpf)) {
-      setForm({ ...form, cpfError: 'CPF inválido' })
+      setForm({ ...form, cpfError: t('referrerRegistration.invalidCpf') })
       return
     }
 
@@ -321,7 +323,7 @@ function CadastroIndicador() {
 
       if (isGoogleSignup) {
         if (!profileUid || auth.currentUser?.uid !== profileUid) {
-          toast.warning('Entre com Google novamente para concluir este cadastro.')
+          toast.warning(t('referrerRegistration.googleAgain'))
           return
         }
 
@@ -342,7 +344,7 @@ function CadastroIndicador() {
         verificationSent = await sendEmailVerification(firebaseUser)
           .then(() => true)
           .catch(() => {
-            toast.warning('Cadastro criado, mas não foi possível enviar a verificação agora.')
+            toast.warning(t('referrerRegistration.verificationFailed'))
             return false
           })
       }
@@ -365,18 +367,18 @@ function CadastroIndicador() {
       keepGoogleSessionRef.current = true
       adotarPerfil(perfilIndicador)
       toast.success(isGoogleSignup
-        ? 'Cadastro concluído com Google.'
+        ? t('referrerRegistration.completedGoogle')
         : verificationSent
-          ? 'Cadastro concluído. Enviamos um e-mail de verificação.'
-          : 'Cadastro concluído.')
+          ? t('referrerRegistration.completedVerification')
+          : t('referrerRegistration.completed'))
       navigate('/painel/indicador')
     } catch (error) {
       await rollbackFirebaseUser(firebaseUser)
 
       if (isFirebaseAuthError(error)) {
-        toast.error(getFirebaseAuthErrorMessage(error))
+        toast.error(t(getFirebaseAuthErrorKey(error)))
       } else {
-        toast.error('Não foi possível salvar o perfil do indicador no Firestore. Tente novamente.')
+        toast.error(t('referrerRegistration.firestoreFailed'))
       }
     } finally {
       setSubmitLoading(false)
@@ -390,12 +392,9 @@ function CadastroIndicador() {
 
       <main className="indicador-cadastro-container">
         <div className="indicador-cadastro-card">
-          <span className="tag center">CADASTRO DE INDICADOR</span>
-          <h1>Junte-se à Selectio</h1>
-          <p className="subtitle">
-            Transforme sua rede profissional em oportunidades reais e seja
-            recompensado por indicações bem-sucedidas.
-          </p>
+          <span className="tag center">{t('referrerRegistration.tag')}</span>
+          <h1>{t('referrerRegistration.title')}</h1>
+          <p className="subtitle">{t('referrerRegistration.description')}</p>
 
           {/* Formulário de cadastro do indicador. */}
           <form onSubmit={handleSubmit}>
@@ -403,8 +402,8 @@ function CadastroIndicador() {
               <div className="google-linked-card">
                 <FaGoogle />
                 <div>
-                  <strong>Google vinculado ao cadastro</strong>
-                  <p>{googleSignupUser.email || 'Conta Google selecionada'}</p>
+                  <strong>{t('referrerRegistration.googleLinkedTitle')}</strong>
+                  <p>{googleSignupUser.email || t('referrerRegistration.googleSelected')}</p>
                 </div>
               </div>
             )}
@@ -412,7 +411,7 @@ function CadastroIndicador() {
             <div className="form-grid">
               <input
                 name="nome"
-                placeholder="Nome completo"
+                placeholder={t('referrerRegistration.fullName')}
                 value={form.nome}
                 onChange={handleChange}
                 required
@@ -421,7 +420,7 @@ function CadastroIndicador() {
               <input
                 name="email"
                 type="email"
-                placeholder="E-mail"
+                placeholder={t('referrerRegistration.email')}
                 value={form.email}
                 onChange={handleChange}
                 required
@@ -429,7 +428,7 @@ function CadastroIndicador() {
 
               <input
                 name="cpf"
-                placeholder="CPF"
+                placeholder={t('referrerRegistration.cpf')}
                 value={form.cpf}
                 onChange={handleChange}
                 required
@@ -438,13 +437,14 @@ function CadastroIndicador() {
 
               <input
                 name="pix"
-                placeholder="Chave Pix"
+                placeholder={t('referrerRegistration.pixKey')}
                 onChange={handleChange}
               />
 
               <input
                 name="dataNascimento"
                 type="date"
+                aria-label={t('referrerRegistration.birthDate')}
                 onChange={handleChange}
               />
 
@@ -453,7 +453,7 @@ function CadastroIndicador() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   name="senha"
-                  placeholder={isGoogleSignup ? 'Acesso via Google vinculado' : 'Senha'}
+                  placeholder={isGoogleSignup ? t('registration.googleAccess') : t('registration.password')}
                   value={form.senha}
                   onChange={handleChange}
                   required={!isGoogleSignup}
@@ -463,7 +463,7 @@ function CadastroIndicador() {
                   type="button"
                   className="password-toggle"
                   onClick={() => setShowPassword((visible) => !visible)}
-                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  aria-label={showPassword ? t('registration.hidePassword') : t('registration.showPassword')}
                   disabled={isGoogleSignup}
                 >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
@@ -475,8 +475,10 @@ function CadastroIndicador() {
                 <div className={`password-strength strength-${passwordStrength.strength}`}>
                   <div className="strength-header">
                     <div>
-                      <strong>Senha {currentStrength.label}</strong>
-                      <p>{currentStrength.hint}</p>
+                      <strong>{t('registration.passwordStrength.label', {
+                        strength: t(currentStrength.labelKey)
+                      })}</strong>
+                      <p>{t(currentStrength.hintKey)}</p>
                     </div>
                     <span className="strength-score">
                       {passwordStrength.score}/6
@@ -501,7 +503,7 @@ function CadastroIndicador() {
                       return (
                         <li key={item.key} className={isMet ? 'met' : ''}>
                           {isMet ? <FaCheck /> : <FaTimes />}
-                          {item.label}
+                          {t(item.labelKey)}
                         </li>
                       )
                     })}
@@ -514,7 +516,7 @@ function CadastroIndicador() {
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
                   name="confirmarSenha"
-                  placeholder={isGoogleSignup ? 'Acesso via Google vinculado' : 'Confirmar senha'}
+                  placeholder={isGoogleSignup ? t('registration.googleAccess') : t('registration.confirmPassword')}
                   value={form.confirmarSenha}
                   onChange={handleChange}
                   required={!isGoogleSignup}
@@ -524,15 +526,17 @@ function CadastroIndicador() {
                   type="button"
                   className="password-toggle"
                   onClick={() => setShowConfirmPassword((visible) => !visible)}
-                  aria-label={showConfirmPassword ? 'Ocultar confirmação de senha' : 'Mostrar confirmação de senha'}
+                  aria-label={showConfirmPassword
+                    ? t('registration.hidePasswordConfirmation')
+                    : t('registration.showPasswordConfirmation')}
                 >
                   {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
                 {!isGoogleSignup && confirmPasswordStatus && (
                   <span className="confirm-password-message">
                     {confirmPasswordStatus === 'match'
-                      ? 'Senhas conferem'
-                      : 'As senhas ainda não conferem'}
+                      ? t('registration.passwordsMatch')
+                      : t('registration.passwordsDoNotMatch')}
                   </span>
                 )}
               </div>
@@ -540,11 +544,15 @@ function CadastroIndicador() {
 
             {/* Botão de envio bloqueado quando a senha ainda não é forte. */}
             <button type="submit" className="btn-primary" disabled={!canSubmit}>
-              {submitLoading ? 'Criando conta...' : isGoogleSignup || isPasswordStrong ? 'Criar conta ->' : 'Complete a senha forte'}
+              {submitLoading
+                ? t('registration.creatingAccount')
+                : isGoogleSignup || isPasswordStrong
+                  ? t('registration.createAccount')
+                  : t('registration.completeStrongPassword')}
             </button>
             <div className="google-signup-area">
               <div className="google-divider">
-                <span>ou</span>
+                <span>{t('registration.or')}</span>
               </div>
 
               {googleMessage && (
@@ -560,7 +568,11 @@ function CadastroIndicador() {
                 disabled={googleLoading || submitLoading || isGoogleSignup}
               >
                 <FaGoogle />
-                {googleLoading ? 'Conectando...' : isGoogleSignup ? 'Google vinculado' : 'Continuar com Google'}
+                {googleLoading
+                  ? t('registration.connecting')
+                  : isGoogleSignup
+                    ? t('registration.googleLinked')
+                    : t('registration.continueWithGoogle')}
               </button>
             </div>
           </form>

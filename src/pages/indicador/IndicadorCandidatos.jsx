@@ -5,6 +5,7 @@
 import './styles/IndicadorCandidatos.css'
 import { Link, Navigate } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   FaCheckCircle,
   FaClock,
@@ -35,75 +36,73 @@ import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { useAuth } from '../../hooks/useAuth'
 import { useConfirmacao } from '../../hooks/useConfirmacao'
 import { useToast } from '../../hooks/useToast'
+import { formatCurrency, formatDate as formatLocalizedDate } from '../../i18n/formatters'
 
 // Status disponíveis para filtro na interface.
-const statusTabs = ['Todos', 'Pré-salvo', 'Indicado', 'Entrevista', 'Contratado', 'Cancelado']
+const statusTabs = [
+  { value: 'all', labelKey: 'candidates.tabs.all' },
+  { value: 'pre_salvo', labelKey: 'candidates.tabs.preSaved' },
+  { value: 'indicado', labelKey: 'candidates.tabs.referred' },
+  { value: 'entrevista', labelKey: 'candidates.tabs.interview' },
+  { value: 'contratado', labelKey: 'candidates.tabs.hired' },
+  { value: 'cancelado', labelKey: 'candidates.tabs.cancelled' }
+]
 
-// Mapeia os status recebidos do Firestore para os textos exibidos ao usuário.
-const statusLabels = {
-  pre_salvo: 'Pré-salvo',
-  indicado: 'Indicado',
-  entrevista: 'Entrevista',
-  contratado: 'Contratado',
-  cancelado: 'Cancelado',
-  recusado: 'Cancelado',
-}
-
-// Mapeia os status exibidos para classes CSS usadas nos cards.
-const statusClass = {
-  'Pré-salvo': 'pre-salvo',
-  Indicado: 'indicado',
-  Entrevista: 'entrevista',
-  Contratado: 'contratado',
-  Cancelado: 'cancelado',
+const originLabelKeys = {
+  csv: 'candidates.origins.csv',
+  manual: 'candidates.origins.manual',
+  Indicação: 'candidates.origins.referral',
+  LinkedIn: 'candidates.origins.linkedin',
+  Portfolio: 'candidates.origins.portfolio',
+  GitHub: 'candidates.origins.github'
 }
 
 const paymentStatusInfo = {
   created: {
-    title: 'Pagamento pendente',
-    description: 'Aguardando confirmação do Mercado Pago.',
+    titleKey: 'candidates.financial.pendingTitle',
+    descriptionKey: 'candidates.financial.pendingDescription',
     tone: 'pending',
     icon: FaClock
   },
   pending: {
-    title: 'Pagamento pendente',
-    description: 'Aguardando confirmação do Mercado Pago.',
+    titleKey: 'candidates.financial.pendingTitle',
+    descriptionKey: 'candidates.financial.pendingDescription',
     tone: 'pending',
     icon: FaClock
   },
   in_process: {
-    title: 'Pagamento pendente',
-    description: 'Aguardando confirmação do Mercado Pago.',
+    titleKey: 'candidates.financial.pendingTitle',
+    descriptionKey: 'candidates.financial.pendingDescription',
     tone: 'pending',
     icon: FaClock
   },
   authorized: {
-    title: 'Pagamento pendente',
-    description: 'Aguardando confirmação do Mercado Pago.',
+    titleKey: 'candidates.financial.pendingTitle',
+    descriptionKey: 'candidates.financial.pendingDescription',
     tone: 'pending',
     icon: FaClock
   },
   rejected: {
-    title: 'Pagamento recusado',
-    description: 'Mercado Pago recusou a transação. A recompensa não foi creditada.',
+    titleKey: 'candidates.financial.rejectedTitle',
+    descriptionKey: 'candidates.financial.rejectedDescription',
     tone: 'danger',
     icon: FaExclamationTriangle
   },
   cancelled: {
-    title: 'Pagamento cancelado',
-    description: 'A transação foi cancelada. A recompensa não foi creditada.',
+    titleKey: 'candidates.financial.cancelledTitle',
+    descriptionKey: 'candidates.financial.cancelledDescription',
     tone: 'danger',
     icon: FaExclamationTriangle
   },
   refunded: {
-    title: 'Pagamento estornado',
-    description: 'O valor foi estornado. A recompensa não fica disponível no saldo.',
+    titleKey: 'candidates.financial.refundedTitle',
+    descriptionKey: 'candidates.financial.refundedDescription',
     tone: 'danger',
     icon: FaExclamationTriangle
   },
   failed: {
-    title: 'Pagamento falhou',
-    description: 'Não foi possível confirmar o pagamento. A recompensa não foi creditada.',
+    titleKey: 'candidates.financial.failedTitle',
+    descriptionKey: 'candidates.financial.failedDescription',
     tone: 'danger',
     icon: FaExclamationTriangle
   }
@@ -120,18 +119,12 @@ const avatars = [
 
 const PAGE_SIZE = 6
 
-// Responsabilidade: formatar datas para exibição no padrão brasileiro.
-function formatDate(value) {
-  if (!value) return 'Não informado'
-
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-
-  return date.toLocaleDateString('pt-BR', {
+function formatDate(value, fallback) {
+  return formatLocalizedDate(value, {
     day: '2-digit',
     month: 'short',
     year: 'numeric'
-  }).replace('.', '')
+  }) || fallback
 }
 
 // Responsabilidade: normalizar textos para busca sem considerar acentos ou maiúsculas.
@@ -143,6 +136,7 @@ function normalizeText(value) {
 }
 
 function Candidatos() {
+  const { t, i18n } = useTranslation(['referrer', 'common'])
   const toast = useToast()
   const confirm = useConfirmacao()
   const { perfil: indicador } = useAuth()
@@ -159,8 +153,8 @@ function Candidatos() {
   const [busca, setBusca] = useState('')
 
   // Controla o status ativo nos filtros.
-  const [activeStatus, setActiveStatus] = useState('Todos')
-  const [filtroVaga, setFiltroVaga] = useState('Todas')
+  const [activeStatus, setActiveStatus] = useState('all')
+  const [filtroVaga, setFiltroVaga] = useState('all')
   const [pagina, setPagina] = useState(1)
   const [reloadKey, setReloadKey] = useState(0)
 
@@ -186,8 +180,8 @@ function Candidatos() {
         setCandidatos([])
         setCandidatosPreSalvos([])
         setPagamentos([])
-        setError('Perfil do indicador sem UID do Firebase.')
-        toast.warning('Perfil do indicador sem UID do Firebase.')
+        setError(t('candidates.missingUid'))
+        toast.warning(t('candidates.missingUid'))
         setLoading(false)
         return
       }
@@ -199,7 +193,7 @@ function Candidatos() {
           listarCandidatosPreSalvos(indicadorUid),
           listarPagamentosPorIndicador(indicadorUid).catch((err) => {
             console.warn('Não foi possível carregar pagamentos do indicador:', err)
-            toast.warning('Não foi possível carregar o status financeiro das indicações.')
+            toast.warning(t('candidates.paymentStatusLoadError'))
             return []
           })
         ])
@@ -207,16 +201,16 @@ function Candidatos() {
         setCandidatos(candidatosData)
         setCandidatosPreSalvos(preSalvosData)
         setPagamentos(pagamentosData)
-      } catch (err) {
-        setError(err.message)
-        toast.error('Não foi possível carregar seus candidatos.')
+      } catch {
+        setError(t('candidates.loadError'))
+        toast.error(t('candidates.loadError'))
       } finally {
         setLoading(false)
       }
     }
 
     fetchCandidatos()
-  }, [indicador, indicadorUid, toast, reloadKey])
+  }, [indicador, indicadorUid, reloadKey, t, toast])
 
   const registros = useMemo(() => ([
     ...candidatos.map((candidato) => ({
@@ -241,10 +235,10 @@ function Candidatos() {
     const termo = normalizeText(busca)
 
     return registros.filter((candidato) => {
-      const status = statusLabels[candidato.status] || 'Indicado'
-      const matchesStatus = activeStatus === 'Todos' || status === activeStatus
-      const matchesVaga = filtroVaga === 'Todas'
-        || (filtroVaga === 'Sem vaga' && candidato.tipoRegistro === 'pre_salvo')
+      const status = normalizeCandidateStatus(candidato.status)
+      const matchesStatus = activeStatus === 'all' || status === activeStatus
+      const matchesVaga = filtroVaga === 'all'
+        || (filtroVaga === 'no_job' && candidato.tipoRegistro === 'pre_salvo')
         || candidato.vagaTitulo === filtroVaga
       const matchesBusca = !termo || [
         candidato.nome,
@@ -260,8 +254,8 @@ function Candidatos() {
 
   const vagasDisponiveis = useMemo(() => (
     [...new Set(candidatos.map((candidato) => candidato.vagaTitulo).filter(Boolean))]
-      .sort((a, b) => a.localeCompare(b, 'pt-BR'))
-  ), [candidatos])
+      .sort((a, b) => a.localeCompare(b, i18n.resolvedLanguage || i18n.language))
+  ), [candidatos, i18n.language, i18n.resolvedLanguage])
 
   const totalPaginas = Math.max(1, Math.ceil(candidatosFiltrados.length / PAGE_SIZE))
   const paginaAtual = Math.min(pagina, totalPaginas)
@@ -298,16 +292,16 @@ function Candidatos() {
 
   const limparFiltros = () => {
     setBusca('')
-    setActiveStatus('Todos')
-    setFiltroVaga('Todas')
+    setActiveStatus('all')
+    setFiltroVaga('all')
     setPagina(1)
   }
 
   const excluirPreSalvo = async (candidato) => {
     const confirmado = await confirm({
-      title: 'Excluir candidato pré-salvo?',
-      description: `${candidato.nome || 'Este candidato'} será removido da sua base privada. Indicações já enviadas não serão alteradas.`,
-      confirmLabel: 'Excluir'
+      title: t('candidates.deleteConfirmTitle'),
+      description: t('candidates.deleteConfirmDescription', { name: candidato.nome || t('candidates.thisCandidate') }),
+      confirmLabel: t('candidates.delete')
     })
 
     if (!confirmado) return
@@ -321,9 +315,9 @@ function Candidatos() {
       })
       setCandidatosPreSalvos((atuais) => atuais.filter((item) => item.id !== candidato.id))
       setSelectedCandidate((atual) => atual?.id === candidato.id ? null : atual)
-      toast.success('Candidato pré-salvo excluído.')
-    } catch (err) {
-      toast.error(err.message || 'Não foi possível excluir o candidato.')
+      toast.success(t('candidates.deleted'))
+    } catch {
+      toast.error(t('candidates.deleteError'))
     } finally {
       setExcluindoId('')
     }
@@ -340,9 +334,9 @@ function Candidatos() {
 
         <main className="candidatos-page">
           <header className="candidatos-header">
-            <span>Recrutamento ativo</span>
-            <h1>Candidatos</h1>
-            <p>Gerencie o fluxo de talentos e acompanhe o progresso das suas vagas abertas com precisão editorial.</p>
+            <span>{t('candidates.eyebrow')}</span>
+            <h1>{t('candidates.title')}</h1>
+            <p>{t('candidates.description')}</p>
           </header>
 
           {/* Barra de busca e filtros por status. */}
@@ -355,12 +349,12 @@ function Candidatos() {
                   setBusca(event.target.value)
                   setPagina(1)
                 }}
-                placeholder="Buscar por nome, cargo ou palavra-chave..."
+                placeholder={t('candidates.searchPlaceholder')}
               />
             </label>
 
             <label className="candidate-vacancy-filter">
-              <span>Vaga</span>
+              <span>{t('candidates.job')}</span>
               <select
                 value={filtroVaga}
                 onChange={(event) => {
@@ -368,8 +362,8 @@ function Candidatos() {
                   setPagina(1)
                 }}
               >
-                <option value="Todas">Todas as vagas</option>
-                {candidatosPreSalvos.length > 0 && <option value="Sem vaga">Sem vaga (pré-salvos)</option>}
+                <option value="all">{t('candidates.allJobs')}</option>
+                {candidatosPreSalvos.length > 0 && <option value="no_job">{t('candidates.noJobSaved')}</option>}
                 {vagasDisponiveis.map((vagaTitulo) => (
                   <option key={vagaTitulo} value={vagaTitulo}>{vagaTitulo}</option>
                 ))}
@@ -379,15 +373,15 @@ function Candidatos() {
             <div className="candidate-tabs">
               {statusTabs.map((status) => (
                 <button
-                  key={status}
-                  className={activeStatus === status ? 'active' : ''}
+                  key={status.value}
+                  className={activeStatus === status.value ? 'active' : ''}
                   onClick={() => {
-                    setActiveStatus(status)
+                    setActiveStatus(status.value)
                     setPagina(1)
                   }}
                   type="button"
                 >
-                  {status}
+                  {t(status.labelKey)}
                 </button>
               ))}
             </div>
@@ -401,10 +395,10 @@ function Candidatos() {
           )}
           {!loading && error && (
             <EstadoDados
-              actionLabel="Tentar novamente"
+              actionLabel={t('candidates.retry')}
               description={error}
               onAction={tentarNovamente}
-              title={navigator.onLine ? 'Não foi possível carregar seus candidatos' : 'Você está sem conexão'}
+              title={navigator.onLine ? t('candidates.loadTitle') : t('candidates.offline')}
               tone={navigator.onLine ? 'error' : 'offline'}
             />
           )}
@@ -413,22 +407,23 @@ function Candidatos() {
             <>
               {!candidatosFiltrados.length && (
                 <EstadoDados
-                  actionLabel={registros.length ? 'Limpar filtros' : ''}
+                  actionLabel={registros.length ? t('candidates.clearFilters') : ''}
                   description={registros.length
-                    ? 'Ajuste a busca, a vaga ou a etapa para visualizar outros resultados.'
-                    : 'Cadastre um talento para mantê-lo na sua base ou escolha uma vaga para fazer uma indicação.'}
+                    ? t('candidates.filterDescription')
+                    : t('candidates.emptyDescription')}
                   onAction={registros.length ? limparFiltros : undefined}
-                  title={registros.length ? 'Nenhum candidato encontrado' : 'Sua base de candidatos ainda está vazia'}
+                  title={registros.length ? t('candidates.noResults') : t('candidates.emptyTitle')}
                 />
               )}
 
               <section className="candidate-grid">
               {candidatosPaginados.map((candidato, index) => {
-                const status = statusLabels[candidato.status] || 'Indicado'
-                const cardClass = statusClass[status] || 'indicado'
+                const normalizedStatus = normalizeCandidateStatus(candidato.status)
+                const status = getCandidateStatusLabel(t, normalizedStatus)
+                const cardClass = normalizedStatus === 'pre_salvo' ? 'pre-salvo' : normalizedStatus
                 const isPreSalvo = candidato.tipoRegistro === 'pre_salvo'
                 const pagamento = pagamentosPorCandidato.get(candidato.id)
-                const financeiro = status === 'Contratado'
+                const financeiro = normalizedStatus === 'contratado'
                   ? getResumoFinanceiroIndicacao(pagamento)
                   : null
 
@@ -443,17 +438,19 @@ function Candidatos() {
                     </div>
 
                     <h2>{candidato.nome}</h2>
-                    <p>{candidato.cargoAtual || candidato.vagaTitulo || (isPreSalvo ? 'Talento pré-salvo' : 'Candidato indicado')}</p>
+                    <p>{candidato.cargoAtual || candidato.vagaTitulo || (isPreSalvo ? t('candidates.talentPreSaved') : t('candidates.candidateReferred'))}</p>
                     {isPreSalvo && candidato.email && <small className="candidate-card-email">{candidato.email}</small>}
 
                     <div className="candidate-meta">
                       <div>
-                        <span>Origem</span>
-                        <strong>{candidato.origem === 'csv' ? 'CSV' : candidato.origem === 'manual' ? 'Manual' : candidato.origem}</strong>
+                        <span>{t('candidates.origin')}</span>
+                        <strong>{originLabelKeys[candidato.origem]
+                          ? t(originLabelKeys[candidato.origem])
+                          : candidato.origem || t('candidates.notProvided')}</strong>
                       </div>
                       <div>
-                        <span>{isPreSalvo ? 'Salvo em' : status === 'Contratado' ? 'Contratado em' : 'Aplicado em'}</span>
-                        <strong>{formatDate(candidato.aplicadoEm || candidato.criadoEm || candidato.createdAt)}</strong>
+                        <span>{isPreSalvo ? t('candidates.savedAt') : normalizedStatus === 'contratado' ? t('candidates.hiredAt') : t('candidates.appliedAt')}</span>
+                        <strong>{formatDate(candidato.aplicadoEm || candidato.criadoEm || candidato.createdAt, t('candidates.notProvided'))}</strong>
                       </div>
                     </div>
 
@@ -463,24 +460,24 @@ function Candidatos() {
 
                     <div className="candidate-card-actions">
                       <button className="candidate-action-secondary" type="button" onClick={() => setSelectedCandidate(candidato)}>
-                        Ver perfil
+                        {t('candidates.viewProfile')}
                       </button>
                       {isPreSalvo && (
                         <>
                           <Link className="candidate-action-secondary" to={`/candidatos/indicador/${candidato.id}/editar`}>
-                            <FaEdit /> Editar
+                            <FaEdit /> {t('candidates.edit')}
                           </Link>
                           <Link className="candidate-action-primary" to={`/vagas?candidatoPreSalvoId=${encodeURIComponent(candidato.id)}`}>
-                            <FaPaperPlane /> Indicar
+                            <FaPaperPlane /> {t('candidates.refer')}
                           </Link>
                           <button
-                            aria-label={`Excluir ${candidato.nome}`}
+                            aria-label={t('candidates.deleteAria', { name: candidato.nome })}
                             className="candidate-action-danger"
                             disabled={excluindoId === candidato.id}
                             onClick={() => excluirPreSalvo(candidato)}
                             type="button"
                           >
-                            <FaTrashAlt /> {excluindoId === candidato.id ? 'Excluindo...' : 'Excluir'}
+                            <FaTrashAlt /> {excluindoId === candidato.id ? t('candidates.excluding') : t('candidates.delete')}
                           </button>
                         </>
                       )}
@@ -493,8 +490,8 @@ function Candidatos() {
                 <span>
                   <FaPlus />
                 </span>
-                <strong>Adicionar candidato</strong>
-                <small>Manualmente ou via CSV</small>
+                <strong>{t('candidates.addCandidate')}</strong>
+                <small>{t('candidates.addMethods')}</small>
               </Link>
               </section>
               {candidatosFiltrados.length > 0 && (
@@ -526,6 +523,7 @@ function Candidatos() {
 }
 
 function ResumoFinanceiroIndicacao({ info }) {
+  const { t } = useTranslation('referrer')
   const Icon = info.icon
 
   return (
@@ -536,8 +534,8 @@ function ResumoFinanceiroIndicacao({ info }) {
         </span>
 
         <div>
-          <strong>{info.title}</strong>
-          <p>{info.description}</p>
+          <strong>{t(info.titleKey)}</strong>
+          <p>{t(info.descriptionKey)}</p>
         </div>
       </div>
 
@@ -545,15 +543,15 @@ function ResumoFinanceiroIndicacao({ info }) {
         <div className="candidate-payment-summary-meta">
           {info.value && (
             <span>
-              Valor
+              {t('candidates.value')}
               <strong>{formatCurrency(info.value)}</strong>
             </span>
           )}
 
           {info.date && (
             <span>
-              Aprovado em
-              <strong>{formatDate(info.date)}</strong>
+              {t('candidates.approvedAt')}
+              <strong>{formatDate(info.date, t('candidates.notProvided'))}</strong>
             </span>
           )}
         </div>
@@ -561,7 +559,7 @@ function ResumoFinanceiroIndicacao({ info }) {
 
       {info.showFinanceLink && (
         <Link className="candidate-payment-link" to="/painel/indicador/dashboard?secao=financeiro">
-          <FaExternalLinkAlt /> Abrir financeiro
+          <FaExternalLinkAlt /> {t('candidates.openFinance')}
         </Link>
       )}
     </div>
@@ -571,8 +569,8 @@ function ResumoFinanceiroIndicacao({ info }) {
 function getResumoFinanceiroIndicacao(pagamento) {
   if (!pagamento) {
     return {
-      title: 'Candidato contratado',
-      description: 'Recompensa aguardando pagamento da empresa.',
+      titleKey: 'candidates.financial.hiredTitle',
+      descriptionKey: 'candidates.financial.hiredDescription',
       tone: 'waiting',
       icon: FaWallet
     }
@@ -582,10 +580,10 @@ function getResumoFinanceiroIndicacao(pagamento) {
     const creditado = pagamento.creditado !== false
 
     return {
-      title: 'Recompensa recebida',
-      description: creditado
-        ? 'Valor creditado no financeiro.'
-        : 'Pagamento aprovado pelo Mercado Pago. Crédito em processamento.',
+      titleKey: 'candidates.financial.receivedTitle',
+      descriptionKey: creditado
+        ? 'candidates.financial.creditedDescription'
+        : 'candidates.financial.processingDescription',
       tone: 'approved',
       icon: FaCheckCircle,
       value: pagamento.valor,
@@ -595,8 +593,8 @@ function getResumoFinanceiroIndicacao(pagamento) {
   }
 
   const info = paymentStatusInfo[pagamento.status] || {
-    title: 'Status do pagamento',
-    description: 'Acompanhe a atualização da recompensa.',
+    titleKey: 'candidates.financial.fallbackTitle',
+    descriptionKey: 'candidates.financial.fallbackDescription',
     tone: 'pending',
     icon: FaClock
   }
@@ -614,11 +612,14 @@ function deveUsarPagamento(novo, atual) {
   return dataNova >= dataAtual
 }
 
-function formatCurrency(value) {
-  return Number(value || 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  })
+function normalizeCandidateStatus(status) {
+  if (status === 'recusado') return 'cancelado'
+  return status || 'indicado'
+}
+
+function getCandidateStatusLabel(t, status) {
+  if (status === 'pre_salvo') return t('candidates.tabs.preSaved')
+  return t(`common:statuses.candidates.${status}`, { defaultValue: status })
 }
 
 export default Candidatos

@@ -5,6 +5,7 @@
 import './Vagas.css'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import Footer from '../../components/layout/Footer'
@@ -14,24 +15,20 @@ import Paginacao from '../../components/ui/Paginacao'
 import { FiSearch } from 'react-icons/fi'
 import {
   listarVagas,
-  statusAprovacaoVagaLabels,
-  statusVagaLabels,
   vagaAceitaIndicacoes
 } from '../../services/firestoreVagas'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { useToast } from '../../hooks/useToast'
 import { useAuth } from '../../hooks/useAuth'
+import { formatCurrency } from '../../i18n/formatters'
+import { formatJobSalary } from '../../i18n/domainFormatters'
 
 // Responsabilidade: formatar o valor digitado no filtro de salário como moeda brasileira.
 const formatCurrencyFilter = (value) => {
   const numbers = value.replace(/\D/g, '')
   if (!numbers) return ''
 
-  return Number(numbers).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0,
-  })
+  return formatCurrency(numbers, { maximumFractionDigits: 0 })
 }
 
 // Responsabilidade: obter apenas o valor numérico de um texto monetário.
@@ -49,7 +46,7 @@ const getSalaryValues = (value) => {
 
   return matches
     .map((match) => {
-      const amount = Number(match[1].replace(/\./g, '').replace(',', '.'))
+      const amount = Number(match[1].replace(/\D/g, ''))
       if (!amount) return null
 
       // Regra: valores acompanhados de "k" são tratados como milhares.
@@ -66,6 +63,7 @@ const getSession = (perfil) => {
 }
 
 function Vagas() {
+  const { t } = useTranslation(['public', 'common'])
   const toast = useToast()
   const { perfil } = useAuth()
   const [searchParams] = useSearchParams()
@@ -97,23 +95,28 @@ function Vagas() {
         setError(null)
         const data = await listarVagas()
         setVagas(data)
-      } catch (err) {
-        setError(err.message)
-        toast.error('Não foi possível carregar as vagas.')
+      } catch {
+        setError(t('jobs.loadError'))
+        toast.error(t('jobs.loadToastError'))
       } finally {
         setLoading(false)
       }
     }
 
     fetchVagas()
-  }, [reloadKey, toast])
+  }, [reloadKey, t, toast])
 
   // Aplica filtros locais por busca textual, área e salário mínimo.
   const vagasFiltradas = useMemo(() => vagas.filter((vaga) => {
     const busca = normalizeText(filtro.busca.trim())
     const salario = getCurrencyValue(filtro.salario)
     const area = normalizeText(filtro.area.trim())
-    const salariosVaga = getSalaryValues(vaga.salario)
+    const salariosEstruturados = [vaga.salarioMinValor, vaga.salarioMaxValor]
+      .map(Number)
+      .filter(Boolean)
+    const salariosVaga = salariosEstruturados.length
+      ? salariosEstruturados
+      : getSalaryValues(vaga.salario)
     const isOwnCompanyJob = session.type === 'empresa'
       && String(vaga.empresaId || vaga.empresaUid || '') === String(getFirebaseUid(session.user))
     const visivelParaSessao = isOwnCompanyJob || vagaAceitaIndicacoes(vaga)
@@ -156,18 +159,18 @@ function Vagas() {
   }
 
   // Textos do cabeçalho variam conforme o tipo de sessão.
-  const headerCopy = {
+  const headerKeys = {
     publico: {
-      title: 'Lista de Vagas',
-      text: 'Visualize oportunidades e entre para indicar talentos ou gerenciar suas vagas.',
+      title: 'jobs.headers.public.title',
+      text: 'jobs.headers.public.description',
     },
     indicador: {
-      title: 'Vagas para indicar',
-      text: 'Encontre oportunidades alinhadas à sua rede e indique candidatos qualificados.',
+      title: 'jobs.headers.referrer.title',
+      text: 'jobs.headers.referrer.description',
     },
     empresa: {
-      title: 'Gerenciamento de vagas',
-      text: 'Consulte todas as oportunidades cadastradas e publique novas vagas para sua empresa.',
+      title: 'jobs.headers.company.title',
+      text: 'jobs.headers.company.description',
     },
   }[session.type]
 
@@ -184,9 +187,9 @@ function Vagas() {
         {/* Cabeçalho da listagem, com texto adaptado ao tipo de usuário. */}
         <section className="vagas-header empresa-vagas-header">
           <div>
-            <span className="tag">OPORTUNIDADES</span>
-            <h1>{headerCopy.title}</h1>
-            <p>{headerCopy.text}</p>
+            <span className="tag">{t('jobs.opportunities')}</span>
+            <h1>{t(headerKeys.title)}</h1>
+            <p>{t(headerKeys.text)}</p>
           </div>
         </section>
 
@@ -196,7 +199,7 @@ function Vagas() {
             <FiSearch />
             <input
               type="text"
-              placeholder="Cargo, empresa, área ou local"
+              placeholder={t('jobs.searchPlaceholder')}
               value={filtro.busca}
               onChange={(e) => atualizarFiltro('busca', e.target.value)}
             />
@@ -206,7 +209,7 @@ function Vagas() {
             <input
               type="text"
               inputMode="numeric"
-              placeholder="Salário mínimo"
+              placeholder={t('jobs.minimumSalary')}
               value={filtro.salario}
               onChange={(e) => atualizarFiltro('salario', formatCurrencyFilter(e.target.value))}
             />
@@ -215,7 +218,7 @@ function Vagas() {
           <div className="filtro-input">
             <input
               type="text"
-              placeholder="Filtrar por área"
+              placeholder={t('jobs.areaPlaceholder')}
               value={filtro.area}
               onChange={(e) => atualizarFiltro('area', e.target.value)}
             />
@@ -225,15 +228,15 @@ function Vagas() {
             className="filtro-select"
             value={filtro.status}
             onChange={(event) => atualizarFiltro('status', event.target.value)}
-            aria-label="Filtrar por status"
+            aria-label={t('jobs.filterByStatus')}
           >
-            <option value="todos">Todos os status</option>
-            <option value="aberta">Abertas</option>
+            <option value="todos">{t('jobs.allStatuses')}</option>
+            <option value="aberta">{t('common:statuses.jobs.aberta')}</option>
             {session.type === 'empresa' && (
               <>
-                <option value="pausada">Pausadas</option>
-                <option value="encerrada">Encerradas</option>
-                <option value="expirada">Expiradas</option>
+                <option value="pausada">{t('common:statuses.jobs.pausada')}</option>
+                <option value="encerrada">{t('common:statuses.jobs.encerrada')}</option>
+                <option value="expirada">{t('common:statuses.jobs.expirada')}</option>
               </>
             )}
           </select>
@@ -244,7 +247,7 @@ function Vagas() {
             type="button"
             onClick={limparFiltros}
           >
-            Limpar
+            {t('jobs.clear')}
           </button>
         </section>
 
@@ -256,9 +259,9 @@ function Vagas() {
             const isOwnCompanyJob = session.type === 'empresa'
               && String(vaga.empresaId || vaga.empresaUid || '') === String(getFirebaseUid(session.user))
             const statusLabel = isOwnCompanyJob && vaga.statusAprovacao
-              ? statusAprovacaoVagaLabels[vaga.statusAprovacao] || vaga.statusAprovacao
-              : statusVagaLabels[vaga.status] || vaga.status
-            const empresaActionLabel = isOwnCompanyJob ? 'Gerenciar vaga' : 'Ver vaga'
+              ? t(`common:statuses.jobApproval.${vaga.statusAprovacao}`, { defaultValue: vaga.statusAprovacao })
+              : t(`common:statuses.jobs.${vaga.status}`, { defaultValue: vaga.status })
+            const empresaActionLabel = isOwnCompanyJob ? t('jobs.manageJob') : t('jobs.viewJob')
 
             // Fluxo: usuários públicos são direcionados ao login antes de ver detalhes.
             const candidatoQuery = candidatoPreSalvoId
@@ -287,7 +290,7 @@ function Vagas() {
                       </span>
                     </div>
                     <h3>{vaga.titulo}</h3>
-                    <span className="vaga-salario">{vaga.salario}</span>
+                    <span className="vaga-salario">{formatJobSalary(vaga, t)}</span>
                     <p>{vaga.empresa}</p>
                   </div>
                 </Link>
@@ -295,7 +298,7 @@ function Vagas() {
                 <div className="vaga-actions">
                   {session.type === 'indicador' && (
                     <Link to={detailPath} className="vaga-action-primary">
-                      {candidatoPreSalvoId ? 'Escolher esta vaga' : 'Ver vaga'}
+                      {candidatoPreSalvoId ? t('jobs.chooseJob') : t('jobs.viewJob')}
                     </Link>
                   )}
 
@@ -310,7 +313,7 @@ function Vagas() {
                       to={`/login?redirect=/vaga/${vaga.id}`}
                       className="vaga-action-primary"
                     >
-                      Entrar para indicar
+                      {t('jobs.loginToRefer')}
                     </Link>
                   )}
                 </div>
@@ -322,20 +325,20 @@ function Vagas() {
         {error && (
           <EstadoDados
             tone={navigator.onLine ? 'error' : 'offline'}
-            title={navigator.onLine ? 'Não foi possível carregar as vagas' : 'Sem conexão'}
-            description={error || 'Verifique sua conexão e tente novamente.'}
-            actionLabel="Tentar novamente"
+            title={navigator.onLine ? t('jobs.loadError') : t('jobs.offline')}
+            description={t('jobs.connectionDescription')}
+            actionLabel={t('jobs.retry')}
             onAction={tentarNovamente}
           />
         )}
 
         {!loading && !error && vagasFiltradas.length === 0 && (
           <EstadoDados
-            title={vagas.length ? 'Nenhuma vaga corresponde aos filtros' : 'Nenhuma vaga publicada'}
+            title={vagas.length ? t('jobs.noFilterResults') : t('jobs.noPublishedJobs')}
             description={vagas.length
-              ? 'Ajuste ou limpe os filtros para encontrar outras oportunidades.'
-              : 'Quando uma empresa publicar uma oportunidade, ela aparecerá aqui.'}
-            actionLabel={vagas.length ? 'Limpar filtros' : ''}
+              ? t('jobs.adjustFilters')
+              : t('jobs.futureJobs')}
+            actionLabel={vagas.length ? t('jobs.clearFilters') : ''}
             onAction={vagas.length ? limparFiltros : undefined}
           />
         )}

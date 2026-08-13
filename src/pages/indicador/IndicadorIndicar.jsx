@@ -5,6 +5,7 @@
 import './styles/IndicadorIndicar.css'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   FaBold,
   FaCheckCircle,
@@ -101,12 +102,11 @@ const resumeTypeByExtension = {
   rtf: 'application/rtf'
 }
 
-// Responsabilidade: formatar valores monetários como moeda brasileira.
-const formatCurrency = (value) => {
+const formatCurrencyInput = (value, language) => {
   const numbers = value.replace(/\D/g, '')
   if (!numbers) return ''
 
-  return Number(numbers).toLocaleString('pt-BR', {
+  return Number(numbers).toLocaleString(language, {
     style: 'currency',
     currency: 'BRL',
     maximumFractionDigits: 0,
@@ -192,10 +192,10 @@ const getResumeMetadata = (candidato) => {
   }
 }
 
-const mapSavedCandidateToForm = (candidato) => {
+const mapSavedCandidateToForm = (candidato, language) => {
   const salario = candidato?.expectativaSalarial
   const salarioFormatado = typeof salario === 'number'
-    ? formatCurrency(String(salario))
+    ? formatCurrencyInput(String(salario), language)
     : toText(salario)
 
   return {
@@ -264,13 +264,49 @@ const mergeSavedCandidate = (current, incoming) => {
 
 const getResumeExtension = (fileName) => String(fileName || '').split('.').pop()?.toLowerCase() || ''
 
-const formatFileSize = (size) => {
+const formatFileSize = (size, language) => {
   if (!size) return ''
   if (size < 1024 * 1024) return `${Math.ceil(size / 1024)} KB`
-  return `${(size / (1024 * 1024)).toFixed(1)} MB`
+  return `${new Intl.NumberFormat(language, { maximumFractionDigits: 1 }).format(size / (1024 * 1024))} MB`
 }
 
+const genderOptions = [
+  { value: 'Feminino', labelKey: 'common:candidateForm.options.gender.female' },
+  { value: 'Masculino', labelKey: 'common:candidateForm.options.gender.male' },
+  { value: 'Outro', labelKey: 'common:candidateForm.options.gender.other' },
+  { value: 'Prefiro não informar', labelKey: 'common:candidateForm.options.gender.preferNot' }
+]
+
+const educationOptions = [
+  { value: 'Ensino médio', labelKey: 'common:candidateForm.options.education.highSchool' },
+  { value: 'Técnico', labelKey: 'common:candidateForm.options.education.technical' },
+  { value: 'Superior', labelKey: 'common:candidateForm.options.education.higher' },
+  { value: 'Pós-graduação', labelKey: 'common:candidateForm.options.education.postgraduate' },
+  { value: 'Mestrado', labelKey: 'common:candidateForm.options.education.masters' },
+  { value: 'Doutorado', labelKey: 'common:candidateForm.options.education.doctorate' }
+]
+
+const workModelOptions = [
+  { value: 'Remoto', labelKey: 'common:candidateForm.options.workModel.remote' },
+  { value: 'Híbrido', labelKey: 'common:candidateForm.options.workModel.hybrid' },
+  { value: 'Presencial', labelKey: 'common:candidateForm.options.workModel.onsite' }
+]
+
+const noticeOptions = [
+  { value: 'Imediato', labelKey: 'common:candidateForm.options.notice.immediate' },
+  { value: '15 dias', labelKey: 'common:candidateForm.options.notice.days15' },
+  { value: '30 dias', labelKey: 'common:candidateForm.options.notice.days30' },
+  { value: '45 dias', labelKey: 'common:candidateForm.options.notice.days45' },
+  { value: '60 dias', labelKey: 'common:candidateForm.options.notice.days60' }
+]
+
+const translateOptions = (options, t) => options.map((option) => ({
+  value: option.value,
+  label: t(option.labelKey)
+}))
+
 function Indicar() {
+  const { t, i18n } = useTranslation(['referrer', 'common'])
   // Identificador da vaga recebido pela rota.
   const { vagaId } = useParams()
 
@@ -283,6 +319,7 @@ function Indicar() {
   const indicadorId = getFirebaseUid(indicador)
   const requestedSavedCandidateId = searchParams.get('candidatoPreSalvoId') || ''
   const automaticSelectionRef = useRef('')
+  const language = i18n.resolvedLanguage || i18n.language
 
   // Armazena os dados da vaga carregada pelo Firestore.
   const [vaga, setVaga] = useState(null)
@@ -313,7 +350,7 @@ function Indicar() {
 
     const fetchVaga = async () => {
       if (!indicadorId) {
-        setLoadError('Perfil do indicador sem UID do Firebase.')
+        setLoadError(t('referral.missingUid'))
         setLoading(false)
         return
       }
@@ -323,16 +360,16 @@ function Indicar() {
         const data = await buscarVagaPorId(vagaId)
 
         if (!data) {
-          throw new Error('Vaga não encontrada')
+          throw new Error(t('referral.jobNotFound'))
         }
 
         if (!vagaAceitaIndicacoes(data)) {
-          throw new Error('Esta vaga não está aberta para novas indicações.')
+          throw new Error(t('referral.jobClosed'))
         }
 
         if (active) setVaga(data)
-      } catch (err) {
-        if (active) setLoadError(err.message || 'Não foi possível carregar a vaga.')
+      } catch {
+        if (active) setLoadError(t('referral.jobLoadError'))
       } finally {
         if (active) setLoading(false)
       }
@@ -343,7 +380,7 @@ function Indicar() {
     return () => {
       active = false
     }
-  }, [indicadorId, vagaId, reloadKey])
+  }, [indicadorId, reloadKey, t, vagaId])
 
   useEffect(() => {
     let active = true
@@ -351,7 +388,7 @@ function Indicar() {
     const fetchSavedCandidates = async () => {
       if (!indicadorId) {
         setSavedCandidates([])
-        setSavedCandidatesError('Perfil do indicador sem UID do Firebase.')
+        setSavedCandidatesError(t('referral.missingUid'))
         setSavedCandidatesLoading(false)
         return
       }
@@ -365,10 +402,10 @@ function Indicar() {
         if (active) {
           setSavedCandidates(Array.isArray(data) ? data : [])
         }
-      } catch (err) {
+      } catch {
         if (active) {
           setSavedCandidates([])
-          setSavedCandidatesError(err.message || 'Não foi possível carregar os candidatos pré-salvos.')
+          setSavedCandidatesError(t('referral.savedLoadError'))
         }
       } finally {
         if (active) setSavedCandidatesLoading(false)
@@ -380,7 +417,7 @@ function Indicar() {
     return () => {
       active = false
     }
-  }, [indicadorId, savedCandidatesReloadKey])
+  }, [indicadorId, savedCandidatesReloadKey, t])
 
   const visibleSavedCandidates = useMemo(() => {
     const search = normalizeText(savedCandidateSearch)
@@ -409,15 +446,15 @@ function Indicar() {
   const applySavedCandidate = useCallback(async (candidate) => {
     if (!candidate) return false
 
-    const incoming = mapSavedCandidateToForm(candidate)
+    const incoming = mapSavedCandidateToForm(candidate, language)
     const conflicts = getProfileConflicts(form, incoming)
 
     if (conflicts.length) {
       const confirmed = await confirm({
-        title: 'Substituir dados do candidato?',
-        description: `${conflicts.length} ${conflicts.length === 1 ? 'campo preenchido possui' : 'campos preenchidos possuem'} valores diferentes. Os dados de perfil serão substituídos, mas os textos específicos desta indicação serão preservados.`,
-        confirmLabel: 'Usar pré-salvo',
-        cancelLabel: 'Manter formulário'
+        title: t('referral.replaceTitle'),
+        description: t('referral.replaceDescription', { count: conflicts.length }),
+        confirmLabel: t('referral.useSaved'),
+        cancelLabel: t('referral.keepForm')
       })
 
       if (!confirmed) return false
@@ -428,7 +465,7 @@ function Indicar() {
     setSavedCandidateSearch('')
     setMessage('')
     return true
-  }, [confirm, form])
+  }, [confirm, form, language, t])
 
   useEffect(() => {
     if (!requestedSavedCandidateId) {
@@ -446,7 +483,7 @@ function Indicar() {
 
     if (!requestedCandidate) {
       automaticSelectionRef.current = requestedSavedCandidateId
-      toast.warning('O candidato pré-salvo solicitado não foi encontrado.')
+      toast.warning(t('referral.savedNotFound'))
       return
     }
 
@@ -462,6 +499,7 @@ function Indicar() {
     savedCandidates,
     savedCandidatesError,
     savedCandidatesLoading,
+    t,
     toast
   ])
 
@@ -501,7 +539,7 @@ function Indicar() {
   // Responsabilidade: atualizar campos monetários já formatados.
   const updateCurrencyField = (event) => {
     const { name, value } = event.target
-    setForm((current) => ({ ...current, [name]: formatCurrency(value) }))
+    setForm((current) => ({ ...current, [name]: formatCurrencyInput(value, language) }))
   }
 
   // Responsabilidade: atualizar o telefone com máscara.
@@ -549,13 +587,13 @@ function Indicar() {
 
     if (!hasValidExtension || !hasValidType) {
       event.target.value = ''
-      toast.warning('Selecione um currículo em PDF, DOC, DOCX ou RTF.')
+      toast.warning(t('referral.invalidResume'))
       return
     }
 
     if (file.size > maxResumeSize) {
       event.target.value = ''
-      toast.warning('O currículo deve ter no máximo 10 MB.')
+      toast.warning(t('referral.resumeTooLarge'))
       return
     }
 
@@ -584,8 +622,8 @@ function Indicar() {
 
     if (!vaga) {
       setSaving(false)
-      setMessage('Vaga não carregada para finalizar a indicação.')
-      toast.warning('Vaga não carregada para finalizar a indicação.')
+      setMessage(t('referral.jobMissingSubmit'))
+      toast.warning(t('referral.jobMissingSubmit'))
       return
     }
 
@@ -596,13 +634,14 @@ function Indicar() {
         vaga,
         candidatoPreSalvoId: selectedSavedId
       })
-      toast.success('Indicação enviada com sucesso.')
+      toast.success(t('referral.success'))
 
       // Após criar a indicação, retorna para a página da vaga.
       navigate(`/vaga/${vagaId}`)
-    } catch (err) {
-      setMessage(err.message)
-      toast.error(err.message)
+    } catch {
+      const errorMessage = t('referral.submitError')
+      setMessage(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setSaving(false)
     }
@@ -619,70 +658,70 @@ function Indicar() {
 
         <main className="indicar-page">
           <header className="indicar-header">
-            <span>Fluxo de indicação</span>
-            <h1>Indicar um<br />Novo Candidato</h1>
-            <Link to={`/vaga/${vagaId}`}>Voltar para vaga selecionada</Link>
+            <span>{t('referral.eyebrow')}</span>
+            <h1>{t('referral.titleFirst')}<br />{t('referral.titleSecond')}</h1>
+            <Link to={`/vaga/${vagaId}`}>{t('referral.backToJob')}</Link>
             {vaga && <p>{vaga.titulo} - {vaga.empresa}</p>}
           </header>
 
           {loading ? (
-            <PageLoader label="Carregando vaga..." compact />
+            <PageLoader label={t('referral.jobLoading')} compact />
           ) : loadError || !vaga ? (
             <EstadoDados
-              actionLabel="Tentar novamente"
-              description={loadError || 'A vaga solicitada não está disponível.'}
+              actionLabel={t('referral.retry')}
+              description={loadError || t('referral.jobUnavailable')}
               onAction={tentarNovamente}
-              title={navigator.onLine ? 'Indicação indisponível' : 'Você está sem conexão'}
+              title={navigator.onLine ? t('referral.unavailable') : t('referral.offline')}
               tone={navigator.onLine ? 'error' : 'offline'}
             />
           ) : (
             <form className="indicar-form" onSubmit={handleSubmit}>
               <div className="indicar-main">
                 <section className="form-section">
-                  <h2>Dados Pessoais</h2>
+                  <h2>{t('common:candidateForm.sections.personal')}</h2>
                   <div className="form-grid">
-                    <Field label="Nome completo" name="nome" value={form.nome} onChange={updateField} placeholder="Ex: João da Silva" required />
-                    <Field label="E-mail" name="email" type="email" value={form.email} onChange={updateField} placeholder="joao@exemplo.com" required />
-                    <Field label="Data de nascimento" name="dataNascimento" type="date" value={form.dataNascimento} onChange={updateField} />
-                    <SelectField label="Gênero (opcional)" name="genero" value={form.genero} onChange={updateField} options={['Feminino', 'Masculino', 'Outro', 'Prefiro não informar']} />
+                    <Field label={t('common:candidateForm.fields.name')} name="nome" value={form.nome} onChange={updateField} placeholder={t('common:candidateForm.placeholders.name')} required />
+                    <Field label={t('common:candidateForm.fields.email')} name="email" type="email" value={form.email} onChange={updateField} placeholder={t('common:candidateForm.placeholders.email')} required />
+                    <Field label={t('common:candidateForm.fields.birthDate')} name="dataNascimento" type="date" value={form.dataNascimento} onChange={updateField} />
+                    <SelectField emptyLabel={t('common:candidateForm.options.select')} label={t('common:candidateForm.fields.genderOptional')} name="genero" value={form.genero} onChange={updateField} options={translateOptions(genderOptions, t)} />
                     <Field
-                      label="Telefone"
+                      label={t('common:candidateForm.fields.phone')}
                       name="telefone"
                       value={form.telefone}
                       onChange={updatePhoneField}
-                      placeholder="(11) 98765-4321"
+                      placeholder={t('common:candidateForm.placeholders.phone')}
                       inputMode="tel"
                     />
                   </div>
                 </section>
 
                 <section className="form-section">
-                  <h2>Perfil Profissional</h2>
+                  <h2>{t('common:candidateForm.sections.professional')}</h2>
                   <div className="form-grid">
-                    <Field label="Cargo atual" name="cargoAtual" value={form.cargoAtual} onChange={updateField} placeholder="Ex: Senior UX Designer" />
-                    <Field label="Anos de experiência" name="anosExperiencia" value={form.anosExperiencia} onChange={updateField} placeholder="Ex: 5" />
-                    <SelectField label="Nível de escolaridade" name="escolaridade" value={form.escolaridade} onChange={updateField} options={['Ensino médio', 'Técnico', 'Superior', 'Pós-graduação', 'Mestrado', 'Doutorado']} />
-                    <Field label="Proficiência em idiomas" name="proficienciaIdiomas" value={form.proficienciaIdiomas} onChange={updateField} placeholder="Inglês (Avançado), Espanhol (Básico)..." />
+                    <Field label={t('common:candidateForm.fields.currentRole')} name="cargoAtual" value={form.cargoAtual} onChange={updateField} placeholder={t('common:candidateForm.placeholders.currentRole')} />
+                    <Field label={t('common:candidateForm.fields.experience')} name="anosExperiencia" value={form.anosExperiencia} onChange={updateField} placeholder={t('common:candidateForm.placeholders.experience')} />
+                    <SelectField emptyLabel={t('common:candidateForm.options.select')} label={t('common:candidateForm.fields.educationLevel')} name="escolaridade" value={form.escolaridade} onChange={updateField} options={translateOptions(educationOptions, t)} />
+                    <Field label={t('common:candidateForm.fields.languages')} name="proficienciaIdiomas" value={form.proficienciaIdiomas} onChange={updateField} placeholder={t('common:candidateForm.placeholders.languages')} />
                   </div>
                 </section>
 
                 <section className="form-section">
-                  <h2>Links & Redes Sociais</h2>
+                  <h2>{t('common:candidateForm.sections.links')}</h2>
                   <div className="form-grid">
-                    <Field label="LinkedIn profile URL" name="linkedin" value={form.linkedin} onChange={updateField} placeholder="linkedin.com/in/perfil" />
-                    <Field label="Portfólio URL" name="portfolio" value={form.portfolio} onChange={updateField} placeholder="behance.net/perfil ou seudominio.com" />
-                    <Field className="full-field" label="GitHub / Behance (opcional)" name="github" value={form.github} onChange={updateField} placeholder="Links adicionais de repositórios ou portfólios" />
+                    <Field label={t('common:candidateForm.fields.linkedin')} name="linkedin" value={form.linkedin} onChange={updateField} placeholder={t('common:candidateForm.placeholders.linkedin')} />
+                    <Field label={t('common:candidateForm.fields.portfolio')} name="portfolio" value={form.portfolio} onChange={updateField} placeholder={t('common:candidateForm.placeholders.portfolio')} />
+                    <Field className="full-field" label={t('common:candidateForm.fields.githubOptional')} name="github" value={form.github} onChange={updateField} placeholder={t('common:candidateForm.placeholders.github')} />
                   </div>
                 </section>
 
                 <section className="form-section">
-                  <h2>Por que indicar?</h2>
-                  <Textarea label="Principais pontos fortes" name="pontosFortes" value={form.pontosFortes} onChange={updateField} placeholder="Quais as maiores fortalezas deste candidato?" />
-                  <Textarea label="Fit cultural com a Selectio" name="fitCultural" value={form.fitCultural} onChange={updateField} placeholder="Por que ele se daria bem com nossa cultura?" />
-                  <Textarea label="Destaques em projetos" name="destaquesProjetos" value={form.destaquesProjetos} onChange={updateField} placeholder="Mencione projetos relevantes que ele entregou..." />
+                  <h2>{t('referral.whyRefer')}</h2>
+                  <Textarea label={t('referral.strengths')} name="pontosFortes" value={form.pontosFortes} onChange={updateField} placeholder={t('referral.strengthsPlaceholder')} />
+                  <Textarea label={t('referral.cultureFit')} name="fitCultural" value={form.fitCultural} onChange={updateField} placeholder={t('referral.cultureFitPlaceholder')} />
+                  <Textarea label={t('referral.projectHighlights')} name="destaquesProjetos" value={form.destaquesProjetos} onChange={updateField} placeholder={t('referral.projectHighlightsPlaceholder')} />
 
                   <label className="field-label full-field">
-                    Narrativa completa da indicação
+                    {t('referral.fullNarrative')}
                     <div className="editor-toolbar">
                       <FaBold />
                       <FaItalic />
@@ -693,48 +732,48 @@ function Indicar() {
                       name="narrativa"
                       value={form.narrativa}
                       onChange={updateField}
-                      placeholder="Uma visão geral do motivo da indicação..."
+                      placeholder={t('referral.narrativePlaceholder')}
                     />
                   </label>
                 </section>
 
                 <section className="form-section">
-                  <h2>Habilidades & Expertise</h2>
-                  <p className="skill-help">Digite uma habilidade e pressione Enter para criar tokens.</p>
-                  <SkillInput label="Hard skills (competências técnicas)" skills={form.hardSkills} onRemove={(skill) => removeSkill('hardSkills', skill)} onAdd={(event) => addSkill(event, 'hardSkills')} />
-                  <SkillInput label="Soft skills (competências interpessoais)" skills={form.softSkills} onRemove={(skill) => removeSkill('softSkills', skill)} onAdd={(event) => addSkill(event, 'softSkills')} />
+                  <h2>{t('common:candidateForm.sections.skills')}</h2>
+                  <p className="skill-help">{t('common:candidateForm.skillHelp')}</p>
+                  <SkillInput label={t('common:candidateForm.hardSkills')} placeholder={t('common:candidateForm.skillPlaceholder')} skills={form.hardSkills} onRemove={(skill) => removeSkill('hardSkills', skill)} onAdd={(event) => addSkill(event, 'hardSkills')} />
+                  <SkillInput label={t('common:candidateForm.softSkills')} placeholder={t('common:candidateForm.skillPlaceholder')} skills={form.softSkills} onRemove={(skill) => removeSkill('softSkills', skill)} onAdd={(event) => addSkill(event, 'softSkills')} />
                 </section>
 
                 <section className="form-section">
-                  <h2>Preferências</h2>
+                  <h2>{t('common:candidateForm.sections.preferences')}</h2>
                   <div className="form-grid three-columns">
                     <Field
-                      label="Expectativa salarial"
+                      label={t('common:candidateForm.fields.salaryExpectation')}
                       name="expectativaSalarial"
                       value={form.expectativaSalarial}
                       onChange={updateCurrencyField}
-                      placeholder="R$ 8.000"
+                      placeholder={formatCurrencyInput('8000', language)}
                       inputMode="numeric"
                     />
-                    <SelectField label="Modelo de trabalho" name="modeloTrabalho" value={form.modeloTrabalho} onChange={updateField} options={['Remoto', 'Híbrido', 'Presencial']} />
-                    <SelectField label="Aviso prévio" name="avisoPrevio" value={form.avisoPrevio} onChange={updateField} options={['Imediato', '15 dias', '30 dias', '45 dias', '60 dias']} />
+                    <SelectField emptyLabel={t('common:candidateForm.options.select')} label={t('common:candidateForm.fields.workModel')} name="modeloTrabalho" value={form.modeloTrabalho} onChange={updateField} options={translateOptions(workModelOptions, t)} />
+                    <SelectField emptyLabel={t('common:candidateForm.options.select')} label={t('common:candidateForm.fields.noticePeriod')} name="avisoPrevio" value={form.avisoPrevio} onChange={updateField} options={translateOptions(noticeOptions, t)} />
                   </div>
 
                   <label className={`upload-box ${form.curriculoNome ? 'has-file' : ''}`}>
                     {form.curriculoNome ? <FaFilePdf /> : <FaCloudUploadAlt />}
                     <strong>
-                      {form.curriculoNome ? 'Arquivo anexado' : (
-                        <>Arraste seu arquivo aqui ou <span>clique para buscar</span></>
+                      {form.curriculoNome ? t('common:candidateForm.fileAttached') : (
+                        <>{t('common:candidateForm.dropFile')} <span>{t('common:candidateForm.browse')}</span></>
                       )}
                     </strong>
                     <small>
                       {form.curriculoNome ? (
                         <>
                           <FaCheckCircle /> {form.curriculoNome}
-                          {form.curriculoTamanho ? ` (${formatFileSize(form.curriculoTamanho)})` : ''}
+                          {form.curriculoTamanho ? ` (${formatFileSize(form.curriculoTamanho, language)})` : ''}
                         </>
                       ) : (
-                        'PDF, DOC, DOCX ou RTF (Máx. 10MB)'
+                        t('referral.resumeHelp')
                       )}
                     </small>
                     <input type="file" accept=".pdf,.doc,.docx,.rtf" onChange={handleFile} />
@@ -745,16 +784,16 @@ function Indicar() {
                   <div className="indicar-alert" role="alert">
                     <FaExclamationCircle />
                     <div>
-                      <strong>Não foi possível finalizar a indicação</strong>
+                      <strong>{t('referral.submitError')}</strong>
                       <p>{message}</p>
                     </div>
                   </div>
                 )}
 
                 <div className="form-actions">
-                  <button type="button" className="draft-button">Salvar como Rascunho</button>
+                  <button type="button" className="draft-button">{t('referral.draft')}</button>
                   <button type="submit" className="submit-button" disabled={saving}>
-                    {saving ? 'Finalizando...' : 'Finalizar Indicação'}
+                    {saving ? t('referral.finishing') : t('referral.finish')}
                   </button>
                 </div>
               </div>
@@ -763,32 +802,32 @@ function Indicar() {
                 <div className="saved-icon">
                   <FaSearch aria-hidden="true" />
                 </div>
-                <h2 id="saved-candidate-title">Adicionar candidato já pré-salvo</h2>
+                <h2 id="saved-candidate-title">{t('referral.savedTitle')}</h2>
                 <p className="saved-candidate-intro">
-                  Selecione um talento da sua base de candidatos para agilizar o processo.
+                  {t('referral.savedIntro')}
                 </p>
 
                 {savedCandidatesLoading ? (
                   <div className="saved-candidate-state" role="status" aria-live="polite">
                     <span className="saved-candidate-spinner" aria-hidden="true" />
-                    <p>Carregando candidatos...</p>
+                    <p>{t('referral.savedLoading')}</p>
                   </div>
                 ) : savedCandidatesError ? (
                   <div className="saved-candidate-state saved-candidate-error" role="alert">
                     <p>{savedCandidatesError}</p>
                     <button type="button" onClick={tentarCarregarPreSalvosNovamente}>
-                      Tentar novamente
+                      {t('referral.retry')}
                     </button>
                   </div>
                 ) : !savedCandidates.length ? (
                   <div className="saved-candidate-state saved-candidate-empty">
-                    <p>Você ainda não possui candidatos pré-salvos.</p>
-                    <Link to="/candidatos/indicador/novo">Cadastrar candidato</Link>
+                    <p>{t('referral.savedEmpty')}</p>
+                    <Link to="/candidatos/indicador/novo">{t('referral.registerCandidate')}</Link>
                   </div>
                 ) : (
                   <>
                     <label className="saved-candidate-search">
-                      Buscar candidato
+                      {t('referral.searchCandidate')}
                       <span>
                         <FaSearch aria-hidden="true" />
                         <input
@@ -798,24 +837,24 @@ function Indicar() {
                           onKeyDown={(event) => {
                             if (event.key === 'Enter') event.preventDefault()
                           }}
-                          placeholder="Nome, e-mail ou cargo"
+                          placeholder={t('referral.searchPlaceholder')}
                           autoComplete="off"
                         />
                       </span>
                     </label>
 
                     <label className="saved-candidate-select">
-                      Selecionar candidato
+                      {t('referral.selectCandidate')}
                       <select
                         value={selectedSavedId}
                         onChange={handleSavedCandidateSelection}
                         aria-describedby="saved-candidate-help"
                       >
-                        <option value="">Escolha na lista...</option>
+                        <option value="">{t('referral.chooseCandidate')}</option>
                         {savedCandidateOptions.map((candidate) => (
                           <option key={candidate.id} value={candidate.id}>
                             {[
-                              candidate.nome || candidate.nomeCompleto || 'Sem nome',
+                              candidate.nome || candidate.nomeCompleto || t('referral.unnamed'),
                               candidate.email,
                               candidate.cargoAtual
                             ].filter(Boolean).join(' — ')}
@@ -825,18 +864,18 @@ function Indicar() {
                     </label>
 
                     <p id="saved-candidate-help" className="saved-candidate-help">
-                      Os dados poderão ser revisados antes do envio.
+                      {t('referral.savedHelp')}
                     </p>
 
                     {savedCandidateSearch.trim() && !visibleSavedCandidates.length && (
                       <p className="saved-candidate-no-results" role="status">
-                        Nenhum candidato corresponde à busca.
+                        {t('referral.savedNoResults')}
                       </p>
                     )}
 
                     {selectedSavedCandidate && (
                       <div className="saved-candidate-selected" aria-live="polite">
-                        <span>Candidato selecionado</span>
+                        <span>{t('referral.selectedCandidate')}</span>
                         <strong>{selectedSavedCandidate.nome || selectedSavedCandidate.nomeCompleto}</strong>
                         <small>
                           {[selectedSavedCandidate.email, selectedSavedCandidate.cargoAtual]
@@ -870,14 +909,14 @@ function Field({ className = '', label, ...props }) {
 }
 
 // Responsabilidade: renderizar um campo select reutilizável com opção inicial padrão.
-function SelectField({ label, options, ...props }) {
+function SelectField({ emptyLabel, label, options, ...props }) {
   return (
     <label className="field-label">
       {label}
       <select {...props}>
-        <option value="">Selecione</option>
+        <option value="">{emptyLabel}</option>
         {options.map((option) => (
-          <option key={option} value={option}>{option}</option>
+          <option key={option.value} value={option.value}>{option.label}</option>
         ))}
       </select>
     </label>
@@ -895,7 +934,7 @@ function Textarea({ label, ...props }) {
 }
 
 // Responsabilidade: renderizar o campo de habilidades com tokens removíveis.
-function SkillInput({ label, skills, onRemove, onAdd }) {
+function SkillInput({ label, skills, onRemove, onAdd, placeholder }) {
   return (
     <label className="field-label full-field">
       {label}
@@ -905,7 +944,7 @@ function SkillInput({ label, skills, onRemove, onAdd }) {
             {skill} x
           </button>
         ))}
-        <input onKeyDown={onAdd} placeholder="Pressione enter para adicionar..." />
+        <input onKeyDown={onAdd} placeholder={placeholder} />
       </div>
     </label>
   )

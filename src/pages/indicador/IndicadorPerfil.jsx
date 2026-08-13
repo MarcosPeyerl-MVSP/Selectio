@@ -1,6 +1,7 @@
 import './styles/IndicadorPerfil.css'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   FaAward,
   FaBriefcase,
@@ -19,8 +20,7 @@ import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { listarIndicacoesPorIndicador } from '../../services/firestoreIndicacoes'
 import { atualizarPerfilUsuario } from '../../services/firestoreUsers'
 import { useToast } from '../../hooks/useToast'
-
-const emptyValue = 'Não informado'
+import { formatDate, formatPercent } from '../../i18n/formatters'
 
 const getInitialForm = (indicador) => ({
   nome: indicador?.nome || '',
@@ -33,24 +33,13 @@ const getInitialForm = (indicador) => ({
     : indicador?.especialidades || ''
 })
 
-const formatDate = (value) => {
-  if (!value) return emptyValue
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return emptyValue
-
-  return date.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  }).replace('.', '')
-}
-
 const splitSpecialties = (value) => String(value || '')
   .split(',')
   .map((item) => item.trim())
   .filter(Boolean)
 
 function IndicadorPerfil({ user, onUserUpdate }) {
+  const { t } = useTranslation(['referrer', 'common'])
   const toast = useToast()
   const indicadorUid = getFirebaseUid(user)
   const [indicacoes, setIndicacoes] = useState([])
@@ -60,6 +49,12 @@ function IndicadorPerfil({ user, onUserUpdate }) {
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState(() => getInitialForm(user))
   const emailVerified = Boolean(auth.currentUser?.emailVerified)
+  const emptyValue = t('profile.notProvided')
+  const formatProfileDate = (value) => formatDate(value, {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  }) || emptyValue
 
   useEffect(() => {
     let active = true
@@ -80,7 +75,7 @@ function IndicadorPerfil({ user, onUserUpdate }) {
         setIndicacoes(indicacoesData)
         setCandidatos(candidatosData)
       } catch {
-        toast.error('Não foi possível carregar os dados do perfil do indicador.')
+        toast.error(t('profile.loadError'))
       } finally {
         if (active) setLoading(false)
       }
@@ -91,7 +86,7 @@ function IndicadorPerfil({ user, onUserUpdate }) {
     return () => {
       active = false
     }
-  }, [indicadorUid, toast])
+  }, [indicadorUid, t, toast])
 
   const metrics = useMemo(() => {
     const total = indicacoes.length || candidatos.length
@@ -124,7 +119,7 @@ function IndicadorPerfil({ user, onUserUpdate }) {
     event.preventDefault()
 
     if (!indicadorUid) {
-      toast.warning('Perfil sem UID do Firebase. Entre novamente antes de salvar.')
+      toast.warning(t('profile.missingUid'))
       return
     }
 
@@ -151,113 +146,113 @@ function IndicadorPerfil({ user, onUserUpdate }) {
       localStorage.setItem('indicadorUser', JSON.stringify(updatedUser))
       onUserUpdate?.(updatedUser)
       setEditing(false)
-      toast.success('Perfil do indicador atualizado.')
+      toast.success(t('profile.saved'))
     } catch {
-      toast.error('Não foi possível salvar o perfil do indicador.')
+      toast.error(t('profile.saveError'))
     } finally {
       setSaving(false)
     }
   }
 
   if (loading) {
-    return <PageLoader label="Carregando perfil do indicador..." />
+    return <PageLoader label={t('profile.loading')} />
   }
 
-  const initial = (user?.nome || 'I').charAt(0).toUpperCase()
+  const initial = (user?.nome || t('profile.defaultRole')).charAt(0).toUpperCase()
   const recentIndications = (indicacoes.length ? indicacoes : candidatos).slice(0, 5)
 
   return (
     <section className="indicador-profile">
       <header className="profile-page-header">
-        <span>PERFIL PROFISSIONAL</span>
-        <h1>Meu Perfil</h1>
-        <p>Gerencie suas informações profissionais e visualize o impacto das suas indicações na rede Selectio.</p>
+        <span>{t('profile.eyebrow')}</span>
+        <h1>{t('profile.title')}</h1>
+        <p>{t('profile.description')}</p>
       </header>
 
       <div className="indicador-profile-layout">
         <aside className="indicador-profile-card">
           <div className="indicador-avatar">{initial}</div>
           <h2>{user?.nome || emptyValue}</h2>
-          <p>{user?.tituloProfissional || 'Indicador Selectio'}</p>
-          {emailVerified && <span className="verified-badge"><FaCheckCircle /> Conta verificada</span>}
+          <p>{user?.tituloProfissional || t('profile.defaultRole')}</p>
+          {emailVerified && <span className="verified-badge"><FaCheckCircle /> {t('profile.verified')}</span>}
           <div className="indicador-links">
             {user?.linkedin && <a href={formatExternalLink(user.linkedin)} target="_blank" rel="noreferrer"><FaLinkedin /> LinkedIn</a>}
             {user?.portfolio && <a href={formatExternalLink(user.portfolio)} target="_blank" rel="noreferrer"><FaExternalLinkAlt /> Portfolio</a>}
           </div>
           <button type="button" onClick={() => setEditing((current) => !current)}>
-            <FaUserTie /> {editing ? 'Cancelar edição' : 'Editar perfil'}
+            <FaUserTie /> {editing ? t('profile.cancelEdit') : t('profile.edit')}
           </button>
         </aside>
 
         <main className="indicador-profile-main">
           {editing && (
             <form className="indicador-profile-form" onSubmit={handleSave}>
-              <ProfileField label="Nome" name="nome" value={form.nome} onChange={handleChange} />
-              <ProfileField label="Telefone" name="telefone" value={form.telefone} onChange={handleChange} />
+              <ProfileField label={t('profile.name')} name="nome" value={form.nome} onChange={handleChange} />
+              <ProfileField label={t('profile.phone')} name="telefone" value={form.telefone} onChange={handleChange} />
               <ProfileField label="Pix" name="pix" value={form.pix} onChange={handleChange} />
               <ProfileField label="LinkedIn" name="linkedin" value={form.linkedin} onChange={handleChange} />
               <ProfileField label="Portfolio" name="portfolio" value={form.portfolio} onChange={handleChange} />
-              <ProfileField label="Especialidades" name="especialidades" value={form.especialidades} onChange={handleChange} placeholder="Separe por virgula" />
+              <ProfileField label={t('profile.specialties')} name="especialidades" value={form.especialidades} onChange={handleChange} placeholder={t('profile.specialtiesPlaceholder')} />
               <button type="submit" disabled={saving}>
-                <FaSave /> {saving ? 'Salvando...' : 'Salvar perfil'}
+                <FaSave /> {saving ? t('profile.saving') : t('profile.save')}
               </button>
             </form>
           )}
 
           <section className="indicador-profile-metrics">
-            <MetricCard icon={FaAward} label="Total de indicações" value={metrics.totalIndicacoes} />
-            <MetricCard icon={FaCheckCircle} label="Contratados" value={metrics.contratados} />
-            <MetricCard icon={FaBriefcase} label="Taxa de conversao" value={`${metrics.taxaConversao}%`} />
-            <MetricCard icon={FaUserTie} label="Em andamento" value={metrics.andamento} />
-            <MetricCard icon={FaIdCard} label="Em entrevista" value={metrics.entrevistas} />
+            <MetricCard icon={FaAward} label={t('profile.totalReferrals')} value={metrics.totalIndicacoes} />
+            <MetricCard icon={FaCheckCircle} label={t('profile.hired')} value={metrics.contratados} />
+            <MetricCard icon={FaBriefcase} label={t('profile.conversionRate')} value={formatPercent(metrics.taxaConversao)} />
+            <MetricCard icon={FaUserTie} label={t('profile.inProgress')} value={metrics.andamento} />
+            <MetricCard icon={FaIdCard} label={t('profile.inInterview')} value={metrics.entrevistas} />
           </section>
 
           <section className="indicador-profile-grid">
-            <InfoCard title="Dados pessoais" items={[
-              ['E-mail', user?.email],
-              ['Telefone', user?.telefone],
-              ['CPF', user?.cpf],
-              ['Nascimento', user?.dataNascimento]
+            <InfoCard title={t('profile.personalData')} emptyValue={emptyValue} items={[
+              [t('profile.email'), user?.email],
+              [t('profile.phone'), user?.telefone],
+              [t('profile.cpf'), user?.cpf],
+              [t('profile.birthDate'), user?.dataNascimento]
             ]} />
-            <InfoCard title="Pagamento e links" items={[
+            <InfoCard title={t('profile.paymentLinks')} emptyValue={emptyValue} items={[
               ['Pix', user?.pix],
               ['LinkedIn', user?.linkedin],
               ['Portfolio', user?.portfolio],
-              ['Atualizado em', formatDate(user?.atualizadoEm)]
+              [t('profile.updatedAt'), formatProfileDate(user?.atualizadoEm)]
             ]} />
           </section>
 
           <section className="indicador-specialties-card">
-            <h3>Especialidades</h3>
+            <h3>{t('profile.specialties')}</h3>
             {specialties.length ? (
               <div>
                 {specialties.map((item) => <span key={item}>{item}</span>)}
               </div>
             ) : (
-              <p>Especialidades ainda não informadas.</p>
+              <p>{t('profile.noSpecialties')}</p>
             )}
           </section>
 
           <section className="indicador-empty-card">
-            <h3>Experiência profissional</h3>
-            <p>Experiência profissional ainda não cadastrada.</p>
+            <h3>{t('profile.experience')}</h3>
+            <p>{t('profile.noExperience')}</p>
           </section>
 
           <section className="indicador-recent-card">
-            <h3>Últimas indicações</h3>
+            <h3>{t('profile.recentReferrals')}</h3>
             {recentIndications.length ? (
               <div>
                 {recentIndications.map((item) => (
                   <article key={item.id}>
-                    <strong>{item.candidatoNome || item.nome || 'Candidato sem nome'}</strong>
+                    <strong>{item.candidatoNome || item.nome || t('profile.unnamedCandidate')}</strong>
                     <span>{item.vagaTitulo || emptyValue}</span>
-                    <em>{item.status || 'indicado'}</em>
-                    <small>{formatDate(item.criadoEm || item.aplicadoEm)}</small>
+                    <em>{t(`common:statuses.candidates.${item.status || 'indicado'}`, { defaultValue: item.status || t('common:statuses.candidates.indicado') })}</em>
+                    <small>{formatProfileDate(item.criadoEm || item.aplicadoEm)}</small>
                   </article>
                 ))}
               </div>
             ) : (
-              <p>Nenhuma indicação registrada ainda.</p>
+              <p>{t('profile.noReferrals')}</p>
             )}
           </section>
         </main>
@@ -289,7 +284,7 @@ function MetricCard({ icon: Icon, label, value }) {
   )
 }
 
-function InfoCard({ title, items }) {
+function InfoCard({ title, items, emptyValue }) {
   return (
     <article className="indicador-info-card">
       <h3>{title}</h3>

@@ -1,6 +1,7 @@
 import './styles/AdminPages.css'
 
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import {
   AdminDetailGrid,
@@ -16,15 +17,8 @@ import { buscarCandidatosAdmin } from '../../services/firestoreAdmin'
 import { formatDate, formatNumber, initials, normalizeText } from './adminFormatters'
 import { useAdminData } from './useAdminData'
 
-const statusLabels = {
-  indicado: 'Triagem',
-  entrevista: 'Entrevista',
-  contratado: 'Contratado',
-  recusado: 'Recusado',
-  cancelado: 'Cancelado',
-}
-
 function AdminCandidatos() {
+  const { t } = useTranslation(['admin', 'common'])
   const { data, loading, error, reload } = useAdminData(buscarCandidatosAdmin)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('todos')
@@ -53,111 +47,111 @@ function AdminCandidatos() {
     })
   }, [data, period, search, status, vaga])
 
-  if (loading) return <AdminLoading label="Carregando candidatos..." />
+  if (loading) return <AdminLoading label={t('candidates.loading')} />
   if (error) return <AdminError message={error} onRetry={reload} />
 
   const columns = [
     {
       key: 'candidato',
-      label: 'Candidato',
+      label: t('candidates.candidate'),
       render: (candidato) => (
         <div className="admin-entity">
-          <span className="admin-entity-avatar">{initials(candidato.nome)}</span>
-          <div><strong>{candidato.nome}</strong><span>{candidato.cargoAtual || candidato.email || 'Talento indicado'}</span></div>
+          <span className="admin-entity-avatar">{initials(candidato.nome || t('candidates.candidate'))}</span>
+          <div><strong>{candidato.nome || t('candidates.candidate')}</strong><span>{candidato.cargoAtual || candidato.email || t('candidates.referredTalent')}</span></div>
         </div>
       ),
     },
-    { key: 'vaga', label: 'Vaga relacionada', render: (candidato) => candidato.vagaTitulo },
-    { key: 'indicador', label: 'Indicado por', render: (candidato) => candidato.indicadorNome },
-    { key: 'data', label: 'Data da indicação', render: (candidato) => formatDate(candidato.dataIndicacao) },
+    { key: 'vaga', label: t('candidates.relatedJob'), render: (candidato) => candidato.vagaTitulo || t('candidates.jobNotProvided') },
+    { key: 'indicador', label: t('candidates.referredBy'), render: (candidato) => candidato.indicadorNome || t('candidates.referrerNotProvided') },
+    { key: 'data', label: t('candidates.referralDate'), render: (candidato) => formatDate(candidato.dataIndicacao) },
     {
       key: 'status',
-      label: 'Status do funil',
-      render: (candidato) => <AdminStatusBadge status={candidato.status} label={statusLabels[candidato.status] || candidato.status} />,
+      label: t('candidates.funnelStatus'),
+      render: (candidato) => <AdminStatusBadge status={candidato.status} label={t(`candidates.statuses.${candidato.status}`, { defaultValue: candidato.status })} />,
     },
     {
       key: 'acoes',
-      label: 'Ações',
-      render: (candidato) => <button className="admin-table-action" type="button" onClick={() => setSelected(candidato)}>Ver detalhes</button>,
+      label: t('candidates.actions'),
+      render: (candidato) => <button className="admin-table-action" type="button" onClick={() => setSelected(candidato)}>{t('candidates.viewDetails')}</button>,
     },
   ]
 
   return (
     <>
       <AdminPageHeader
-        eyebrow="Gestão de talentos • Base global"
-        title="Candidatos"
-        description="Visualize talentos indicados, vagas relacionadas e o estágio atual de cada processo seletivo."
+        eyebrow={t('candidates.eyebrow')}
+        title={t('candidates.title')}
+        description={t('candidates.description')}
       />
 
       <AdminToolbar
         search={search}
         onSearch={setSearch}
-        placeholder="Buscar por nome, vaga ou indicador..."
+        placeholder={t('candidates.searchPlaceholder')}
         onClear={() => { setSearch(''); setStatus('todos'); setVaga('todas'); setPeriod('todos') }}
       >
         <select value={status} onChange={(event) => setStatus(event.target.value)}>
-          <option value="todos">Todas as etapas</option>
-          <option value="indicado">Triagem</option>
-          <option value="entrevista">Entrevista</option>
-          <option value="contratado">Contratado</option>
-          <option value="recusado">Recusado</option>
-          <option value="cancelado">Cancelado</option>
+          <option value="todos">{t('candidates.allStages')}</option>
+          <option value="indicado">{t('candidates.screening')}</option>
+          <option value="entrevista">{t('candidates.interview')}</option>
+          <option value="contratado">{t('candidates.hired')}</option>
+          <option value="recusado">{t('candidates.rejected')}</option>
+          <option value="cancelado">{t('candidates.cancelled')}</option>
         </select>
         <select value={vaga} onChange={(event) => setVaga(event.target.value)}>
-          <option value="todas">Todas as vagas</option>
+          <option value="todas">{t('candidates.allJobs')}</option>
           {data.vagas.map((vagaTitulo) => <option key={vagaTitulo} value={vagaTitulo}>{vagaTitulo}</option>)}
         </select>
         <select value={period} onChange={(event) => setPeriod(event.target.value)}>
-          <option value="todos">Todo período</option>
-          <option value="7">Últimos 7 dias</option>
-          <option value="30">Últimos 30 dias</option>
+          <option value="todos">{t('candidates.allPeriod')}</option>
+          <option value="7">{t('candidates.lastSevenDays')}</option>
+          <option value="30">{t('candidates.lastThirtyDays')}</option>
         </select>
       </AdminToolbar>
 
       <AdminTable
         columns={columns}
         rows={rows}
-        emptyTitle="Nenhum candidato encontrado"
-        emptyDescription="Ajuste a etapa, vaga, período ou busca."
+        emptyTitle={t('candidates.emptyTitle')}
+        emptyDescription={t('candidates.emptyDescription')}
       />
 
       <section className="admin-summary-cards">
         <article className="admin-summary-card primary">
-          <span>Taxa de conversão</span>
+          <span>{t('candidates.conversionRate')}</span>
           <strong>{data.metricas.conversao}%</strong>
-          <p>Percentual de candidatos que chegaram ao status contratado.</p>
+          <p>{t('candidates.conversionDescription')}</p>
         </article>
         <article className="admin-summary-card accent">
-          <span>Novos talentos</span>
+          <span>{t('candidates.newTalent')}</span>
           <strong>+{formatNumber(data.metricas.novos)}</strong>
-          <p>Indicações recebidas nos últimos sete dias.</p>
+          <p>{t('candidates.newTalentDescription')}</p>
         </article>
         <article className="admin-summary-card">
-          <span>Em entrevista</span>
+          <span>{t('candidates.inInterview')}</span>
           <strong>{formatNumber(data.metricas.entrevistas)}</strong>
-          <p>{formatNumber(data.metricas.contratados)} candidatos já foram contratados.</p>
+          <p>{t('candidates.alreadyHired', { count: data.metricas.contratados })}</p>
         </article>
       </section>
 
       {selected && (
-        <AdminModal title={selected.nome} eyebrow="Perfil do candidato" onClose={() => setSelected(null)}>
+        <AdminModal title={selected.nome || t('candidates.candidate')} eyebrow={t('candidates.profile')} onClose={() => setSelected(null)}>
           <AdminDetailGrid items={[
-            { label: 'E-mail', value: selected.email },
-            { label: 'Telefone', value: selected.telefone },
-            { label: 'Cargo atual', value: selected.cargoAtual },
-            { label: 'Vaga', value: selected.vagaTitulo },
-            { label: 'Empresa', value: selected.vagaEmpresa },
-            { label: 'Indicador', value: selected.indicadorNome },
-            { label: 'Status', value: statusLabels[selected.status] || selected.status },
-            { label: 'Data da indicação', value: formatDate(selected.dataIndicacao) },
-            { label: 'LinkedIn', value: selected.linkedin },
-            { label: 'Currículo', value: selected.curriculoNome },
+            { label: t('candidates.email'), value: selected.email },
+            { label: t('candidates.phone'), value: selected.telefone },
+            { label: t('candidates.currentRole'), value: selected.cargoAtual },
+            { label: t('candidates.job'), value: selected.vagaTitulo || t('candidates.jobNotProvided') },
+            { label: t('candidates.company'), value: selected.vagaEmpresa },
+            { label: t('candidates.referrer'), value: selected.indicadorNome || t('candidates.referrerNotProvided') },
+            { label: t('candidates.status'), value: t(`candidates.statuses.${selected.status}`, { defaultValue: selected.status }) },
+            { label: t('candidates.referralDate'), value: formatDate(selected.dataIndicacao) },
+            { label: t('candidates.linkedin'), value: selected.linkedin },
+            { label: t('candidates.resume'), value: selected.curriculoNome },
           ]} />
 
           {selected.narrativa && (
             <section className="admin-modal-section">
-              <h3>Narrativa da indicação</h3>
+              <h3>{t('candidates.referralNarrative')}</h3>
               <p>{selected.narrativa}</p>
             </section>
           )}

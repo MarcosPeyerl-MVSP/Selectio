@@ -1,6 +1,7 @@
 import './ModalPagamentoRecompensa.css'
 
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FaCreditCard, FaExternalLinkAlt, FaTimes } from 'react-icons/fa'
 
 import { useConfirmacao } from '../../hooks/useConfirmacao'
@@ -10,8 +11,10 @@ import {
   obterCheckoutUrlPagamento
 } from '../../services/firestorePagamentos'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
+import { formatCurrency } from '../../i18n/formatters'
 
 function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onClose, onCreated }) {
+  const { t } = useTranslation('company')
   const toast = useToast()
   const confirm = useConfirmacao()
   const empresaId = getFirebaseUid(empresa)
@@ -27,24 +30,24 @@ function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onCl
   const pagamentoPendente = statusPagamento === 'pending' && checkoutUrl
 
   const abrirCheckoutExistente = () => {
-    if (checkoutUrl) abrirCheckout(checkoutUrl, toast)
+    if (checkoutUrl) abrirCheckout(checkoutUrl, toast, t)
   }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
 
     if (!recompensaFixa.disponivel) {
-      toast.warning('Esta vaga não possui recompensa fixa. Defina um valor fixo para liberar pagamento automático.')
+      toast.warning(t('payments.modal.fixedRequiredWarning'))
       return
     }
 
     const confirmado = await confirm({
-      title: 'Pagar recompensa?',
+      title: t('payments.modal.confirmTitle'),
       description: valorRecompensa
-        ? `Você será redirecionado para o Mercado Pago para pagar ${formatCurrency(valorRecompensa)}.`
-        : 'A recompensa será validada pela vaga no Firestore antes de abrir o checkout.',
-      confirmLabel: 'Ir para pagamento',
-      cancelLabel: 'Voltar',
+        ? t('payments.modal.confirmDescription', { value: formatCurrency(valorRecompensa) })
+        : t('payments.modal.confirmValidation'),
+      confirmLabel: t('payments.modal.confirm'),
+      cancelLabel: t('payments.modal.back'),
       tone: 'danger'
     })
 
@@ -63,7 +66,10 @@ function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onCl
         indicadorId: candidato.indicadorId || candidato.indicadorUid || '',
         indicadorNome: candidato.indicadorNome || '',
         valor: valorRecompensa,
-        descricao: `Recompensa Selectio - ${candidato.vagaTitulo || 'Vaga'} - ${candidato.nome || 'Candidato'}`
+        descricao: t('payments.modal.rewardDescription', {
+          job: candidato.vagaTitulo || t('payments.modal.jobFallback'),
+          candidate: candidato.nome || t('payments.modal.candidateFallback')
+        })
       })
 
       onCreated?.(pagamento)
@@ -71,19 +77,19 @@ function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onCl
       const url = pagamento.sandboxInitPoint || pagamento.checkoutUrl || pagamento.initPoint
       if (url) {
         if (url.includes('sandbox.mercadopago')) {
-          toast.success('Preferência sandbox criada. Clique em Continuar checkout para pagar.')
+          toast.success(t('payments.modal.sandboxCreated'))
           return
         }
 
-        abrirCheckout(url, toast)
+        abrirCheckout(url, toast, t)
         onClose()
         return
       }
 
-      toast.success('Preferência de pagamento criada.')
+      toast.success(t('payments.modal.preferenceCreated'))
       onClose()
-    } catch (error) {
-      toast.error(error.message || 'Não foi possível criar o pagamento.')
+    } catch {
+      toast.error(t('payments.modal.createError'))
     } finally {
       setCarregando(false)
     }
@@ -98,44 +104,44 @@ function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onCl
         aria-labelledby="payment-reward-title"
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <button type="button" className="payment-modal-close" onClick={onClose} aria-label="Fechar pagamento">
+        <button type="button" className="payment-modal-close" onClick={onClose} aria-label={t('payments.modal.close')}>
           <FaTimes />
         </button>
 
         <header>
           <span><FaCreditCard /> Mercado Pago</span>
-          <h2 id="payment-reward-title">Pagar recompensa</h2>
-          <p>O checkout é criado pelo backend local da Selectio. Depois da aprovação, o saldo do indicador é creditado internamente.</p>
+          <h2 id="payment-reward-title">{t('payments.modal.title')}</h2>
+          <p>{t('payments.modal.description')}</p>
         </header>
 
         <div className="payment-summary">
           <div>
-            <span>Candidato</span>
-            <strong>{candidato.nome || 'Não informado'}</strong>
+            <span>{t('payments.modal.candidate')}</span>
+            <strong>{candidato.nome || t('profile.notProvided')}</strong>
           </div>
           <div>
-            <span>Vaga</span>
-            <strong>{candidato.vagaTitulo || 'Não informada'}</strong>
+            <span>{t('payments.modal.job')}</span>
+            <strong>{candidato.vagaTitulo || t('payments.modal.notProvidedFemale')}</strong>
           </div>
           <div>
-            <span>Indicador</span>
-            <strong>{candidato.indicadorNome || 'Não informado'}</strong>
+            <span>{t('payments.modal.referrer')}</span>
+            <strong>{candidato.indicadorNome || t('profile.notProvided')}</strong>
           </div>
         </div>
 
         {recompensaPaga ? (
           <div className="payment-state approved">
-            <strong>Recompensa paga</strong>
-            <p>Este candidato já possui pagamento aprovado.</p>
+            <strong>{t('payments.modal.paid')}</strong>
+            <p>{t('payments.modal.paidDescription')}</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
             <label className="payment-field">
-              Valor da recompensa
+              {t('payments.modal.rewardValue')}
               <input
                 value={recompensaFixa.disponivel
-                  ? valorRecompensa ? formatCurrency(valorRecompensa) : 'Validado pela vaga no Firestore'
-                  : 'Recompensa fixa não definida'}
+                  ? valorRecompensa ? formatCurrency(valorRecompensa) : t('payments.modal.validatedByJob')
+                  : t('payments.modal.fixedNotDefined')}
                 readOnly
                 disabled={Boolean(pagamentoPendente)}
               />
@@ -143,37 +149,37 @@ function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onCl
 
             {!recompensaFixa.disponivel && (
               <div className="payment-state blocked">
-                <strong>Recompensa fixa obrigatória</strong>
-                <p>Esta vaga não possui recompensa fixa. Defina um valor fixo para liberar pagamento automático.</p>
+                <strong>{t('payments.modal.fixedRequired')}</strong>
+                <p>{t('payments.modal.fixedRequiredWarning')}</p>
               </div>
             )}
 
             {recompensaFixa.disponivel && !valorRecompensa && (
               <div className="payment-state pending">
-                <strong>Valor pendente de validação</strong>
-                <p>O backend local vai buscar a recompensa cadastrada na vaga antes de criar o checkout.</p>
+                <strong>{t('payments.modal.pendingValue')}</strong>
+                <p>{t('payments.modal.pendingValueDescription')}</p>
               </div>
             )}
 
             {pagamentoPendente && (
               <div className="payment-state pending">
-                <strong>Pagamento pendente</strong>
-                <p>Continue o checkout já criado para esta recompensa.</p>
+                <strong>{t('payments.modal.pendingPayment')}</strong>
+                <p>{t('payments.modal.pendingPaymentDescription')}</p>
               </div>
             )}
 
             <div className="payment-actions">
               <button type="button" className="secondary" onClick={onClose}>
-                Cancelar
+                {t('payments.modal.cancel')}
               </button>
 
               {pagamentoPendente ? (
                 <button type="button" onClick={abrirCheckoutExistente}>
-                  <FaExternalLinkAlt /> Continuar checkout
+                  <FaExternalLinkAlt /> {t('payments.continueCheckout')}
                 </button>
               ) : (
                 <button type="submit" disabled={carregando || !recompensaFixa.disponivel}>
-                  {carregando ? 'Criando...' : 'Pagar recompensa'}
+                  {carregando ? t('payments.modal.creating') : t('payments.modal.title')}
                 </button>
               )}
             </div>
@@ -184,7 +190,7 @@ function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onCl
   )
 }
 
-function abrirCheckout(url, toast) {
+function abrirCheckout(url, toast, t) {
   if (url.includes('sandbox.mercadopago')) {
     const checkout = window.open(url, '_blank')
 
@@ -194,7 +200,7 @@ function abrirCheckout(url, toast) {
     }
 
     checkout.opener = null
-    toast.info('Checkout sandbox aberto em outra aba. Ao finalizar, volte ao Selectio para atualizar o status.')
+    toast.info(t('payments.modal.sandboxOpened'))
     return
   }
 
@@ -233,13 +239,6 @@ function normalizarValor(valor) {
 
   const numero = Number(normalizado)
   return Number.isFinite(numero) && numero > 0 ? Number(numero.toFixed(2)) : 0
-}
-
-function formatCurrency(value) {
-  return Number(value || 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  })
 }
 
 export default ModalPagamentoRecompensa

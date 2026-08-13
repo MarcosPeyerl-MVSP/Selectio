@@ -4,6 +4,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./CadastroEmpresa.css";
 import { FaCheck, FaEye, FaEyeSlash, FaGoogle, FaTimes } from "react-icons/fa";
 import {
@@ -18,7 +19,7 @@ import {
 import Navbar from "../../components/layout/Navbar";
 import Footer from "../../components/layout/Footer";
 import { auth } from "../../services/firebase";
-import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from "../../services/errosAutenticacao";
+import { getFirebaseAuthErrorKey, isFirebaseAuthError } from "../../services/errosAutenticacao";
 import { buscarPerfilUsuario, salvarPerfilUsuario } from "../../services/firestoreUsers";
 import { useToast } from "../../hooks/useToast";
 import { useAuth } from "../../hooks/useAuth";
@@ -29,6 +30,7 @@ import {
   criarPayloadSetoresEmpresariais,
   setoresEmpresariais,
 } from "../../utils/modoEmpresarial";
+import { formatCurrency } from "../../i18n/formatters";
 
 // Opções fixas de porte/tamanho da empresa.
 const tamanhoOptions = [
@@ -38,6 +40,13 @@ const tamanhoOptions = [
   "Grande empresa",
 ];
 
+const tamanhoLabelKeys = {
+  "Microempresa (ME)": "companyRegistration.sizes.micro",
+  "Empresa de Pequeno Porte (EPP)": "companyRegistration.sizes.small",
+  "Média empresa": "companyRegistration.sizes.medium",
+  "Grande empresa": "companyRegistration.sizes.large",
+};
+
 const createInitialSectorPasswords = () => setoresEmpresariais.reduce((passwords, setor) => ({
   ...passwords,
   [setor.id]: "",
@@ -45,27 +54,27 @@ const createInitialSectorPasswords = () => setoresEmpresariais.reduce((passwords
 
 // Critérios usados para avaliar a força da senha.
 const passwordCriteria = [
-  { key: "length", label: "12+ caracteres" },
-  { key: "uppercase", label: "Maiúscula" },
-  { key: "lowercase", label: "Minúscula" },
-  { key: "numbers", label: "Número" },
-  { key: "special", label: "Símbolo" },
-  { key: "noSequence", label: "Sem repetição" },
+  { key: "length", labelKey: "registration.passwordCriteria.length" },
+  { key: "uppercase", labelKey: "registration.passwordCriteria.uppercase" },
+  { key: "lowercase", labelKey: "registration.passwordCriteria.lowercase" },
+  { key: "numbers", labelKey: "registration.passwordCriteria.numbers" },
+  { key: "special", labelKey: "registration.passwordCriteria.special" },
+  { key: "noSequence", labelKey: "registration.passwordCriteria.noSequence" },
 ];
 
 // Textos exibidos de acordo com a força calculada da senha.
 const strengthCopy = {
   fraca: {
-    label: "fraca",
-    hint: "Use mais caracteres e misture letras, números e símbolo.",
+    labelKey: "registration.passwordStrength.weakLabel",
+    hintKey: "companyRegistration.weakHint",
   },
   média: {
-    label: "média",
-    hint: "Quase lá. Complete os critérios restantes.",
+    labelKey: "registration.passwordStrength.mediumLabel",
+    hintKey: "companyRegistration.mediumHint",
   },
   forte: {
-    label: "forte",
-    hint: "Senha pronta para proteger o acesso da empresa.",
+    labelKey: "registration.passwordStrength.strongLabel",
+    hintKey: "companyRegistration.strongHint",
   },
 };
 
@@ -80,6 +89,7 @@ const rollbackFirebaseUser = async (firebaseUser) => {
 };
 
 export default function Cadastro() {
+  const { t } = useTranslation("auth");
   // Hook usado para redirecionar a empresa após cadastro bem-sucedido.
   const navigate = useNavigate();
   const toast = useToast();
@@ -174,26 +184,26 @@ export default function Cadastro() {
 
     if (perfil.tipo === "empresa") {
       adotarPerfil(perfil);
-      toast.info("Esta conta Google já está cadastrada. Vamos te levar ao painel da empresa.");
+      toast.info(t("companyRegistration.existingCompany"));
       navigate("/painel/empresa");
       return;
     }
 
     if (perfil.tipo === "indicador") {
       adotarPerfil(perfil);
-      toast.info("Esta conta Google já está cadastrada como indicador. Vamos te levar ao painel correto.");
+      toast.info(t("companyRegistration.existingReferrer"));
       navigate("/painel/indicador");
       return;
     }
 
     if (perfil.tipo === "admin") {
       adotarPerfil(perfil);
-      toast.info("Esta conta Google possui acesso administrativo. Vamos te levar ao painel admin.");
+      toast.info(t("companyRegistration.existingAdmin"));
       navigate("/admin/visao-geral");
       return;
     }
 
-    toast.info("Esta conta Google já possui um cadastro no Selectio. Entre pelo login.");
+    toast.info(t("companyRegistration.existingAccount"));
     navigate("/login");
   };
 
@@ -280,25 +290,25 @@ export default function Cadastro() {
 
     if (cnpj.length !== 14) {
       setCnpjStatus("error");
-      setCnpjMessage("Digite um CNPJ com 14 números.");
+      setCnpjMessage(t("companyRegistration.cnpjLength"));
       return;
     }
 
     setCnpjStatus("loading");
-    setCnpjMessage("Consultando dados públicos da empresa...");
+    setCnpjMessage(t("companyRegistration.cnpjSearching"));
 
     try {
       const response = await fetch(`https://api.opencnpj.org/${cnpj}`);
 
       if (!response.ok) {
-        throw new Error("CNPJ não encontrado");
+        throw new Error("cnpj-not-found");
       }
 
       const result = await response.json();
       const empresa = result.data || result;
 
       if (!empresa?.cnpj) {
-        throw new Error("CNPJ não encontrado");
+        throw new Error("cnpj-not-found");
       }
 
       // Preenche dados da empresa com as informações retornadas pela consulta.
@@ -312,10 +322,10 @@ export default function Cadastro() {
       }));
 
       setCnpjStatus("verified");
-      setCnpjMessage("Empresa verificada. Revise os dados antes de concluir.");
+      setCnpjMessage(t("companyRegistration.cnpjVerified"));
     } catch {
       setCnpjStatus("error");
-      setCnpjMessage("Não encontramos esse CNPJ no OpenCNPJ.");
+      setCnpjMessage(t("companyRegistration.cnpjNotFound"));
     }
   };
 
@@ -352,20 +362,20 @@ export default function Cadastro() {
         senha: "",
         confirmarSenha: "",
       }));
-      setGoogleMessage("Google vinculado temporariamente. Complete os dados e finalize o cadastro.");
-      toast.success("Google vinculado temporariamente. Complete os dados e finalize o cadastro.");
+      setGoogleMessage(t("companyRegistration.googleTemporaryLinked"));
+      toast.success(t("companyRegistration.googleTemporaryLinked"));
     } catch (error) {
       if (pendingGoogleUidRef.current && auth.currentUser?.uid === pendingGoogleUidRef.current) {
         await signOut(auth).catch(() => {});
       }
 
       if (isFirebaseAuthError(error)) {
-        const message = getFirebaseAuthErrorMessage(error);
+        const message = t(getFirebaseAuthErrorKey(error));
         setGoogleMessage(message);
         toast.warning(message);
       } else {
-        setGoogleMessage("Não foi possível continuar com Google. Tente novamente.");
-        toast.warning("Não foi possível continuar com Google. Tente novamente.");
+        setGoogleMessage(t("companyRegistration.googleFailed"));
+        toast.warning(t("companyRegistration.googleFailed"));
       }
     } finally {
       setGoogleLoading(false);
@@ -376,39 +386,39 @@ export default function Cadastro() {
     e.preventDefault();
 
     if (!form.termos) {
-      toast.warning("Você precisa aceitar os termos.");
+      toast.warning(t("companyRegistration.acceptTerms"));
       return;
     }
 
     if (!form.nome || !form.email || !form.cnpj) {
-      toast.warning("Preencha os campos obrigatórios.");
+      toast.warning(t("companyRegistration.requiredFields"));
       return;
     }
 
     if (isModoEmpresarialSelecionado && !setoresComSenha) {
-      toast.warning("Defina uma senha com pelo menos 4 caracteres para cada setor empresarial.");
+      toast.warning(t("companyRegistration.sectorPasswordsRequired"));
       return;
     }
 
     if (!isGoogleSignup) {
       if (!form.senha || !form.confirmarSenha) {
-        toast.warning("Informe e confirme a senha da empresa.");
+        toast.warning(t("companyRegistration.passwordRequired"));
         return;
       }
 
       if (form.senha !== form.confirmarSenha) {
-        toast.warning("As senhas não conferem.");
+        toast.warning(t("companyRegistration.passwordMismatch"));
         return;
       }
 
       if (!isPasswordStrong) {
-        toast.warning("Crie uma senha forte antes de cadastrar a empresa.");
+        toast.warning(t("companyRegistration.strongPasswordRequired"));
         return;
       }
     }
 
     if (cnpjStatus !== "verified") {
-      toast.warning("Consulte e verifique o CNPJ antes de cadastrar a empresa.");
+      toast.warning(t("companyRegistration.verifyCnpj"));
       return;
     }
 
@@ -440,7 +450,7 @@ export default function Cadastro() {
 
       if (isGoogleSignup) {
         if (!profileUid || auth.currentUser?.uid !== profileUid) {
-          toast.warning("Entre com Google novamente para concluir este cadastro.");
+          toast.warning(t("companyRegistration.googleAgain"));
           return;
         }
 
@@ -461,7 +471,7 @@ export default function Cadastro() {
         verificationSent = await sendEmailVerification(firebaseUser)
           .then(() => true)
           .catch(() => {
-            toast.warning("Cadastro criado, mas não foi possível enviar a verificação agora.");
+            toast.warning(t("companyRegistration.verificationFailed"));
             return false;
           });
       }
@@ -508,18 +518,18 @@ export default function Cadastro() {
         }
         : perfilEmpresa);
       toast.success(isGoogleSignup
-        ? "Cadastro concluído com Google."
+        ? t("companyRegistration.completedGoogle")
         : verificationSent
-          ? "Cadastro concluído. Enviamos um e-mail de verificação."
-          : "Cadastro concluído.");
+          ? t("companyRegistration.completedVerification")
+          : t("companyRegistration.completed"));
       navigate("/painel/empresa");
     } catch (error) {
       await rollbackFirebaseUser(firebaseUser);
 
       if (isFirebaseAuthError(error)) {
-        toast.error(getFirebaseAuthErrorMessage(error));
+        toast.error(t(getFirebaseAuthErrorKey(error)));
       } else {
-        toast.error("Não foi possível salvar o perfil da empresa no Firestore. Tente novamente.");
+        toast.error(t("companyRegistration.firestoreFailed"));
       }
     } finally {
       setSubmitLoading(false);
@@ -534,13 +544,13 @@ export default function Cadastro() {
         <div className="empresa-wrapper">
           <form className="empresa-form" onSubmit={handleSubmit}>
             <header className="form-header">
-              <span>Cadastro de empresa</span>
-              <h1>Dados da organização</h1>
-              <p>Informe o CNPJ para preencher os dados principais automaticamente.</p>
+              <span>{t("companyRegistration.tag")}</span>
+              <h1>{t("companyRegistration.title")}</h1>
+              <p>{t("companyRegistration.description")}</p>
             </header>
 
             <section className="form-section">
-              <h2>Verificação</h2>
+              <h2>{t("companyRegistration.verification")}</h2>
 
               <label className="field-label" htmlFor="cnpj">
                 CNPJ
@@ -558,7 +568,9 @@ export default function Cadastro() {
                   onClick={consultarCNPJ}
                   disabled={cnpjStatus === "loading"}
                 >
-                  {cnpjStatus === "loading" ? "Buscando..." : "Buscar"}
+                  {cnpjStatus === "loading"
+                    ? t("companyRegistration.searching")
+                    : t("companyRegistration.search")}
                 </button>
               </div>
               {cnpjMessage && (
@@ -567,17 +579,17 @@ export default function Cadastro() {
             </section>
 
             <section className="form-section">
-              <h2>Empresa</h2>
+              <h2>{t("companyRegistration.company")}</h2>
 
               <div className="grid-2">
                 <div>
                   <label className="field-label" htmlFor="nome">
-                    Nome fantasia
+                    {t("companyRegistration.tradeName")}
                   </label>
                   <input
                     id="nome"
                     name="nome"
-                    placeholder="Nome exibido da empresa"
+                    placeholder={t("companyRegistration.tradeNamePlaceholder")}
                     value={form.nome}
                     onChange={handleChange}
                   />
@@ -585,12 +597,12 @@ export default function Cadastro() {
 
                 <div>
                   <label className="field-label" htmlFor="razao">
-                    Razão social
+                    {t("companyRegistration.legalName")}
                   </label>
                   <input
                     id="razao"
                     name="razao"
-                    placeholder="Razão social"
+                    placeholder={t("companyRegistration.legalName")}
                     value={form.razao}
                     onChange={handleChange}
                   />
@@ -598,24 +610,24 @@ export default function Cadastro() {
               </div>
 
               <label className="field-label" htmlFor="endereco">
-                Endereço
+                {t("companyRegistration.address")}
               </label>
               <input
                 id="endereco"
                 name="endereco"
-                placeholder="Logradouro, número"
+                placeholder={t("companyRegistration.addressPlaceholder")}
                 value={form.endereco}
                 onChange={handleChange}
               />
             </section>
 
             <section className="form-section">
-              <h2>Contato</h2>
+              <h2>{t("companyRegistration.contact")}</h2>
 
               <div className="grid-2">
                 <div>
                   <label className="field-label" htmlFor="email">
-                    E-mail corporativo
+                    {t("companyRegistration.corporateEmail")}
                   </label>
                   <input
                     id="email"
@@ -629,7 +641,7 @@ export default function Cadastro() {
 
                 <div>
                   <label className="field-label" htmlFor="telefone">
-                    Telefone
+                    {t("companyRegistration.phone")}
                   </label>
                   <input
                     id="telefone"
@@ -642,7 +654,7 @@ export default function Cadastro() {
               </div>
 
               <label className="field-label" htmlFor="site">
-                Site
+                {t("companyRegistration.website")}
               </label>
               <input
                 id="site"
@@ -654,12 +666,12 @@ export default function Cadastro() {
             </section>
 
             <section className="form-section">
-              <h2>Perfil</h2>
+              <h2>{t("companyRegistration.profile")}</h2>
 
               <div className="grid-2">
                 <div>
                   <label className="field-label" htmlFor="setor">
-                    Setor
+                    {t("companyRegistration.industry")}
                   </label>
                   <select
                     id="setor"
@@ -667,18 +679,18 @@ export default function Cadastro() {
                     value={form.setor}
                     onChange={handleChange}
                   >
-                    <option value="">Selecione</option>
-                    <option>Tecnologia</option>
-                    <option>Financeiro</option>
-                    <option>Indústria</option>
-                    <option>Serviços</option>
-                    <option>Varejo</option>
+                    <option value="">{t("companyRegistration.select")}</option>
+                    <option value="Tecnologia">{t("companyRegistration.industries.technology")}</option>
+                    <option value="Financeiro">{t("companyRegistration.industries.finance")}</option>
+                    <option value="Indústria">{t("companyRegistration.industries.industry")}</option>
+                    <option value="Serviços">{t("companyRegistration.industries.services")}</option>
+                    <option value="Varejo">{t("companyRegistration.industries.retail")}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="field-label" htmlFor="tamanho">
-                    Tamanho
+                    {t("companyRegistration.size")}
                   </label>
                   <select
                     id="tamanho"
@@ -686,10 +698,10 @@ export default function Cadastro() {
                     value={form.tamanho}
                     onChange={handleChange}
                   >
-                    <option value="">Selecione</option>
+                    <option value="">{t("companyRegistration.select")}</option>
                     {tamanhoSelectOptions.map((option) => (
                       <option key={option} value={option}>
-                        {option}
+                        {tamanhoLabelKeys[option] ? t(tamanhoLabelKeys[option]) : option}
                       </option>
                     ))}
                   </select>
@@ -698,7 +710,7 @@ export default function Cadastro() {
             </section>
 
             <section className="form-section">
-              <h2>Modo de uso</h2>
+              <h2>{t("companyRegistration.usageMode")}</h2>
 
               <div className="mode-options">
                 <label className={form.modoEmpresa === MODO_EMPRESA_CLASSICO ? "mode-option selected" : "mode-option"}>
@@ -710,8 +722,8 @@ export default function Cadastro() {
                     onChange={handleChange}
                   />
                   <span>
-                    <strong>Classico Selectio</strong>
-                    <small>Fluxo atual: a empresa cria, publica e gerencia vagas diretamente.</small>
+                    <strong>{t("companyRegistration.classic")}</strong>
+                    <small>{t("companyRegistration.classicDescription")}</small>
                   </span>
                 </label>
 
@@ -724,8 +736,8 @@ export default function Cadastro() {
                     onChange={handleChange}
                   />
                   <span>
-                    <strong>Empresarial</strong>
-                    <small>Fluxo com setores, aprovacao financeira e publicacao pelo RH.</small>
+                    <strong>{t("companyRegistration.business")}</strong>
+                    <small>{t("companyRegistration.businessDescription")}</small>
                   </span>
                 </label>
               </div>
@@ -733,34 +745,32 @@ export default function Cadastro() {
               {isModoEmpresarialSelecionado && (
                 <div className="modo-empresarial-card">
                   <div>
-                    <span>Fluxo empresarial</span>
-                    <h3>Vagas passam por pedido, auditoria e RH</h3>
-                    <p>
-                      O Chefe de departamento solicita a vaga com todos os detalhes. A Reitoria ou Auditoria avalia salario, premiacao e observacoes financeiras. Depois da aprovacao, o Setor RH publica a vaga e administra os candidatos. O Administrador Empresa acompanha os setores e o dashboard geral.
-                    </p>
+                    <span>{t("companyRegistration.businessFlow")}</span>
+                    <h3>{t("companyRegistration.businessFlowTitle")}</h3>
+                    <p>{t("companyRegistration.businessFlowDescription")}</p>
                   </div>
 
                   <ol>
-                    <li><strong>Chefe de departamento</strong> envia o pedido da vaga.</li>
-                    <li><strong>Reitoria ou Auditoria</strong> aprova ou devolve com comentarios.</li>
-                    <li><strong>Setor RH</strong> publica a vaga aprovada e acompanha candidatos.</li>
-                    <li><strong>Administrador Empresa</strong> observa o funcionamento dos setores.</li>
+                    <li><strong>{t("sectors.chefe_departamento")}</strong> {t("companyRegistration.flowStepDepartment")}</li>
+                    <li><strong>{t("sectors.reitoria_auditoria")}</strong> {t("companyRegistration.flowStepAudit")}</li>
+                    <li><strong>{t("sectors.setor_rh")}</strong> {t("companyRegistration.flowStepHr")}</li>
+                    <li><strong>{t("sectors.admin_empresa")}</strong> {t("companyRegistration.flowStepAdmin")}</li>
                   </ol>
 
                   <div className="sector-passwords">
-                    <h4>Senhas iniciais dos setores</h4>
-                    <p>Essas senhas serao solicitadas depois do login principal da empresa. Use pelo menos 4 caracteres em cada setor.</p>
+                    <h4>{t("companyRegistration.initialSectorPasswords")}</h4>
+                    <p>{t("companyRegistration.sectorPasswordsDescription")}</p>
 
                     <div className="grid-2">
                       {setoresEmpresariais.map((setor) => (
                         <div key={setor.id}>
                           <label className="field-label" htmlFor={`senha-${setor.id}`}>
-                            {setor.nome}
+                            {t(`sectors.${setor.id}`, { defaultValue: setor.nome })}
                           </label>
                           <input
                             id={`senha-${setor.id}`}
                             type="password"
-                            placeholder="Senha do setor"
+                            placeholder={t("companyRegistration.sectorPassword")}
                             value={form.senhasSetores[setor.id]}
                             onChange={(event) => handleSetorSenhaChange(setor.id, event.target.value)}
                           />
@@ -773,14 +783,14 @@ export default function Cadastro() {
             </section>
 
             <section className="form-section">
-              <h2>Acesso</h2>
+              <h2>{t("companyRegistration.access")}</h2>
 
               {isGoogleSignup && (
                 <div className="google-linked-card">
                   <FaGoogle />
                   <div>
-                    <strong>Google vinculado ao cadastro</strong>
-                    <p>{googleSignupUser.email || "Conta Google selecionada"}</p>
+                    <strong>{t("companyRegistration.googleLinkedTitle")}</strong>
+                    <p>{googleSignupUser.email || t("companyRegistration.googleSelected")}</p>
                   </div>
                 </div>
               )}
@@ -788,14 +798,16 @@ export default function Cadastro() {
               <div className="grid-2">
                 <div>
                   <label className="field-label" htmlFor="senha">
-                    Senha
+                    {t("registration.password")}
                   </label>
                   <div className="password-field">
                     <input
                       id="senha"
                       name="senha"
                       type={showPassword ? "text" : "password"}
-                      placeholder={isGoogleSignup ? "Acesso via Google vinculado" : "Crie uma senha"}
+                      placeholder={isGoogleSignup
+                        ? t("registration.googleAccess")
+                        : t("companyRegistration.createPassword")}
                       value={form.senha}
                       onChange={handleChange}
                       disabled={isGoogleSignup}
@@ -804,7 +816,9 @@ export default function Cadastro() {
                       type="button"
                       className="password-toggle"
                       onClick={() => setShowPassword((visible) => !visible)}
-                      aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                      aria-label={showPassword
+                        ? t("registration.hidePassword")
+                        : t("registration.showPassword")}
                       disabled={isGoogleSignup}
                     >
                       {showPassword ? <FaEyeSlash /> : <FaEye />}
@@ -814,14 +828,16 @@ export default function Cadastro() {
 
                 <div>
                   <label className="field-label" htmlFor="confirmarSenha">
-                    Confirmar senha
+                    {t("registration.confirmPassword")}
                   </label>
                   <div className={`password-field confirm-password-field ${confirmPasswordStatus}`}>
                     <input
                       id="confirmarSenha"
                       name="confirmarSenha"
                       type={showConfirmPassword ? "text" : "password"}
-                      placeholder={isGoogleSignup ? "Acesso via Google vinculado" : "Repita a senha"}
+                      placeholder={isGoogleSignup
+                        ? t("registration.googleAccess")
+                        : t("companyRegistration.repeatPassword")}
                       value={form.confirmarSenha}
                       onChange={handleChange}
                       disabled={isGoogleSignup}
@@ -830,7 +846,9 @@ export default function Cadastro() {
                       type="button"
                       className="password-toggle"
                       onClick={() => setShowConfirmPassword((visible) => !visible)}
-                      aria-label={showConfirmPassword ? "Ocultar confirmação de senha" : "Mostrar confirmação de senha"}
+                      aria-label={showConfirmPassword
+                        ? t("registration.hidePasswordConfirmation")
+                        : t("registration.showPasswordConfirmation")}
                     >
                       {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                     </button>
@@ -842,8 +860,10 @@ export default function Cadastro() {
                 <div className={`password-strength strength-${passwordStrength.strength}`}>
                   <div className="strength-header">
                     <div>
-                      <strong>Senha {currentStrength.label}</strong>
-                      <p>{currentStrength.hint}</p>
+                      <strong>{t("registration.passwordStrength.label", {
+                        strength: t(currentStrength.labelKey)
+                      })}</strong>
+                      <p>{t(currentStrength.hintKey)}</p>
                     </div>
                     <span className="strength-score">
                       {passwordStrength.score}/6
@@ -866,7 +886,7 @@ export default function Cadastro() {
                       return (
                         <li key={item.key} className={isMet ? "met" : ""}>
                           {isMet ? <FaCheck /> : <FaTimes />}
-                          {item.label}
+                          {t(item.labelKey)}
                         </li>
                       );
                     })}
@@ -877,19 +897,19 @@ export default function Cadastro() {
               {!isGoogleSignup && confirmPasswordStatus && (
                 <span className={`confirm-password-message ${confirmPasswordStatus}`}>
                   {confirmPasswordStatus === "match"
-                    ? "Senhas conferem"
-                    : "As senhas ainda não conferem"}
+                    ? t("registration.passwordsMatch")
+                    : t("registration.passwordsDoNotMatch")}
                 </span>
               )}
             </section>
 
             <section className="form-section">
-              <h2>Pagamento</h2>
+              <h2>{t("companyRegistration.payment")}</h2>
 
               <div className="grid-2">
                 <div>
                   <label className="field-label" htmlFor="pagamento">
-                    Forma de pagamento
+                    {t("companyRegistration.paymentMethod")}
                   </label>
                   <select
                     id="pagamento"
@@ -897,21 +917,21 @@ export default function Cadastro() {
                     value={form.pagamento}
                     onChange={handleChange}
                   >
-                    <option value="">Selecione</option>
+                    <option value="">{t("companyRegistration.select")}</option>
                     <option value="pix">Pix</option>
-                    <option value="banco">Conta bancária</option>
-                    <option value="outros">Outros</option>
+                    <option value="banco">{t("companyRegistration.bankAccount")}</option>
+                    <option value="outros">{t("companyRegistration.other")}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="field-label" htmlFor="dadosPagamento">
-                    Dados de pagamento
+                    {t("companyRegistration.paymentData")}
                   </label>
                   <input
                     id="dadosPagamento"
                     name="dadosPagamento"
-                    placeholder="Chave Pix, banco ou observação"
+                    placeholder={t("companyRegistration.paymentDataPlaceholder")}
                     value={form.dadosPagamento}
                     onChange={handleChange}
                   />
@@ -927,7 +947,7 @@ export default function Cadastro() {
                   checked={form.ia}
                   onChange={handleChange}
                 />
-                Usar curadoria assistida nas vagas
+                {t("companyRegistration.assistedCuration")}
               </label>
 
               <label>
@@ -937,17 +957,19 @@ export default function Cadastro() {
                   checked={form.termos}
                   onChange={handleChange}
                 />
-                Li e concordo com os termos
+                {t("companyRegistration.terms")}
               </label>
             </div>
 
             <button type="submit" className="submit-button" disabled={!canSubmit}>
-              {submitLoading ? "Cadastrando..." : "Cadastrar empresa"}
+              {submitLoading
+                ? t("companyRegistration.registering")
+                : t("companyRegistration.registerCompany")}
             </button>
 
             <div className="google-signup-area">
               <div className="google-divider">
-                <span>ou</span>
+                <span>{t("registration.or")}</span>
               </div>
 
               {googleMessage && (
@@ -963,34 +985,38 @@ export default function Cadastro() {
                 disabled={googleLoading || submitLoading || isGoogleSignup}
               >
                 <FaGoogle />
-                {googleLoading ? "Conectando..." : isGoogleSignup ? "Google vinculado" : "Continuar com Google"}
+                {googleLoading
+                  ? t("registration.connecting")
+                  : isGoogleSignup
+                    ? t("registration.googleLinked")
+                    : t("registration.continueWithGoogle")}
               </button>
             </div>
           </form>
 
           {/* Card lateral com informações do plano selecionado. */}
           <aside className="plano-box">
-            <span className="plano-title">Plano selecionado</span>
+            <span className="plano-title">{t("companyRegistration.selectedPlan")}</span>
 
             <div className="plano-card">
-              <h2>Plano Electio</h2>
+              <h2>{t("companyRegistration.planName")}</h2>
               <p className="preco">
-                R$ 499<span>/mês</span>
+                {formatCurrency(499, { maximumFractionDigits: 0 })}<span>{t("companyRegistration.perMonth")}</span>
               </p>
 
               <ul>
-                <li>Publicação de vagas</li>
-                <li>Gestão de indicações</li>
-                <li>Suporte no onboarding</li>
+                <li>{t("companyRegistration.jobPosting")}</li>
+                <li>{t("companyRegistration.referralManagement")}</li>
+                <li>{t("companyRegistration.onboardingSupport")}</li>
               </ul>
             </div>
 
-            <button type="button" className="plano-btn">Alterar plano</button>
+            <button type="button" className="plano-btn">{t("companyRegistration.changePlan")}</button>
 
             <div className="help-box">
-              <h3>Precisa de ajuda?</h3>
-              <p>Fale com a equipe para revisar o cadastro da empresa.</p>
-              <span className="help-link">Falar com especialista →</span>
+              <h3>{t("companyRegistration.needHelp")}</h3>
+              <p>{t("companyRegistration.helpDescription")}</p>
+              <span className="help-link">{t("companyRegistration.talkToExpert")}</span>
             </div>
           </aside>
         </div>

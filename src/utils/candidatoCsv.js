@@ -76,7 +76,27 @@ export function detectarDelimitadorCsv(text) {
   return semicolons > commas ? ';' : ','
 }
 
-function parseRows(text, delimiter) {
+const defaultCsvMessages = {
+  unclosedQuotes: ({ line }) => `Aspas não fechadas a partir da linha ${line}.`,
+  empty: () => 'O arquivo CSV está vazio.',
+  duplicateColumns: ({ columns }) => `Existem colunas duplicadas: ${columns}.`,
+  requiredColumn: ({ column }) => `A coluna obrigatória "${column}" não foi encontrada.`,
+  rowLimit: ({ count, max }) => `O arquivo possui ${count} registros. O limite é de ${max}.`,
+  nameRequired: () => 'Nome completo é obrigatório.',
+  emailRequired: () => 'E-mail é obrigatório.',
+  emailInvalid: () => 'E-mail inválido.',
+  phoneInvalid: () => 'Telefone deve conter 10 ou 11 dígitos.',
+  columnCount: ({ rowCount, headerCount }) => `A linha possui ${rowCount} coluna(s), mas o cabeçalho possui ${headerCount}.`,
+  duplicateEmail: ({ line }) => `E-mail duplicado no arquivo (primeira ocorrência na linha ${line}).`
+}
+
+const getCsvMessage = (translate, key, params = {}) => (
+  typeof translate === 'function'
+    ? translate(key, params)
+    : defaultCsvMessages[key](params)
+)
+
+function parseRows(text, delimiter, translate) {
   const source = String(text || '').replace(/^\uFEFF/, '')
   const rows = []
   const syntaxErrors = []
@@ -127,7 +147,7 @@ function parseRows(text, delimiter) {
   }
 
   if (quoted) {
-    syntaxErrors.push(`Aspas não fechadas a partir da linha ${rowStartLine}.`)
+    syntaxErrors.push(getCsvMessage(translate, 'unclosedQuotes', { line: rowStartLine }))
   }
 
   if (field !== '' || row.length > 0) finishRow()
@@ -153,18 +173,18 @@ const normalizeCandidate = (data) => ({
   softSkills: normalizeSkills(data.softSkills),
 })
 
-const validateCandidate = (candidate) => {
+const validateCandidate = (candidate, translate) => {
   const errors = []
 
-  if (!candidate.nome) errors.push('Nome completo é obrigatório.')
+  if (!candidate.nome) errors.push(getCsvMessage(translate, 'nameRequired'))
   if (!candidate.email) {
-    errors.push('E-mail é obrigatório.')
+    errors.push(getCsvMessage(translate, 'emailRequired'))
   } else if (!validarEmailCandidato(candidate.email)) {
-    errors.push('E-mail inválido.')
+    errors.push(getCsvMessage(translate, 'emailInvalid'))
   }
 
   if (!validarTelefoneCandidato(candidate.telefone)) {
-    errors.push('Telefone deve conter 10 ou 11 dígitos.')
+    errors.push(getCsvMessage(translate, 'phoneInvalid'))
   }
 
   return errors
@@ -172,9 +192,10 @@ const validateCandidate = (candidate) => {
 
 export function processarCandidatosCsv(text, options = {}) {
   const maxRows = options.maxRows || MAX_CANDIDATOS_CSV
+  const { translate } = options
   const source = String(text || '')
   const delimiter = detectarDelimitadorCsv(source)
-  const { rows, syntaxErrors } = parseRows(source, delimiter)
+  const { rows, syntaxErrors } = parseRows(source, delimiter, translate)
   const nonBlankRows = rows.filter((row) => !isBlankRow(row))
   const generalErrors = [...syntaxErrors]
 
@@ -186,7 +207,7 @@ export function processarCandidatosCsv(text, options = {}) {
       validos: [],
       invalidos: [],
       totalRegistros: 0,
-      errosGerais: ['O arquivo CSV está vazio.'],
+      errosGerais: [getCsvMessage(translate, 'empty')],
     }
   }
 
@@ -196,18 +217,20 @@ export function processarCandidatosCsv(text, options = {}) {
   const duplicateHeaders = mappedHeaders.filter((key, index) => key && mappedHeaders.indexOf(key) !== index)
 
   if (duplicateHeaders.length) {
-    generalErrors.push(`Existem colunas duplicadas: ${[...new Set(duplicateHeaders)].join(', ')}.`)
+    generalErrors.push(getCsvMessage(translate, 'duplicateColumns', {
+      columns: [...new Set(duplicateHeaders)].join(', ')
+    }))
   }
 
   CANDIDATO_CSV_COLUMNS.filter((column) => column.required).forEach((column) => {
     if (!mappedHeaders.includes(column.key)) {
-      generalErrors.push(`A coluna obrigatória "${column.label}" não foi encontrada.`)
+      generalErrors.push(getCsvMessage(translate, 'requiredColumn', { column: column.label }))
     }
   })
 
   const dataRows = nonBlankRows.slice(1)
   if (dataRows.length > maxRows) {
-    generalErrors.push(`O arquivo possui ${dataRows.length} registros. O limite é de ${maxRows}.`)
+    generalErrors.push(getCsvMessage(translate, 'rowLimit', { count: dataRows.length, max: maxRows }))
   }
 
   const seenEmails = new Map()
@@ -218,16 +241,19 @@ export function processarCandidatosCsv(text, options = {}) {
     })
 
     const candidate = normalizeCandidate(rawData)
-    const errors = validateCandidate(candidate)
+    const errors = validateCandidate(candidate, translate)
 
     if (csvRow.values.length !== rawHeaders.length) {
-      errors.push(`A linha possui ${csvRow.values.length} coluna(s), mas o cabeçalho possui ${rawHeaders.length}.`)
+      errors.push(getCsvMessage(translate, 'columnCount', {
+        rowCount: csvRow.values.length,
+        headerCount: rawHeaders.length
+      }))
     }
 
     if (candidate.email) {
       const previousLine = seenEmails.get(candidate.email)
       if (previousLine) {
-        errors.push(`E-mail duplicado no arquivo (primeira ocorrência na linha ${previousLine}).`)
+        errors.push(getCsvMessage(translate, 'duplicateEmail', { line: previousLine }))
       } else {
         seenEmails.set(candidate.email, csvRow.line)
       }

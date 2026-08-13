@@ -1,6 +1,16 @@
 const statusAtivos = new Set(['indicado', 'entrevista'])
 
-export function montarResumoDashboard({ candidatos, pagamentos, movimentacoes, agora = new Date() }) {
+export function montarResumoDashboard(
+  {
+    candidatos,
+    pagamentos,
+    movimentacoes,
+    agora: agoraInformado = new Date(),
+    locale: localeInformado = 'pt-BR'
+  },
+  agora = agoraInformado,
+  locale = localeInformado
+) {
   const totalIndicacoes = candidatos.length
   const totalContratacoes = candidatos.filter((candidato) => candidato.status === 'contratado').length
   const totalEntrevistas = candidatos.filter((candidato) => candidato.status === 'entrevista').length
@@ -25,7 +35,7 @@ export function montarResumoDashboard({ candidatos, pagamentos, movimentacoes, a
   }, 0)
   const fonteGrafico = creditosFinanceiros.length ? creditosFinanceiros : pagamentosAprovados
   const fonteGanhos = creditosFinanceiros.length ? 'movimentacoes' : 'pagamentos'
-  const ganhosMensais = montarGanhosMensais(fonteGrafico, fonteGanhos, agora)
+  const ganhosMensais = montarGanhosMensais(fonteGrafico, fonteGanhos, agora, locale)
   const datasCredito = fonteGrafico
     .map((item) => obterDataGanho(item, fonteGanhos))
     .filter(Boolean)
@@ -51,13 +61,13 @@ export function montarResumoDashboard({ candidatos, pagamentos, movimentacoes, a
   }
 }
 
-function montarGanhosMensais(itens, fonte, agora) {
+function montarGanhosMensais(itens, fonte, agora, locale) {
   const hoje = new Date(agora)
   const meses = Array.from({ length: 6 }, (_, index) => {
     const data = new Date(hoje.getFullYear(), hoje.getMonth() - (5 - index), 1)
     const chave = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`
-    const mes = data.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')
-    const mesCompleto = data.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+    const mes = data.toLocaleDateString(locale, { month: 'short' }).replace('.', '')
+    const mesCompleto = data.toLocaleDateString(locale, { month: 'long', year: 'numeric' })
 
     return {
       chave,

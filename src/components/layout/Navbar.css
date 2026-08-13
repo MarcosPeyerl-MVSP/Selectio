@@ -308,30 +308,6 @@
   }
 }
 
-.theme-toggle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  display: grid;
-  place-items: center;
-  box-shadow: var(--shadow-soft);
-}
-
-.theme-toggle svg {
-  width: 16px;
-  height: 16px;
-}
-
-.theme-toggle:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(182, 28, 47, 0.15);
-}
-
 @media (max-width: 900px) {
   .navbar {
     height: auto;

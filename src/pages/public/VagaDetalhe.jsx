@@ -5,6 +5,7 @@
 import './VagaDetalhe.css'
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import Footer from '../../components/layout/Footer'
@@ -17,13 +18,14 @@ import {
 } from 'react-icons/fa'
 import {
   buscarVagaPorId,
-  statusVagaLabels,
   vagaAceitaIndicacoes,
 } from '../../services/firestoreVagas'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { useAuth } from '../../hooks/useAuth'
+import { formatJobReward, formatJobSalary, formatJobType } from '../../i18n/domainFormatters'
 
 function Vaga() {
+  const { t, i18n } = useTranslation(['public', 'common'])
   // Identificador da vaga recebido pela rota.
   const { id } = useParams()
   const [searchParams] = useSearchParams()
@@ -60,18 +62,18 @@ function Vaga() {
         setError(null)
         const data = await buscarVagaPorId(id)
         if (!data) {
-          throw new Error('Vaga não encontrada')
+          throw new Error('job-not-found')
         }
         setVaga(data)
-      } catch (err) {
-        setError(err.message)
+      } catch {
+        setError(t('jobDetail.loadError'))
       } finally {
         setLoading(false)
       }
     }
 
     fetchVaga()
-  }, [id, perfil.tipo, reloadKey])
+  }, [id, perfil.tipo, reloadKey, t])
 
   const tentarNovamente = () => {
     setLoading(true)
@@ -89,7 +91,7 @@ function Vaga() {
       <>
         <Navbar />
         <main className="vaga-detail-content">
-          <PageLoader label="Carregando vaga..." />
+          <PageLoader label={t('jobDetail.loading')} />
         </main>
         <Footer />
       </>
@@ -103,13 +105,13 @@ function Vaga() {
         <Navbar />
         <main className="vaga-detail-content">
           <EstadoDados
-            actionLabel="Tentar novamente"
-            description={error || 'Verifique se a vaga existe ou retorne à lista de vagas.'}
+            actionLabel={t('jobDetail.retry')}
+            description={t('jobDetail.errorDescription')}
             onAction={tentarNovamente}
-            title={navigator.onLine ? 'Não foi possível carregar a vaga' : 'Você está sem conexão'}
+            title={navigator.onLine ? t('jobDetail.loadError') : t('jobDetail.offline')}
             tone={navigator.onLine ? 'error' : 'offline'}
           />
-          <Link className="detail-return-link" to={vagasPath}>Voltar à lista de vagas</Link>
+          <Link className="detail-return-link" to={vagasPath}>{t('jobDetail.backToList')}</Link>
         </main>
         <Footer />
       </>
@@ -121,9 +123,6 @@ function Vaga() {
     titulo,
     empresa,
     localizacao,
-    salario,
-    tipo,
-    recompensa,
     descricaoCurta,
     descricaoLonga,
     beneficios,
@@ -152,10 +151,10 @@ function Vaga() {
         <main className="vaga-detail-content">
           <div className="page-header">
             <Link className="back-link" to={vagasPath}>
-              <FaRegClock /> Voltar para listagem de vagas
+              <FaRegClock /> {t('jobDetail.backToListing')}
             </Link>
             <span className={`tag status status-${vaga.status}`}>
-              {statusVagaLabels[vaga.status] || vaga.status}
+              {t(`common:statuses.jobs.${vaga.status}`, { defaultValue: vaga.status })}
             </span>
           </div>
 
@@ -168,8 +167,8 @@ function Vaga() {
                   <div className="vaga-tags">
                     <span>{empresa}</span>
                     <span>{localizacao}</span>
-                    <span>{salario}</span>
-                    <span>{tipo}</span>
+                    <span>{formatJobSalary(vaga, t)}</span>
+                    <span>{formatJobType(vaga, t)}</span>
                   </div>
                 </div>
                 <p className="vaga-intro">{descricaoCurta}</p>
@@ -181,13 +180,13 @@ function Vaga() {
 
               {/* Descrição detalhada da função. */}
               <section className="section-block">
-                <h2>Descrição da Função</h2>
+                <h2>{t('jobDetail.roleDescription')}</h2>
                 <p>{descricaoLonga}</p>
               </section>
 
               {/* Lista de requisitos da vaga. */}
               <section className="section-block">
-                <h2>Requisitos e Qualificações</h2>
+                <h2>{t('jobDetail.requirements')}</h2>
                 <ul>
                   {requisitosArray.map((item) => (
                     <li key={item}>
@@ -202,24 +201,22 @@ function Vaga() {
               {perfil.tipo === 'empresa' && isOwnCompanyJob ? (
                 // Ação exibida para usuário empresa gerenciar a vaga.
                 <div className="edit-vaga-card">
-                  <span className="tag edit-tag">MINHA VAGA</span>
-                  <strong>Gerenciar vaga</strong>
-                  <p>
-                    Atualize as informações, requisitos, benefícios e recompensa desta oportunidade.
-                  </p>
+                  <span className="tag edit-tag">{t('jobDetail.myJob')}</span>
+                  <strong>{t('jobDetail.manageJob')}</strong>
+                  <p>{t('jobDetail.manageDescription')}</p>
                   <Link className="btn-primary" to={`/editar-vaga/empresa/${id}`}>
-                    <FaEdit /> Editar vaga
+                    <FaEdit /> {t('jobDetail.editJob')}
                   </Link>
                 </div>
               ) : (
                 // Ação exibida para indicador iniciar uma indicação para a vaga.
                 <div className="reward-card">
-                  <span className="tag reward-tag">RECOMPENSA POR INDICAÇÃO</span>
-                  <strong>{recompensa}</strong>
+                  <span className="tag reward-tag">{t('jobDetail.referralReward')}</span>
+                  <strong>{formatJobReward(vaga, t)}</strong>
                   <p>
                     {perfil.tipo === 'indicador'
-                      ? 'Indique um profissional qualificado. Se ele for contratado, você recebe o prêmio direto na sua conta.'
-                      : 'Esta vaga foi publicada por outra empresa e está disponível apenas para visualização.'}
+                      ? t('jobDetail.referrerDescription')
+                      : t('jobDetail.companyDescription')}
                   </p>
                   {perfil.tipo === 'indicador' && aceitaIndicacoes && (
                     <Link
@@ -228,12 +225,16 @@ function Vaga() {
                         ? `?candidatoPreSalvoId=${encodeURIComponent(candidatoPreSalvoId)}`
                         : ''}`}
                     >
-                      Fazer Indicação
+                      {t('jobDetail.refer')}
                     </Link>
                   )}
                   {perfil.tipo === 'indicador' && !aceitaIndicacoes && (
                     <div className="indication-unavailable" role="status">
-                      Esta vaga está {statusVagaLabels[vaga.status]?.toLowerCase() || 'indisponível'} e não recebe novas indicações.
+                      {t('jobDetail.unavailable', {
+                        status: t(`common:statuses.jobs.${vaga.status}`, {
+                          defaultValue: t('common:statuses.jobs.indisponivel')
+                        }).toLocaleLowerCase(i18n.resolvedLanguage || i18n.language)
+                      })}
                     </div>
                   )}
                 </div>
@@ -241,7 +242,7 @@ function Vaga() {
 
               {/* Lista de benefícios da vaga. */}
               <div className="benefits-card">
-                <h3>Benefícios</h3>
+                <h3>{t('jobDetail.benefits')}</h3>
                 <div className="benefits-grid">
                   {beneficiosArray.map((beneficio) => (
                     <div key={beneficio}>

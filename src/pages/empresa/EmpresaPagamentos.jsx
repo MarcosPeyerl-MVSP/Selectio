@@ -1,11 +1,13 @@
 import './styles/EmpresaPagamentos.css'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FaCreditCard, FaExternalLinkAlt, FaReceipt, FaSyncAlt } from 'react-icons/fa'
 import { useSearchParams } from 'react-router-dom'
 
 import PageLoader from '../../components/ui/PageLoader'
 import { useToast } from '../../hooks/useToast'
+import { formatCurrency, formatDate } from '../../i18n/formatters'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import {
   listarPagamentosPorEmpresa,
@@ -14,17 +16,8 @@ import {
   sincronizarPagamentoMercadoPago
 } from '../../services/firestorePagamentos'
 
-const statusLabels = {
-  created: 'Criado',
-  pending: 'Pendente',
-  approved: 'Aprovado',
-  rejected: 'Recusado',
-  cancelled: 'Cancelado',
-  refunded: 'Estornado',
-  failed: 'Falhou'
-}
-
 function EmpresaPagamentos({ empresa }) {
+  const { t } = useTranslation(['company', 'common'])
   const toast = useToast()
   const [searchParams, setSearchParams] = useSearchParams()
   const empresaId = getFirebaseUid(empresa)
@@ -33,6 +26,10 @@ function EmpresaPagamentos({ empresa }) {
   const [sincronizandoId, setSincronizandoId] = useState('')
   const retornoProcessado = useRef('')
   const backendUrl = obterMercadoPagoBackendUrl()
+  const formatDateTime = (value) => formatDate(value, {
+    dateStyle: 'short',
+    timeStyle: 'short'
+  }) || t('payments.notProvided')
 
   useEffect(() => {
     let ativo = true
@@ -51,11 +48,11 @@ function EmpresaPagamentos({ empresa }) {
           const pagamentoAtualizado = await sincronizarPagamentoMercadoPago({ paymentId, empresaId })
 
           if (pagamentoAtualizado?.status === 'approved') {
-            toast.success('Pagamento de teste aprovado e transação atualizada.')
+            toast.success(t('payments.testApproved'))
           } else if (pagamentoAtualizado?.status === 'pending') {
-            toast.warning('Pagamento ainda pendente no Mercado Pago.')
+            toast.warning(t('payments.stillPending'))
           } else {
-            toast.error('O pagamento não foi aprovado pelo Mercado Pago.')
+            toast.error(t('payments.notApproved'))
           }
 
           const parametrosLimpos = new URLSearchParams(searchParams)
@@ -75,8 +72,8 @@ function EmpresaPagamentos({ empresa }) {
 
         const dados = await listarPagamentosPorEmpresa(empresaId)
         if (ativo) setPagamentos(dados)
-      } catch (error) {
-        toast.error(error.message || 'Não foi possível carregar pagamentos.')
+      } catch {
+        toast.error(t('payments.loadError'))
       } finally {
         if (ativo) setCarregando(false)
       }
@@ -87,7 +84,7 @@ function EmpresaPagamentos({ empresa }) {
     return () => {
       ativo = false
     }
-  }, [empresaId, searchParams, setSearchParams, toast])
+  }, [empresaId, searchParams, setSearchParams, t, toast])
 
   const metricas = useMemo(() => ({
     totalCriado: pagamentos.reduce((soma, pagamento) => soma + Number(pagamento.valor || 0), 0),
@@ -110,47 +107,49 @@ function EmpresaPagamentos({ empresa }) {
       })
 
       if (resultado?.status === 'approved') {
-        toast.success('Pagamento aprovado e saldo do indicador atualizado.')
+        toast.success(t('payments.approvedBalance'))
       } else if (resultado?.status === 'pending') {
-        toast.warning('Pagamento ainda pendente no Mercado Pago.')
+        toast.warning(t('payments.stillPending'))
       } else if (resultado?.status) {
-        toast.error(`Pagamento ${statusLabels[resultado.status]?.toLowerCase() || resultado.status}.`)
+        toast.error(t('payments.statusResult', {
+          status: t(`common:statuses.payments.${resultado.status}`, { defaultValue: resultado.status }).toLowerCase()
+        }))
       } else {
-        toast.info('Nenhuma atualização encontrada para este pagamento.')
+        toast.info(t('payments.noUpdate'))
       }
 
       const dados = await listarPagamentosPorEmpresa(empresaId)
       setPagamentos(dados)
-    } catch (error) {
-      toast.error(error.message || 'Não foi possível atualizar o pagamento.')
+    } catch {
+      toast.error(t('payments.updateError'))
     } finally {
       setSincronizandoId('')
     }
   }
 
-  if (carregando) return <PageLoader label="Carregando pagamentos..." compact />
+  if (carregando) return <PageLoader label={t('payments.loading')} compact />
 
   return (
     <section className="empresa-pagamentos">
       <header className="empresa-pagamentos-header">
-        <span>Financeiro da empresa</span>
-        <h1>Pagamentos de recompensas</h1>
-        <p>Acompanhe recompensas pagas, pendentes e aprovadas para indicadores vinculados aos candidatos contratados.</p>
+        <span>{t('payments.eyebrow')}</span>
+        <h1>{t('payments.title')}</h1>
+        <p>{t('payments.description')}</p>
         <div className="empresa-pagamentos-env">
-          <strong>Ambiente local Mercado Pago</strong>
-          <span>{backendUrl || 'VITE_MERCADO_PAGO_SANDBOX_URL não configurado'}</span>
+          <strong>{t('payments.localEnvironment')}</strong>
+          <span>{backendUrl || t('payments.backendNotConfigured')}</span>
         </div>
       </header>
 
       <section className="empresa-pagamentos-metricas">
-        <MetricCard label="Volume aprovado" value={formatCurrency(metricas.totalAprovado)} />
-        <MetricCard label="Volume pendente" value={formatCurrency(metricas.totalPendente)} />
-        <MetricCard label="Total criado" value={formatCurrency(metricas.totalCriado)} />
+        <MetricCard label={t('payments.approvedVolume')} value={formatCurrency(metricas.totalAprovado)} />
+        <MetricCard label={t('payments.pendingVolume')} value={formatCurrency(metricas.totalPendente)} />
+        <MetricCard label={t('payments.totalCreated')} value={formatCurrency(metricas.totalCriado)} />
       </section>
 
       <article className="empresa-pagamentos-lista">
         <div className="empresa-pagamentos-lista-header">
-          <span><FaReceipt /> Histórico</span>
+          <span><FaReceipt /> {t('payments.history')}</span>
           <strong>{pagamentos.length}</strong>
         </div>
 
@@ -158,21 +157,21 @@ function EmpresaPagamentos({ empresa }) {
           pagamentos.map((pagamento) => (
             <div className="empresa-pagamento-item" key={pagamento.id}>
               <div>
-                <strong>{pagamento.candidatoNome || 'Candidato'}</strong>
-                <span>{pagamento.vagaTitulo || 'Vaga não informada'} - {pagamento.indicadorNome || 'Indicador'}</span>
-                <small>Criado em {formatDateTime(pagamento.criadoEm)}</small>
+                <strong>{pagamento.candidatoNome || t('payments.candidate')}</strong>
+                <span>{pagamento.vagaTitulo || t('payments.jobNotProvided')} - {pagamento.indicadorNome || t('payments.referrer')}</span>
+                <small>{t('payments.createdAt', { date: formatDateTime(pagamento.criadoEm) })}</small>
                 {pagamento.transacaoEm && (
-                  <small>Transação em {formatDateTime(pagamento.transacaoEm)}</small>
+                  <small>{t('payments.transactionAt', { date: formatDateTime(pagamento.transacaoEm) })}</small>
                 )}
                 {pagamento.encerradoEm && (
-                  <small>Encerrado em {formatDateTime(pagamento.encerradoEm)}</small>
+                  <small>{t('payments.closedAt', { date: formatDateTime(pagamento.encerradoEm) })}</small>
                 )}
               </div>
 
               <div className="empresa-pagamento-meta">
                 <strong>{formatCurrency(pagamento.valor)}</strong>
                 <span className={`empresa-pagamento-status ${pagamento.status}`}>
-                  {statusLabels[pagamento.status] || pagamento.status}
+                  {t(`common:statuses.payments.${pagamento.status}`, { defaultValue: pagamento.status })}
                 </span>
               </div>
 
@@ -184,7 +183,7 @@ function EmpresaPagamentos({ empresa }) {
                       target={obterCheckoutUrlPagamento(pagamento).includes('sandbox.mercadopago') ? '_blank' : undefined}
                       rel="noreferrer"
                     >
-                      <FaExternalLinkAlt /> Continuar checkout
+                      <FaExternalLinkAlt /> {t('payments.continueCheckout')}
                     </a>
                   )}
                   <button
@@ -192,7 +191,7 @@ function EmpresaPagamentos({ empresa }) {
                     onClick={() => atualizarStatusPagamento(pagamento)}
                     disabled={sincronizandoId === pagamento.id}
                   >
-                    <FaSyncAlt /> {sincronizandoId === pagamento.id ? 'Atualizando...' : 'Atualizar status'}
+                    <FaSyncAlt /> {sincronizandoId === pagamento.id ? t('payments.updating') : t('payments.updateStatus')}
                   </button>
                 </div>
               )}
@@ -201,8 +200,8 @@ function EmpresaPagamentos({ empresa }) {
         ) : (
           <div className="empresa-pagamentos-vazio">
             <FaCreditCard />
-            <strong>Nenhum pagamento criado</strong>
-            <p>Quando uma recompensa for paga para um candidato contratado, ela aparecerá aqui.</p>
+            <strong>{t('payments.emptyTitle')}</strong>
+            <p>{t('payments.emptyDescription')}</p>
           </div>
         )}
       </article>
@@ -217,22 +216,6 @@ function MetricCard({ label, value }) {
       <strong>{value}</strong>
     </div>
   )
-}
-
-function formatCurrency(value) {
-  return Number(value || 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  })
-}
-
-function formatDateTime(value) {
-  if (!value) return 'não informado'
-
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'não informado'
-
-  return date.toLocaleString('pt-BR')
 }
 
 export default EmpresaPagamentos

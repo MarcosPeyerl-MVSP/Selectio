@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   FaCalendarAlt,
   FaChartBar,
@@ -39,50 +40,38 @@ import {
 const empresaCards = [
   {
     icon: FaSuitcase,
-    title: 'Minhas Vagas',
-    description: 'Crie sua rede de postagens de vagas, melhore suas conexões e contrate rápido.',
+    copyKey: 'myJobs',
     to: '/criar-vaga/empresa',
-    action: 'Criar Vagas',
     dataTour: 'empresa-card-vagas'
   },
   {
     icon: FaUserFriends,
-    title: 'Candidatos',
-    description: 'Veja os candidatos disponíveis para suas vagas publicadas.',
+    copyKey: 'candidates',
     to: '/candidatos/empresa',
-    action: 'Ver Candidatos',
     dataTour: 'empresa-card-candidatos'
   },
   {
     icon: FaUserTie,
-    title: 'Perfil',
-    description: 'Personalize o perfil da sua empresa e gerencie seus dados.',
+    copyKey: 'profile',
     to: '/painel/empresa?secao=perfil',
-    action: 'Meu Perfil',
     dataTour: 'empresa-card-perfil'
   },
   {
     icon: FaChartBar,
-    title: 'Dashboard',
-    description: 'Acompanhe status, ganhos e impacto das suas contratações.',
+    copyKey: 'dashboard',
     to: '/painel/empresa',
-    action: 'Acompanhar',
     dataTour: 'empresa-card-dashboard'
   },
   {
     icon: FaCalendarAlt,
-    title: 'Entrevistas',
-    description: 'Organize e acompanhe entrevistas com candidatos de forma simples.',
+    copyKey: 'interviews',
     to: '/painel/empresa?secao=entrevistas',
-    action: 'Minhas Entrevistas',
     dataTour: 'empresa-card-entrevistas'
   },
   {
     icon: FaCreditCard,
-    title: 'Pagamentos',
-    description: 'Acompanhe recompensas pagas aos indicadores por contratações.',
+    copyKey: 'payments',
     to: '/painel/empresa?secao=pagamentos',
-    action: 'Ver Pagamentos',
     dataTour: 'empresa-card-pagamentos'
   }
 ]
@@ -95,92 +84,70 @@ const getEmpresaCards = (empresa) => {
     [SETOR_CHEFE_DEPARTAMENTO]: [
       {
         icon: FaSuitcase,
-        title: 'Solicitar vaga',
-        description: 'Preencha o pedido da vaga para que Reitoria ou Auditoria avalie a parte financeira.',
+        copyKey: 'requestJob',
         to: '/criar-vaga/empresa',
-        action: 'Nova solicitacao',
         dataTour: 'empresa-card-vagas'
       },
       {
         icon: FaClipboardCheck,
-        title: 'Minhas solicitacoes',
-        description: 'Acompanhe vagas enviadas, devolvidas e aprovadas no fluxo empresarial.',
+        copyKey: 'myRequests',
         to: '/painel/empresa?secao=aprovacoes',
-        action: 'Acompanhar'
       }
     ],
     [SETOR_REITORIA_AUDITORIA]: [
       {
         icon: FaClipboardCheck,
-        title: 'Pedidos para analise',
-        description: 'Revise salario, premiacao e comentarios antes de liberar a vaga para o RH.',
+        copyKey: 'reviewRequests',
         to: '/painel/empresa?secao=aprovacoes',
-        action: 'Analisar pedidos',
         dataTour: 'empresa-card-vagas'
       },
       {
         icon: FaChartBar,
-        title: 'Dashboard',
-        description: 'Veja a visao geral das solicitacoes e do fluxo da empresa.',
+        copyKey: 'requestsDashboard',
         to: '/painel/empresa',
-        action: 'Acompanhar'
       }
     ],
     [SETOR_RH]: [
       {
         icon: FaClipboardCheck,
-        title: 'Publicar aprovadas',
-        description: 'Receba vagas aprovadas pela auditoria e publique para os indicadores.',
+        copyKey: 'publishApproved',
         to: '/painel/empresa?secao=aprovacoes',
-        action: 'Ver aprovadas',
         dataTour: 'empresa-card-vagas'
       },
       {
         icon: FaUserFriends,
-        title: 'Candidatos',
-        description: 'Administre os candidatos das vagas publicadas pelo RH.',
+        copyKey: 'hrCandidates',
         to: '/candidatos/empresa',
-        action: 'Ver Candidatos',
         dataTour: 'empresa-card-candidatos'
       },
       {
         icon: FaCalendarAlt,
-        title: 'Entrevistas',
-        description: 'Organize entrevistas e acompanhe agendamentos com candidatos.',
+        copyKey: 'hrInterviews',
         to: '/painel/empresa?secao=entrevistas',
-        action: 'Minhas Entrevistas'
       },
       {
         icon: FaCreditCard,
-        title: 'Pagamentos',
-        description: 'Acompanhe recompensas pagas aos indicadores por contratacoes.',
+        copyKey: 'hrPayments',
         to: '/painel/empresa?secao=pagamentos',
-        action: 'Ver Pagamentos'
       }
     ],
     [SETOR_ADMIN_EMPRESA]: [
       {
         icon: FaUsersCog,
-        title: 'Setores',
-        description: 'Acompanhe setores e redefina senhas de acesso do modo empresarial.',
+        copyKey: 'sectors',
         to: '/painel/empresa?secao=setores',
-        action: 'Gerenciar setores',
         dataTour: 'empresa-card-perfil'
       },
       {
         icon: FaClipboardCheck,
-        title: 'Fluxo de vagas',
-        description: 'Observe pedidos, aprovacoes, devolucoes e publicacoes do RH.',
+        copyKey: 'jobFlow',
         to: '/painel/empresa?secao=aprovacoes',
-        action: 'Ver fluxo',
         dataTour: 'empresa-card-vagas'
       },
       {
         icon: FaChartBar,
-        title: 'Dashboard',
-        description: 'Acompanhe o funcionamento geral da empresa no Selectio.',
+        copyKey: 'generalDashboard',
         to: '/painel/empresa',
-        action: 'Acompanhar',
         dataTour: 'empresa-card-dashboard'
       }
     ]
@@ -190,55 +157,54 @@ const getEmpresaCards = (empresa) => {
     ...(cardsBySetor[setorId] || cardsBySetor[SETOR_ADMIN_EMPRESA]),
     {
       icon: FaUserTie,
-      title: 'Perfil',
-      description: 'Consulte dados da empresa e configuracoes do perfil.',
+      copyKey: 'companyProfile',
       to: '/painel/empresa?secao=perfil',
-      action: 'Meu Perfil',
       dataTour: 'empresa-card-perfil'
     }
   ]
 }
 
-const empresaTourSteps = [
+const getEmpresaTourSteps = (t) => [
   {
-    title: 'Bem-vindo ao painel da empresa',
-    description: 'Aqui você acompanha vagas, candidatos indicados, entrevistas e pagamentos de recompensas.'
+    title: t('panel.tour.welcomeTitle'),
+    description: t('panel.tour.welcomeDescription')
   },
   {
     selector: '[data-tour="empresa-sidebar"]',
     align: 'start',
-    title: 'Menu lateral',
-    description: 'Use o menu lateral para navegar pelas principais áreas do painel.'
+    title: t('panel.tour.menuTitle'),
+    description: t('panel.tour.menuDescription')
   },
   {
     selector: '[data-tour="empresa-card-vagas"]',
-    title: 'Vagas',
-    description: 'Crie e gerencie suas vagas para começar a receber indicações.'
+    title: t('panel.tour.jobsTitle'),
+    description: t('panel.tour.jobsDescription')
   },
   {
     selector: '[data-tour="empresa-card-candidatos"]',
-    title: 'Candidatos',
-    description: 'Aqui ficam os candidatos indicados para suas vagas. Você pode acompanhar e atualizar o status de cada um.'
+    title: t('panel.tour.candidatesTitle'),
+    description: t('panel.tour.candidatesDescription')
   },
   {
     selector: '[data-tour="empresa-card-entrevistas"]',
-    title: 'Entrevistas',
-    description: 'Organize entrevistas com candidatos promissores e acompanhe os agendamentos.'
+    title: t('panel.tour.interviewsTitle'),
+    description: t('panel.tour.interviewsDescription')
   },
   {
     selector: '[data-tour="empresa-card-pagamentos"]',
-    title: 'Pagamentos',
-    description: 'Quando um candidato for contratado, acompanhe e pague a recompensa do indicador.'
+    title: t('panel.tour.paymentsTitle'),
+    description: t('panel.tour.paymentsDescription')
   },
   {
     selector: '[data-tour="navbar-account-actions"]',
     scroll: false,
-    title: 'Notificações e perfil',
-    description: 'Receba alertas importantes e acesse configurações, tema e perfil da conta.'
+    title: t('panel.tour.accountTitle'),
+    description: t('panel.tour.accountDescription')
   }
 ]
 
 function PainelEmpresa() {
+  const { t } = useTranslation(['company', 'auth'])
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const activeSection = searchParams.get('secao') || 'dashboard'
@@ -302,15 +268,18 @@ function PainelEmpresa() {
     }
   }, [empresa, navigate])
 
-  if (!empresa || !perfilCarregado) return <PageLoader label="Carregando painel da empresa..." />
+  if (!empresa || !perfilCarregado) return <PageLoader label={t('panel.loading')} />
 
   const tourConcluido = Boolean(empresa.tourEmpresaConcluido || empresa.onboardingTour?.empresaConcluido)
   const modoEmpresarialAtivo = isModoEmpresarial(empresa)
   const setorAtual = obterSetorAtual(empresa)
   const cards = getEmpresaCards(empresa)
+  const setorLabel = setorAtual
+    ? t(`auth:sectors.${setorAtual.id}`, { defaultValue: setorAtual.nome })
+    : t('panel.defaultSector')
   const dashboardDescription = modoEmpresarialAtivo && setorAtual
-    ? `Voce esta acessando o setor ${setorAtual.nome}. Use o painel para acompanhar as tarefas desse setor no fluxo empresarial.`
-    : "Gerencie suas vagas, explore novas oportunidades e acompanhe seu crescimento em um sÃ³ lugar."
+    ? t('panel.enterpriseDescription', { sector: setorLabel })
+    : t('panel.description')
 
   const concluirTour = async () => {
     const atualizacao = {
@@ -347,15 +316,23 @@ function PainelEmpresa() {
       ) : (
         <>
           <DashboardHeader
-            eyebrow={modoEmpresarialAtivo ? `MODO EMPRESARIAL - ${setorAtual?.nome || 'Setor'}` : "BOAS-VINDAS - Painel Central"}
-            greeting="Bem-vinda,"
+            eyebrow={modoEmpresarialAtivo
+              ? t('panel.enterpriseEyebrow', { sector: setorLabel })
+              : t('panel.eyebrow')}
+            greeting={t('panel.greeting')}
             name={empresa.nomeEmpresa}
             description={dashboardDescription}
           />
 
           <section className="dashboard-cards">
             {cards.map((card) => (
-              <DashboardActionCard key={card.title} {...card} />
+              <DashboardActionCard
+                key={`${card.to}-${card.copyKey}`}
+                {...card}
+                title={t(`panel.cards.${card.copyKey}.title`)}
+                description={t(`panel.cards.${card.copyKey}.description`)}
+                action={t(`panel.cards.${card.copyKey}.action`)}
+              />
             ))}
           </section>
 
@@ -366,7 +343,7 @@ function PainelEmpresa() {
           <GuidedTour
             key={`empresa-tour-${empresaUid}`}
             active={activeSection === 'dashboard' && !tourConcluido}
-            steps={empresaTourSteps}
+            steps={getEmpresaTourSteps(t)}
             storageKey={`empresa-${empresaUid}`}
             onFinish={concluirTour}
           />

@@ -1,7 +1,11 @@
+import { useTranslation } from 'react-i18next'
+
 function PanelPlaceholder({ title, description }) {
+  const { t } = useTranslation('common')
+
   return (
     <section className="panel-placeholder">
-      <p className="dashboard-breadcrumb">PAINEL - Em construcao</p>
+      <p className="dashboard-breadcrumb">{t('panel.underConstruction')}</p>
       <h1>
         {title}
         <span>.</span>

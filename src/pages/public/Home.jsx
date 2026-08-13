@@ -5,6 +5,7 @@
 import './Home.css'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   FiBriefcase,
   FiUsers,
@@ -18,8 +19,11 @@ import {
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import { listarVagasBanner } from '../../services/firestoreVagas'
+import { formatJobReward } from '../../i18n/domainFormatters'
 
 function Home() {
+  const { t } = useTranslation('public')
+
   // Controla o índice da vaga atualmente exibida no banner principal.
   const [currentVaga, setCurrentVaga] = useState(0)
 
@@ -85,18 +89,17 @@ function Home() {
         {/* Seção principal da home com banner dinâmico de vagas em destaque. */}
         <section className="hero-modelo">
           <div className={`hero-text slide-animation slide-${direction}`}>
-            <span className="tag">VAGA DO MOMENTO</span>
+            <span className="tag">{t('home.featuredJob')}</span>
 
             <h1>
               {/* Exibe dados da vaga quando disponíveis; caso contrário, usa texto padrão. */}
-              {vaga?.titulo || 'Vagas em destaque'}
+              {vaga?.titulo || t('home.featuredJobs')}
               <br />
               <strong>{vaga?.area ? `(${vaga.area})` : '(Selectio)'}</strong>
             </h1>
 
             <p>
-              {vaga?.descricaoCurta ||
-                'Confira as oportunidades cadastradas no banco de dados da Selectio.'}
+              {vaga?.descricaoCurta || t('home.featuredDescription')}
             </p>
 
             <div className="hero-actions">
@@ -105,11 +108,11 @@ function Home() {
                 className="home-button-primary hero-indication"
                 to={vaga ? `/login?redirect=/vaga/${vaga.id}` : '/login'}
               >
-                Fazer Indicação
+                {t('home.refer')}
               </Link>
 
               {/* Direciona para detalhes da vaga atual ou para a listagem geral. */}
-              <Link to={vaga ? `/vaga/${vaga.id}` : '/vagas'}>Ver Detalhes da Vaga</Link>
+              <Link to={vaga ? `/vaga/${vaga.id}` : '/vagas'}>{t('home.viewJob')}</Link>
             </div>
           </div>
 
@@ -120,21 +123,23 @@ function Home() {
               style={vaga?.imagem ? { backgroundImage: `url(${vaga.imagem})` } : undefined}
             >
               {/* Fallback visual quando a vaga não possui imagem cadastrada. */}
-              {!vaga?.imagem && <span>Imagem da vaga</span>}
+              {!vaga?.imagem && <span>{t('home.jobImage')}</span>}
             </div>
 
             <div className="info-box glass-effect">
-              <strong>Recompensa</strong>
-              <span>{vaga?.recompensa || 'A combinar'}</span>
+              <strong>{t('home.reward')}</strong>
+              <span>{vaga?.recompensa || vaga?.recompensaValorFixo
+                ? formatJobReward(vaga, t)
+                : t('home.negotiable')}</span>
             </div>
           </div>
 
           {/* Controles do carrossel de vagas. */}
-          <button className="carousel-btn carousel-prev" onClick={vagaAnterior} aria-label="Vaga anterior">
+          <button className="carousel-btn carousel-prev" onClick={vagaAnterior} aria-label={t('home.previousJob')}>
             <FiChevronLeft />
           </button>
 
-          <button className="carousel-btn carousel-next" onClick={proximaVaga} aria-label="Próxima vaga">
+          <button className="carousel-btn carousel-next" onClick={proximaVaga} aria-label={t('home.nextJob')}>
             <FiChevronRight />
           </button>
 
@@ -145,7 +150,7 @@ function Home() {
                 key={index}
                 className={`indicator ${index === currentVaga ? 'active' : ''}`}
                 onClick={() => setCurrentVaga(index)}
-                aria-label={`Ir para vaga ${index + 1}`}
+                aria-label={t('home.goToJob', { number: index + 1 })}
               />
             ))}
           </div>
@@ -153,8 +158,8 @@ function Home() {
 
         {/* Seção com caminhos de cadastro para empresas e indicadores. */}
         <section className="ecosystem">
-          <span className="tag center">O ECOSSISTEMA</span>
-          <h2>Soluções para os dois lados da elite.</h2>
+          <span className="tag center">{t('home.ecosystem')}</span>
+          <h2>{t('home.ecosystemTitle')}</h2>
 
           <div className="ecosystem-grid">
             <div className="solution-card">
@@ -162,13 +167,13 @@ function Home() {
                 <FiBriefcase />
               </div>
 
-              <h3>Para Empresas</h3>
-              <p>Acesso a talentos qualificados fora do mercado comum.</p>
-              <p>Filtragem inteligente para apoiar a tomada de decisão.</p>
-              <p>Processo focado em eficiência, curadoria e resultado.</p>
+              <h3>{t('home.forCompanies')}</h3>
+              <p>{t('home.companyBenefitOne')}</p>
+              <p>{t('home.companyBenefitTwo')}</p>
+              <p>{t('home.companyBenefitThree')}</p>
 
               <Link className="home-button-primary" to="/cadastro/empresa">
-                Cadastrar Empresa
+                {t('home.registerCompany')}
               </Link>
             </div>
 
@@ -177,13 +182,13 @@ function Home() {
                 <FiUsers />
               </div>
 
-              <h3>Para Indicadores</h3>
-              <p>Transforme sua rede profissional em oportunidades reais.</p>
-              <p>Acompanhe suas indicações em um painel transparente.</p>
-              <p>Receba recompensas por indicações bem-sucedidas.</p>
+              <h3>{t('home.forReferrers')}</h3>
+              <p>{t('home.referrerBenefitOne')}</p>
+              <p>{t('home.referrerBenefitTwo')}</p>
+              <p>{t('home.referrerBenefitThree')}</p>
 
               <Link className="home-button-primary" to="/cadastro/indicador">
-                Tornar-se Indicador
+                {t('home.becomeReferrer')}
               </Link>
             </div>
           </div>
@@ -192,19 +197,18 @@ function Home() {
         {/* Seção explicativa do funcionamento da plataforma. */}
         <section className="how-it-works">
           <div>
-            <span className="tag">COMO FUNCIONA</span>
+            <span className="tag">{t('home.howItWorks')}</span>
 
             <h2>
-              Como a Selectio
+              {t('home.howTitleStart')}
               <br />
-              <strong>revoluciona o</strong>
+              <strong>{t('home.howTitleStrong')}</strong>
               <br />
-              recrutamento.
+              {t('home.howTitleEnd')}
             </h2>
 
             <p className="section-text">
-              A plataforma organiza conexões profissionais, indicações e vagas
-              por meio de curadoria e tecnologia.
+              {t('home.howDescription')}
             </p>
 
             {/* Etapas descritas visualmente para explicar o fluxo da plataforma. */}
@@ -214,8 +218,8 @@ function Home() {
                   <FiTarget />
                 </span>
                 <div>
-                  <h3>Curadoria da Vaga</h3>
-                  <p>As vagas passam por análise antes da publicação.</p>
+                  <h3>{t('home.stepOneTitle')}</h3>
+                  <p>{t('home.stepOneDescription')}</p>
                 </div>
               </div>
 
@@ -224,8 +228,8 @@ function Home() {
                   <FiShare2 />
                 </span>
                 <div>
-                  <h3>Ativação da Rede</h3>
-                  <p>Indicadores recebem vagas compatíveis com sua rede.</p>
+                  <h3>{t('home.stepTwoTitle')}</h3>
+                  <p>{t('home.stepTwoDescription')}</p>
                 </div>
               </div>
 
@@ -234,8 +238,8 @@ function Home() {
                   <FiFilter />
                 </span>
                 <div>
-                  <h3>Filtragem de Precisão</h3>
-                  <p>Dados de perfil e indicação ajudam a montar uma lista qualificada.</p>
+                  <h3>{t('home.stepThreeTitle')}</h3>
+                  <p>{t('home.stepThreeDescription')}</p>
                 </div>
               </div>
             </div>
@@ -247,26 +251,22 @@ function Home() {
               <FiCpu />
             </div>
 
-            <span>ALGORITMO DE MATCHING</span>
+            <span>{t('home.matchingAlgorithm')}</span>
             <div className="bar large"></div>
             <div className="bar medium"></div>
             <div className="bar small"></div>
-            <strong>Indicador de compatibilidade</strong>
+            <strong>{t('home.compatibilityIndicator')}</strong>
           </div>
         </section>
 
         {/* Chamada final para levar o usuário à busca/listagem de vagas. */}
         <section className="cta">
-          <h2>Pronto para enviar ou procurar seu talento?</h2>
+          <h2>{t('home.ctaTitle')}</h2>
 
-          <p>
-            Junte-se à nossa rede de indicadores e transforme
-            <br />
-            o futuro da sua equipe ou a sua carreira como indicador.
-          </p>
+          <p>{t('home.ctaDescription')}</p>
 
           <Link className="home-button-primary" to="/vagas">
-            Procurar Vagas
+            {t('home.browseJobs')}
           </Link>
         </section>
       </main>

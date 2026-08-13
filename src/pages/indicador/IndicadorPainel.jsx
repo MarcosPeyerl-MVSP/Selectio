@@ -3,6 +3,7 @@
 
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 import ConfiguracoesConta from '../../components/configuracoes-conta/ConfiguracoesConta'
 import DashboardLayout from '../../components/dashboard/DashboardLayout'
@@ -15,41 +16,42 @@ import IndicadorPerfil from './IndicadorPerfil'
 
 const IndicadorDashboard = lazy(() => import('./IndicadorDashboard'))
 
-const indicadorTourSteps = [
+const getIndicadorTourSteps = (t) => [
   {
-    title: 'Seu desempenho em um só lugar',
-    description: 'Este dashboard reúne indicações, conversões, contratações e recompensas.',
+    title: t('panel.tour.performanceTitle'),
+    description: t('panel.tour.performanceDescription'),
   },
   {
     selector: '[data-tour="indicador-sidebar"]',
     align: 'start',
-    title: 'Menu lateral',
-    description: 'Use o menu para acessar vagas, candidatos, perfil, financeiro e configurações.',
+    title: t('panel.tour.menuTitle'),
+    description: t('panel.tour.menuDescription'),
   },
   {
     selector: '[data-tour="indicador-dashboard-metricas"]',
-    title: 'Métricas principais',
-    description: 'Veja rapidamente o volume da sua rede, processos ativos e pagamentos aprovados.',
+    title: t('panel.tour.metricsTitle'),
+    description: t('panel.tour.metricsDescription'),
   },
   {
     selector: '[data-tour="indicador-dashboard-recentes"]',
-    title: 'Pipeline recente',
-    description: 'Acompanhe os últimos talentos indicados e a etapa atual de cada processo.',
+    title: t('panel.tour.pipelineTitle'),
+    description: t('panel.tour.pipelineDescription'),
   },
   {
     selector: '[data-tour="indicador-dashboard-grafico"]',
-    title: 'Evolução financeira',
-    description: 'Os ganhos aprovados são agrupados por mês para mostrar a evolução das recompensas.',
+    title: t('panel.tour.financeTitle'),
+    description: t('panel.tour.financeDescription'),
   },
   {
     selector: '[data-tour="navbar-account-actions"]',
     scroll: false,
-    title: 'Notificações e perfil',
-    description: 'Receba alertas sobre processos e pagamentos ou acesse as configurações da conta.',
+    title: t('panel.tour.accountTitle'),
+    description: t('panel.tour.accountDescription'),
   },
 ]
 
 function Painel() {
+  const { t } = useTranslation('referrer')
   const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem('indicadorUser')
     if (!storedUser) return null
@@ -105,7 +107,7 @@ function Painel() {
   }, [indicadorUid])
 
   if (!user || loadingPanel) {
-    return <PageLoader label="Carregando painel do indicador..." />
+    return <PageLoader label={t('panel.loading')} />
   }
 
   const tourConcluido = Boolean(
@@ -147,14 +149,14 @@ function Painel() {
         <IndicadorFinanceiro user={user} />
       ) : (
         <>
-          <Suspense fallback={<PageLoader label="Carregando indicadores de performance..." compact />}>
+          <Suspense fallback={<PageLoader label={t('panel.loadingPerformance')} compact />}>
             <IndicadorDashboard user={user} />
           </Suspense>
 
           <GuidedTour
             key={`indicador-tour-${indicadorUid}`}
             active={activeSection === 'dashboard' && !tourConcluido}
-            steps={indicadorTourSteps}
+            steps={getIndicadorTourSteps(t)}
             storageKey={`indicador-${indicadorUid}`}
             onFinish={concluirTour}
           />

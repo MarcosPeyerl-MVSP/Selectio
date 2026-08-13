@@ -1,11 +1,13 @@
 import './GuidedTour.css'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const cardWidth = 340
 const padding = 18
 
 function GuidedTour({ steps = [], storageKey, active = true, onFinish }) {
+  const { t } = useTranslation('common')
   const [currentIndex, setCurrentIndex] = useState(0)
   const [targetRect, setTargetRect] = useState(null)
   const [cardStyle, setCardStyle] = useState({})
@@ -123,22 +125,22 @@ function GuidedTour({ steps = [], storageKey, active = true, onFinish }) {
 
       <section className="guided-tour-card" style={cardStyle}>
         <span className="guided-tour-progress">
-          {currentIndex + 1} de {visibleSteps.length}
+          {t('guidedTour.progress', { current: currentIndex + 1, total: visibleSteps.length })}
         </span>
         <h2 id="guided-tour-title">{currentStep.title}</h2>
         <p>{currentStep.description}</p>
 
         <div className="guided-tour-actions">
           <button type="button" className="guided-tour-skip" onClick={finish}>
-            Pular
+            {t('guidedTour.skip')}
           </button>
 
           <div>
             <button type="button" onClick={goPrevious} disabled={isFirst}>
-              Voltar
+              {t('guidedTour.back')}
             </button>
             <button type="button" className="primary" onClick={goNext}>
-              {isLast ? 'Concluir' : 'Próximo'}
+              {isLast ? t('guidedTour.finish') : t('guidedTour.next')}
             </button>
           </div>
         </div>

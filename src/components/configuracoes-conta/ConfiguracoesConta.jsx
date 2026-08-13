@@ -1,6 +1,7 @@
 import './ConfiguracoesConta.css'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
   GoogleAuthProvider,
@@ -25,7 +26,7 @@ import {
 
 import PageLoader from '../ui/PageLoader'
 import { auth } from '../../services/firebase'
-import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from '../../services/errosAutenticacao'
+import { getFirebaseAuthErrorKey, isFirebaseAuthError } from '../../services/errosAutenticacao'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { atualizarPerfilUsuario, definirTourUsuarioConcluido } from '../../services/firestoreUsers'
 import { useConfirmacao } from '../../hooks/useConfirmacao'
@@ -37,17 +38,17 @@ const minPasswordLength = 8
 
 const profileFieldsByTipo = {
   empresa: [
-    { name: 'nomeEmpresa', label: 'Nome da empresa', placeholder: 'Nome exibido da empresa' },
-    { name: 'telefone', label: 'Telefone', placeholder: '(00) 00000-0000' },
-    { name: 'site', label: 'Site', placeholder: 'https://empresa.com' },
-    { name: 'setor', label: 'Setor', placeholder: 'Tecnologia, Financeiro...' },
-    { name: 'tamanho', label: 'Tamanho', placeholder: 'Pequena, média, grande...' }
+    { name: 'nomeEmpresa', labelKey: 'accountSettings.fields.companyName', placeholderKey: 'accountSettings.fields.companyNamePlaceholder' },
+    { name: 'telefone', labelKey: 'accountSettings.fields.phone', placeholderKey: 'accountSettings.fields.phonePlaceholder' },
+    { name: 'site', label: 'Site', placeholderKey: 'accountSettings.fields.sitePlaceholder' },
+    { name: 'setor', labelKey: 'accountSettings.fields.sector', placeholderKey: 'accountSettings.fields.sectorPlaceholder' },
+    { name: 'tamanho', labelKey: 'accountSettings.fields.size', placeholderKey: 'accountSettings.fields.sizePlaceholder' }
   ],
   indicador: [
-    { name: 'nome', label: 'Nome', placeholder: 'Nome completo' },
-    { name: 'telefone', label: 'Telefone', placeholder: '(00) 00000-0000' },
-    { name: 'pix', label: 'Pix', placeholder: 'Chave Pix' },
-    { name: 'linkedin', label: 'LinkedIn', placeholder: 'linkedin.com/in/perfil' }
+    { name: 'nome', labelKey: 'accountSettings.fields.name', placeholderKey: 'accountSettings.fields.namePlaceholder' },
+    { name: 'telefone', labelKey: 'accountSettings.fields.phone', placeholderKey: 'accountSettings.fields.phonePlaceholder' },
+    { name: 'pix', label: 'Pix', placeholderKey: 'accountSettings.fields.pixPlaceholder' },
+    { name: 'linkedin', label: 'LinkedIn', placeholderKey: 'accountSettings.fields.linkedinPlaceholder' }
   ]
 }
 
@@ -76,6 +77,7 @@ const getProfileForm = (profile, tipo) => {
 }
 
 function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
+  const { t } = useTranslation(['common', 'auth'])
   const navigate = useNavigate()
   const toast = useToast()
   const confirm = useConfirmacao()
@@ -94,9 +96,9 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
   })
 
   const firebaseUid = getFirebaseUid(user)
-  const accountType = tipo === 'empresa' ? 'Empresa' : 'Indicador'
-  const accountName = user?.nomeEmpresa || user?.nome || 'Conta Selectio'
-  const accountEmail = user?.email || firebaseUser?.email || 'E-mail não informado'
+  const accountType = tipo === 'empresa' ? t('accountSettings.company') : t('accountSettings.referrer')
+  const accountName = user?.nomeEmpresa || user?.nome || t('accountSettings.accountFallback')
+  const accountEmail = user?.email || firebaseUser?.email || t('accountSettings.emailNotProvided')
   const profileFields = profileFieldsByTipo[tipo] || []
   const storageKey = tipo === 'empresa' ? 'empresaUser' : 'indicadorUser'
 
@@ -111,7 +113,7 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
 
   const repetirTour = async () => {
     if (!firebaseUid) {
-      toast.warning('Perfil sem UID do Firebase. Entre novamente antes de reiniciar o tour.')
+      toast.warning(t('accountSettings.tourMissingUid'))
       return
     }
 
@@ -132,7 +134,7 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
     try {
       await definirTourUsuarioConcluido({ uid: firebaseUid, tipo, concluido: false })
     } catch {
-      toast.warning('O tour será reaberto nesta sessão. Não foi possível salvar a preferência agora.')
+      toast.warning(t('accountSettings.tourSessionOnly'))
     }
 
     navigate(tipo === 'empresa' ? '/painel/empresa' : '/painel/indicador')
@@ -159,12 +161,12 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
     const currentUser = auth.currentUser
 
     if (!currentUser) {
-      toast.warning('Entre novamente para gerenciar sua conta.')
+      toast.warning(t('accountSettings.signInAgain'))
       return null
     }
 
     if (firebaseUid && currentUser.uid !== firebaseUid) {
-      toast.warning('A sessão do Firebase não corresponde a conta aberta no painel. Entre novamente.')
+      toast.warning(t('accountSettings.sessionMismatch'))
       return null
     }
 
@@ -186,17 +188,17 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
     if (!currentUser) return
 
     if (hasPasswordLinked) {
-      toast.info('Esta conta já possui login por e-mail e senha.')
+      toast.info(t('accountSettings.passwordAlreadyLinked'))
       return
     }
 
     if (passwordForm.novaSenha.length < minPasswordLength) {
-      toast.warning(`Use uma senha com pelo menos ${minPasswordLength} caracteres.`)
+      toast.warning(t('accountSettings.passwordMin', { count: minPasswordLength }))
       return
     }
 
     if (passwordForm.novaSenha !== passwordForm.confirmarSenha) {
-      toast.warning('As senhas não conferem.')
+      toast.warning(t('accountSettings.passwordMismatch'))
       return
     }
 
@@ -205,11 +207,11 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
       await updatePassword(currentUser, passwordForm.novaSenha)
       await refreshFirebaseUser(currentUser)
       setPasswordForm({ novaSenha: '', confirmarSenha: '' })
-      toast.success('Senha adicionada com sucesso. Agora você também pode entrar com e-mail e senha.')
+      toast.success(t('accountSettings.passwordAdded'))
     } catch (error) {
       toast.warning(isFirebaseAuthError(error)
-        ? getFirebaseAuthErrorMessage(error)
-        : 'Não foi possível adicionar senha agora. Tente novamente.')
+        ? t(`auth:${getFirebaseAuthErrorKey(error)}`)
+        : t('accountSettings.passwordAddError'))
     } finally {
       setSavingPassword(false)
     }
@@ -221,7 +223,7 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
 
     if (getLinkedProviderIds(currentUser).includes(googleProviderId)) {
       await refreshFirebaseUser(currentUser)
-      toast.info('Esta conta já possui Google vinculado.')
+      toast.info(t('accountSettings.googleAlreadyLinked'))
       return
     }
 
@@ -233,11 +235,11 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
 
       const credential = await linkWithPopup(currentUser, provider)
       await refreshFirebaseUser(credential.user)
-      toast.success('Conta Google vinculada com sucesso.')
+      toast.success(t('accountSettings.googleLinked'))
     } catch (error) {
       toast.warning(isFirebaseAuthError(error)
-        ? getFirebaseAuthErrorMessage(error)
-        : 'Não foi possível vincular Google agora. Tente novamente.')
+        ? t(`auth:${getFirebaseAuthErrorKey(error)}`)
+        : t('accountSettings.googleLinkError'))
     } finally {
       setLinking(false)
     }
@@ -251,19 +253,19 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
 
     if (!currentProviderIds.includes(googleProviderId)) {
       await refreshFirebaseUser(currentUser)
-      toast.info('Esta conta não possui Google vinculado.')
+      toast.info(t('accountSettings.googleNotLinked'))
       return
     }
 
     if (currentProviderIds.length <= 1) {
-      toast.warning('Para desvincular o Google, primeiro adicione uma senha a sua conta.')
+      toast.warning(t('accountSettings.googleNeedsPassword'))
       return
     }
 
     const confirmed = await confirm({
-      title: 'Desvincular Google?',
-      description: 'Você ainda poderá entrar com e-mail e senha. Esta ação remove apenas o método de login Google.',
-      confirmLabel: 'Desvincular'
+      title: t('accountSettings.unlinkTitle'),
+      description: t('accountSettings.unlinkDescription'),
+      confirmLabel: t('accountSettings.unlink')
     })
 
     if (!confirmed) return
@@ -272,11 +274,11 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
       setUnlinking(true)
       const updatedUser = await unlink(currentUser, googleProviderId)
       await refreshFirebaseUser(updatedUser)
-      toast.success('Google desvinculado com sucesso.')
+      toast.success(t('accountSettings.googleUnlinked'))
     } catch (error) {
       toast.warning(isFirebaseAuthError(error)
-        ? getFirebaseAuthErrorMessage(error)
-        : 'Não foi possível desvincular Google agora. Tente novamente.')
+        ? t(`auth:${getFirebaseAuthErrorKey(error)}`)
+        : t('accountSettings.googleUnlinkError'))
     } finally {
       setUnlinking(false)
     }
@@ -290,10 +292,10 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
       setRefreshingEmail(true)
       await refreshFirebaseUser(currentUser)
       toast.info(auth.currentUser?.emailVerified
-        ? 'E-mail verificado confirmado.'
-        : 'Seu e-mail ainda não aparece como verificado.')
+        ? t('accountSettings.emailVerifiedConfirmed')
+        : t('accountSettings.emailStillUnverified'))
     } catch {
-      toast.error('Não foi possível atualizar o status do e-mail agora.')
+      toast.error(t('accountSettings.emailRefreshError'))
     } finally {
       setRefreshingEmail(false)
     }
@@ -305,18 +307,18 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
 
     if (currentUser.emailVerified) {
       await refreshFirebaseUser(currentUser)
-      toast.info('Este e-mail já está verificado.')
+      toast.info(t('accountSettings.emailAlreadyVerified'))
       return
     }
 
     try {
       setSendingVerification(true)
       await sendEmailVerification(currentUser)
-      toast.success('Enviamos um novo e-mail de verificação.')
+      toast.success(t('accountSettings.verificationSent'))
     } catch (error) {
       toast.warning(isFirebaseAuthError(error)
-        ? getFirebaseAuthErrorMessage(error)
-        : 'Não foi possível reenviar a verificação agora.')
+        ? t(`auth:${getFirebaseAuthErrorKey(error)}`)
+        : t('accountSettings.verificationError'))
     } finally {
       setSendingVerification(false)
     }
@@ -334,7 +336,7 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
     event.preventDefault()
 
     if (!firebaseUid) {
-      toast.warning('Perfil sem UID do Firebase. Entre novamente antes de salvar.')
+      toast.warning(t('accountSettings.profileMissingUid'))
       return
     }
 
@@ -355,9 +357,9 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
 
       localStorage.setItem(storageKey, JSON.stringify(updatedUser))
       onUserUpdate?.(updatedUser)
-      toast.success('Perfil atualizado com sucesso.')
+      toast.success(t('accountSettings.profileUpdated'))
     } catch {
-      toast.error('Não foi possível atualizar o perfil agora.')
+      toast.error(t('accountSettings.profileUpdateError'))
     } finally {
       setSavingProfile(false)
     }
@@ -366,22 +368,22 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
   if (!authReady) {
     return (
       <section className="account-settings">
-        <PageLoader label="Carregando configuracoes da conta..." />
+        <PageLoader label={t('accountSettings.loading')} />
       </section>
     )
   }
 
   return (
     <section className="account-settings">
-      <p className="dashboard-breadcrumb">CONFIGURAÇÕES - Conta</p>
+      <p className="dashboard-breadcrumb">{t('accountSettings.breadcrumb')}</p>
 
       <div className="settings-header">
         <div>
           <h1>
-            Configurações da <span>conta</span>.
+            {t('accountSettings.titleFirst')} <span>{t('accountSettings.titleHighlight')}</span>.
           </h1>
           <p className="dashboard-subtitle">
-            Gerencie dados básicos e os métodos usados para acessar sua conta Selectio.
+            {t('accountSettings.subtitle')}
           </p>
         </div>
       </div>
@@ -391,37 +393,37 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
           <div className="settings-card-title">
             <FaUserCircle />
             <div>
-              <span>Dados da conta</span>
+              <span>{t('accountSettings.accountData')}</span>
               <h2>{accountName}</h2>
             </div>
           </div>
 
           <dl className="settings-details">
             <div>
-              <dt>Nome</dt>
+              <dt>{t('accountSettings.name')}</dt>
               <dd>{accountName}</dd>
             </div>
             <div>
-              <dt>E-mail</dt>
+              <dt>{t('accountSettings.email')}</dt>
               <dd>{accountEmail}</dd>
             </div>
             <div>
-              <dt>Tipo de conta</dt>
+              <dt>{t('accountSettings.accountType')}</dt>
               <dd>{accountType}</dd>
             </div>
           </dl>
 
           <form className="profile-edit-form" onSubmit={handleSaveProfile}>
-            <h3>Editar dados básicos</h3>
+            <h3>{t('accountSettings.editBasics')}</h3>
             <div className="settings-field-grid">
               {profileFields.map((field) => (
                 <label key={field.name}>
-                  {field.label}
+                  {field.label || t(field.labelKey)}
                   <input
                     name={field.name}
                     value={profileForm[field.name] || ''}
                     onChange={handleProfileChange}
-                    placeholder={field.placeholder}
+                    placeholder={field.placeholder || t(field.placeholderKey)}
                   />
                 </label>
               ))}
@@ -429,7 +431,7 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
 
             <button type="submit" className="settings-secondary-button" disabled={savingProfile}>
               <FaSave />
-              {savingProfile ? 'Salvando...' : 'Salvar perfil'}
+              {savingProfile ? t('accountSettings.saving') : t('accountSettings.saveProfile')}
             </button>
           </form>
         </article>
@@ -438,20 +440,20 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
           <div className="settings-card-title">
             <FaKey />
             <div>
-              <span>Métodos de login</span>
-              <h2>Acesso</h2>
+              <span>{t('accountSettings.loginMethods')}</span>
+              <h2>{t('accountSettings.access')}</h2>
             </div>
           </div>
 
           <div className="login-methods">
             <LoginMethod
               icon={<FaEnvelope />}
-              title="E-mail e senha"
+              title={t('accountSettings.emailPassword')}
               linked={hasPasswordLinked}
               description={
                 hasPasswordLinked
-                  ? 'Senha ativa para login com e-mail.'
-                  : 'Adicione uma senha para ter um segundo método de acesso.'
+                  ? t('accountSettings.passwordActive')
+                  : t('accountSettings.passwordAddDescription')
               }
             />
 
@@ -461,25 +463,25 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
               linked={hasGoogleLinked}
               description={
                 hasGoogleLinked
-                  ? 'Google ativo para login social.'
-                  : 'Vincule uma conta Google para login social.'
+                  ? t('accountSettings.googleActive')
+                  : t('accountSettings.googleAddDescription')
               }
             />
           </div>
 
           {!isSameFirebaseUser && authReady && (
             <p className="settings-note">
-              Entre novamente para confirmar sua sessão do Firebase antes de alterar métodos de login.
+              {t('accountSettings.reauthNote')}
             </p>
           )}
 
           <div className={`email-verification-card ${isEmailVerified ? 'verified' : 'pending'}`}>
             <div>
-              <strong>{isEmailVerified ? 'E-mail verificado' : 'E-mail não verificado'}</strong>
+              <strong>{isEmailVerified ? t('accountSettings.emailVerified') : t('accountSettings.emailUnverified')}</strong>
               <p>
                 {isEmailVerified
-                  ? 'Este e-mail já foi confirmado no Firebase Auth.'
-                  : 'Confirme seu e-mail para manter a conta mais segura.'}
+                  ? t('accountSettings.emailVerifiedDescription')
+                  : t('accountSettings.emailUnverifiedDescription')}
               </p>
             </div>
             <span>{isEmailVerified ? <FaCheckCircle /> : <FaExclamationTriangle />}</span>
@@ -489,40 +491,40 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
             {!isEmailVerified && (
               <button type="button" className="settings-secondary-button" onClick={handleResendVerification} disabled={!isSameFirebaseUser || sendingVerification}>
                 <FaEnvelope />
-                {sendingVerification ? 'Enviando...' : 'Reenviar verificação'}
+                {sendingVerification ? t('accountSettings.sending') : t('accountSettings.resendVerification')}
               </button>
             )}
             <button type="button" className="settings-secondary-button" onClick={handleRefreshEmailStatus} disabled={!isSameFirebaseUser || refreshingEmail}>
               <FaRedo />
-              {refreshingEmail ? 'Atualizando...' : 'Atualizar status'}
+              {refreshingEmail ? t('accountSettings.updating') : t('accountSettings.updateStatus')}
             </button>
           </div>
 
           {!hasPasswordLinked && (
             <form className="password-setup" onSubmit={handleSavePassword}>
-              <h3>Adicionar senha</h3>
+              <h3>{t('accountSettings.addPassword')}</h3>
               <div className="settings-field-grid">
                 <label>
-                  Nova senha
+                  {t('accountSettings.newPassword')}
                   <input
                     type="password"
                     name="novaSenha"
                     value={passwordForm.novaSenha}
                     onChange={handlePasswordChange}
                     minLength={minPasswordLength}
-                    placeholder="Mínimo de 8 caracteres"
+                    placeholder={t('accountSettings.passwordPlaceholder')}
                   />
                 </label>
 
                 <label>
-                  Confirmar senha
+                  {t('accountSettings.confirmPassword')}
                   <input
                     type="password"
                     name="confirmarSenha"
                     value={passwordForm.confirmarSenha}
                     onChange={handlePasswordChange}
                     minLength={minPasswordLength}
-                    placeholder="Repita a senha"
+                    placeholder={t('accountSettings.confirmPasswordPlaceholder')}
                   />
                 </label>
               </div>
@@ -533,7 +535,7 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
                 disabled={!authReady || !isSameFirebaseUser || savingPassword}
               >
                 <FaKey />
-                {savingPassword ? 'Salvando...' : 'Adicionar senha'}
+                {savingPassword ? t('accountSettings.saving') : t('accountSettings.addPassword')}
               </button>
             </form>
           )}
@@ -546,7 +548,7 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
               disabled={!canLinkGoogle}
             >
               <FaGoogle />
-              {linking ? 'Vinculando...' : hasGoogleLinked ? 'Google vinculado' : 'Vincular conta Google'}
+              {linking ? t('accountSettings.linking') : hasGoogleLinked ? t('accountSettings.googleLinkedLabel') : t('accountSettings.linkGoogle')}
             </button>
 
             {hasGoogleLinked && (
@@ -557,7 +559,7 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
                 disabled={!canUnlinkGoogle}
               >
                 <FaUnlink />
-                {unlinking ? 'Desvinculando...' : 'Desvincular Google'}
+                {unlinking ? t('accountSettings.unlinking') : t('accountSettings.unlinkGoogle')}
               </button>
             )}
           </div>
@@ -567,17 +569,17 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
           <div className="settings-card-title">
             <FaRoute />
             <div>
-              <span>Onboarding</span>
-              <h2>Tour guiado</h2>
+              <span>{t('accountSettings.onboarding')}</span>
+              <h2>{t('accountSettings.guidedTour')}</h2>
             </div>
           </div>
 
           <p className="settings-note">
-            Reabra o tour inicial para rever rapidamente as principais áreas do painel.
+            {t('accountSettings.tourDescription')}
           </p>
 
           <button type="button" className="settings-secondary-button" onClick={repetirTour}>
-            <FaRoute /> Repetir tour
+            <FaRoute /> {t('accountSettings.repeatTour')}
           </button>
         </article>
 
@@ -587,6 +589,8 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
 }
 
 function LoginMethod({ icon, title, linked, description }) {
+  const { t } = useTranslation('common')
+
   return (
     <div className={`login-method ${linked ? 'linked' : 'unlinked'}`}>
       <div className="method-icon">{icon}</div>
@@ -596,7 +600,7 @@ function LoginMethod({ icon, title, linked, description }) {
       </div>
       <span className="method-badge">
         {linked ? <FaCheckCircle /> : <FaExclamationTriangle />}
-        {linked ? 'Vinculado' : 'Não vinculado'}
+        {linked ? t('accountSettings.linked') : t('accountSettings.notLinked')}
       </span>
     </div>
   )

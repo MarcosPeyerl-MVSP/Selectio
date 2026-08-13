@@ -5,6 +5,7 @@
 import './styles/EmpresaCandidatos.css'
 import { Navigate } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   FaCalendarAlt,
   FaCreditCard,
@@ -25,19 +26,17 @@ import { atualizarStatusCandidato, listarCandidatosPorEmpresa } from '../../serv
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { listarPagamentosPorEmpresa } from '../../services/firestorePagamentos'
 import { useToast } from '../../hooks/useToast'
+import { formatDate as formatLocalizedDate } from '../../i18n/formatters'
 import { isModoEmpresarial, podeGerenciarCandidatosEmpresa } from '../../utils/modoEmpresarial'
 
 // Abas de filtro exibidas na interface.
-const tabs = ['Todos', 'Indicado', 'Entrevista', 'Contratado', 'Cancelado']
-
-// Mapeia status retornados pelo Firestore para os textos exibidos na interface.
-const statusLabels = {
-  indicado: 'Indicado',
-  entrevista: 'Entrevista',
-  contratado: 'Contratado',
-  cancelado: 'Cancelado',
-  recusado: 'Cancelado',
-}
+const tabs = [
+  { value: 'all', labelKey: 'candidates.tabs.all' },
+  { value: 'indicado', labelKey: 'candidates.tabs.referred' },
+  { value: 'entrevista', labelKey: 'candidates.tabs.interview' },
+  { value: 'contratado', labelKey: 'candidates.tabs.hired' },
+  { value: 'cancelado', labelKey: 'candidates.tabs.cancelled' }
+]
 
 // Lista de imagens usadas como avatares visuais dos candidatos.
 const avatars = [
@@ -72,20 +71,16 @@ function normalizeText(value) {
     .toLowerCase()
 }
 
-// Responsabilidade: formatar datas para exibição no padrão brasileiro.
-function formatDate(value) {
-  if (!value) return 'Não informado'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-
-  return date.toLocaleDateString('pt-BR', {
+function formatDate(value, fallback) {
+  return formatLocalizedDate(value, {
     day: '2-digit',
     month: 'short',
     year: 'numeric'
-  }).replace('.', '')
+  }) || fallback
 }
 
 function CandidatosEmpresa() {
+  const { t, i18n } = useTranslation(['company', 'common'])
   const toast = useToast()
   // Mantém os dados da empresa autenticada durante a renderização da página.
   const [empresa] = useState(getEmpresa)
@@ -98,8 +93,8 @@ function CandidatosEmpresa() {
   const [busca, setBusca] = useState('')
 
   // Controla a aba de status ativa.
-  const [activeTab, setActiveTab] = useState('Todos')
-  const [filtroVaga, setFiltroVaga] = useState('Todas')
+  const [activeTab, setActiveTab] = useState('all')
+  const [filtroVaga, setFiltroVaga] = useState('all')
   const [pagina, setPagina] = useState(1)
   const [reloadKey, setReloadKey] = useState(0)
 
@@ -131,7 +126,7 @@ function CandidatosEmpresa() {
 
       if (!empresaUid) {
         setCandidatos([])
-        setError('Perfil da empresa sem UID do Firebase.')
+        setError(t('candidates.missingUid'))
         setLoading(false)
         return
       }
@@ -140,9 +135,9 @@ function CandidatosEmpresa() {
         setError('')
         const candidatosData = await listarCandidatosPorEmpresa(empresaUid)
         setCandidatos(candidatosData)
-      } catch (err) {
-        setError(err.message)
-        toast.error('Não foi possível carregar os candidatos.')
+      } catch {
+        setError(t('candidates.loadError'))
+        toast.error(t('candidates.loadError'))
       } finally {
         setLoading(false)
       }
@@ -157,16 +152,16 @@ function CandidatosEmpresa() {
     }
 
     fetchCandidatos()
-  }, [empresa, empresaUid, toast, reloadKey])
+  }, [empresa, empresaUid, reloadKey, t, toast])
 
   // Filtra candidatos por status selecionado e termo de busca.
   const candidatosFiltrados = useMemo(() => {
     const termo = normalizeText(busca)
 
     return candidatos.filter((candidato) => {
-      const status = statusLabels[candidato.status] || 'Indicado'
-      const matchesStatus = activeTab === 'Todos' || status === activeTab
-      const matchesVaga = filtroVaga === 'Todas' || candidato.vagaTitulo === filtroVaga
+      const status = normalizeCandidateStatus(candidato.status)
+      const matchesStatus = activeTab === 'all' || status === activeTab
+      const matchesVaga = filtroVaga === 'all' || candidato.vagaTitulo === filtroVaga
       const matchesBusca = !termo || [
         candidato.nome,
         candidato.cargoAtual,
@@ -180,8 +175,8 @@ function CandidatosEmpresa() {
 
   const vagasDisponiveis = useMemo(() => (
     [...new Set(candidatos.map((candidato) => candidato.vagaTitulo).filter(Boolean))]
-      .sort((a, b) => a.localeCompare(b, 'pt-BR'))
-  ), [candidatos])
+      .sort((a, b) => a.localeCompare(b, i18n.resolvedLanguage || i18n.language))
+  ), [candidatos, i18n.language, i18n.resolvedLanguage])
 
   const totalPaginas = Math.max(1, Math.ceil(candidatosFiltrados.length / PAGE_SIZE))
   const paginaAtual = Math.min(pagina, totalPaginas)
@@ -220,9 +215,9 @@ function CandidatosEmpresa() {
           <Sidebar type="empresa" user={empresa} />
           <main className="empresa-candidatos-page">
             <EstadoDados
-              title="Candidatos sob responsabilidade do RH"
-              description="No modo empresarial, o Setor RH administra candidatos. Este setor pode acompanhar o fluxo de aprovacao pelo painel."
-              actionLabel="Voltar ao painel"
+              title={t('candidates.restrictedTitle')}
+              description={t('candidates.restrictedDescription')}
+              actionLabel={t('candidates.backPanel')}
               onAction={() => window.location.assign('/painel/empresa')}
             />
           </main>
@@ -240,8 +235,8 @@ function CandidatosEmpresa() {
 
   const limparFiltros = () => {
     setBusca('')
-    setActiveTab('Todos')
-    setFiltroVaga('Todas')
+    setActiveTab('all')
+    setFiltroVaga('all')
     setPagina(1)
   }
 
@@ -250,7 +245,7 @@ function CandidatosEmpresa() {
     setUpdatingId(candidatoId)
 
     if (!empresaUid) {
-      toast.warning('Perfil da empresa sem UID do Firebase.')
+      toast.warning(t('candidates.missingUid'))
       setUpdatingId(null)
       return
     }
@@ -265,9 +260,9 @@ function CandidatosEmpresa() {
       setSelectedCandidate((current) => (
         current?.id === candidatoId ? { ...current, status } : current
       ))
-      toast.success('Status atualizado com sucesso.')
-    } catch (err) {
-      toast.error(err.message)
+      toast.success(t('candidates.statusUpdated'))
+    } catch {
+      toast.error(t('candidates.statusUpdateError'))
     } finally {
       setUpdatingId(null)
     }
@@ -311,10 +306,10 @@ function CandidatosEmpresa() {
 
         <main className="empresa-candidatos-page">
           <header className="empresa-candidatos-header">
-            <span>Gestão de talentos</span>
-            <h1>Visualização de Candidatos</h1>
-            <p>Curadoria estratégica de profissionais em processo seletivo. Analise o progresso das candidaturas através do pipeline editorial da Selectio.</p>
-            <a href="/vagas">Voltar para minhas vagas</a>
+            <span>{t('candidates.eyebrow')}</span>
+            <h1>{t('candidates.title')}</h1>
+            <p>{t('candidates.description')}</p>
+            <a href="/vagas">{t('candidates.backJobs')}</a>
           </header>
 
           {/* Barra de busca e filtros por status. */}
@@ -327,12 +322,12 @@ function CandidatosEmpresa() {
                   setBusca(event.target.value)
                   setPagina(1)
                 }}
-                placeholder="Buscar por nome ou cargo..."
+                placeholder={t('candidates.searchPlaceholder')}
               />
             </label>
 
             <label className="empresa-candidate-vacancy-filter">
-              <span>Vaga</span>
+              <span>{t('candidates.job')}</span>
               <select
                 value={filtroVaga}
                 onChange={(event) => {
@@ -340,7 +335,7 @@ function CandidatosEmpresa() {
                   setPagina(1)
                 }}
               >
-                <option value="Todas">Todas as vagas</option>
+                <option value="all">{t('candidates.allJobs')}</option>
                 {vagasDisponiveis.map((vagaTitulo) => (
                   <option key={vagaTitulo} value={vagaTitulo}>{vagaTitulo}</option>
                 ))}
@@ -350,15 +345,15 @@ function CandidatosEmpresa() {
             <div className="empresa-candidate-tabs">
               {tabs.map((tab) => (
                 <button
-                  key={tab}
+                  key={tab.value}
                   type="button"
-                  className={activeTab === tab ? 'active' : ''}
+                  className={activeTab === tab.value ? 'active' : ''}
                   onClick={() => {
-                    setActiveTab(tab)
+                    setActiveTab(tab.value)
                     setPagina(1)
                   }}
                 >
-                  {tab}
+                  {t(tab.labelKey)}
                 </button>
               ))}
             </div>
@@ -372,22 +367,22 @@ function CandidatosEmpresa() {
           )}
           {!loading && error && (
             <EstadoDados
-              actionLabel="Tentar novamente"
+              actionLabel={t('candidates.retry')}
               description={error}
               onAction={tentarNovamente}
-              title={navigator.onLine ? 'Não foi possível carregar os candidatos' : 'Você está sem conexão'}
+              title={navigator.onLine ? t('candidates.loadTitle') : t('candidates.offline')}
               tone={navigator.onLine ? 'error' : 'offline'}
             />
           )}
 
           {!loading && !error && !candidatosFiltrados.length && (
             <EstadoDados
-              actionLabel={candidatos.length ? 'Limpar filtros' : ''}
+              actionLabel={candidatos.length ? t('candidates.clearFilters') : ''}
               description={candidatos.length
-                ? 'Ajuste a busca, a vaga ou a etapa para visualizar outros resultados.'
-                : 'Os candidatos indicados para suas vagas aparecerão aqui.'}
+                ? t('candidates.filterDescription')
+                : t('candidates.emptyDescription')}
               onAction={limparFiltros}
-              title={candidatos.length ? 'Nenhum candidato encontrado' : 'Ainda não há candidatos'}
+              title={candidatos.length ? t('candidates.noResults') : t('candidates.emptyTitle')}
             />
           )}
 
@@ -409,16 +404,16 @@ function CandidatosEmpresa() {
                       <img src={avatars[index % avatars.length]} alt={candidato.nome} />
 
                       <strong className={`empresa-status-badge ${status}`}>
-                        {statusLabels[status] || 'Indicado'}
+                        {t(`common:statuses.candidates.${status}`, { defaultValue: status })}
                       </strong>
                     </div>
 
                     <h2>{candidato.nome}</h2>
-                    <p>{candidato.cargoAtual || candidato.vagaTitulo || 'Candidato indicado'}</p>
+                    <p>{candidato.cargoAtual || candidato.vagaTitulo || t('candidates.referredCandidate')}</p>
 
                     <div className="empresa-candidate-details">
-                      <span><FaUser /> {candidato.indicadorNome ? `Indicação de ${candidato.indicadorNome}` : candidato.origem}</span>
-                      <span><FaCalendarAlt /> Aplicado em {formatDate(candidato.aplicadoEm)}</span>
+                      <span><FaUser /> {candidato.indicadorNome ? t('candidates.referredBy', { name: candidato.indicadorNome }) : candidato.origem}</span>
+                      <span><FaCalendarAlt /> {t('candidates.appliedAt', { date: formatDate(candidato.aplicadoEm, t('candidates.notProvided')) })}</span>
                     </div>
 
                     <LinhaStatusCandidato
@@ -431,7 +426,7 @@ function CandidatosEmpresa() {
 
                     <div className="empresa-candidate-actions">
                       <button type="button" onClick={() => setSelectedCandidate(candidato)}>
-                        Ver Perfil
+                        {t('candidates.viewProfile')}
                       </button>
                       {podePagar && (
                         <button
@@ -441,10 +436,10 @@ function CandidatosEmpresa() {
                           disabled={recompensaPaga}
                         >
                           <FaCreditCard />
-                          {recompensaPaga ? 'Recompensa paga' : pagamentoPendente ? 'Pagamento pendente' : 'Pagar recompensa'}
+                          {recompensaPaga ? t('candidates.rewardPaid') : pagamentoPendente ? t('candidates.paymentPending') : t('candidates.payReward')}
                         </button>
                       )}
-                      <button type="button" aria-label="Mais opções">
+                      <button type="button" aria-label={t('candidates.moreOptions')}>
                         <FaEllipsisH />
                       </button>
                     </div>
@@ -492,3 +487,8 @@ function CandidatosEmpresa() {
 }
 
 export default CandidatosEmpresa
+
+function normalizeCandidateStatus(status) {
+  if (status === 'recusado') return 'cancelado'
+  return status || 'indicado'
+}

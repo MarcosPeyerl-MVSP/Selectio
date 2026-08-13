@@ -2,6 +2,7 @@ import './ToastProvider.css'
 
 import { useCallback, useMemo, useState } from 'react'
 import { FaCheckCircle, FaExclamationTriangle, FaInfoCircle, FaTimes } from 'react-icons/fa'
+import { useTranslation } from 'react-i18next'
 
 import { ToastContext } from './toastContext'
 
@@ -13,32 +14,33 @@ const iconByType = {
 }
 
 const titleByType = {
-  success: 'Sucesso',
-  error: 'Erro',
-  warning: 'Atenção',
-  info: 'Aviso'
+  success: 'toast.success',
+  error: 'toast.error',
+  warning: 'toast.warning',
+  info: 'toast.info'
 }
 
 const defaultDuration = 4200
 
-function normalizeToast(input, type) {
+function normalizeToast(input, type, t) {
   if (typeof input === 'string') {
     return {
       type,
-      title: titleByType[type],
+      title: t(titleByType[type]),
       message: input
     }
   }
 
   return {
     type,
-    title: input?.title || titleByType[type],
+    title: input?.title || t(titleByType[type]),
     message: input?.message || '',
     duration: input?.duration
   }
 }
 
 function ToastProvider({ children }) {
+  const { t } = useTranslation('common')
   const [toasts, setToasts] = useState([])
 
   const dismiss = useCallback((id) => {
@@ -47,7 +49,7 @@ function ToastProvider({ children }) {
 
   const addToast = useCallback((toastInput, type = 'info') => {
     const toast = {
-      ...normalizeToast(toastInput, type),
+      ...normalizeToast(toastInput, type, t),
       id: `${Date.now()}-${Math.random().toString(16).slice(2)}`
     }
 
@@ -59,7 +61,7 @@ function ToastProvider({ children }) {
     }
 
     return toast.id
-  }, [dismiss])
+  }, [dismiss, t])
 
   const value = useMemo(() => ({
     show: addToast,
@@ -84,6 +86,7 @@ function ToastProvider({ children }) {
 }
 
 function Toast({ toast, onDismiss }) {
+  const { t } = useTranslation('common')
   const Icon = iconByType[toast.type] || FaInfoCircle
 
   return (
@@ -97,7 +100,7 @@ function Toast({ toast, onDismiss }) {
         {toast.message && <p>{toast.message}</p>}
       </div>
 
-      <button type="button" onClick={onDismiss} aria-label="Fechar notificação">
+      <button type="button" onClick={onDismiss} aria-label={t('toast.close')}>
         <FaTimes />
       </button>
     </section>

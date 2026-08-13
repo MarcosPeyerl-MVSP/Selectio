@@ -2,18 +2,12 @@ import './DialogoConfirmacao.css'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FaExclamationTriangle, FaTimes } from 'react-icons/fa'
+import { useTranslation } from 'react-i18next'
 
 import { ContextoConfirmacao } from './contextoConfirmacao'
 
-const defaultOptions = {
-  title: 'Confirmar ação',
-  description: 'Tem certeza de que deseja continuar?',
-  confirmLabel: 'Confirmar',
-  cancelLabel: 'Cancelar',
-  tone: 'danger'
-}
-
 export function ProvedorConfirmacao({ children }) {
+  const { t } = useTranslation('common')
   const [dialog, setDialog] = useState(null)
   const resolverRef = useRef(null)
 
@@ -24,12 +18,19 @@ export function ProvedorConfirmacao({ children }) {
   }, [])
 
   const confirm = useCallback((options = {}) => {
-    setDialog({ ...defaultOptions, ...options })
+    setDialog({
+      title: t('confirmation.title'),
+      description: t('confirmation.description'),
+      confirmLabel: t('confirmation.confirm'),
+      cancelLabel: t('confirmation.cancel'),
+      tone: 'danger',
+      ...options
+    })
 
     return new Promise((resolve) => {
       resolverRef.current = resolve
     })
-  }, [])
+  }, [t])
 
   const value = useMemo(() => ({ confirm }), [confirm])
 
@@ -42,6 +43,8 @@ export function ProvedorConfirmacao({ children }) {
 }
 
 function DialogoConfirmacao({ options, onCancel, onConfirm }) {
+  const { t } = useTranslation('common')
+
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') onCancel()
@@ -61,7 +64,7 @@ function DialogoConfirmacao({ options, onCancel, onConfirm }) {
         aria-describedby="confirm-description"
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <button type="button" className="confirm-close" onClick={onCancel} aria-label="Fechar confirmação">
+        <button type="button" className="confirm-close" onClick={onCancel} aria-label={t('confirmation.close')}>
           <FaTimes />
         </button>
 

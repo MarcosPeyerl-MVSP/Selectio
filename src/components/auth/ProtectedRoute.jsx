@@ -1,9 +1,11 @@
 import { Navigate, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 import { useAuth } from '../../hooks/useAuth'
 import PageLoader from '../ui/PageLoader'
 
 function ProtectedRoute({ children, tipo }) {
+  const { t } = useTranslation('common')
   const location = useLocation()
   const {
     firebaseUser,
@@ -13,7 +15,7 @@ function ProtectedRoute({ children, tipo }) {
   } = useAuth()
 
   if (carregando || carregandoPerfil) {
-    return <PageLoader label="Validando sua sessão..." />
+    return <PageLoader label={t('loading.session')} />
   }
 
   if (!firebaseUser) {

@@ -5,6 +5,7 @@
 import './styles/EmpresaCriarVaga.css'
 import './styles/EmpresaEditarVaga.css'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
@@ -47,11 +48,11 @@ const getLocalDateInputValue = () => {
 }
 
 // Responsabilidade: formatar valores numéricos como moeda brasileira.
-const formatCurrency = (value) => {
+const formatCurrency = (value, language) => {
   const numbers = String(value || '').replace(/\D/g, '')
   const amount = Number(numbers || 0)
 
-  return amount.toLocaleString('pt-BR', {
+  return amount.toLocaleString(language, {
     style: 'currency',
     currency: 'BRL',
     maximumFractionDigits: 0,
@@ -71,7 +72,7 @@ const parseList = (value) => String(value || '')
 const listToText = (value) => Array.isArray(value) ? value.join(', ') : ''
 
 // Responsabilidade: normalizar partes do salário para o formato monetário usado no formulário.
-const formatSalaryPart = (value) => {
+const formatSalaryPart = (value, language) => {
   const text = String(value || '').trim()
   if (!text || text === 'A combinar') return ''
 
@@ -81,11 +82,11 @@ const formatSalaryPart = (value) => {
   const amount = Number(match[1].replace(/\./g, '').replace(',', '.'))
   const normalizedAmount = /k/i.test(match[0]) ? amount * 1000 : amount
 
-  return formatCurrency(String(normalizedAmount))
+  return formatCurrency(String(normalizedAmount), language)
 }
 
 // Responsabilidade: separar salário mínimo e máximo a partir do texto salvo na vaga.
-const getSalaryParts = (value) => {
+const getSalaryParts = (value, language) => {
   if (!value || value === 'A combinar') return ['', '']
 
   const parts = String(value)
@@ -94,31 +95,36 @@ const getSalaryParts = (value) => {
     .filter(Boolean)
 
   if (parts.length >= 2) {
-    return parts.map(formatSalaryPart).slice(0, 2)
+    return parts.map((part) => formatSalaryPart(part, language)).slice(0, 2)
   }
 
-  return [formatSalaryPart(parts[0]), '']
+  return [formatSalaryPart(parts[0], language), '']
 }
 
 // Responsabilidade: converter o texto de recompensa salvo na vaga para os campos do formulário.
-const getRecompensaForm = (value, tipoSalvo = '') => {
+const getRecompensaForm = (value, tipoSalvo = '', language = 'pt-BR') => {
+  const defaultReward = formatCurrency('2500', language)
+
   if (tipoSalvo === 'percentual') {
-    return { recompensaTipo: 'percentual', recompensaValor: 'R$ 2.500' }
+    return { recompensaTipo: 'percentual', recompensaValor: defaultReward }
   }
 
   if (tipoSalvo === 'personalizado') {
-    return { recompensaTipo: 'personalizado', recompensaValor: 'R$ 2.500' }
+    return { recompensaTipo: 'personalizado', recompensaValor: defaultReward }
   }
 
   if (value === '10% Salário') {
-    return { recompensaTipo: 'percentual', recompensaValor: 'R$ 2.500' }
+    return { recompensaTipo: 'percentual', recompensaValor: defaultReward }
   }
 
   if (value === 'Consultar') {
-    return { recompensaTipo: 'personalizado', recompensaValor: 'R$ 2.500' }
+    return { recompensaTipo: 'personalizado', recompensaValor: defaultReward }
   }
 
-  return { recompensaTipo: 'fixo', recompensaValor: value || 'R$ 2.500' }
+  return {
+    recompensaTipo: 'fixo',
+    recompensaValor: value ? formatCurrency(String(getNumberFromCurrency(value)), language) : defaultReward
+  }
 }
 
 // Responsabilidade: converter o tipo salvo da vaga para os campos do formulário,
@@ -139,12 +145,14 @@ const getTipoForm = (value) => {
 }
 
 function EditarVagaEmpresa() {
+  const { t, i18n } = useTranslation(['company', 'common'])
   // Identificador da vaga recebido pela rota.
   const { id } = useParams()
 
   // Hook usado para redirecionar a empresa em fluxos de login e pós-atualização.
   const navigate = useNavigate()
   const toast = useToast()
+  const language = i18n.resolvedLanguage || i18n.language
 
   // Recupera a empresa autenticada salva no localStorage.
   const [empresa] = useState(() => {
@@ -153,7 +161,10 @@ function EditarVagaEmpresa() {
   })
 
   // Controla os campos do formulário de edição.
-  const [form, setForm] = useState(initialForm)
+  const [form, setForm] = useState(() => ({
+    ...initialForm,
+    recompensaValor: formatCurrency('2500', language)
+  }))
 
   // Controla o envio da atualização.
   const [loading, setLoading] = useState(false)
@@ -183,21 +194,32 @@ function EditarVagaEmpresa() {
         const data = await buscarVagaPorId(id)
 
         if (!data) {
-          setMessage('Vaga não encontrada.')
-          toast.error('Vaga não encontrada.')
+          setMessage(t('jobForm.notFound'))
+          toast.error(t('jobForm.notFound'))
           return
         }
 
         if (String(data.empresaId || data.empresaUid || '') !== String(getFirebaseUid(empresa))) {
-          setMessage('Esta vaga não pertence à sua empresa.')
-          toast.warning('Esta vaga não pertence a sua empresa.')
+          setMessage(t('jobForm.notOwned'))
+          toast.warning(t('jobForm.notOwned'))
           setCanEdit(false)
           return
         }
 
-        const [salarioMin, salarioMax] = getSalaryParts(data.salario)
-        const recompensa = getRecompensaForm(data.recompensa, data.recompensaTipo)
-        const tipo = getTipoForm(data.tipo)
+        const [salarioMin, salarioMax] = data.salarioMinValor || data.salarioMaxValor
+          ? [
+              data.salarioMinValor ? formatCurrency(String(data.salarioMinValor), language) : '',
+              data.salarioMaxValor ? formatCurrency(String(data.salarioMaxValor), language) : ''
+            ]
+          : getSalaryParts(data.salario, language)
+        const recompensa = getRecompensaForm(data.recompensa, data.recompensaTipo, language)
+        const tipo = data.tipoBase
+          ? {
+              tipo: data.tipoBase,
+              tipoDataInicio: data.tipoDataInicio || '',
+              tipoDataFim: data.tipoDataFim || ''
+            }
+          : getTipoForm(data.tipo)
 
         // Preenche o formulário com os dados carregados da vaga.
         setForm({
@@ -219,8 +241,8 @@ function EditarVagaEmpresa() {
         })
         setCanEdit(true)
       } catch {
-        setMessage('Não foi possível carregar a vaga.')
-        toast.error('Não foi possível carregar a vaga.')
+        setMessage(t('jobForm.loadError'))
+        toast.error(t('jobForm.loadError'))
         setCanEdit(false)
       } finally {
         setLoadingVaga(false)
@@ -228,7 +250,7 @@ function EditarVagaEmpresa() {
     }
 
     fetchVaga()
-  }, [empresa, id, toast])
+  }, [empresa, id, language, t, toast])
 
   // Responsabilidade: atualizar campos simples do formulário.
   const handleChange = (event) => {
@@ -239,7 +261,7 @@ function EditarVagaEmpresa() {
   // Responsabilidade: atualizar campos monetários com formatação de moeda.
   const handleCurrencyChange = (event) => {
     const { name, value } = event.target
-    setForm((current) => ({ ...current, [name]: formatCurrency(value) }))
+    setForm((current) => ({ ...current, [name]: formatCurrency(value, language) }))
   }
 
   // Responsabilidade: definir o texto de recompensa conforme o tipo selecionado.
@@ -264,22 +286,22 @@ function EditarVagaEmpresa() {
     if (!empresa) return
 
     if (!form.titulo || !form.area || !form.descricaoLonga || !form.localizacao) {
-      setMessage('Preencha título, área, descrição e localização.')
-      toast.warning('Preencha título, área, descrição e localização.')
+      setMessage(t('jobForm.requiredFields'))
+      toast.warning(t('jobForm.requiredFields'))
       return
     }
 
     const salarioMin = getNumberFromCurrency(form.salarioMin)
     const salarioMax = getNumberFromCurrency(form.salarioMax)
     if (salarioMin && salarioMax && salarioMin > salarioMax) {
-      setMessage('O salário mínimo não pode ser maior que o máximo.')
-      toast.warning('O salário mínimo não pode ser maior que o máximo.')
+      setMessage(t('jobForm.salaryRangeError'))
+      toast.warning(t('jobForm.salaryRangeError'))
       return
     }
 
     if (form.tipo === 'Contrato temporário' && (!form.tipoDataInicio || !form.tipoDataFim)) {
-      setMessage('Informe a data de início e a data de fim do contrato temporário.')
-      toast.warning('Informe a data de início e a data de fim do contrato temporário.')
+      setMessage(t('jobForm.temporaryDatesRequired'))
+      toast.warning(t('jobForm.temporaryDatesRequired'))
       return
     }
 
@@ -288,8 +310,8 @@ function EditarVagaEmpresa() {
       && form.dataLimite
       && form.dataLimite < getLocalDateInputValue()
     ) {
-      setMessage('Atualize a data limite antes de reabrir esta vaga.')
-      toast.warning('Atualize a data limite antes de reabrir esta vaga.')
+      setMessage(t('jobForm.deadlineReopen'))
+      toast.warning(t('jobForm.deadlineReopen'))
       return
     }
 
@@ -308,9 +330,14 @@ function EditarVagaEmpresa() {
       empresaUid,
       localizacao: form.localizacao,
       salario,
+      salarioMinValor: salarioMin || null,
+      salarioMaxValor: salarioMax || null,
       tipo: form.tipo === 'Contrato temporário'
         ? `${form.tipo} (${formatDate(form.tipoDataInicio)} - ${formatDate(form.tipoDataFim)})`
         : form.tipo,
+      tipoBase: form.tipo,
+      tipoDataInicio: form.tipo === 'Contrato temporário' ? form.tipoDataInicio : '',
+      tipoDataFim: form.tipo === 'Contrato temporário' ? form.tipoDataFim : '',
       recompensa: getRecompensa(),
       recompensaTipo: form.recompensaTipo,
       recompensaValorFixo: form.recompensaTipo === 'fixo'
@@ -334,12 +361,12 @@ function EditarVagaEmpresa() {
       setLoading(true)
       await editarVaga(id, payload)
 
-      setMessage('Vaga atualizada com sucesso.')
-      toast.success('Vaga atualizada com sucesso.')
+      setMessage(t('jobForm.updated'))
+      toast.success(t('jobForm.updated'))
       navigate(`/vaga/${id}`)
     } catch {
-      setMessage('Não foi possível salvar a vaga no Firestore.')
-      toast.error('Não foi possível salvar a vaga no Firestore.')
+      setMessage(t('jobForm.saveError'))
+      toast.error(t('jobForm.saveError'))
     } finally {
       setLoading(false)
     }
@@ -357,81 +384,92 @@ function EditarVagaEmpresa() {
 
         <main className="empresa-vaga-content editar-vaga-content">
           <section className="empresa-vaga-intro">
-            <span>EDIÇÃO DE VAGA</span>
+            <span>{t('jobForm.editEyebrow')}</span>
             <h1>
-              Ajustar
+              {t('jobForm.editTitleFirst')}
               <br />
-              uma <strong>Vaga.</strong>
+              <strong>{t('jobForm.editTitleSecond')}</strong>
             </h1>
-            <p>Atualize informações da oportunidade, recompensa, requisitos e detalhes de contratação.</p>
-            <Link className="editar-vaga-back" to="/vagas">Voltar para vagas</Link>
+            <p>{t('jobForm.editDescription')}</p>
+            <Link className="editar-vaga-back" to="/vagas">{t('jobForm.backJobs')}</Link>
           </section>
 
           {loadingVaga ? (
-            <PageLoader label="Carregando vaga..." compact />
+            <PageLoader label={t('jobForm.loading')} compact />
           ) : !canEdit ? (
             <section className="vaga-step">
-              <p>{message || 'Não foi possível editar esta vaga.'}</p>
-              <Link className="editar-vaga-back" to="/vagas">Voltar para vagas</Link>
+              <p>{message || t('jobForm.editUnavailable')}</p>
+              <Link className="editar-vaga-back" to="/vagas">{t('jobForm.backJobs')}</Link>
             </section>
           ) : (
             <form className="empresa-vaga-form" onSubmit={handleSubmit}>
               <section className="vaga-step">
                 <div className="step-header">
-                  <h2>Fundamentos da Vaga</h2>
-                  <span>PASSO 1 DE 4</span>
+                  <h2>{t('jobForm.steps.foundations')}</h2>
+                  <span>{t('jobForm.steps.step1')}</span>
                 </div>
 
-                <label>Título do cargo / função</label>
+                <label>{t('jobForm.fields.title')}</label>
                 <input name="titulo" value={form.titulo} onChange={handleChange} />
 
                 <div className="form-grid three">
                   <div>
-                    <label>Indústria / Área</label>
+                    <label>{t('jobForm.fields.area')}</label>
                     <input name="area" value={form.area} onChange={handleChange} />
                   </div>
                   <div>
-                    <label>Faixa salarial</label>
-                    <input name="salarioMin" placeholder="Mín." value={form.salarioMin} onChange={handleCurrencyChange} />
+                    <label>{t('jobForm.fields.salaryRange')}</label>
+                    <input name="salarioMin" placeholder={t('jobForm.placeholders.minimum')} value={form.salarioMin} onChange={handleCurrencyChange} />
                   </div>
                   <div>
                     <label>&nbsp;</label>
-                    <input name="salarioMax" placeholder="Máx." value={form.salarioMax} onChange={handleCurrencyChange} />
+                    <input name="salarioMax" placeholder={t('jobForm.placeholders.maximum')} value={form.salarioMax} onChange={handleCurrencyChange} />
                   </div>
                 </div>
 
                 <div className="form-grid two">
                   <div>
-                    <label>Experiência requerida</label>
+                    <label>{t('jobForm.fields.experience')}</label>
                     <div className="option-grid">
-                      {['Júnior', 'Pleno', 'Sênior', 'Personalizado'].map((option) => (
+                      {[
+                        ['Júnior', t('jobForm.experience.junior')],
+                        ['Pleno', t('jobForm.experience.mid')],
+                        ['Sênior', t('jobForm.experience.senior')],
+                        ['Personalizado', t('jobForm.experience.custom')]
+                      ].map(([option, label]) => (
                         <button key={option} type="button" className={form.experiencia === option ? 'selected' : ''} onClick={() => setForm((current) => ({ ...current, experiencia: option }))}>
-                          {option}
+                          {label}
                         </button>
                       ))}
                     </div>
                     {form.experiencia === 'Personalizado' && (
-                      <textarea className="small inline-textarea" name="experienciaPersonalizada" value={form.experienciaPersonalizada} onChange={handleChange} />
+                      <textarea className="small inline-textarea" name="experienciaPersonalizada" placeholder={t('jobForm.placeholders.customExperience')} value={form.experienciaPersonalizada} onChange={handleChange} />
                     )}
                   </div>
 
                   <div>
-                    <label>Tipo de contratação</label>
+                    <label>{t('jobForm.fields.employmentType')}</label>
                     <div className="option-grid">
-                      {['Tempo Integral', 'Freelance', 'Meio Período', 'Remoto', 'Contrato temporário'].map((option) => (
+                      {[
+                        ['Tempo Integral', t('jobForm.employment.fullTime')],
+                        ['Freelance', t('jobForm.employment.freelance')],
+                        ['Meio Período', t('jobForm.employment.partTime')],
+                        ['Remoto', t('jobForm.employment.remote')],
+                        ['Contrato temporário', t('jobForm.employment.temporary')]
+                      ].map(([option, label]) => (
                         <button key={option} type="button" className={form.tipo === option ? 'selected outline' : ''} onClick={() => setForm((current) => ({ ...current, tipo: option }))}>
-                          {option}
+                          {label}
                         </button>
                       ))}
                     </div>
                     {form.tipo === 'Contrato temporário' && (
                       <div className="temporary-contract-grid">
                         <div>
-                          <label>Data de início</label>
+                          <label>{t('jobForm.fields.startDate')}</label>
                           <input className="inline-input" name="tipoDataInicio" type="date" value={form.tipoDataInicio} onChange={handleChange} />
                         </div>
                         <div>
-                          <label>Data de fim</label>
+                          <label>{t('jobForm.fields.endDate')}</label>
                           <input className="inline-input" name="tipoDataFim" type="date" value={form.tipoDataFim} onChange={handleChange} />
                         </div>
                       </div>
@@ -442,24 +480,24 @@ function EditarVagaEmpresa() {
 
               <section className="vaga-step">
                 <div className="step-header">
-                  <h2>Descrição da vaga</h2>
-                  <span>PASSO 2 DE 4</span>
+                  <h2>{t('jobForm.steps.description')}</h2>
+                  <span>{t('jobForm.steps.step2')}</span>
                 </div>
 
-                <label>Resumo da vaga</label>
+                <label>{t('jobForm.fields.summary')}</label>
                 <input name="descricaoCurta" value={form.descricaoCurta} onChange={handleChange} />
 
-                <label>Descrição da vaga</label>
+                <label>{t('jobForm.fields.description')}</label>
                 <textarea name="descricaoLonga" value={form.descricaoLonga} onChange={handleChange} />
 
                 <div className="form-grid two">
                   <div>
-                    <label>Requisitos</label>
+                    <label>{t('jobForm.fields.requirements')}</label>
                     <textarea className="small" name="requisitos" value={form.requisitos} onChange={handleChange} />
                     <TokenPreview items={parseList(form.requisitos)} />
                   </div>
                   <div>
-                    <label>Habilidades</label>
+                    <label>{t('jobForm.fields.skills')}</label>
                     <textarea className="small" name="habilidades" value={form.habilidades} onChange={handleChange} />
                     <TokenPreview items={parseList(form.habilidades)} />
                   </div>
@@ -467,12 +505,12 @@ function EditarVagaEmpresa() {
 
                 <div className="form-grid two">
                   <div>
-                    <label>Benefícios</label>
+                    <label>{t('jobForm.fields.benefits')}</label>
                     <textarea className="small" name="beneficios" value={form.beneficios} onChange={handleChange} />
                     <TokenPreview items={parseList(form.beneficios)} />
                   </div>
                   <div>
-                    <label>Imagem da vaga</label>
+                    <label>{t('jobForm.fields.image')}</label>
                     <input name="imagem" value={form.imagem} onChange={handleChange} />
                   </div>
                 </div>
@@ -481,17 +519,17 @@ function EditarVagaEmpresa() {
               <section className="vaga-step">
                 <div className="step-header">
                   <div>
-                    <h2>Premiação por Indicação</h2>
-                    <p>Ajuste o incentivo exibido para indicadores.</p>
+                    <h2>{t('jobForm.steps.reward')}</h2>
+                    <p>{t('jobForm.rewardEditDescription')}</p>
                   </div>
-                  <span>PASSO 3 DE 4</span>
+                  <span>{t('jobForm.steps.step3')}</span>
                 </div>
 
                 <div className="reward-grid">
                   {[
-                    ['fixo', 'Valor fixo', form.recompensaValor],
-                    ['percentual', 'Percentual', '10% Salário'],
-                    ['personalizado', 'Personalizado', 'Consultar'],
+                    ['fixo', t('jobForm.fixedValue'), form.recompensaValor],
+                    ['percentual', t('jobForm.percentage'), t('jobForm.salaryPercentage')],
+                    ['personalizado', t('jobForm.custom'), t('jobForm.consult')],
                   ].map(([value, label, text]) => (
                     <button key={value} type="button" className={form.recompensaTipo === value ? 'selected' : ''} onClick={() => setForm((current) => ({ ...current, recompensaTipo: value }))}>
                       <span>{label}</span>
@@ -506,27 +544,27 @@ function EditarVagaEmpresa() {
 
               <section className="vaga-step">
                 <div className="step-header">
-                  <h2>Logística e Prazos</h2>
-                  <span>PASSO 4 DE 4</span>
+                  <h2>{t('jobForm.steps.logistics')}</h2>
+                  <span>{t('jobForm.steps.step4')}</span>
                 </div>
 
                 <div className="form-grid two">
                   <div>
-                    <label>Localização</label>
+                    <label>{t('jobForm.fields.location')}</label>
                     <input name="localizacao" value={form.localizacao} onChange={handleChange} />
                   </div>
                   <div>
-                    <label>Data limite</label>
+                    <label>{t('jobForm.fields.deadline')}</label>
                     <input name="dataLimite" type="date" value={form.dataLimite} onChange={handleChange} />
                   </div>
                 </div>
 
-                <label>Status da vaga</label>
+                <label>{t('jobForm.fields.status')}</label>
                 <div className="option-grid">
                   {[
-                    ['aberta', 'Aberta'],
-                    ['pausada', 'Pausada'],
-                    ['encerrada', 'Encerrada']
+                    ['aberta', t('common:statuses.jobs.aberta')],
+                    ['pausada', t('common:statuses.jobs.pausada')],
+                    ['encerrada', t('common:statuses.jobs.encerrada')]
                   ].map(([value, label]) => (
                     <button
                       key={value}
@@ -544,9 +582,9 @@ function EditarVagaEmpresa() {
               {message && <p className="empresa-vaga-message">{message}</p>}
 
               <div className="form-actions">
-                <Link className="draft-btn" to={`/vaga/${id}`}>Cancelar</Link>
+                <Link className="draft-btn" to={`/vaga/${id}`}>{t('jobForm.cancel')}</Link>
                 <button type="submit" className="finish-btn" disabled={loading}>
-                  {loading ? 'Salvando...' : 'Salvar ajustes'}
+                  {loading ? t('jobForm.saving') : t('jobForm.saveAdjustments')}
                 </button>
               </div>
             </form>

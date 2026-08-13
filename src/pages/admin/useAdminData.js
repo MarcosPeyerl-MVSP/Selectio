@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export function useAdminData(loader) {
+  const { t } = useTranslation('common')
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [hasError, setHasError] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
@@ -11,12 +13,12 @@ export function useAdminData(loader) {
 
     const load = async () => {
       try {
-        setError('')
+        setHasError(false)
         const result = await loader()
         if (active) setData(result)
-      } catch (loadError) {
+      } catch {
         if (active) {
-          setError(loadError.message || 'Não foi possível carregar os dados administrativos.')
+          setHasError(true)
         }
       } finally {
         if (active) setLoading(false)
@@ -35,5 +37,10 @@ export function useAdminData(loader) {
     setReloadKey((value) => value + 1)
   }, [])
 
-  return { data, loading, error, reload }
+  return {
+    data,
+    loading,
+    error: hasError ? t('generic.loadAreaError') : '',
+    reload,
+  }
 }

@@ -378,16 +378,24 @@ service cloud.firestore {
           'link',
           'lida',
           'mensagem',
+          'mensagemKey',
+          'mensagemParams',
           'metadata',
           'origem',
           'tipo',
           'titulo',
+          'tituloKey',
+          'tituloParams',
           'userId'
         ])
         && request.resource.data.userId is string
         && request.resource.data.tipo is string
         && request.resource.data.titulo is string
+        && (!('tituloKey' in request.resource.data) || request.resource.data.tituloKey is string)
+        && (!('tituloParams' in request.resource.data) || request.resource.data.tituloParams is map)
         && request.resource.data.mensagem is string
+        && (!('mensagemKey' in request.resource.data) || request.resource.data.mensagemKey is string)
+        && (!('mensagemParams' in request.resource.data) || request.resource.data.mensagemParams is map)
         && request.resource.data.link is string
         && request.resource.data.metadata is map
         && request.resource.data.lida == false
@@ -594,6 +602,8 @@ service cloud.firestore {
           'criadoEm',
           'criadoPor',
           'descricao',
+          'descricaoKey',
+          'descricaoParams',
           'empresaId',
           'entrevistaId',
           'indicadorId',
@@ -601,6 +611,8 @@ service cloud.firestore {
           'statusAtual',
           'tipo',
           'titulo',
+          'tituloKey',
+          'tituloParams',
           'vagaId',
           'vagaTitulo'
         ])
@@ -611,7 +623,11 @@ service cloud.firestore {
         && request.resource.data.statusAtual is string
         && request.resource.data.tipo is string
         && request.resource.data.titulo is string
-        && request.resource.data.descricao is string;
+        && (!('tituloKey' in request.resource.data) || request.resource.data.tituloKey is string)
+        && (!('tituloParams' in request.resource.data) || request.resource.data.tituloParams is map)
+        && request.resource.data.descricao is string
+        && (!('descricaoKey' in request.resource.data) || request.resource.data.descricaoKey is string)
+        && (!('descricaoParams' in request.resource.data) || request.resource.data.descricaoParams is map);
     }
 
     function historyCandidateWasCreated(data) {

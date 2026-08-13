@@ -422,7 +422,7 @@ export const importarCandidatosPreSalvos = async ({ candidatos, indicadorId }) =
         rejeitados.push({
           linha,
           candidato: candidatoDadosEntrada,
-          motivo: duplicateEmailError().message
+          motivoKey: 'candidateRegistration.csv.duplicateExisting'
         })
         return
       }
@@ -435,11 +435,11 @@ export const importarCandidatosPreSalvos = async ({ candidatos, indicadorId }) =
         candidatoRef,
         linha
       })
-    } catch (error) {
+    } catch {
       rejeitados.push({
         linha,
         candidato: candidatoDadosEntrada,
-        motivo: error.message
+        motivoKey: 'candidateRegistration.csv.recordRejected'
       })
     }
   })
@@ -469,12 +469,12 @@ export const importarCandidatosPreSalvos = async ({ candidatos, indicadorId }) =
           origem: 'csv'
         }))
       })
-    } catch (error) {
+    } catch {
       grupo.forEach(({ candidato, linha }) => {
         rejeitados.push({
           linha,
           candidato,
-          motivo: error.message || 'Não foi possível importar este candidato.'
+          motivoKey: 'candidateRegistration.csv.recordRejected'
         })
       })
     }

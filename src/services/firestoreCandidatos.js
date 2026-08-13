@@ -210,7 +210,13 @@ export const criarCandidatoIndicado = async ({
     indicadorId,
     tipo: 'indicacao_criada',
     titulo: 'Indicação enviada',
+    tituloKey: 'notifications.messages.referralSentTitle',
     descricao: `${dados.nome || 'Candidato'} foi indicado para ${vaga.titulo || 'a vaga'}.`,
+    descricaoKey: 'candidateProfile.historyEvents.referralCreated',
+    descricaoParams: {
+      candidate: dados.nome || '',
+      job: vaga.titulo || ''
+    },
     statusAtual: 'indicado',
     criadoPor: indicadorId
   })
@@ -307,7 +313,19 @@ export const atualizarStatusCandidato = async ({ candidatoId, status, empresaId 
         : status === 'cancelado'
           ? 'Processo cancelado'
         : 'Status do candidato atualizado',
+    tituloKey: status === 'contratado'
+      ? 'notifications.messages.candidate.contratadoTitle'
+      : status === 'recusado'
+        ? 'notifications.messages.candidate.recusadoTitle'
+        : status === 'cancelado'
+          ? 'notifications.messages.candidate.canceladoTitle'
+          : 'candidateProfile.historyEvents.candidateStatusTitle',
     descricao: `Status alterado de ${candidato.status || 'indicado'} para ${status}.`,
+    descricaoKey: 'candidateProfile.historyEvents.statusChanged',
+    descricaoParams: {
+      fromStatus: candidato.status || 'indicado',
+      toStatus: status
+    },
     statusAnterior: candidato.status || 'indicado',
     statusAtual: status,
     criadoPor: empresaId

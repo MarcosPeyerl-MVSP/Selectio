@@ -1,6 +1,7 @@
 import './Login.css'
 
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { FaApple, FaEye, FaEyeSlash, FaGoogle, FaLock, FaUser } from 'react-icons/fa'
 import {
@@ -14,7 +15,7 @@ import {
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import { auth } from '../../services/firebase'
-import { getFirebaseAuthErrorMessage, isFirebaseAuthError } from '../../services/errosAutenticacao'
+import { getFirebaseAuthErrorKey, isFirebaseAuthError } from '../../services/errosAutenticacao'
 import { buscarPerfilUsuario } from '../../services/firestoreUsers'
 import { useToast } from '../../hooks/useToast'
 import { useAuth } from '../../hooks/useAuth'
@@ -28,6 +29,7 @@ import {
 } from '../../utils/modoEmpresarial'
 
 function Login() {
+  const { t } = useTranslation('auth')
   const [form, setForm] = useState({ login: '', senha: '' })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -74,26 +76,26 @@ function Login() {
         senha: ''
       })
       setLoading(false)
-      toast.info('Login validado. Agora escolha o setor empresarial.')
+      toast.info(t('login.validatedChooseSector'))
       return true
     }
 
     adotarPerfil(perfil)
 
     if (perfil.tipo === 'indicador') {
-      toast.success('Login realizado com sucesso.')
+      toast.success(t('login.success'))
       navigate(redirectTo || '/painel/indicador')
       return true
     }
 
     if (perfil.tipo === 'empresa') {
-      toast.success('Login realizado com sucesso.')
+      toast.success(t('login.success'))
       navigate(redirectTo || '/painel/empresa')
       return true
     }
 
     if (perfil.tipo === 'admin') {
-      toast.success('Acesso administrativo validado.')
+      toast.success(t('login.adminSuccess'))
       navigate(redirectTo || '/admin/visao-geral')
       return true
     }
@@ -110,7 +112,7 @@ function Login() {
     const senha = form.senha
 
     if (!login || !senha) {
-      const message = 'Preencha e-mail e senha.'
+      const message = t('errors.fillCredentials')
       setError(message)
       toast.warning(message)
       return
@@ -128,25 +130,25 @@ function Login() {
 
       if (!perfil) {
         await signOut(auth)
-        showError('Sua conta existe no Firebase, mas ainda não possui perfil no Selectio.')
+        showError(t('errors.missingProfile'))
         setLoading(false)
         return
       }
 
       if (!storeProfileAndNavigate(perfil)) {
         await signOut(auth)
-        showError('Perfil de usuário inválido. Entre em contato com o suporte da Selectio.')
+        showError(t('errors.invalidProfile'))
         setLoading(false)
       }
     } catch (error) {
       if (isFirebaseAuthError(error)) {
-        showError(getFirebaseAuthErrorMessage(error))
+        showError(t(getFirebaseAuthErrorKey(error)))
       } else {
         if (firebaseAuthenticated) {
           await signOut(auth).catch(() => {})
         }
 
-        showError('Não foi possível buscar seu perfil no Firestore. Verifique sua conexão e tente novamente.')
+        showError(t('errors.profileLoad'))
       }
 
       setLoading(false)
@@ -168,7 +170,7 @@ function Login() {
 
       if (!perfil) {
         await signOut(auth)
-        const message = 'Esta conta Google ainda não possui perfil no Selectio. Conclua o cadastro primeiro.'
+        const message = t('errors.googleMissingProfile')
         setError(message)
         toast.warning(message)
         setLoading(false)
@@ -177,14 +179,14 @@ function Login() {
 
       if (!storeProfileAndNavigate(perfil)) {
         await signOut(auth)
-        showError('Perfil de usuário inválido. Entre em contato com o suporte da Selectio.')
+        showError(t('errors.invalidProfile'))
         setLoading(false)
       }
     } catch (error) {
       if (isFirebaseAuthError(error)) {
-        showError(getFirebaseAuthErrorMessage(error))
+        showError(t(getFirebaseAuthErrorKey(error)))
       } else {
-        showError('Não foi possível entrar com Google. Verifique sua conexão e tente novamente.')
+        showError(t('errors.googleLogin'))
       }
 
       setLoading(false)
@@ -199,7 +201,7 @@ function Login() {
     if (!pendingPerfilEmpresarial) return
 
     if (!setorForm.senha.trim()) {
-      const message = 'Informe a senha do setor selecionado.'
+      const message = t('errors.sectorPasswordRequired')
       setError(message)
       toast.warning(message)
       return
@@ -210,7 +212,7 @@ function Login() {
     const senhaHashDigitada = await hashSenhaSetor(setorForm.senha, pendingPerfilEmpresarial.firebaseUid || pendingPerfilEmpresarial.uid)
 
     if (!setor || !senhaHashSalva || senhaHashDigitada !== senhaHashSalva) {
-      const message = 'Senha do setor incorreta.'
+      const message = t('errors.sectorPasswordIncorrect')
       setError(message)
       toast.error(message)
       return
@@ -228,7 +230,9 @@ function Login() {
     setPendingPerfilEmpresarial(null)
     setSetorForm({ setorId: setoresEmpresariais[0].id, senha: '' })
     adotarPerfil(perfilComSetor)
-    toast.success(`Acesso liberado para ${setor.nome}.`)
+    toast.success(t('login.sectorAccessGranted', {
+      sector: t(`sectors.${setor.id}`, { defaultValue: setor.nome })
+    }))
     navigate(redirectTo || '/painel/empresa')
   }
 
@@ -246,7 +250,7 @@ function Login() {
     const email = form.login.trim()
 
     if (!email) {
-      const message = 'Informe seu e-mail para receber o link de redefinição.'
+      const message = t('errors.resetEmailRequired')
       setError(message)
       toast.warning(message)
       return
@@ -255,14 +259,14 @@ function Login() {
     try {
       setLoading(true)
       await sendPasswordResetEmail(auth, email)
-      const message = 'Se este e-mail estiver cadastrado, enviaremos um link de redefinição.'
+      const message = t('login.resetSent')
       setSuccess(message)
       toast.success(message)
     } catch (error) {
       if (isFirebaseAuthError(error)) {
-        showError(getFirebaseAuthErrorMessage(error))
+        showError(t(getFirebaseAuthErrorKey(error)))
       } else {
-        showError('Não foi possível solicitar a redefinição agora. Verifique sua conexão e tente novamente.')
+        showError(t('errors.resetFailed'))
       }
     } finally {
       setLoading(false)
@@ -275,16 +279,16 @@ function Login() {
 
       <main className="login-container">
         <div className="login-card">
-          <h1>{pendingPerfilEmpresarial ? 'Escolha o setor' : 'Entre na sua conta'}</h1>
+          <h1>{pendingPerfilEmpresarial ? t('login.chooseSectorTitle') : t('login.title')}</h1>
 
           {pendingPerfilEmpresarial ? (
             <form className="login-form setor-login-form" onSubmit={handleSetorSubmit}>
               <p className="setor-login-copy">
-                Selecione o setor empresarial e informe a senha definida pelo Administrador Empresa.
+                {t('login.sectorInstructions')}
               </p>
 
               <label>
-                Setor
+                {t('login.sector')}
                 <select
                   value={setorForm.setorId}
                   onChange={(event) => setSetorForm((current) => ({
@@ -294,18 +298,20 @@ function Login() {
                   }))}
                 >
                   {setoresEmpresariais.map((setor) => (
-                    <option key={setor.id} value={setor.id}>{setor.nome}</option>
+                    <option key={setor.id} value={setor.id}>
+                      {t(`sectors.${setor.id}`, { defaultValue: setor.nome })}
+                    </option>
                   ))}
                 </select>
               </label>
 
               <label>
-                Senha do setor
+                {t('login.sectorPassword')}
                 <div className="input-group">
                   <span className="input-icon"><FaLock /></span>
                   <input
                     type="password"
-                    placeholder="Senha do setor"
+                    placeholder={t('login.sectorPassword')}
                     value={setorForm.senha}
                     onChange={(event) => setSetorForm((current) => ({
                       ...current,
@@ -318,10 +324,10 @@ function Login() {
               {error && <p className="login-error">{error}</p>}
 
               <button type="submit" className="login-button">
-                Acessar setor
+                {t('login.accessSector')}
               </button>
               <button type="button" className="sector-cancel-button" onClick={handleCancelarSetor}>
-                Trocar conta
+                {t('login.switchAccount')}
               </button>
             </form>
           ) : (
@@ -329,7 +335,7 @@ function Login() {
 
           <form className="login-form" onSubmit={handleSubmit}>
             <label>
-              E-mail
+              {t('login.email')}
               <div className="input-group">
                 <span className="input-icon"><FaUser /></span>
                 <input
@@ -343,7 +349,7 @@ function Login() {
             </label>
 
             <label>
-              Senha
+              {t('login.password')}
               <div className="input-group">
                 <span className="input-icon"><FaLock /></span>
                 <input
@@ -358,7 +364,7 @@ function Login() {
                   type="button"
                   className="password-visibility"
                   onClick={() => setShowPassword((visible) => !visible)}
-                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
                 >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
@@ -370,7 +376,7 @@ function Login() {
                 onClick={handlePasswordReset}
                 disabled={loading}
               >
-                Esqueceu sua senha?
+                {t('login.forgotPassword')}
               </button>
             </label>
 
@@ -378,12 +384,12 @@ function Login() {
             {success && <p className="login-success">{success}</p>}
 
             <button type="submit" className="login-button" disabled={loading}>
-              {loading ? 'Entrando...' : 'Entrar ->'}
+              {loading ? t('login.submitting') : t('login.submit')}
             </button>
           </form>
 
           <div className="login-divider">
-            <span>ou continue com</span>
+            <span>{t('login.continueWith')}</span>
           </div>
 
           <div className="social-login">
@@ -394,7 +400,7 @@ function Login() {
           </div>
 
           <p className="register-link">
-            Não tem uma conta? <Link to="/cadastro">Cadastre-se</Link>
+            {t('login.noAccount')} <Link to="/cadastro">{t('login.signUp')}</Link>
           </p>
             </>
           )}

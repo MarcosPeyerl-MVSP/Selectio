@@ -1,6 +1,7 @@
 import './Sidebar.css'
 import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   FaBars,
   FaBriefcase,
@@ -28,30 +29,30 @@ import {
 
 const sidebarConfig = {
   indicador: {
-    title: 'PAINEL DO INDICADOR',
-    userLabel: 'Indicador',
-    action: { to: '/candidatos/indicador/novo', label: 'Candidato', icon: FaPlus },
+    titleKey: 'sidebar.referrerPanel',
+    userLabelKey: 'account.referrer',
+    action: { to: '/candidatos/indicador/novo', labelKey: 'sidebar.candidate', icon: FaPlus },
     items: [
-      { to: '/vagas', label: 'Vagas', icon: FaBriefcase, activeOn: ['/vagas'], tourKey: 'vagas' },
-      { to: '/candidatos/indicador', label: 'Candidatos', icon: FaUserFriends, activeOn: ['/candidatos/indicador', '/indicar'], tourKey: 'candidatos' },
-      { to: '/painel/indicador/dashboard', label: 'Dashboard', icon: FaChartBar, exact: true, tourKey: 'dashboard' },
-      { to: '/painel/indicador/dashboard?secao=perfil', label: 'Perfil', icon: FaUserTie, tourKey: 'perfil' },
-      { to: '/painel/indicador/dashboard?secao=financeiro', label: 'Financeiro', icon: FaMoneyBillWave, tourKey: 'financeiro' },
-      { to: '/painel/indicador/dashboard?secao=configuracoes', label: 'Configurações', icon: FaCog },
+      { to: '/vagas', labelKey: 'sidebar.jobs', icon: FaBriefcase, activeOn: ['/vagas'], tourKey: 'vagas' },
+      { to: '/candidatos/indicador', labelKey: 'sidebar.candidates', icon: FaUserFriends, activeOn: ['/candidatos/indicador', '/indicar'], tourKey: 'candidatos' },
+      { to: '/painel/indicador/dashboard', labelKey: 'sidebar.dashboard', icon: FaChartBar, exact: true, tourKey: 'dashboard' },
+      { to: '/painel/indicador/dashboard?secao=perfil', labelKey: 'sidebar.profile', icon: FaUserTie, tourKey: 'perfil' },
+      { to: '/painel/indicador/dashboard?secao=financeiro', labelKey: 'sidebar.finance', icon: FaMoneyBillWave, tourKey: 'financeiro' },
+      { to: '/painel/indicador/dashboard?secao=configuracoes', labelKey: 'sidebar.settings', icon: FaCog },
     ],
   },
   empresa: {
-    title: 'PAINEL DA EMPRESA',
-    userLabel: 'Empresa',
-    action: { to: '/criar-vaga/empresa', label: 'Nova vaga', icon: FaPlus },
+    titleKey: 'sidebar.companyPanel',
+    userLabelKey: 'account.company',
+    action: { to: '/criar-vaga/empresa', labelKey: 'sidebar.newJob', icon: FaPlus },
     items: [
-      { to: '/vagas', label: 'Vagas', icon: FaBriefcase, activeOn: ['/vagas'], tourKey: 'vagas' },
-      { to: '/candidatos/empresa', label: 'Candidatos', icon: FaUserFriends, activeOn: ['/candidatos/empresa'], tourKey: 'candidatos' },
-      { to: '/painel/empresa', label: 'Dashboard', icon: FaChartBar, exact: true, tourKey: 'dashboard' },
-      { to: '/painel/empresa?secao=perfil', label: 'Perfil', icon: FaUserTie, tourKey: 'perfil' },
-      { to: '/painel/empresa?secao=pagamentos', label: 'Pagamentos', icon: FaCreditCard, tourKey: 'pagamentos' },
-      { to: '/painel/empresa?secao=configuracoes', label: 'Configurações', icon: FaCog },
-      { to: '/painel/empresa?secao=entrevistas', label: 'Entrevistas', icon: FaCalendarAlt, tourKey: 'entrevistas' },
+      { to: '/vagas', labelKey: 'sidebar.jobs', icon: FaBriefcase, activeOn: ['/vagas'], tourKey: 'vagas' },
+      { to: '/candidatos/empresa', labelKey: 'sidebar.candidates', icon: FaUserFriends, activeOn: ['/candidatos/empresa'], tourKey: 'candidatos' },
+      { to: '/painel/empresa', labelKey: 'sidebar.dashboard', icon: FaChartBar, exact: true, tourKey: 'dashboard' },
+      { to: '/painel/empresa?secao=perfil', labelKey: 'sidebar.profile', icon: FaUserTie, tourKey: 'perfil' },
+      { to: '/painel/empresa?secao=pagamentos', labelKey: 'sidebar.payments', icon: FaCreditCard, tourKey: 'pagamentos' },
+      { to: '/painel/empresa?secao=configuracoes', labelKey: 'sidebar.settings', icon: FaCog },
+      { to: '/painel/empresa?secao=entrevistas', labelKey: 'sidebar.interviews', icon: FaCalendarAlt, tourKey: 'entrevistas' },
     ],
   },
 }
@@ -63,49 +64,49 @@ function getSidebarConfig(type, user) {
 
   const setorId = user?.setorEmpresarial?.id
   const commonItems = [
-    { to: '/painel/empresa', label: 'Dashboard', icon: FaChartBar, exact: true, tourKey: 'dashboard' },
-    { to: '/painel/empresa?secao=perfil', label: 'Perfil', icon: FaUserTie, tourKey: 'perfil' },
-    { to: '/painel/empresa?secao=configuracoes', label: 'Configuracoes', icon: FaCog },
+    { to: '/painel/empresa', labelKey: 'sidebar.dashboard', icon: FaChartBar, exact: true, tourKey: 'dashboard' },
+    { to: '/painel/empresa?secao=perfil', labelKey: 'sidebar.profile', icon: FaUserTie, tourKey: 'perfil' },
+    { to: '/painel/empresa?secao=configuracoes', labelKey: 'sidebar.settings', icon: FaCog },
   ]
 
   const configs = {
     [SETOR_CHEFE_DEPARTAMENTO]: {
-      title: 'CHEFE DE DEPARTAMENTO',
-      userLabel: 'Departamento',
-      action: { to: '/criar-vaga/empresa', label: 'Solicitar vaga', icon: FaPlus },
+      titleKey: 'sidebar.departmentHead',
+      userLabelKey: 'sidebar.department',
+      action: { to: '/criar-vaga/empresa', labelKey: 'sidebar.requestJob', icon: FaPlus },
       items: [
-        { to: '/painel/empresa?secao=aprovacoes', label: 'Solicitacoes', icon: FaClipboardCheck, tourKey: 'vagas' },
+        { to: '/painel/empresa?secao=aprovacoes', labelKey: 'sidebar.requests', icon: FaClipboardCheck, tourKey: 'vagas' },
         ...commonItems
       ]
     },
     [SETOR_REITORIA_AUDITORIA]: {
-      title: 'REITORIA OU AUDITORIA',
-      userLabel: 'Auditoria',
-      action: { to: '/painel/empresa?secao=aprovacoes', label: 'Analisar', icon: FaClipboardCheck },
+      titleKey: 'sidebar.rectoryAudit',
+      userLabelKey: 'sidebar.audit',
+      action: { to: '/painel/empresa?secao=aprovacoes', labelKey: 'sidebar.analyze', icon: FaClipboardCheck },
       items: [
-        { to: '/painel/empresa?secao=aprovacoes', label: 'Aprovacoes', icon: FaClipboardCheck, tourKey: 'vagas' },
+        { to: '/painel/empresa?secao=aprovacoes', labelKey: 'sidebar.approvals', icon: FaClipboardCheck, tourKey: 'vagas' },
         ...commonItems
       ]
     },
     [SETOR_RH]: {
-      title: 'SETOR RH',
-      userLabel: 'RH',
-      action: { to: '/painel/empresa?secao=aprovacoes', label: 'Publicar', icon: FaClipboardCheck },
+      titleKey: 'sidebar.hrSector',
+      userLabelKey: 'sidebar.hr',
+      action: { to: '/painel/empresa?secao=aprovacoes', labelKey: 'sidebar.publish', icon: FaClipboardCheck },
       items: [
-        { to: '/painel/empresa?secao=aprovacoes', label: 'Aprovadas', icon: FaClipboardCheck, tourKey: 'vagas' },
-        { to: '/candidatos/empresa', label: 'Candidatos', icon: FaUserFriends, activeOn: ['/candidatos/empresa'], tourKey: 'candidatos' },
-        { to: '/painel/empresa?secao=pagamentos', label: 'Pagamentos', icon: FaCreditCard, tourKey: 'pagamentos' },
-        { to: '/painel/empresa?secao=entrevistas', label: 'Entrevistas', icon: FaCalendarAlt, tourKey: 'entrevistas' },
+        { to: '/painel/empresa?secao=aprovacoes', labelKey: 'sidebar.approved', icon: FaClipboardCheck, tourKey: 'vagas' },
+        { to: '/candidatos/empresa', labelKey: 'sidebar.candidates', icon: FaUserFriends, activeOn: ['/candidatos/empresa'], tourKey: 'candidatos' },
+        { to: '/painel/empresa?secao=pagamentos', labelKey: 'sidebar.payments', icon: FaCreditCard, tourKey: 'pagamentos' },
+        { to: '/painel/empresa?secao=entrevistas', labelKey: 'sidebar.interviews', icon: FaCalendarAlt, tourKey: 'entrevistas' },
         ...commonItems
       ]
     },
     [SETOR_ADMIN_EMPRESA]: {
-      title: 'ADMINISTRADOR EMPRESA',
-      userLabel: 'Administrador',
-      action: { to: '/painel/empresa?secao=setores', label: 'Setores', icon: FaUsersCog },
+      titleKey: 'sidebar.companyAdministrator',
+      userLabelKey: 'account.administrator',
+      action: { to: '/painel/empresa?secao=setores', labelKey: 'sidebar.sectors', icon: FaUsersCog },
       items: [
-        { to: '/painel/empresa?secao=setores', label: 'Setores', icon: FaUsersCog, tourKey: 'perfil' },
-        { to: '/painel/empresa?secao=aprovacoes', label: 'Fluxo de vagas', icon: FaClipboardCheck, tourKey: 'vagas' },
+        { to: '/painel/empresa?secao=setores', labelKey: 'sidebar.sectors', icon: FaUsersCog, tourKey: 'perfil' },
+        { to: '/painel/empresa?secao=aprovacoes', labelKey: 'sidebar.jobFlow', icon: FaClipboardCheck, tourKey: 'vagas' },
         ...commonItems
       ]
     }
@@ -115,6 +116,7 @@ function getSidebarConfig(type, user) {
 }
 
 function Sidebar({ type, user }) {
+  const { t } = useTranslation('common')
   const [collapsed, setCollapsed] = useState(() => (
     localStorage.getItem('selectioSidebarCollapsed') === 'true'
   ))
@@ -143,8 +145,9 @@ function Sidebar({ type, user }) {
 
   const config = getSidebarConfig(activeType, activeUser)
   const ActionIcon = config.action.icon
-  const userName = activeUser?.nome || activeUser?.nomeEmpresa || config.userLabel
-  const userInfo = activeUser?.email || activeUser?.cnpj || config.userLabel
+  const userLabel = t(config.userLabelKey)
+  const userName = activeUser?.nome || activeUser?.nomeEmpresa || userLabel
+  const userInfo = activeUser?.email || activeUser?.cnpj || userLabel
 
   return (
     <>
@@ -152,7 +155,7 @@ function Sidebar({ type, user }) {
         type="button"
         className="sidebar-mobile-trigger"
         onClick={() => setMobileOpen(true)}
-        aria-label="Abrir menu lateral"
+        aria-label={t('sidebar.open')}
         aria-controls="selectio-sidebar"
         aria-expanded={mobileOpen}
       >
@@ -164,7 +167,7 @@ function Sidebar({ type, user }) {
           type="button"
           className="sidebar-mobile-overlay"
           onClick={() => setMobileOpen(false)}
-          aria-label="Fechar menu lateral"
+          aria-label={t('sidebar.close')}
         />
       )}
 
@@ -177,7 +180,11 @@ function Sidebar({ type, user }) {
         type="button"
         className="app-sidebar-toggle"
         onClick={() => mobileOpen ? setMobileOpen(false) : setCollapsed((current) => !current)}
-        aria-label={mobileOpen ? 'Fechar menu lateral' : collapsed ? 'Expandir barra lateral' : 'Recolher barra lateral'}
+        aria-label={mobileOpen
+          ? t('sidebar.close')
+          : collapsed
+            ? t('sidebar.expand')
+            : t('sidebar.collapse')}
         aria-expanded={mobileOpen || !collapsed}
       >
         <FaChevronLeft className="sidebar-collapse-icon" />
@@ -185,7 +192,7 @@ function Sidebar({ type, user }) {
         <FaTimes className="sidebar-mobile-close-icon" />
       </button>
 
-      <h2 className="app-sidebar-title">{config.title}</h2>
+      <h2 className="app-sidebar-title">{t(config.titleKey)}</h2>
 
       <div className="app-sidebar-user">
         <FaUserTie />
@@ -201,14 +208,14 @@ function Sidebar({ type, user }) {
 
           return (
             <NavLink
-              key={`${item.to}-${item.label}`}
+              key={`${item.to}-${item.labelKey}`}
               to={item.to}
               className={() => isItemActive(item, pathname, search) ? 'active' : ''}
               data-tour={item.tourKey ? `${activeType}-nav-${item.tourKey}` : undefined}
-              title={collapsed ? item.label : undefined}
+              title={collapsed ? t(item.labelKey) : undefined}
               onClick={() => setMobileOpen(false)}
             >
-              <Icon /> <span>{item.label}</span>
+              <Icon /> <span>{t(item.labelKey)}</span>
             </NavLink>
           )
         })}
@@ -218,10 +225,10 @@ function Sidebar({ type, user }) {
         className={() => 'app-sidebar-btn'}
         to={config.action.to}
         data-tour={`${activeType}-nav-action`}
-        title={collapsed ? config.action.label : undefined}
+        title={collapsed ? t(config.action.labelKey) : undefined}
         onClick={() => setMobileOpen(false)}
       >
-        <ActionIcon /> <span>{config.action.label}</span>
+        <ActionIcon /> <span>{t(config.action.labelKey)}</span>
       </NavLink>
     </aside>
     </>

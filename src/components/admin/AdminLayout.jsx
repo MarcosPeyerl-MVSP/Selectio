@@ -2,6 +2,7 @@ import './AdminLayout.css'
 
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   FaBriefcase,
   FaBuilding,
@@ -22,14 +23,15 @@ import { useConfirmacao } from '../../hooks/useConfirmacao'
 import { useTema } from '../../hooks/useTema'
 import { useToast } from '../../hooks/useToast'
 import { auth } from '../../services/firebase'
+import LanguageSwitcher from '../layout/LanguageSwitcher'
 
 const adminItems = [
-  { to: '/admin/visao-geral', label: 'Visão Geral', icon: FaChartPie },
-  { to: '/admin/empresas', label: 'Empresas', icon: FaBuilding },
-  { to: '/admin/indicadores', label: 'Indicadores', icon: FaUserTie },
-  { to: '/admin/vagas', label: 'Vagas', icon: FaBriefcase },
-  { to: '/admin/candidatos', label: 'Candidatos', icon: FaUserFriends },
-  { to: '/admin/financeiro', label: 'Financeiro', icon: FaMoneyCheckAlt },
+  { to: '/admin/visao-geral', labelKey: 'layout.overview', icon: FaChartPie },
+  { to: '/admin/empresas', labelKey: 'layout.companies', icon: FaBuilding },
+  { to: '/admin/indicadores', labelKey: 'layout.referrers', icon: FaUserTie },
+  { to: '/admin/vagas', labelKey: 'layout.jobs', icon: FaBriefcase },
+  { to: '/admin/candidatos', labelKey: 'layout.candidates', icon: FaUserFriends },
+  { to: '/admin/financeiro', labelKey: 'layout.finance', icon: FaMoneyCheckAlt },
 ]
 
 function AdminLayout() {
@@ -50,6 +52,7 @@ function AdminLayout() {
 }
 
 function AdminTopbar({ perfil }) {
+  const { t } = useTranslation(['admin', 'common'])
   const navigate = useNavigate()
   const toast = useToast()
   const confirm = useConfirmacao()
@@ -70,9 +73,9 @@ function AdminTopbar({ perfil }) {
 
   const handleLogout = async () => {
     const confirmed = await confirm({
-      title: 'Sair do painel administrativo?',
-      description: 'Sua sessão Selectio será encerrada neste navegador.',
-      confirmLabel: 'Sair',
+      title: t('layout.logoutTitle'),
+      description: t('layout.logoutDescription'),
+      confirmLabel: t('common:account.logout'),
     })
 
     if (!confirmed) return
@@ -81,7 +84,7 @@ function AdminTopbar({ perfil }) {
     localStorage.removeItem('adminUser')
     localStorage.removeItem('empresaUser')
     localStorage.removeItem('indicadorUser')
-    toast.info('Sessão administrativa encerrada.')
+    toast.info(t('layout.sessionEnded'))
     navigate('/login')
   }
 
@@ -93,16 +96,17 @@ function AdminTopbar({ perfil }) {
       </NavLink>
 
       <div className="admin-topbar-context">
-        <span>Ambiente administrativo</span>
-        <strong>Operação Selectio</strong>
+        <span>{t('layout.environment')}</span>
+        <strong>{t('layout.operation')}</strong>
       </div>
 
       <div className="admin-topbar-actions">
+        <LanguageSwitcher />
         <button
           type="button"
           onClick={toggleTheme}
-          aria-label={isDark ? 'Ativar tema claro' : 'Ativar tema escuro'}
-          title={isDark ? 'Tema claro' : 'Tema escuro'}
+          aria-label={isDark ? t('common:theme.activateLight') : t('common:theme.activateDark')}
+          title={isDark ? t('common:theme.light') : t('common:theme.dark')}
         >
           {isDark ? <FaSun /> : <FaMoon />}
         </button>
@@ -120,10 +124,10 @@ function AdminTopbar({ perfil }) {
 
           {menuOpen && (
             <div className="admin-account-menu" role="menu">
-              <strong>{perfil?.nome || 'Selectio Admin'}</strong>
-              <span>{perfil?.email || 'Administrador'}</span>
+              <strong>{perfil?.nome || t('layout.selectioAdmin')}</strong>
+              <span>{perfil?.email || t('layout.administrator')}</span>
               <button type="button" onClick={handleLogout}>
-                <FaSignOutAlt /> Sair
+                <FaSignOutAlt /> {t('common:account.logout')}
               </button>
             </div>
           )}
@@ -134,21 +138,22 @@ function AdminTopbar({ perfil }) {
 }
 
 function AdminSidebar({ perfil }) {
+  const { t } = useTranslation('admin')
   const location = useLocation()
   const toast = useToast()
 
   return (
     <aside className="admin-sidebar">
       <div className="admin-sidebar-heading">
-        <strong>Selectio Admin</strong>
-        <span>Painel de controle</span>
+        <strong>{t('layout.selectioAdmin')}</strong>
+        <span>{t('layout.controlPanel')}</span>
       </div>
 
       <div className="admin-sidebar-user">
         <span>{initials(perfil?.nome || perfil?.email || 'Admin')}</span>
         <div>
-          <strong>{perfil?.nome || 'Administrador'}</strong>
-          <small>Platform owner</small>
+          <strong>{perfil?.nome || t('layout.administrator')}</strong>
+          <small>{t('layout.platformOwner')}</small>
         </div>
       </div>
 
@@ -163,7 +168,7 @@ function AdminSidebar({ perfil }) {
               className={location.pathname === item.to ? 'active' : ''}
             >
               <Icon />
-              <span>{item.label}</span>
+              <span>{t(item.labelKey)}</span>
             </NavLink>
           )
         })}
@@ -171,11 +176,11 @@ function AdminSidebar({ perfil }) {
         <button
           type="button"
           className="disabled"
-          onClick={() => toast.info('Configurações globais estarão disponíveis em uma versão futura.')}
+          onClick={() => toast.info(t('layout.settingsFuture'))}
         >
           <FaCog />
-          <span>Configurações</span>
-          <small>Em breve</small>
+          <span>{t('layout.settings')}</span>
+          <small>{t('layout.comingSoon')}</small>
         </button>
       </nav>
     </aside>

@@ -86,7 +86,7 @@ export async function buscarEmpresasAdmin() {
         ...user,
         ...empresa,
         id: empresa.id,
-        nome: empresa.nomeEmpresa || empresa.nome || user.nome || 'Empresa',
+        nome: empresa.nomeEmpresa || empresa.nome || user.nome || '',
         email: empresa.email || user.email || '',
         statusAdmin: normalizarStatusPerfil(empresa),
         totalVagas: vagasByEmpresa.get(empresa.id) || 0,
@@ -139,7 +139,7 @@ export async function buscarIndicadoresAdmin() {
         ...user,
         ...indicador,
         id: indicador.id,
-        nome: indicador.nome || user.nome || 'Indicador',
+        nome: indicador.nome || user.nome || '',
         email: indicador.email || user.email || '',
         statusAdmin: normalizarStatusPerfil(indicador),
         totalIndicacoes: candidatosIndicador.length,
@@ -208,10 +208,10 @@ export async function buscarCandidatosAdmin() {
 
       return {
         ...candidato,
-        nome: candidato.nome || candidato.candidatoNome || 'Candidato',
-        vagaTitulo: candidato.vagaTitulo || vaga.titulo || 'Vaga não informada',
+        nome: candidato.nome || candidato.candidatoNome || '',
+        vagaTitulo: candidato.vagaTitulo || vaga.titulo || '',
         vagaEmpresa: candidato.vagaEmpresa || vaga.empresa || vaga.empresaNome || '',
-        indicadorNome: candidato.indicadorNome || indicador.nome || 'Indicador não informado',
+        indicadorNome: candidato.indicadorNome || indicador.nome || '',
         dataIndicacao: candidato.aplicadoEm || candidato.criadoEm || null,
       }
     })
@@ -224,7 +224,7 @@ export async function buscarCandidatosAdmin() {
     candidatos: candidatosEnriquecidos,
     geradoEm: new Date().toISOString(),
     vagas: [...new Set(candidatosEnriquecidos.map((candidato) => candidato.vagaTitulo).filter(Boolean))]
-      .sort((a, b) => a.localeCompare(b, 'pt-BR')),
+      .sort((a, b) => a.localeCompare(b)),
     metricas: {
       conversao: candidatosEnriquecidos.length
         ? Number(((contratados.length * 100) / candidatosEnriquecidos.length).toFixed(1))
@@ -260,7 +260,7 @@ export async function buscarFinanceiroAdmin() {
 
       return {
         ...saque,
-        indicadorNome: saque.indicadorNome || indicador.nome || 'Indicador',
+        indicadorNome: saque.indicadorNome || indicador.nome || '',
         indicadorEmail: indicador.email || '',
         dataSolicitacao: saque.solicitadoEm || saque.criadoEm || saque.atualizadoEm || null,
       }
@@ -332,11 +332,9 @@ function montarSaudeEcossistema({ empresas, indicadores, vagas, candidatos }) {
   const meses = Array.from({ length: 7 }, (_, index) => {
     const data = new Date(hoje.getFullYear(), hoje.getMonth() - (6 - index), 1)
     const chave = chaveMes(data)
-    const label = data.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase()
 
     return {
       chave,
-      mes: label,
       empresas: 0,
       indicadores: 0,
       vagas: 0,
@@ -373,29 +371,31 @@ function montarAtividadeRecente({ empresas, indicadores, vagas, candidatos, paga
     ...empresas.map((empresa) => ({
       id: `empresa-${empresa.id}`,
       tipo: 'empresa',
-      titulo: `${empresa.nomeEmpresa || empresa.nome || 'Nova empresa'} entrou na plataforma`,
-      descricao: empresa.email || 'Cadastro de empresa',
+      nome: empresa.nomeEmpresa || empresa.nome || '',
+      email: empresa.email || '',
       data: empresa.criadoEm || empresa.atualizadoEm,
     })),
     ...indicadores.map((indicador) => ({
       id: `indicador-${indicador.id}`,
       tipo: 'indicador',
-      titulo: `${indicador.nome || 'Novo indicador'} entrou para a rede`,
-      descricao: indicador.email || 'Cadastro de indicador',
+      nome: indicador.nome || '',
+      email: indicador.email || '',
       data: indicador.criadoEm || indicador.atualizadoEm,
     })),
     ...vagas.map((vaga) => ({
       id: `vaga-${vaga.id}`,
       tipo: 'vaga',
-      titulo: `${vaga.empresa || vaga.empresaNome || 'Empresa'} publicou ${vaga.titulo || 'uma vaga'}`,
-      descricao: normalizarStatusVaga(vaga),
+      empresaNome: vaga.empresa || vaga.empresaNome || '',
+      vagaTitulo: vaga.titulo || '',
+      status: normalizarStatusVaga(vaga),
       data: vaga.criadoEm || vaga.atualizadoEm,
     })),
     ...candidatos.map((candidato) => ({
       id: `candidato-${candidato.id}`,
       tipo: 'candidato',
-      titulo: `${candidato.indicadorNome || 'Um indicador'} indicou ${candidato.nome || 'um candidato'}`,
-      descricao: candidato.vagaTitulo || 'Indicação de candidato',
+      indicadorNome: candidato.indicadorNome || '',
+      candidatoNome: candidato.nome || candidato.candidatoNome || '',
+      vagaTitulo: candidato.vagaTitulo || '',
       data: candidato.aplicadoEm || candidato.criadoEm || candidato.atualizadoEm,
     })),
     ...pagamentos
@@ -403,8 +403,8 @@ function montarAtividadeRecente({ empresas, indicadores, vagas, candidatos, paga
       .map((pagamento) => ({
         id: `pagamento-${pagamento.id}`,
         tipo: 'pagamento',
-        titulo: `Recompensa aprovada para ${pagamento.candidatoNome || 'candidato'}`,
-        descricao: formatCurrency(pagamento.valor),
+        candidatoNome: pagamento.candidatoNome || '',
+        valor: Number(pagamento.valor || 0),
         data: pagamento.aprovadoEm || pagamento.encerradoEm || pagamento.atualizadoEm,
       })),
   ]
@@ -420,22 +420,20 @@ function montarPendencias({ saquesPendentes, recompensasSemPagamento, vagas }) {
     ...saquesPendentes.map((saque) => ({
       id: `saque-${saque.id}`,
       tipo: 'financeiro',
-      titulo: 'Solicitação de saque',
-      descricao: `${saque.indicadorNome || 'Indicador'} aguarda análise de ${formatCurrency(saque.valor)}.`,
+      indicadorNome: saque.indicadorNome || '',
+      valor: Number(saque.valor || 0),
       link: '/admin/financeiro',
     })),
     ...recompensasSemPagamento.map((candidato) => ({
       id: `recompensa-${candidato.id}`,
       tipo: 'recompensa',
-      titulo: 'Recompensa aguardando empresa',
-      descricao: `${candidato.nome || 'Candidato'} foi contratado sem pagamento aprovado.`,
+      candidatoNome: candidato.nome || candidato.candidatoNome || '',
       link: '/admin/candidatos',
     })),
     ...vagasPausadas.map((vaga) => ({
       id: `vaga-${vaga.id}`,
       tipo: 'vaga',
-      titulo: 'Vaga pausada',
-      descricao: `${vaga.titulo || 'Vaga'} está fora da vitrine de oportunidades.`,
+      vagaTitulo: vaga.titulo || '',
       link: '/admin/vagas',
     })),
   ].slice(0, 6)
@@ -535,11 +533,4 @@ function toDate(valor) {
 
 function dataMs(valor) {
   return toDate(valor)?.getTime() || 0
-}
-
-function formatCurrency(valor) {
-  return Number(valor || 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  })
 }

@@ -1,5 +1,7 @@
 import './CardSaldo.css'
 
+import { formatCurrency } from '../../i18n/formatters'
+
 function CardSaldo({ label, value, helper, tone = 'default' }) {
   return (
     <article className={`balance-card ${tone}`}>
@@ -8,13 +10,6 @@ function CardSaldo({ label, value, helper, tone = 'default' }) {
       {helper && <p>{helper}</p>}
     </article>
   )
-}
-
-function formatCurrency(value) {
-  return Number(value || 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  })
 }
 
 export default CardSaldo

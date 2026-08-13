@@ -4,6 +4,7 @@
 
 import './styles/EmpresaCriarVaga.css'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
@@ -48,10 +49,23 @@ const getLocalDateInputValue = () => {
   return `${year}-${month}-${day}`
 }
 
+const formatCurrency = (value, language) => {
+  const numbers = String(value || '').replace(/\D/g, '')
+  const amount = Number(numbers || 0)
+
+  return amount.toLocaleString(language, {
+    style: 'currency',
+    currency: 'BRL',
+    maximumFractionDigits: 0,
+  })
+}
+
 function CriarVagaEmpresa() {
+  const { t, i18n } = useTranslation(['company', 'common'])
   // Hook usado para redirecionar a empresa após criação da vaga ou ausência de sessão.
   const navigate = useNavigate()
   const toast = useToast()
+  const language = i18n.resolvedLanguage || i18n.language
 
   // Recupera a empresa autenticada salva no localStorage.
   const [empresa] = useState(() => {
@@ -60,7 +74,10 @@ function CriarVagaEmpresa() {
   })
 
   // Controla os campos do formulário de vaga.
-  const [form, setForm] = useState(initialForm)
+  const [form, setForm] = useState(() => ({
+    ...initialForm,
+    recompensaValor: formatCurrency('2500', language)
+  }))
 
   // Controla o estado de envio da vaga.
   const [loading, setLoading] = useState(false)
@@ -97,22 +114,10 @@ function CriarVagaEmpresa() {
     return form.recompensaValor
   }
 
-  // Responsabilidade: formatar valores numéricos como moeda brasileira.
-  const formatCurrency = (value) => {
-    const numbers = value.replace(/\D/g, '')
-    const amount = Number(numbers || 0)
-
-    return amount.toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-      maximumFractionDigits: 0,
-    })
-  }
-
   // Responsabilidade: atualizar campos monetários já formatados.
   const handleCurrencyChange = (event) => {
     const { name, value } = event.target
-    setForm((current) => ({ ...current, [name]: formatCurrency(value) }))
+    setForm((current) => ({ ...current, [name]: formatCurrency(value, language) }))
   }
 
   // Responsabilidade: extrair o valor numérico de um texto monetário.
@@ -133,15 +138,15 @@ function CriarVagaEmpresa() {
     if (!empresa) return
 
     if (!podeSolicitarVaga) {
-      setMessage('Somente o Chefe de departamento pode solicitar vagas no modo empresarial.')
-      toast.warning('Somente o Chefe de departamento pode solicitar vagas no modo empresarial.')
+      setMessage(t('jobForm.departmentOnly'))
+      toast.warning(t('jobForm.departmentOnly'))
       return
     }
 
     // Validação: campos principais obrigatórios da vaga.
     if (!form.titulo || !form.area || !form.descricaoLonga || !form.localizacao) {
-      setMessage('Preencha título, área, descrição e localização.')
-      toast.warning('Preencha título, área, descrição e localização.')
+      setMessage(t('jobForm.requiredFields'))
+      toast.warning(t('jobForm.requiredFields'))
       return
     }
 
@@ -149,15 +154,15 @@ function CriarVagaEmpresa() {
     const salarioMin = getNumberFromCurrency(form.salarioMin)
     const salarioMax = getNumberFromCurrency(form.salarioMax)
     if (salarioMin && salarioMax && salarioMin > salarioMax) {
-      setMessage('O salário mínimo não pode ser maior que o máximo.')
-      toast.warning('O salário mínimo não pode ser maior que o máximo.')
+      setMessage(t('jobForm.salaryRangeError'))
+      toast.warning(t('jobForm.salaryRangeError'))
       return
     }
 
     // Validação: contrato temporário exige datas de início e fim.
     if (form.tipo === 'Contrato temporário' && (!form.tipoDataInicio || !form.tipoDataFim)) {
-      setMessage('Informe a data de início e a data de fim do contrato temporário.')
-      toast.warning('Informe a data de início e a data de fim do contrato temporário.')
+      setMessage(t('jobForm.temporaryDatesRequired'))
+      toast.warning(t('jobForm.temporaryDatesRequired'))
       return
     }
 
@@ -168,14 +173,14 @@ function CriarVagaEmpresa() {
       && form.tipoDataFim
       && form.tipoDataInicio > form.tipoDataFim
     ) {
-      setMessage('A data de início não pode ser posterior à data de fim.')
-      toast.warning('A data de início não pode ser posterior à data de fim.')
+      setMessage(t('jobForm.dateOrderError'))
+      toast.warning(t('jobForm.dateOrderError'))
       return
     }
 
     if (form.dataLimite && form.dataLimite < getLocalDateInputValue()) {
-      setMessage('A data limite não pode estar no passado.')
-      toast.warning('A data limite não pode estar no passado.')
+      setMessage(t('jobForm.deadlinePast'))
+      toast.warning(t('jobForm.deadlinePast'))
       return
     }
 
@@ -196,9 +201,14 @@ function CriarVagaEmpresa() {
       empresaUid,
       localizacao: form.localizacao,
       salario,
+      salarioMinValor: salarioMin || null,
+      salarioMaxValor: salarioMax || null,
       tipo: form.tipo === 'Contrato temporário'
         ? `${form.tipo} (${formatDate(form.tipoDataInicio)} – ${formatDate(form.tipoDataFim)})`
         : form.tipo,
+      tipoBase: form.tipo,
+      tipoDataInicio: form.tipo === 'Contrato temporário' ? form.tipoDataInicio : '',
+      tipoDataFim: form.tipo === 'Contrato temporário' ? form.tipoDataFim : '',
       recompensa: getRecompensa(),
       recompensaTipo: form.recompensaTipo,
       recompensaValorFixo: form.recompensaTipo === 'fixo'
@@ -238,18 +248,18 @@ function CriarVagaEmpresa() {
       await criarVaga(payload)
 
       const mensagemSucesso = modoEmpresarialAtivo
-        ? 'Solicitacao enviada para Reitoria ou Auditoria.'
+        ? t('jobForm.requestSent')
         : status === 'pausada'
-          ? 'Vaga salva como pausada.'
-          : 'Vaga criada e aberta para indicações.'
+          ? t('jobForm.savedPaused')
+          : t('jobForm.created')
 
       setMessage(mensagemSucesso)
       toast.success(mensagemSucesso)
-      setForm(initialForm)
+      setForm({ ...initialForm, recompensaValor: formatCurrency('2500', language) })
       navigate(modoEmpresarialAtivo ? '/painel/empresa?secao=aprovacoes' : '/vagas')
     } catch {
-      setMessage('Não foi possível salvar a vaga no Firestore.')
-      toast.error('Não foi possível salvar a vaga no Firestore.')
+      setMessage(t('jobForm.saveError'))
+      toast.error(t('jobForm.saveError'))
     } finally {
       setLoading(false)
     }
@@ -269,9 +279,9 @@ function CriarVagaEmpresa() {
           <Sidebar type="empresa" user={empresa} />
           <main className="empresa-vaga-content">
             <EstadoDados
-              title="Criacao restrita ao departamento"
-              description="No modo empresarial, somente o Chefe de departamento pode solicitar uma vaga. Auditoria, RH e Administrador Empresa acompanham o fluxo pelo painel."
-              actionLabel="Voltar ao painel"
+              title={t('jobForm.restrictedTitle')}
+              description={t('jobForm.restrictedDescription')}
+              actionLabel={t('jobForm.backPanel')}
               onAction={() => navigate('/painel/empresa')}
             />
           </main>
@@ -293,57 +303,62 @@ function CriarVagaEmpresa() {
 
         <main className="empresa-vaga-content">
           <section className="empresa-vaga-intro">
-            <span>{modoEmpresarialAtivo ? 'SOLICITACAO DE VAGA' : 'FASE DE RASCUNHO'}</span>
+            <span>{modoEmpresarialAtivo ? t('jobForm.requestEyebrow') : t('jobForm.draftEyebrow')}</span>
             <h1>
-              Postar uma
+              {t('jobForm.createTitleFirst')}
               <br />
-              nova <strong>Vaga.</strong>
+              <strong>{t('jobForm.createTitleSecond')}</strong>
             </h1>
-            <p>{modoEmpresarialAtivo ? 'Preencha o pedido para que Reitoria ou Auditoria valide salario e premiacao.' : 'Crie anúncios de alto impacto que atraem os melhores talentos do mundo.'}</p>
+            <p>{modoEmpresarialAtivo ? t('jobForm.requestDescription') : t('jobForm.createDescription')}</p>
           </section>
 
           <form className="empresa-vaga-form" onSubmit={handleSubmit}>
             <section className="vaga-step">
               <div className="step-header">
-                <h2>Fundamentos da Vaga</h2>
-                <span>PASSO 1 DE 4</span>
+                <h2>{t('jobForm.steps.foundations')}</h2>
+                <span>{t('jobForm.steps.step1')}</span>
               </div>
 
-              <label>Título do cargo / função</label>
+              <label>{t('jobForm.fields.title')}</label>
               <input
                 name="titulo"
-                placeholder="ex. Diretor de Criação Sênior"
+                placeholder={t('jobForm.placeholders.title')}
                 value={form.titulo}
                 onChange={handleChange}
               />
 
               <div className="form-grid three">
                 <div>
-                  <label>Indústria / Área</label>
-                  <input name="area" placeholder="Design & Criativo" value={form.area} onChange={handleChange} />
+                  <label>{t('jobForm.fields.area')}</label>
+                  <input name="area" placeholder={t('jobForm.placeholders.area')} value={form.area} onChange={handleChange} />
                 </div>
                 <div>
-                  <label>Faixa salarial</label>
-                  <input name="salarioMin" placeholder="Mín." value={form.salarioMin} onChange={handleCurrencyChange} />
+                  <label>{t('jobForm.fields.salaryRange')}</label>
+                  <input name="salarioMin" placeholder={t('jobForm.placeholders.minimum')} value={form.salarioMin} onChange={handleCurrencyChange} />
                 </div>
                 <div>
                   <label>&nbsp;</label>
-                  <input name="salarioMax" placeholder="Máx." value={form.salarioMax} onChange={handleCurrencyChange} />
+                  <input name="salarioMax" placeholder={t('jobForm.placeholders.maximum')} value={form.salarioMax} onChange={handleCurrencyChange} />
                 </div>
               </div>
 
               <div className="form-grid two">
                 <div>
-                  <label>Experiência requerida</label>
+                  <label>{t('jobForm.fields.experience')}</label>
                   <div className="option-grid">
-                    {['Júnior', 'Pleno', 'Sênior', 'Personalizado'].map((option) => (
+                    {[
+                      ['Júnior', t('jobForm.experience.junior')],
+                      ['Pleno', t('jobForm.experience.mid')],
+                      ['Sênior', t('jobForm.experience.senior')],
+                      ['Personalizado', t('jobForm.experience.custom')]
+                    ].map(([option, label]) => (
                       <button
                         key={option}
                         type="button"
                         className={form.experiencia === option ? 'selected' : ''}
                         onClick={() => setForm((current) => ({ ...current, experiencia: option }))}
                       >
-                        {option}
+                        {label}
                       </button>
                     ))}
                   </div>
@@ -351,7 +366,7 @@ function CriarVagaEmpresa() {
                     <textarea
                       className="small inline-textarea"
                       name="experienciaPersonalizada"
-                      placeholder="Descreva a experiência requerida"
+                      placeholder={t('jobForm.placeholders.customExperience')}
                       value={form.experienciaPersonalizada}
                       onChange={handleChange}
                     />
@@ -359,23 +374,29 @@ function CriarVagaEmpresa() {
                 </div>
 
                 <div>
-                  <label>Tipo de contratação</label>
+                  <label>{t('jobForm.fields.employmentType')}</label>
                   <div className="option-grid">
-                    {['Tempo Integral', 'Freelance', 'Meio Período', 'Remoto', 'Contrato temporário'].map((option) => (
+                    {[
+                      ['Tempo Integral', t('jobForm.employment.fullTime')],
+                      ['Freelance', t('jobForm.employment.freelance')],
+                      ['Meio Período', t('jobForm.employment.partTime')],
+                      ['Remoto', t('jobForm.employment.remote')],
+                      ['Contrato temporário', t('jobForm.employment.temporary')]
+                    ].map(([option, label]) => (
                       <button
                         key={option}
                         type="button"
                         className={form.tipo === option ? 'selected outline' : ''}
                         onClick={() => setForm((current) => ({ ...current, tipo: option }))}
                       >
-                        {option}
+                        {label}
                       </button>
                     ))}
                   </div>
                   {form.tipo === 'Contrato temporário' && (
                     <div className="temporary-contract-grid">
                       <div>
-                        <label>Data de início</label>
+                        <label>{t('jobForm.fields.startDate')}</label>
                         <input
                           className="inline-input"
                           name="tipoDataInicio"
@@ -386,7 +407,7 @@ function CriarVagaEmpresa() {
                         />
                       </div>
                       <div>
-                        <label>Data de fim</label>
+                        <label>{t('jobForm.fields.endDate')}</label>
                         <input
                           className="inline-input"
                           name="tipoDataFim"
@@ -404,44 +425,44 @@ function CriarVagaEmpresa() {
 
             <section className="vaga-step">
               <div className="step-header">
-                <h2>Descrição da vaga</h2>
-                <span>PASSO 2 DE 4</span>
+                <h2>{t('jobForm.steps.description')}</h2>
+                <span>{t('jobForm.steps.step2')}</span>
               </div>
 
-              <label>Resumo da vaga</label>
+              <label>{t('jobForm.fields.summary')}</label>
               <input
                 name="descricaoCurta"
-                placeholder="Resumo curto para os cards"
+                placeholder={t('jobForm.placeholders.summary')}
                 value={form.descricaoCurta}
                 onChange={handleChange}
               />
 
-              <label>Descrição da vaga</label>
+              <label>{t('jobForm.fields.description')}</label>
               <textarea
                 name="descricaoLonga"
-                placeholder="Descreva as necessidades da vaga, qual o profissional necessário..."
+                placeholder={t('jobForm.placeholders.description')}
                 value={form.descricaoLonga}
                 onChange={handleChange}
               />
 
               <div className="form-grid two">
                 <div>
-                  <label>Requisitos</label>
+                  <label>{t('jobForm.fields.requirements')}</label>
                   <textarea
                     className="small"
                     name="requisitos"
-                    placeholder="Separe os requisitos por vírgula"
+                    placeholder={t('jobForm.placeholders.requirements')}
                     value={form.requisitos}
                     onChange={handleChange}
                   />
                   <TokenPreview items={parseList(form.requisitos)} />
                 </div>
                 <div>
-                  <label>Habilidades</label>
+                  <label>{t('jobForm.fields.skills')}</label>
                   <textarea
                     className="small"
                     name="habilidades"
-                    placeholder="Separe as habilidades por vírgula"
+                    placeholder={t('jobForm.placeholders.skills')}
                     value={form.habilidades}
                     onChange={handleChange}
                   />
@@ -451,11 +472,11 @@ function CriarVagaEmpresa() {
 
               <div className="form-grid two">
                 <div>
-                  <label>Benefícios</label>
+                  <label>{t('jobForm.fields.benefits')}</label>
                   <textarea
                     className="small"
                     name="beneficios"
-                    placeholder="Separe os benefícios por vírgula"
+                    placeholder={t('jobForm.placeholders.benefits')}
                     value={form.beneficios}
                     onChange={handleChange}
                   />
@@ -467,17 +488,17 @@ function CriarVagaEmpresa() {
             <section className="vaga-step">
               <div className="step-header">
                 <div>
-                  <h2>Premiação por Indicação</h2>
-                  <p>Incentive sua rede a indicar talentos de alta performance.</p>
+                  <h2>{t('jobForm.steps.reward')}</h2>
+                  <p>{t('jobForm.rewardDescription')}</p>
                 </div>
-                <span>PASSO 3 DE 4</span>
+                <span>{t('jobForm.steps.step3')}</span>
               </div>
 
               <div className="reward-grid">
                 {[
-                  ['fixo', 'Valor fixo', form.recompensaValor],
-                  ['percentual', 'Percentual', '10% Salário'],
-                  ['personalizado', 'Personalizado', 'Consultar'],
+                  ['fixo', t('jobForm.fixedValue'), form.recompensaValor],
+                  ['percentual', t('jobForm.percentage'), t('jobForm.salaryPercentage')],
+                  ['personalizado', t('jobForm.custom'), t('jobForm.consult')],
                 ].map(([value, label, text]) => (
                   <button
                     key={value}
@@ -496,29 +517,29 @@ function CriarVagaEmpresa() {
                   name="recompensaValor"
                   value={form.recompensaValor}
                   onChange={handleCurrencyChange}
-                  placeholder="Valor da premiação"
+                  placeholder={t('jobForm.placeholders.reward')}
                 />
               )}
             </section>
 
             <section className="vaga-step">
               <div className="step-header">
-                <h2>Logística e Prazos</h2>
-                <span>PASSO 4 DE 4</span>
+                <h2>{t('jobForm.steps.logistics')}</h2>
+                <span>{t('jobForm.steps.step4')}</span>
               </div>
 
               <div className="form-grid two">
                 <div>
-                  <label>Localização</label>
+                  <label>{t('jobForm.fields.location')}</label>
                   <input
                     name="localizacao"
-                    placeholder="ex. São Paulo, London, ou Global"
+                    placeholder={t('jobForm.placeholders.location')}
                     value={form.localizacao}
                     onChange={handleChange}
                   />
                 </div>
                 <div>
-                  <label>Data limite</label>
+                  <label>{t('jobForm.fields.deadline')}</label>
                   <input
                     name="dataLimite"
                     type="date"
@@ -540,11 +561,11 @@ function CriarVagaEmpresa() {
                   disabled={loading}
                   onClick={(event) => handleSubmit(event, 'pausada')}
                 >
-                  Salvar pausada
+                  {t('jobForm.savePaused')}
                 </button>
               )}
               <button type="submit" className="finish-btn" disabled={loading}>
-                {loading ? 'Salvando...' : modoEmpresarialAtivo ? 'Enviar para auditoria' : 'Finalizar Vaga'}
+                {loading ? t('jobForm.saving') : modoEmpresarialAtivo ? t('jobForm.sendAudit') : t('jobForm.finish')}
               </button>
             </div>
           </form>

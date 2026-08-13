@@ -2,6 +2,7 @@ import './styles/IndicadorCandidatoCadastro.css'
 
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   FaCheckCircle,
   FaCloudUploadAlt,
@@ -103,37 +104,38 @@ const formatPhone = (value) => {
   return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7)}`
 }
 
-const formatCurrency = (value) => {
+const formatCurrency = (value, language) => {
   const numbers = String(value || '').replace(/\D/g, '')
   if (!numbers) return ''
-  return Number(numbers).toLocaleString('pt-BR', {
+  return Number(numbers).toLocaleString(language, {
     style: 'currency',
     currency: 'BRL',
     maximumFractionDigits: 0,
   })
 }
 
-const formatFileSize = (size) => {
+const formatFileSize = (size, language) => {
   const bytes = Number(size || 0)
   if (!bytes) return ''
   if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  const formatter = new Intl.NumberFormat(language, { maximumFractionDigits: 1 })
+  if (bytes < 1024 * 1024) return `${formatter.format(bytes / 1024)} KB`
+  return `${formatter.format(bytes / (1024 * 1024))} MB`
 }
 
-const validateManualForm = (form) => {
+const validateManualForm = (form, t) => {
   const errors = {}
   const name = String(form.nome || '').trim()
   const email = String(form.email || '').trim()
 
-  if (!name) errors.nome = 'Informe o nome completo.'
-  else if (name.length < 2) errors.nome = 'O nome deve ter pelo menos 2 caracteres.'
+  if (!name) errors.nome = t('candidateRegistration.validation.nameRequired')
+  else if (name.length < 2) errors.nome = t('candidateRegistration.validation.nameShort')
 
-  if (!email) errors.email = 'Informe o e-mail.'
-  else if (!validarEmailCandidato(email)) errors.email = 'Informe um e-mail válido.'
+  if (!email) errors.email = t('candidateRegistration.validation.emailRequired')
+  else if (!validarEmailCandidato(email)) errors.email = t('candidateRegistration.validation.emailInvalid')
 
   if (!validarTelefoneCandidato(form.telefone)) {
-    errors.telefone = 'Informe um telefone com 10 ou 11 dígitos.'
+    errors.telefone = t('candidateRegistration.validation.phoneInvalid')
   }
 
   return errors
@@ -156,7 +158,7 @@ const buildManualPayload = (form, origin) => {
   }
 }
 
-const getResumeValidationError = (file) => {
+const getResumeValidationError = (file, t) => {
   if (!file) return ''
   const extension = file.name.split('.').pop()?.toLowerCase() || ''
   const browserType = String(file.type || '').toLowerCase()
@@ -165,13 +167,51 @@ const getResumeValidationError = (file) => {
     || RESUME_TYPES.has(browserType)
 
   if (!RESUME_EXTENSIONS.includes(extension) || !validType) {
-    return 'Use um arquivo PDF, DOC, DOCX ou RTF.'
+    return t('candidateRegistration.validation.resumeType')
   }
-  if (file.size > MAX_RESUME_SIZE) return 'O currículo deve ter no máximo 10 MB.'
+  if (file.size > MAX_RESUME_SIZE) return t('candidateRegistration.validation.resumeSize')
   return ''
 }
 
+const genderOptions = [
+  { value: 'Feminino', labelKey: 'common:candidateForm.options.gender.female' },
+  { value: 'Masculino', labelKey: 'common:candidateForm.options.gender.male' },
+  { value: 'Não binário', labelKey: 'common:candidateForm.options.gender.nonBinary' },
+  { value: 'Outro', labelKey: 'common:candidateForm.options.gender.other' },
+  { value: 'Prefiro não informar', labelKey: 'common:candidateForm.options.gender.preferNot' }
+]
+
+const educationOptions = [
+  { value: 'Ensino fundamental', labelKey: 'common:candidateForm.options.education.elementary' },
+  { value: 'Ensino médio', labelKey: 'common:candidateForm.options.education.highSchool' },
+  { value: 'Técnico', labelKey: 'common:candidateForm.options.education.technical' },
+  { value: 'Superior', labelKey: 'common:candidateForm.options.education.higher' },
+  { value: 'Pós-graduação', labelKey: 'common:candidateForm.options.education.postgraduate' },
+  { value: 'Mestrado', labelKey: 'common:candidateForm.options.education.masters' },
+  { value: 'Doutorado', labelKey: 'common:candidateForm.options.education.doctorate' }
+]
+
+const workModelOptions = [
+  { value: 'Remoto', labelKey: 'common:candidateForm.options.workModel.remote' },
+  { value: 'Híbrido', labelKey: 'common:candidateForm.options.workModel.hybrid' },
+  { value: 'Presencial', labelKey: 'common:candidateForm.options.workModel.onsite' }
+]
+
+const noticeOptions = [
+  { value: 'Imediato', labelKey: 'common:candidateForm.options.notice.immediate' },
+  { value: '15 dias', labelKey: 'common:candidateForm.options.notice.days15' },
+  { value: '30 dias', labelKey: 'common:candidateForm.options.notice.days30' },
+  { value: '45 dias', labelKey: 'common:candidateForm.options.notice.days45' },
+  { value: '60 dias', labelKey: 'common:candidateForm.options.notice.days60' }
+]
+
+const translateOptions = (options, t) => options.map((option) => ({
+  value: option.value,
+  label: t(option.labelKey)
+}))
+
 function IndicadorCandidatoCadastro() {
+  const { t, i18n } = useTranslation(['referrer', 'common'])
   const { candidatoId } = useParams()
   const isEditing = Boolean(candidatoId)
   const navigate = useNavigate()
@@ -180,6 +220,7 @@ function IndicadorCandidatoCadastro() {
   const { firebaseUser, perfil, carregando, carregandoPerfil } = useAuth()
   const indicador = perfil?.tipo === 'indicador' ? perfil : null
   const indicadorId = firebaseUser?.uid || ''
+  const language = i18n.resolvedLanguage || i18n.language
 
   const [activeTab, setActiveTab] = useState('manual')
   const [form, setForm] = useState(cloneEmptyForm)
@@ -210,13 +251,13 @@ function IndicadorCandidatoCadastro() {
       try {
         setLoadError('')
         const candidate = await buscarCandidatoPreSalvoPorId({ candidatoId, indicadorId })
-        if (!candidate) throw new Error('Candidato pré-salvo não encontrado.')
+        if (!candidate) throw new Error(t('candidateRegistration.candidateNotFound'))
         if (!active) return
 
         setForm(mapCandidateToForm(candidate))
         setOrigin(candidate.origem || 'manual')
-      } catch (error) {
-        if (active) setLoadError(error.message || 'Não foi possível carregar o candidato.')
+      } catch {
+        if (active) setLoadError(t('candidateRegistration.loadError'))
       } finally {
         if (active) setLoadingCandidate(false)
       }
@@ -226,7 +267,7 @@ function IndicadorCandidatoCadastro() {
     return () => {
       active = false
     }
-  }, [candidatoId, indicadorId, isEditing, reloadKey])
+  }, [candidatoId, indicadorId, isEditing, reloadKey, t])
 
   const handleFieldChange = (event) => {
     const { name, value } = event.target
@@ -243,7 +284,7 @@ function IndicadorCandidatoCadastro() {
   }
 
   const handleCurrencyChange = (event) => {
-    const value = formatCurrency(event.target.value)
+    const value = formatCurrency(event.target.value, language)
     setForm((current) => ({ ...current, expectativaSalarial: value }))
   }
 
@@ -267,7 +308,7 @@ function IndicadorCandidatoCadastro() {
   const handleResume = (event) => {
     const file = event.target.files?.[0]
     if (!file) return
-    const error = getResumeValidationError(file)
+    const error = getResumeValidationError(file, t)
 
     if (error) {
       setResumeError(error)
@@ -300,11 +341,11 @@ function IndicadorCandidatoCadastro() {
     event.preventDefault()
     if (saving) return
 
-    const errors = validateManualForm(form)
+    const errors = validateManualForm(form, t)
     setFormErrors(errors)
 
     if (Object.keys(errors).length) {
-      toast.warning('Revise os campos obrigatórios antes de salvar.')
+      toast.warning(t('candidateRegistration.validation.reviewRequired'))
       const firstInvalidField = Object.keys(errors)[0]
       window.requestAnimationFrame(() => document.querySelector(`[name="${firstInvalidField}"]`)?.focus())
       return
@@ -316,15 +357,15 @@ function IndicadorCandidatoCadastro() {
 
       if (isEditing) {
         await atualizarCandidatoPreSalvo({ candidatoId, dados: data, indicadorId })
-        toast.success('Candidato atualizado com sucesso.')
+        toast.success(t('candidateRegistration.updated'))
       } else {
         await criarCandidatoPreSalvo({ dados: data, indicadorId })
-        toast.success('Candidato pré-salvo com sucesso.')
+        toast.success(t('candidateRegistration.saved'))
       }
 
       navigate('/candidatos/indicador')
-    } catch (error) {
-      toast.error(error.message || 'Não foi possível salvar o candidato.')
+    } catch {
+      toast.error(t('candidateRegistration.saveError'))
     } finally {
       setSaving(false)
     }
@@ -343,7 +384,7 @@ function IndicadorCandidatoCadastro() {
     const isCsv = file.name.toLowerCase().endsWith('.csv') || ['text/csv', 'application/vnd.ms-excel'].includes(file.type)
 
     if (!isCsv) {
-      const message = 'Selecione um arquivo no formato CSV.'
+      const message = t('candidateRegistration.csvType')
       setCsvError(message)
       setCsvPreview(null)
       toast.warning(message)
@@ -351,7 +392,7 @@ function IndicadorCandidatoCadastro() {
     }
 
     if (file.size > MAX_CSV_FILE_SIZE) {
-      const message = 'O arquivo CSV deve ter no máximo 2 MB.'
+      const message = t('candidateRegistration.csvSize')
       setCsvError(message)
       setCsvPreview(null)
       toast.warning(message)
@@ -365,16 +406,18 @@ function IndicadorCandidatoCadastro() {
 
     try {
       const content = await file.text()
-      const preview = processarCandidatosCsv(content)
+      const preview = processarCandidatosCsv(content, {
+        translate: (key, params) => t(`candidateRegistration.csvErrors.${key}`, params)
+      })
       setCsvPreview(preview)
 
       if (preview.errosGerais.length) {
-        toast.warning('O CSV possui erros que impedem a importação.')
+        toast.warning(t('candidateRegistration.csvBlockingErrors'))
       }
-    } catch (error) {
+    } catch {
       setCsvPreview(null)
-      setCsvError(error.message || 'Não foi possível ler o arquivo CSV.')
-      toast.error('Não foi possível ler o arquivo CSV.')
+      setCsvError(t('candidateRegistration.csvReadError'))
+      toast.error(t('candidateRegistration.csvReadError'))
     } finally {
       setCsvReading(false)
     }
@@ -400,16 +443,16 @@ function IndicadorCandidatoCadastro() {
     anchor.click()
     anchor.remove()
     URL.revokeObjectURL(url)
-    toast.info('Modelo CSV baixado.')
+    toast.info(t('candidateRegistration.csvModelDownloaded'))
   }
 
   const handleCsvImport = async () => {
     if (csvImporting || !csvPreview?.validos.length || csvPreview.errosGerais.length) return
 
     const approved = await confirm({
-      title: 'Importar candidatos?',
-      description: `${csvPreview.validos.length} candidato(s) válido(s) serão adicionados à sua base. Linhas inválidas serão ignoradas.`,
-      confirmLabel: 'Importar candidatos',
+      title: t('candidateRegistration.csvConfirmTitle'),
+      description: t('candidateRegistration.csvConfirmDescription', { count: csvPreview.validos.length }),
+      confirmLabel: t('candidateRegistration.csvConfirm'),
     })
     if (!approved) return
 
@@ -431,12 +474,12 @@ function IndicadorCandidatoCadastro() {
 
       setImportResult({ importados: imported, rejeitados: rejected })
       if (imported.length) {
-        toast.success(`${imported.length} candidato(s) importado(s) com sucesso.`)
+        toast.success(t('candidateRegistration.csvImported', { count: imported.length }))
       } else {
-        toast.warning('Nenhum candidato foi importado.')
+        toast.warning(t('candidateRegistration.csvNoneImported'))
       }
-    } catch (error) {
-      toast.error(error.message || 'Não foi possível importar os candidatos.')
+    } catch {
+      toast.error(t('candidateRegistration.csvImportError'))
     } finally {
       setCsvImporting(false)
     }
@@ -449,12 +492,12 @@ function IndicadorCandidatoCadastro() {
 
   const authLoading = carregando || carregandoPerfil
   const content = useMemo(() => {
-    if (authLoading) return { type: 'loading', message: 'Validando sua sessão...' }
+    if (authLoading) return { type: 'loading', message: t('candidateRegistration.validatingSession') }
     if (!indicador || !indicadorId) return { type: 'access' }
-    if (loadingCandidate) return { type: 'loading', message: 'Carregando candidato...' }
+    if (loadingCandidate) return { type: 'loading', message: t('candidateRegistration.loadingCandidate') }
     if (loadError) return { type: 'error' }
     return { type: 'ready' }
-  }, [authLoading, indicador, indicadorId, loadError, loadingCandidate])
+  }, [authLoading, indicador, indicadorId, loadError, loadingCandidate, t])
 
   return (
     <>
@@ -465,35 +508,35 @@ function IndicadorCandidatoCadastro() {
 
         <main className="candidate-registration-page">
           <header className="candidate-registration-header">
-            <span>Base de talentos</span>
-            <h1>{isEditing ? 'Editar candidato' : 'Pré-salvar candidato'}</h1>
+            <span>{t('candidateRegistration.eyebrow')}</span>
+            <h1>{isEditing ? t('candidateRegistration.editTitle') : t('candidateRegistration.createTitle')}</h1>
             <p>
               {isEditing
-                ? 'Atualize os dados do talento sem alterar indicações já enviadas.'
-                : 'Cadastre um talento agora e indique-o para uma vaga quando desejar.'}
+                ? t('candidateRegistration.editDescription')
+                : t('candidateRegistration.createDescription')}
             </p>
-            <Link to="/candidatos/indicador">Voltar para candidatos</Link>
+            <Link to="/candidatos/indicador">{t('candidateRegistration.backToCandidates')}</Link>
           </header>
 
           {content.type === 'loading' ? (
             <PageLoader label={content.message} compact />
           ) : content.type === 'access' ? (
             <EstadoDados
-              description="Entre com uma conta de indicador para acessar este cadastro."
-              title="Cadastro indisponível"
+              description={t('candidateRegistration.accessDescription')}
+              title={t('candidateRegistration.unavailable')}
               tone="error"
             />
           ) : content.type === 'error' ? (
             <EstadoDados
-              actionLabel="Tentar novamente"
+              actionLabel={t('candidateRegistration.retry')}
               description={loadError}
               onAction={retryLoad}
-              title={navigator.onLine ? 'Não foi possível carregar o candidato' : 'Você está sem conexão'}
+              title={navigator.onLine ? t('candidateRegistration.loadTitle') : t('candidateRegistration.offline')}
               tone={navigator.onLine ? 'error' : 'offline'}
             />
           ) : (
             <section className="candidate-registration-panel">
-              <div className="candidate-registration-tabs" role="tablist" aria-label="Forma de cadastro">
+              <div className="candidate-registration-tabs" role="tablist" aria-label={t('candidateRegistration.registrationMethod')}>
                 <button
                   type="button"
                   role="tab"
@@ -501,7 +544,7 @@ function IndicadorCandidatoCadastro() {
                   className={activeTab === 'manual' ? 'active' : ''}
                   onClick={() => setActiveTab('manual')}
                 >
-                  <FaFileAlt aria-hidden="true" /> Cadastro manual
+                  <FaFileAlt aria-hidden="true" /> {t('candidateRegistration.manualTab')}
                 </button>
                 <button
                   type="button"
@@ -510,10 +553,10 @@ function IndicadorCandidatoCadastro() {
                   aria-disabled={isEditing}
                   className={activeTab === 'csv' ? 'active' : ''}
                   disabled={isEditing}
-                  title={isEditing ? 'A importação CSV está disponível apenas em novos cadastros.' : undefined}
+                  title={isEditing ? t('candidateRegistration.csvOnlyNew') : undefined}
                   onClick={() => setActiveTab('csv')}
                 >
-                  <FaFileCsv aria-hidden="true" /> Importar CSV
+                  <FaFileCsv aria-hidden="true" /> {t('candidateRegistration.csvTab')}
                 </button>
               </div>
 
@@ -578,88 +621,91 @@ function ManualCandidateForm({
   resumeInputRef,
   saving,
 }) {
+  const { t, i18n } = useTranslation(['referrer', 'common'])
+  const language = i18n.resolvedLanguage || i18n.language
+
   return (
     <form className="candidate-registration-form" onSubmit={onSubmit} noValidate>
-      <FormSection title="Dados pessoais">
+      <FormSection title={t('common:candidateForm.sections.personal')}>
         <div className="candidate-registration-grid">
-          <Field label="Nome completo" name="nome" value={form.nome} onChange={onChange} error={errors.nome} placeholder="Ex: João da Silva" required autoComplete="name" />
-          <Field label="E-mail" name="email" type="email" value={form.email} onChange={onChange} error={errors.email} placeholder="joao@exemplo.com" required autoComplete="email" />
-          <Field label="Telefone" name="telefone" value={form.telefone} onChange={onPhoneChange} error={errors.telefone} placeholder="(11) 98765-4321" inputMode="tel" autoComplete="tel" />
-          <Field label="Data de nascimento" name="dataNascimento" type="date" value={form.dataNascimento} onChange={onChange} />
-          <SelectField label="Gênero (opcional)" name="genero" value={form.genero} onChange={onChange} options={['Feminino', 'Masculino', 'Não binário', 'Outro', 'Prefiro não informar']} />
+          <Field label={t('common:candidateForm.fields.name')} name="nome" value={form.nome} onChange={onChange} error={errors.nome} placeholder={t('common:candidateForm.placeholders.name')} required autoComplete="name" />
+          <Field label={t('common:candidateForm.fields.email')} name="email" type="email" value={form.email} onChange={onChange} error={errors.email} placeholder={t('common:candidateForm.placeholders.email')} required autoComplete="email" />
+          <Field label={t('common:candidateForm.fields.phone')} name="telefone" value={form.telefone} onChange={onPhoneChange} error={errors.telefone} placeholder={t('common:candidateForm.placeholders.phone')} inputMode="tel" autoComplete="tel" />
+          <Field label={t('common:candidateForm.fields.birthDate')} name="dataNascimento" type="date" value={form.dataNascimento} onChange={onChange} />
+          <SelectField emptyLabel={t('common:candidateForm.options.select')} label={t('common:candidateForm.fields.genderOptional')} name="genero" value={form.genero} onChange={onChange} options={translateOptions(genderOptions, t)} />
         </div>
       </FormSection>
 
-      <FormSection title="Perfil profissional">
+      <FormSection title={t('common:candidateForm.sections.professional')}>
         <div className="candidate-registration-grid">
-          <Field label="Cargo atual" name="cargoAtual" value={form.cargoAtual} onChange={onChange} placeholder="Ex: Desenvolvedor Front-end" />
-          <Field label="Anos de experiência" name="anosExperiencia" type="number" min="0" max="80" value={form.anosExperiencia} onChange={onChange} placeholder="Ex: 5" />
-          <SelectField label="Escolaridade" name="escolaridade" value={form.escolaridade} onChange={onChange} options={['Ensino fundamental', 'Ensino médio', 'Técnico', 'Superior', 'Pós-graduação', 'Mestrado', 'Doutorado']} />
-          <Field label="Idiomas" name="proficienciaIdiomas" value={form.proficienciaIdiomas} onChange={onChange} placeholder="Inglês (Avançado), Espanhol (Básico)" />
+          <Field label={t('common:candidateForm.fields.currentRole')} name="cargoAtual" value={form.cargoAtual} onChange={onChange} placeholder={t('common:candidateForm.placeholders.currentRole')} />
+          <Field label={t('common:candidateForm.fields.experience')} name="anosExperiencia" type="number" min="0" max="80" value={form.anosExperiencia} onChange={onChange} placeholder={t('common:candidateForm.placeholders.experience')} />
+          <SelectField emptyLabel={t('common:candidateForm.options.select')} label={t('common:candidateForm.fields.education')} name="escolaridade" value={form.escolaridade} onChange={onChange} options={translateOptions(educationOptions, t)} />
+          <Field label={t('common:candidateForm.fields.languages')} name="proficienciaIdiomas" value={form.proficienciaIdiomas} onChange={onChange} placeholder={t('common:candidateForm.placeholders.languages')} />
         </div>
       </FormSection>
 
-      <FormSection title="Links profissionais">
+      <FormSection title={t('candidateRegistration.linksSection')}>
         <div className="candidate-registration-grid">
-          <Field label="LinkedIn" name="linkedin" value={form.linkedin} onChange={onChange} placeholder="linkedin.com/in/perfil" />
-          <Field label="Portfólio" name="portfolio" value={form.portfolio} onChange={onChange} placeholder="behance.net/perfil ou seudominio.com" />
-          <Field className="full" label="GitHub / Behance" name="github" value={form.github} onChange={onChange} placeholder="Links adicionais de repositórios ou portfólios" />
+          <Field label="LinkedIn" name="linkedin" value={form.linkedin} onChange={onChange} placeholder={t('common:candidateForm.placeholders.linkedin')} />
+          <Field label="Portfolio" name="portfolio" value={form.portfolio} onChange={onChange} placeholder={t('common:candidateForm.placeholders.portfolio')} />
+          <Field className="full" label="GitHub / Behance" name="github" value={form.github} onChange={onChange} placeholder={t('common:candidateForm.placeholders.github')} />
         </div>
       </FormSection>
 
-      <FormSection title="Habilidades">
-        <p className="candidate-registration-help">Digite uma habilidade e pressione Enter ou vírgula para adicioná-la.</p>
+      <FormSection title={t('candidateRegistration.skillsSection')}>
+        <p className="candidate-registration-help">{t('common:candidateForm.skillHelp')}</p>
         <SkillField label="Hard skills" skills={form.hardSkills} onAdd={(value) => onAddSkill('hardSkills', value)} onRemove={(value) => onRemoveSkill('hardSkills', value)} />
         <SkillField label="Soft skills" skills={form.softSkills} onAdd={(value) => onAddSkill('softSkills', value)} onRemove={(value) => onRemoveSkill('softSkills', value)} />
       </FormSection>
 
-      <FormSection title="Preferências profissionais">
+      <FormSection title={t('common:candidateForm.sections.preferences')}>
         <div className="candidate-registration-grid three-columns">
-          <Field label="Expectativa salarial" name="expectativaSalarial" value={form.expectativaSalarial} onChange={onCurrencyChange} placeholder="R$ 8.000" inputMode="numeric" />
-          <SelectField label="Modelo de trabalho" name="modeloTrabalho" value={form.modeloTrabalho} onChange={onChange} options={['Remoto', 'Híbrido', 'Presencial']} />
-          <SelectField label="Aviso prévio" name="avisoPrevio" value={form.avisoPrevio} onChange={onChange} options={['Imediato', '15 dias', '30 dias', '45 dias', '60 dias']} />
+          <Field label={t('common:candidateForm.fields.salaryExpectation')} name="expectativaSalarial" value={form.expectativaSalarial} onChange={onCurrencyChange} placeholder={formatCurrency('8000', language)} inputMode="numeric" />
+          <SelectField emptyLabel={t('common:candidateForm.options.select')} label={t('common:candidateForm.fields.workModel')} name="modeloTrabalho" value={form.modeloTrabalho} onChange={onChange} options={translateOptions(workModelOptions, t)} />
+          <SelectField emptyLabel={t('common:candidateForm.options.select')} label={t('common:candidateForm.fields.noticePeriod')} name="avisoPrevio" value={form.avisoPrevio} onChange={onChange} options={translateOptions(noticeOptions, t)} />
         </div>
       </FormSection>
 
-      <FormSection title="Currículo e observações">
+      <FormSection title={t('common:candidateForm.sections.resume')}>
         <div className={`candidate-registration-resume ${form.curriculoNome ? 'has-file' : ''} ${resumeError ? 'has-error' : ''}`}>
           {form.curriculoNome ? <FaCheckCircle aria-hidden="true" /> : <FaCloudUploadAlt aria-hidden="true" />}
           <div>
-            <strong>{form.curriculoNome || 'Anexar currículo'}</strong>
+            <strong>{form.curriculoNome || t('common:candidateForm.attachResume')}</strong>
             <p>
               {form.curriculoNome
-                ? [form.curriculoTipo, formatFileSize(form.curriculoTamanho)].filter(Boolean).join(' • ')
-                : 'PDF, DOC, DOCX ou RTF • máximo de 10 MB'}
+                ? [form.curriculoTipo, formatFileSize(form.curriculoTamanho, language)].filter(Boolean).join(' • ')
+                : t('common:candidateForm.fileHelp')}
             </p>
           </div>
           <label className="candidate-registration-file-button">
-            {form.curriculoNome ? 'Substituir' : 'Escolher arquivo'}
+            {form.curriculoNome ? t('candidateRegistration.replaceFile') : t('candidateRegistration.chooseFile')}
             <input ref={resumeInputRef} type="file" accept=".pdf,.doc,.docx,.rtf" onChange={onResume} />
           </label>
           {form.curriculoNome && (
-            <button type="button" className="candidate-registration-remove-file" onClick={onRemoveResume} aria-label="Remover currículo">
+            <button type="button" className="candidate-registration-remove-file" onClick={onRemoveResume} aria-label={t('common:candidateForm.removeResume')}>
               <FaTrash aria-hidden="true" />
             </button>
           )}
         </div>
         {resumeError && <p className="candidate-registration-inline-error" role="alert">{resumeError}</p>}
-        <TextareaField label="Observações profissionais" name="observacoesProfissionais" value={form.observacoesProfissionais} onChange={onChange} placeholder="Inclua contexto profissional, disponibilidade ou outras informações relevantes." />
+        <TextareaField label={t('common:candidateForm.fields.professionalNotes')} name="observacoesProfissionais" value={form.observacoesProfissionais} onChange={onChange} placeholder={t('common:candidateForm.placeholders.professionalNotes')} />
       </FormSection>
 
       {Object.values(errors).some(Boolean) && (
         <div className="candidate-registration-alert" role="alert">
           <FaExclamationCircle aria-hidden="true" />
           <div>
-            <strong>Revise os dados informados</strong>
-            <p>Existem campos que precisam ser corrigidos antes de salvar.</p>
+            <strong>{t('candidateRegistration.reviewTitle')}</strong>
+            <p>{t('candidateRegistration.reviewDescription')}</p>
           </div>
         </div>
       )}
 
       <div className="candidate-registration-actions">
-        <Link to="/candidatos/indicador" className="candidate-registration-secondary-button">Cancelar</Link>
+        <Link to="/candidatos/indicador" className="candidate-registration-secondary-button">{t('common:candidateForm.cancel')}</Link>
         <button type="submit" className="candidate-registration-primary-button" disabled={saving}>
-          {saving ? 'Salvando...' : isEditing ? 'Salvar alterações' : 'Pré-salvar candidato'}
+          {saving ? t('common:candidateForm.saving') : isEditing ? t('candidateRegistration.saveChanges') : t('candidateRegistration.saveCandidate')}
         </button>
       </div>
     </form>
@@ -682,18 +728,19 @@ function CsvImportPanel({
   onImport,
   onReset,
 }) {
+  const { t } = useTranslation('referrer')
   const hasBlockingErrors = Boolean(csvPreview?.errosGerais.length)
 
   return (
     <div className="candidate-csv-panel" role="tabpanel">
       <div className="candidate-csv-intro">
         <div>
-          <span>Importação em lote</span>
-          <h2>Adicione até {MAX_CANDIDATOS_CSV} candidatos</h2>
-          <p>Use o modelo para manter os cabeçalhos corretos. Nome e e-mail são obrigatórios.</p>
+          <span>{t('candidateRegistration.csv.eyebrow')}</span>
+          <h2>{t('candidateRegistration.csv.title', { count: MAX_CANDIDATOS_CSV })}</h2>
+          <p>{t('candidateRegistration.csv.description')}</p>
         </div>
         <button type="button" className="candidate-registration-secondary-button" onClick={onDownloadModel}>
-          <FaDownload aria-hidden="true" /> Baixar modelo CSV
+          <FaDownload aria-hidden="true" /> {t('candidateRegistration.csv.downloadModel')}
         </button>
       </div>
 
@@ -712,44 +759,44 @@ function CsvImportPanel({
           onDrop={onDrop}
         >
           <FaUpload aria-hidden="true" />
-          <strong>Arraste o CSV aqui ou clique para selecionar</strong>
-          <small>CSV com vírgula ou ponto-e-vírgula • até 2 MB</small>
+          <strong>{t('candidateRegistration.csv.dropzone')}</strong>
+          <small>{t('candidateRegistration.csv.fileHelp')}</small>
           <input ref={csvInputRef} type="file" accept=".csv,text/csv" onChange={onFileInput} />
         </label>
       )}
 
-      {csvReading && <PageLoader label="Lendo e validando o CSV..." compact />}
+      {csvReading && <PageLoader label={t('candidateRegistration.csv.reading')} compact />}
 
       {csvError && !csvReading && (
         <EstadoDados
-          actionLabel="Selecionar outro arquivo"
+          actionLabel={t('candidateRegistration.csv.selectAnother')}
           compact
           description={csvError}
           onAction={onReset}
-          title="Arquivo CSV inválido"
+          title={t('candidateRegistration.csv.invalidFile')}
           tone="error"
         />
       )}
 
       {csvPreview && !csvReading && (
         <>
-          <section className="candidate-csv-summary" aria-label="Resumo do arquivo CSV">
+          <section className="candidate-csv-summary" aria-label={t('candidateRegistration.csv.summary')}>
             <div>
               <FaFileCsv aria-hidden="true" />
-              <span><strong>{csvFileName}</strong><small>{csvPreview.totalRegistros} registro(s) encontrado(s)</small></span>
+              <span><strong>{csvFileName}</strong><small>{t('candidateRegistration.csv.records', { count: csvPreview.totalRegistros })}</small></span>
             </div>
             <dl>
-              <div><dt>Válidos</dt><dd>{csvPreview.validos.length}</dd></div>
-              <div><dt>Inválidos</dt><dd>{csvPreview.invalidos.length}</dd></div>
+              <div><dt>{t('candidateRegistration.csv.valid')}</dt><dd>{csvPreview.validos.length}</dd></div>
+              <div><dt>{t('candidateRegistration.csv.invalid')}</dt><dd>{csvPreview.invalidos.length}</dd></div>
             </dl>
-            <button type="button" onClick={onReset} disabled={csvImporting}>Trocar arquivo</button>
+            <button type="button" onClick={onReset} disabled={csvImporting}>{t('candidateRegistration.csv.changeFile')}</button>
           </section>
 
           {hasBlockingErrors && (
             <div className="candidate-registration-alert" role="alert">
               <FaExclamationCircle aria-hidden="true" />
               <div>
-                <strong>Corrija o arquivo antes de importar</strong>
+                <strong>{t('candidateRegistration.csv.fixBefore')}</strong>
                 <ul>{csvPreview.errosGerais.map((error) => <li key={error}>{error}</li>)}</ul>
               </div>
             </div>
@@ -757,14 +804,14 @@ function CsvImportPanel({
 
           <div className="candidate-csv-table-wrap">
             <table className="candidate-csv-table">
-              <caption className="candidate-registration-sr-only">Pré-visualização e validação dos candidatos do CSV</caption>
+              <caption className="candidate-registration-sr-only">{t('candidateRegistration.csv.previewCaption')}</caption>
               <thead>
                 <tr>
-                  <th scope="col">Linha</th>
-                  <th scope="col">Nome</th>
-                  <th scope="col">E-mail</th>
-                  <th scope="col">Telefone</th>
-                  <th scope="col">Validação</th>
+                  <th scope="col">{t('candidateRegistration.csv.line')}</th>
+                  <th scope="col">{t('candidateRegistration.csv.name')}</th>
+                  <th scope="col">{t('candidateRegistration.csv.email')}</th>
+                  <th scope="col">{t('candidateRegistration.csv.phone')}</th>
+                  <th scope="col">{t('candidateRegistration.csv.validation')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -776,7 +823,7 @@ function CsvImportPanel({
                     <td>{row.dados.telefone || '—'}</td>
                     <td>
                       {row.valido ? (
-                        <span className="candidate-csv-status valid"><FaCheckCircle aria-hidden="true" /> Pronto</span>
+                        <span className="candidate-csv-status valid"><FaCheckCircle aria-hidden="true" /> {t('candidateRegistration.csv.ready')}</span>
                       ) : (
                         <span className="candidate-csv-errors">
                           {row.erros.map((error) => <small key={error}>{error}</small>)}
@@ -792,9 +839,9 @@ function CsvImportPanel({
           {importResult && <CsvImportResult result={importResult} />}
 
           <div className="candidate-registration-actions">
-            <Link to="/candidatos/indicador" className="candidate-registration-secondary-button">Voltar para candidatos</Link>
+            <Link to="/candidatos/indicador" className="candidate-registration-secondary-button">{t('candidateRegistration.backToCandidates')}</Link>
             {importResult ? (
-              <button type="button" className="candidate-registration-primary-button" onClick={onReset}>Importar outro arquivo</button>
+              <button type="button" className="candidate-registration-primary-button" onClick={onReset}>{t('candidateRegistration.csv.importAnother')}</button>
             ) : (
               <button
                 type="button"
@@ -802,7 +849,7 @@ function CsvImportPanel({
                 disabled={csvImporting || hasBlockingErrors || !csvPreview.validos.length}
                 onClick={onImport}
               >
-                {csvImporting ? 'Importando...' : `Importar ${csvPreview.validos.length} candidato(s)`}
+                {csvImporting ? t('candidateRegistration.csv.importing') : t('candidateRegistration.csv.importCount', { count: csvPreview.validos.length })}
               </button>
             )}
           </div>
@@ -813,23 +860,26 @@ function CsvImportPanel({
 }
 
 function CsvImportResult({ result }) {
+  const { t } = useTranslation('referrer')
+
   return (
     <section className="candidate-csv-result" aria-live="polite">
       <div>
         <FaCheckCircle aria-hidden="true" />
-        <span><strong>Importação concluída</strong><small>Os registros válidos já estão na sua base.</small></span>
+        <span><strong>{t('candidateRegistration.csv.complete')}</strong><small>{t('candidateRegistration.csv.completeDescription')}</small></span>
       </div>
       <dl>
-        <div><dt>Importados</dt><dd>{result.importados.length}</dd></div>
-        <div><dt>Rejeitados</dt><dd>{result.rejeitados.length}</dd></div>
+        <div><dt>{t('candidateRegistration.csv.imported')}</dt><dd>{result.importados.length}</dd></div>
+        <div><dt>{t('candidateRegistration.csv.rejected')}</dt><dd>{result.rejeitados.length}</dd></div>
       </dl>
       {result.rejeitados.length > 0 && (
         <details>
-          <summary>Ver registros rejeitados</summary>
+          <summary>{t('candidateRegistration.csv.viewRejected')}</summary>
           <ul>
             {result.rejeitados.map((item, index) => (
               <li key={`${item.linha || 'registro'}-${index}`}>
-                <strong>Linha {item.linha || 'não informada'}:</strong> {item.motivo || 'Registro rejeitado.'}
+                <strong>{t('candidateRegistration.csv.lineValue', { line: item.linha || t('candidateRegistration.csv.lineUnknown') })}</strong>{' '}
+                {item.motivoKey ? t(item.motivoKey) : item.motivo || t('candidateRegistration.csv.recordRejected')}
               </li>
             ))}
           </ul>
@@ -865,13 +915,13 @@ function Field({ className = '', error, label, name, required = false, ...props 
   )
 }
 
-function SelectField({ label, options, name, ...props }) {
+function SelectField({ emptyLabel, label, options, name, ...props }) {
   return (
     <label className="candidate-registration-field">
       <span>{label}</span>
       <select name={name} {...props}>
-        <option value="">Selecione</option>
-        {options.map((option) => <option key={option} value={option}>{option}</option>)}
+        <option value="">{emptyLabel}</option>
+        {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
       </select>
     </label>
   )
@@ -887,6 +937,7 @@ function TextareaField({ label, name, ...props }) {
 }
 
 function SkillField({ label, onAdd, onRemove, skills }) {
+  const { t } = useTranslation('referrer')
   const [draft, setDraft] = useState('')
 
   const commit = () => {
@@ -907,7 +958,7 @@ function SkillField({ label, onAdd, onRemove, skills }) {
       <span>{label}</span>
       <div className="candidate-registration-skills">
         {skills.map((skill) => (
-          <button type="button" key={skill} onClick={() => onRemove(skill)} aria-label={`Remover ${skill}`}>
+          <button type="button" key={skill} onClick={() => onRemove(skill)} aria-label={t('candidateRegistration.removeSkill', { skill })}>
             {skill} <FaTimes aria-hidden="true" />
           </button>
         ))}
@@ -916,7 +967,7 @@ function SkillField({ label, onAdd, onRemove, skills }) {
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={commit}
-          placeholder="Adicionar habilidade..."
+          placeholder={t('candidateRegistration.skillPlaceholder')}
         />
       </div>
     </label>

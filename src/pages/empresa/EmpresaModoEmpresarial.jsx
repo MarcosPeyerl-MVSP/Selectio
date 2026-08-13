@@ -1,6 +1,7 @@
 import './styles/EmpresaModoEmpresarial.css'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import {
   FaCheckCircle,
@@ -16,12 +17,13 @@ import CardEsqueleto from '../../components/ui/CardEsqueleto'
 import EstadoDados from '../../components/ui/EstadoDados'
 import {
   atualizarFluxoAprovacaoVaga,
-  listarVagasPorEmpresa,
-  statusAprovacaoVagaLabels
+  listarVagasPorEmpresa
 } from '../../services/firestoreVagas'
 import { atualizarSetoresEmpresariais } from '../../services/firestoreUsers'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { useToast } from '../../hooks/useToast'
+import { formatDate as formatLocalizedDate } from '../../i18n/formatters'
+import { formatJobReward, formatJobSalary } from '../../i18n/domainFormatters'
 import {
   SETOR_ADMIN_EMPRESA,
   SETOR_CHEFE_DEPARTAMENTO,
@@ -36,20 +38,14 @@ const getStatusAprovacao = (vaga) => (
   vaga.statusAprovacao || (vaga.status === 'aberta' ? 'publicada' : 'solicitada')
 )
 
-const formatDate = (value) => {
-  if (!value) return 'Sem prazo'
-
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-
-  return date.toLocaleDateString('pt-BR', {
+const formatDate = (value, fallback) => formatLocalizedDate(value, {
     day: '2-digit',
     month: 'short',
     year: 'numeric'
-  }).replace('.', '')
-}
+  }) || fallback
 
 export function EmpresaFluxoEmpresarial({ empresa }) {
+  const { t } = useTranslation(['company', 'common'])
   const toast = useToast()
   const empresaUid = getFirebaseUid(empresa)
   const setorAtual = obterSetorAtual(empresa)
@@ -73,8 +69,8 @@ export function EmpresaFluxoEmpresarial({ empresa }) {
         setError('')
         const data = await listarVagasPorEmpresa(empresaUid)
         if (ativo) setVagas(data)
-      } catch (err) {
-        if (ativo) setError(err.message)
+      } catch {
+        if (ativo) setError(t('enterprise.loadError'))
       } finally {
         if (ativo) setLoading(false)
       }
@@ -85,7 +81,7 @@ export function EmpresaFluxoEmpresarial({ empresa }) {
     return () => {
       ativo = false
     }
-  }, [empresaUid])
+  }, [empresaUid, t])
 
   const vagasFluxo = useMemo(() => (
     vagas
@@ -107,7 +103,7 @@ export function EmpresaFluxoEmpresarial({ empresa }) {
     const comentario = comentarios[vaga.id] || ''
 
     if (exigeComentario && !comentario.trim()) {
-      toast.warning('Inclua um comentario para devolver a vaga ao departamento.')
+      toast.warning(t('enterprise.commentRequired'))
       return
     }
 
@@ -135,7 +131,7 @@ export function EmpresaFluxoEmpresarial({ empresa }) {
       atualizarComentario(vaga.id, '')
       toast.success(sucesso)
     } catch {
-      toast.error('Nao foi possivel atualizar o fluxo da vaga.')
+      toast.error(t('enterprise.updateError'))
     } finally {
       setUpdatingId('')
     }
@@ -146,7 +142,7 @@ export function EmpresaFluxoEmpresarial({ empresa }) {
     setError('')
     listarVagasPorEmpresa(empresaUid)
       .then(setVagas)
-      .catch((err) => setError(err.message))
+      .catch(() => setError(t('enterprise.passwordsError')))
       .finally(() => setLoading(false))
   }
 
@@ -157,9 +153,9 @@ export function EmpresaFluxoEmpresarial({ empresa }) {
   return (
     <section className="empresa-flow">
       <header className="empresa-flow-header">
-        <span>Modo empresarial</span>
-        <h1>Fluxo de aprovacao de vagas</h1>
-        <p>Pedidos criados pelo departamento passam por auditoria financeira antes de serem publicados pelo RH.</p>
+        <span>{t('enterprise.eyebrow')}</span>
+        <h1>{t('enterprise.title')}</h1>
+        <p>{t('enterprise.description')}</p>
       </header>
 
       {loading && (
@@ -170,18 +166,18 @@ export function EmpresaFluxoEmpresarial({ empresa }) {
 
       {!loading && error && (
         <EstadoDados
-          actionLabel="Tentar novamente"
+          actionLabel={t('enterprise.retry')}
           description={error}
           onAction={tentarNovamente}
-          title="Nao foi possivel carregar as solicitacoes"
+          title={t('enterprise.loadError')}
           tone="error"
         />
       )}
 
       {!loading && !error && !vagasFluxo.length && (
         <EstadoDados
-          title="Nenhuma solicitacao empresarial"
-          description="Quando um Chefe de departamento pedir uma vaga, ela aparecera aqui."
+          title={t('enterprise.emptyTitle')}
+          description={t('enterprise.emptyDescription')}
         />
       )}
 
@@ -194,23 +190,23 @@ export function EmpresaFluxoEmpresarial({ empresa }) {
             return (
               <article className={`empresa-flow-card status-${statusAprovacao}`} key={vaga.id}>
                 <header>
-                  <span>{statusAprovacaoVagaLabels[statusAprovacao] || statusAprovacao}</span>
+                  <span>{t(`common:statuses.jobApproval.${statusAprovacao}`, { defaultValue: statusAprovacao })}</span>
                   <h2>{vaga.titulo}</h2>
-                  <p>{vaga.area || 'Area nao informada'} - {vaga.localizacao || 'Local nao informado'}</p>
+                  <p>{vaga.area || t('enterprise.areaNotProvided')} - {vaga.localizacao || t('enterprise.locationNotProvided')}</p>
                 </header>
 
                 <dl>
                   <div>
-                    <dt>Salario</dt>
-                    <dd>{vaga.salario || 'A combinar'}</dd>
+                    <dt>{t('enterprise.salary')}</dt>
+                    <dd>{formatJobSalary(vaga, t)}</dd>
                   </div>
                   <div>
-                    <dt>Premiacao</dt>
-                    <dd>{vaga.recompensa || 'Nao informada'}</dd>
+                    <dt>{t('enterprise.reward')}</dt>
+                    <dd>{formatJobReward(vaga, t)}</dd>
                   </div>
                   <div>
-                    <dt>Prazo</dt>
-                    <dd>{formatDate(vaga.dataLimite || vaga.expiraEm)}</dd>
+                    <dt>{t('enterprise.deadline')}</dt>
+                    <dd>{formatDate(vaga.dataLimite || vaga.expiraEm, t('enterprise.noDeadline'))}</dd>
                   </div>
                 </dl>
 
@@ -224,7 +220,7 @@ export function EmpresaFluxoEmpresarial({ empresa }) {
                 {podeAuditar && statusAprovacao === 'solicitada' && (
                   <div className="empresa-flow-actions">
                     <textarea
-                      placeholder="Comentarios ou ressalvas da auditoria"
+                      placeholder={t('enterprise.auditPlaceholder')}
                       value={comentarios[vaga.id] || ''}
                       onChange={(event) => atualizarComentario(vaga.id, event.target.value)}
                     />
@@ -237,10 +233,10 @@ export function EmpresaFluxoEmpresarial({ empresa }) {
                           vaga,
                           statusAprovacao: 'aprovada',
                           status: 'pausada',
-                          sucesso: 'Vaga aprovada e enviada ao Setor RH.'
+                          sucesso: t('enterprise.approvedSentHr')
                         })}
                       >
-                        <FaCheckCircle /> Aprovar
+                        <FaCheckCircle /> {t('enterprise.approve')}
                       </button>
                       <button
                         type="button"
@@ -250,11 +246,11 @@ export function EmpresaFluxoEmpresarial({ empresa }) {
                           vaga,
                           statusAprovacao: 'devolvida',
                           status: 'pausada',
-                          sucesso: 'Vaga devolvida ao Chefe de departamento.',
+                          sucesso: t('enterprise.returnedDepartment'),
                           exigeComentario: true
                         })}
                       >
-                        <FaTimesCircle /> Devolver
+                        <FaTimesCircle /> {t('enterprise.return')}
                       </button>
                     </div>
                   </div>
@@ -270,17 +266,17 @@ export function EmpresaFluxoEmpresarial({ empresa }) {
                         vaga,
                         statusAprovacao: 'publicada',
                         status: 'aberta',
-                        sucesso: 'Vaga publicada para indicadores.'
+                        sucesso: t('enterprise.published')
                       })}
                     >
-                      <FaRocket /> Publicar vaga
+                      <FaRocket /> {t('enterprise.publish')}
                     </button>
                   </div>
                 )}
 
                 {podeReenviar && statusAprovacao === 'devolvida' && (
                   <div className="empresa-flow-actions compact">
-                    <Link to={`/editar-vaga/empresa/${vaga.id}`}>Editar pedido</Link>
+                    <Link to={`/editar-vaga/empresa/${vaga.id}`}>{t('enterprise.editRequest')}</Link>
                     <button
                       type="button"
                       className="flow-approve"
@@ -289,10 +285,10 @@ export function EmpresaFluxoEmpresarial({ empresa }) {
                         vaga,
                         statusAprovacao: 'solicitada',
                         status: 'pausada',
-                        sucesso: 'Pedido reenviado para Reitoria ou Auditoria.'
+                        sucesso: t('enterprise.resent')
                       })}
                     >
-                      <FaRedo /> Reenviar
+                      <FaRedo /> {t('enterprise.resend')}
                     </button>
                   </div>
                 )}
@@ -306,6 +302,7 @@ export function EmpresaFluxoEmpresarial({ empresa }) {
 }
 
 export function EmpresaSetoresEmpresariais({ empresa, onUserUpdate }) {
+  const { t } = useTranslation('company')
   const toast = useToast()
   const empresaUid = getFirebaseUid(empresa)
   const setorAtual = obterSetorAtual(empresa)
@@ -318,8 +315,8 @@ export function EmpresaSetoresEmpresariais({ empresa, onUserUpdate }) {
   if (setorAtual?.id !== SETOR_ADMIN_EMPRESA) {
     return (
       <EstadoDados
-        title="Acesso restrito"
-        description="Somente o Administrador Empresa pode redefinir senhas dos setores."
+        title={t('enterprise.restricted')}
+        description={t('enterprise.restrictedDescription')}
       />
     )
   }
@@ -370,9 +367,9 @@ export function EmpresaSetoresEmpresariais({ empresa, onUserUpdate }) {
         ...mapa,
         [setor.id]: ''
       }), {}))
-      toast.success('Senhas dos setores atualizadas.')
+      toast.success(t('enterprise.passwordsUpdated'))
     } catch {
-      toast.error('Nao foi possivel atualizar as senhas dos setores.')
+      toast.error(t('enterprise.passwordsError'))
     } finally {
       setLoading(false)
     }
@@ -381,9 +378,9 @@ export function EmpresaSetoresEmpresariais({ empresa, onUserUpdate }) {
   return (
     <section className="empresa-setores">
       <header className="empresa-flow-header">
-        <span>Administrador Empresa</span>
-        <h1>Setores e acessos</h1>
-        <p>Redefina as senhas usadas apos o login principal da empresa.</p>
+        <span>{t('enterprise.adminEyebrow')}</span>
+        <h1>{t('enterprise.sectorsTitle')}</h1>
+        <p>{t('enterprise.sectorsDescription')}</p>
       </header>
 
       <form className="empresa-setores-grid" onSubmit={handleSubmit}>
@@ -394,16 +391,16 @@ export function EmpresaSetoresEmpresariais({ empresa, onUserUpdate }) {
             <article className="empresa-setor-card" key={setor.id}>
               <FaUsersCog />
               <div>
-                <h2>{setor.nome}</h2>
-                <p>{setor.resumo}</p>
-                <span>{senhaDefinida ? 'Senha definida' : 'Senha pendente'}</span>
+                <h2>{t(`enterprise.sectors.${setor.id}.name`)}</h2>
+                <p>{t(`enterprise.sectors.${setor.id}.description`)}</p>
+                <span>{senhaDefinida ? t('enterprise.passwordDefined') : t('enterprise.passwordPending')}</span>
               </div>
 
               <label>
                 <FaLock />
                 <input
                   type="password"
-                  placeholder="Nova senha do setor"
+                  placeholder={t('enterprise.newPassword')}
                   value={senhas[setor.id]}
                   onChange={(event) => handleChange(setor.id, event.target.value)}
                 />
@@ -413,7 +410,7 @@ export function EmpresaSetoresEmpresariais({ empresa, onUserUpdate }) {
         })}
 
         <button type="submit" disabled={loading}>
-          {loading ? 'Salvando...' : 'Salvar senhas dos setores'}
+          {loading ? t('enterprise.saving') : t('enterprise.savePasswords')}
         </button>
       </form>
     </section>

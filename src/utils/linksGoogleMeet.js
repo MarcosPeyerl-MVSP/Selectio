@@ -23,8 +23,8 @@ export const somarMinutosAoHorario = (data, horaInicio, duracaoMinutos = 45) => 
   return `${String(horario.getHours()).padStart(2, '0')}:${String(horario.getMinutes()).padStart(2, '0')}`
 }
 
-export const montarTituloMeet = (vagaTitulo, candidatoNome) => (
-  `${textoSeguro(vagaTitulo, 'Entrevista Selectio')} - ${textoSeguro(candidatoNome, 'Candidato')}`
+export const montarTituloMeet = (vagaTitulo, candidatoNome, labels = {}) => (
+  `${textoSeguro(vagaTitulo, labels.defaultTitle || 'Entrevista Selectio')} - ${textoSeguro(candidatoNome, labels.candidate || 'Candidato')}`
 )
 
 export const montarDescricaoEntrevista = ({
@@ -33,16 +33,19 @@ export const montarDescricaoEntrevista = ({
   vagaTitulo,
   empresaNome,
   indicadorNome,
-  observacoes
+  observacoes,
+  labels = {}
 }) => [
-  `Candidato: ${textoSeguro(candidatoNome, 'Não informado')}`,
-  candidatoEmail ? `E-mail: ${candidatoEmail}` : '',
-  `Vaga: ${textoSeguro(vagaTitulo, 'Não informada')}`,
-  empresaNome ? `Empresa: ${empresaNome}` : '',
-  indicadorNome ? `Indicador: ${indicadorNome}` : '',
-  observacoes ? `Observações: ${observacoes}` : '',
+  labels.candidateLine?.(textoSeguro(candidatoNome, labels.notProvided || 'Não informado'))
+    || `Candidato: ${textoSeguro(candidatoNome, 'Não informado')}`,
+  candidatoEmail ? (labels.emailLine?.(candidatoEmail) || `E-mail: ${candidatoEmail}`) : '',
+  labels.jobLine?.(textoSeguro(vagaTitulo, labels.notProvidedFemale || 'Não informada'))
+    || `Vaga: ${textoSeguro(vagaTitulo, 'Não informada')}`,
+  empresaNome ? (labels.companyLine?.(empresaNome) || `Empresa: ${empresaNome}`) : '',
+  indicadorNome ? (labels.referrerLine?.(indicadorNome) || `Indicador: ${indicadorNome}`) : '',
+  observacoes ? (labels.notesLine?.(observacoes) || `Observações: ${observacoes}`) : '',
   '',
-  'Evento gerado pelo Selectio. O link do Google Meet pode ser criado ao salvar o evento no Google Calendar.'
+  labels.generated || 'Evento gerado pelo Selectio. O link do Google Meet pode ser criado ao salvar o evento no Google Calendar.'
 ].filter(Boolean).join('\n')
 
 export const montarUrlGoogleCalendarMeet = ({
@@ -52,15 +55,16 @@ export const montarUrlGoogleCalendarMeet = ({
   horaFim,
   duracaoMinutos = 45,
   descricao,
-  fusoHorario = fusoHorarioPadrao
+  fusoHorario = fusoHorarioPadrao,
+  labels = {}
 }) => {
-  const tituloFinal = textoSeguro(titulo, 'Entrevista Selectio')
+  const tituloFinal = textoSeguro(titulo, labels.defaultTitle || 'Entrevista Selectio')
   const horarioFim = horaFim || somarMinutosAoHorario(data, horaInicio, duracaoMinutos)
   const parametros = new URLSearchParams({
     action: 'TEMPLATE',
     text: tituloFinal,
     dates: `${compactarData(data, horaInicio)}/${compactarData(data, horarioFim)}`,
-    details: descricao || 'Entrevista agendada pelo Selectio.',
+    details: descricao || labels.fallbackDescription || 'Entrevista agendada pelo Selectio.',
     ctz: fusoHorario
   })
 

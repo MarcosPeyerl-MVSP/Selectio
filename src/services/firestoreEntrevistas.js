@@ -86,7 +86,13 @@ export const criarEntrevista = async (dados) => {
     entrevistaId: docRef.id,
     tipo: 'entrevista_agendada',
     titulo: 'Entrevista agendada',
+    tituloKey: 'notifications.messages.interview.agendadaTitle',
     descricao: `Entrevista agendada para ${entrevista.data} às ${entrevista.horaInicio}.`,
+    descricaoKey: 'candidateProfile.historyEvents.interviewScheduled',
+    descricaoParams: {
+      date: entrevista.data,
+      time: entrevista.horaInicio
+    },
     statusAtual: entrevista.status,
     criadoPor: entrevista.empresaId
   })
@@ -209,7 +215,13 @@ export const atualizarStatusEntrevista = async (id, status) => {
       realizada: 'Entrevista realizada',
       cancelada: 'Entrevista cancelada'
     }[status],
+    tituloKey: `notifications.messages.interview.${status}Title`,
     descricao: `Status da entrevista alterado de ${entrevistaAtual.status || 'agendada'} para ${status}.`,
+    descricaoKey: 'candidateProfile.historyEvents.interviewStatusChanged',
+    descricaoParams: {
+      fromStatus: entrevistaAtual.status || 'agendada',
+      toStatus: status
+    },
     statusAnterior: entrevistaAtual.status || 'agendada',
     statusAtual: status,
     criadoPor: entrevistaAtual.empresaId

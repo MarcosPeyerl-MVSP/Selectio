@@ -18,56 +18,78 @@ const statusCandidatoNotificacoes = {
   entrevista: {
     tipo: 'candidato_entrevista',
     titulo: 'Candidato em entrevista',
-    mensagem: 'avançou para entrevista'
+    mensagem: 'avançou para entrevista',
+    tituloKey: 'notifications.messages.candidate.entrevistaTitle',
+    mensagemKey: 'notifications.messages.candidate.entrevista'
   },
   contratado: {
     tipo: 'candidato_contratado',
     titulo: 'Candidato contratado',
-    mensagem: 'foi marcado como contratado'
+    mensagem: 'foi marcado como contratado',
+    tituloKey: 'notifications.messages.candidate.contratadoTitle',
+    mensagemKey: 'notifications.messages.candidate.contratado'
   },
   cancelado: {
     tipo: 'candidato_cancelado',
     titulo: 'Candidato cancelado',
-    mensagem: 'foi cancelado no processo'
+    mensagem: 'foi cancelado no processo',
+    tituloKey: 'notifications.messages.candidate.canceladoTitle',
+    mensagemKey: 'notifications.messages.candidate.cancelado'
   },
   recusado: {
     tipo: 'candidato_recusado',
     titulo: 'Candidato recusado',
-    mensagem: 'foi recusado no processo'
+    mensagem: 'foi recusado no processo',
+    tituloKey: 'notifications.messages.candidate.recusadoTitle',
+    mensagemKey: 'notifications.messages.candidate.recusado'
   }
 }
 const statusEntrevistaNotificacoes = {
   agendada: {
     tipo: 'entrevista_agendada',
     titulo: 'Entrevista agendada',
-    mensagem: 'teve uma entrevista agendada'
+    mensagem: 'teve uma entrevista agendada',
+    tituloKey: 'notifications.messages.interview.agendadaTitle',
+    mensagemKey: 'notifications.messages.interview.agendada'
   },
   pendente: {
     tipo: 'entrevista_pendente',
     titulo: 'Entrevista pendente',
-    mensagem: 'ficou com entrevista pendente'
+    mensagem: 'ficou com entrevista pendente',
+    tituloKey: 'notifications.messages.interview.pendenteTitle',
+    mensagemKey: 'notifications.messages.interview.pendente'
   },
   realizada: {
     tipo: 'entrevista_realizada',
     titulo: 'Entrevista realizada',
-    mensagem: 'teve a entrevista marcada como realizada'
+    mensagem: 'teve a entrevista marcada como realizada',
+    tituloKey: 'notifications.messages.interview.realizadaTitle',
+    mensagemKey: 'notifications.messages.interview.realizada'
   },
   cancelada: {
     tipo: 'entrevista_cancelada',
     titulo: 'Entrevista cancelada',
-    mensagem: 'teve a entrevista cancelada'
+    mensagem: 'teve a entrevista cancelada',
+    tituloKey: 'notifications.messages.interview.canceladaTitle',
+    mensagemKey: 'notifications.messages.interview.cancelada'
   }
 }
 const statusPagamentoNotificacoes = {
   created: {
     tipo: 'pagamento_criado',
     titulo: 'Pagamento criado',
+    tituloKey: 'notifications.messages.payment.createdTitle',
+    mensagemIndicadorKey: 'notifications.messages.payment.createdReferrer',
+    mensagemEmpresaKey: 'notifications.messages.payment.createdCompany',
     mensagemIndicador: 'A empresa iniciou o pagamento da sua recompensa',
     mensagemEmpresa: 'Pagamento de recompensa criado'
   },
   pending: {
     tipo: 'pagamento_pendente',
     titulo: 'Pagamento pendente',
+    tituloKey: 'notifications.messages.payment.pendingTitle',
+    mensagemIndicadorKey: 'notifications.messages.payment.pendingReferrer',
+    mensagemEmpresaKey: 'notifications.messages.payment.pendingCompany',
     mensagemIndicador: 'Pagamento da recompensa aguardando confirmação do Mercado Pago',
     mensagemEmpresa: 'Pagamento aguardando confirmação do Mercado Pago'
   },
@@ -75,30 +97,46 @@ const statusPagamentoNotificacoes = {
     tipo: 'pagamento_aprovado',
     tituloIndicador: 'Pagamento recebido',
     tituloEmpresa: 'Pagamento aprovado',
+    tituloIndicadorKey: 'notifications.messages.payment.approvedReferrerTitle',
+    tituloEmpresaKey: 'notifications.messages.payment.approvedCompanyTitle',
+    mensagemIndicadorKey: 'notifications.messages.payment.approvedReferrer',
+    mensagemEmpresaKey: 'notifications.messages.payment.approvedCompany',
     mensagemIndicador: 'Você recebeu a recompensa',
     mensagemEmpresa: 'Pagamento de recompensa aprovado'
   },
   rejected: {
     tipo: 'pagamento_recusado',
     titulo: 'Pagamento recusado',
+    tituloKey: 'notifications.messages.payment.rejectedTitle',
+    mensagemIndicadorKey: 'notifications.messages.payment.rejectedReferrer',
+    mensagemEmpresaKey: 'notifications.messages.payment.rejectedCompany',
     mensagemIndicador: 'O pagamento da recompensa foi recusado',
     mensagemEmpresa: 'O Mercado Pago recusou o pagamento'
   },
   cancelled: {
     tipo: 'pagamento_cancelado',
     titulo: 'Pagamento cancelado',
+    tituloKey: 'notifications.messages.payment.cancelledTitle',
+    mensagemIndicadorKey: 'notifications.messages.payment.cancelledReferrer',
+    mensagemEmpresaKey: 'notifications.messages.payment.cancelledCompany',
     mensagemIndicador: 'O pagamento da recompensa foi cancelado',
     mensagemEmpresa: 'Pagamento de recompensa cancelado'
   },
   refunded: {
     tipo: 'pagamento_estornado',
     titulo: 'Pagamento estornado',
+    tituloKey: 'notifications.messages.payment.refundedTitle',
+    mensagemIndicadorKey: 'notifications.messages.payment.refundedReferrer',
+    mensagemEmpresaKey: 'notifications.messages.payment.refundedCompany',
     mensagemIndicador: 'O pagamento da recompensa foi estornado',
     mensagemEmpresa: 'Pagamento de recompensa estornado'
   },
   failed: {
     tipo: 'pagamento_falhou',
     titulo: 'Pagamento falhou',
+    tituloKey: 'notifications.messages.payment.failedTitle',
+    mensagemIndicadorKey: 'notifications.messages.payment.failedReferrer',
+    mensagemEmpresaKey: 'notifications.messages.payment.failedCompany',
     mensagemIndicador: 'Não foi possível confirmar o pagamento da recompensa',
     mensagemEmpresa: 'O pagamento de recompensa falhou'
   }
@@ -163,11 +201,15 @@ export const criarNotificacao = async ({
   userId,
   tipo,
   titulo,
+  tituloKey = '',
+  tituloParams = {},
   mensagem,
+  mensagemKey = '',
+  mensagemParams = {},
   link,
   metadata = {}
 }) => {
-  if (!userId || !tipo || !titulo) return null
+  if (!userId || !tipo || (!titulo && !tituloKey)) return null
 
   const notificationId = Array.isArray(id)
     ? notificacaoId(...id)
@@ -176,8 +218,12 @@ export const criarNotificacao = async ({
   const payload = {
     userId,
     tipo,
-    titulo,
+    titulo: titulo || '',
+    tituloKey,
+    tituloParams,
     mensagem: mensagem || '',
+    mensagemKey,
+    mensagemParams,
     link: link || '',
     metadata,
     lida: false,
@@ -212,7 +258,14 @@ export const notificarNovoCandidatoIndicado = async (candidato) => {
       userId: empresaId,
       tipo: 'novo_candidato',
       titulo: 'Novo candidato indicado',
+      tituloKey: 'notifications.messages.newCandidateTitle',
       mensagem: `${indicadorNome} indicou ${candidatoNome} para ${vagaTitulo}.`,
+      mensagemKey: 'notifications.messages.newCandidateCompany',
+      mensagemParams: {
+        referrer: indicadorNome,
+        candidate: candidatoNome,
+        job: vagaTitulo
+      },
       link: '/candidatos/empresa',
       metadata
     }))
@@ -224,7 +277,13 @@ export const notificarNovoCandidatoIndicado = async (candidato) => {
       userId: indicadorId,
       tipo: 'indicacao_enviada',
       titulo: 'Indicação enviada',
+      tituloKey: 'notifications.messages.referralSentTitle',
       mensagem: `Sua indicação de ${candidatoNome} para ${vagaTitulo} foi registrada.`,
+      mensagemKey: 'notifications.messages.referralSent',
+      mensagemParams: {
+        candidate: candidatoNome,
+        job: vagaTitulo
+      },
       link: '/candidatos/indicador',
       metadata
     }))
@@ -259,7 +318,13 @@ export const notificarStatusCandidatoAlterado = async ({ candidato, statusAnteri
       userId: indicadorId,
       tipo: info.tipo,
       titulo: info.titulo,
+      tituloKey: info.tituloKey,
       mensagem: `${candidatoNome} ${info.mensagem} na vaga ${vagaTitulo}.`,
+      mensagemKey: info.mensagemKey,
+      mensagemParams: {
+        candidate: candidatoNome,
+        job: vagaTitulo
+      },
       link: '/candidatos/indicador',
       metadata
     }))
@@ -271,7 +336,10 @@ export const notificarStatusCandidatoAlterado = async ({ candidato, statusAnteri
       userId: empresaId,
       tipo: 'recompensa_pendente',
       titulo: 'Recompensa pendente',
+      tituloKey: 'notifications.messages.rewardPendingTitle',
       mensagem: `${candidatoNome} foi contratado. Agora a recompensa do indicador pode ser paga.`,
+      mensagemKey: 'notifications.messages.rewardPending',
+      mensagemParams: { candidate: candidatoNome },
       link: '/candidatos/empresa',
       metadata
     }))
@@ -311,7 +379,15 @@ export const notificarEntrevistaAlterada = async ({ entrevista, statusAnterior =
       userId: indicadorId,
       tipo: info.tipo,
       titulo: info.titulo,
+      tituloKey: info.tituloKey,
       mensagem: `${candidatoNome} ${info.mensagem} para ${vagaTitulo}${dataHora}.`,
+      mensagemKey: info.mensagemKey,
+      mensagemParams: {
+        candidate: candidatoNome,
+        job: vagaTitulo,
+        date: textoSeguro(entrevista.data),
+        time: textoSeguro(entrevista.horaInicio)
+      },
       link: '/candidatos/indicador',
       metadata
     }))
@@ -323,7 +399,15 @@ export const notificarEntrevistaAlterada = async ({ entrevista, statusAnterior =
       userId: empresaId,
       tipo: info.tipo,
       titulo: info.titulo,
+      tituloKey: info.tituloKey,
       mensagem: `${candidatoNome} ${info.mensagem} para ${vagaTitulo}${dataHora}.`,
+      mensagemKey: info.mensagemKey,
+      mensagemParams: {
+        candidate: candidatoNome,
+        job: vagaTitulo,
+        date: textoSeguro(entrevista.data),
+        time: textoSeguro(entrevista.horaInicio)
+      },
       link: '/painel/empresa?secao=entrevistas',
       metadata
     }))
@@ -354,7 +438,8 @@ export const notificarPagamentoAlterado = async ({ pagamento, statusAnterior = '
     empresaId,
     indicadorId,
     statusAnterior,
-    statusAtual: status
+    statusAtual: status,
+    valor: Number(pagamento.valor || 0)
   }
   const tarefas = []
 
@@ -368,7 +453,13 @@ export const notificarPagamentoAlterado = async ({ pagamento, statusAnterior = '
       userId: indicadorId,
       tipo: info.tipo,
       titulo: info.tituloIndicador || info.titulo,
+      tituloKey: info.tituloIndicadorKey || info.tituloKey,
       mensagem,
+      mensagemKey: info.mensagemIndicadorKey,
+      mensagemParams: {
+        candidate: candidatoNome,
+        job: vagaTitulo
+      },
       link: '/painel/indicador/dashboard?secao=financeiro',
       metadata
     }))
@@ -384,7 +475,13 @@ export const notificarPagamentoAlterado = async ({ pagamento, statusAnterior = '
       userId: empresaId,
       tipo: info.tipo,
       titulo: info.tituloEmpresa || info.titulo,
+      tituloKey: info.tituloEmpresaKey || info.tituloKey,
       mensagem,
+      mensagemKey: info.mensagemEmpresaKey,
+      mensagemParams: {
+        candidate: candidatoNome,
+        job: vagaTitulo
+      },
       link: '/painel/empresa?secao=pagamentos',
       metadata
     }))

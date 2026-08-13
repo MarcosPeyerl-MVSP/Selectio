@@ -3,6 +3,7 @@ import './ModalAlterarSetor.css'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { FaBuilding, FaEye, FaEyeSlash, FaLock, FaTimes } from 'react-icons/fa'
+import { useTranslation } from 'react-i18next'
 
 import { useToast } from '../../hooks/useToast'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
@@ -18,6 +19,7 @@ const obterSetorInicial = (setorAtualId) => (
 )
 
 function ModalAlterarSetor({ empresa, onClose, onSuccess }) {
+  const { t } = useTranslation(['common', 'auth'])
   const setorAtualId = empresa?.setorEmpresarial?.id || ''
   const [setorId, setSetorId] = useState(() => obterSetorInicial(setorAtualId))
   const [senha, setSenha] = useState('')
@@ -47,12 +49,12 @@ function ModalAlterarSetor({ empresa, onClose, onSuccess }) {
     event.preventDefault()
 
     if (!setorId || setorId === setorAtualId) {
-      toast.warning('Selecione um setor diferente do atual.')
+      toast.warning(t('sectorSwitch.selectDifferent'))
       return
     }
 
     if (!senha.trim()) {
-      toast.warning('Informe a senha do setor selecionado.')
+      toast.warning(t('sectorSwitch.passwordRequired'))
       return
     }
 
@@ -60,7 +62,7 @@ function ModalAlterarSetor({ empresa, onClose, onSuccess }) {
     const senhaHashSalva = obterHashSenhaSetor(empresa, setorId)
 
     if (!setor || !senhaHashSalva) {
-      toast.error('O acesso deste setor ainda não está configurado.')
+      toast.error(t('sectorSwitch.notConfigured'))
       return
     }
 
@@ -69,7 +71,7 @@ function ModalAlterarSetor({ empresa, onClose, onSuccess }) {
       const senhaHashDigitada = await hashSenhaSetor(senha, getFirebaseUid(empresa))
 
       if (senhaHashDigitada !== senhaHashSalva) {
-        toast.error('Senha do setor incorreta.')
+        toast.error(t('sectorSwitch.incorrectPassword'))
         setLoading(false)
         return
       }
@@ -87,7 +89,7 @@ function ModalAlterarSetor({ empresa, onClose, onSuccess }) {
       onSuccess(perfilAtualizado, setor)
     } catch {
       setLoading(false)
-      toast.error('Não foi possível alterar o setor. Tente novamente.')
+      toast.error(t('sectorSwitch.failed'))
     }
   }
 
@@ -111,7 +113,7 @@ function ModalAlterarSetor({ empresa, onClose, onSuccess }) {
           type="button"
           className="sector-switch-close"
           onClick={onClose}
-          aria-label="Fechar alteração de setor"
+          aria-label={t('sectorSwitch.close')}
           disabled={loading}
         >
           <FaTimes />
@@ -120,18 +122,18 @@ function ModalAlterarSetor({ empresa, onClose, onSuccess }) {
         <header>
           <span><FaBuilding /></span>
           <div>
-            <small>ACESSO EMPRESARIAL</small>
-            <h2 id="sector-switch-title">Alterar setor</h2>
+            <small>{t('sectorSwitch.eyebrow')}</small>
+            <h2 id="sector-switch-title">{t('sectorSwitch.title')}</h2>
           </div>
         </header>
 
         <p id="sector-switch-description">
-          Escolha o novo setor e informe a senha de acesso correspondente.
+          {t('sectorSwitch.description')}
         </p>
 
         <form onSubmit={handleSubmit}>
           <label htmlFor="sector-switch-select">
-            Setor
+            {t('sectorSwitch.sector')}
             <select
               ref={selectRef}
               id="sector-switch-select"
@@ -145,14 +147,15 @@ function ModalAlterarSetor({ empresa, onClose, onSuccess }) {
                   value={setor.id}
                   disabled={setor.id === setorAtualId}
                 >
-                  {setor.nome}{setor.id === setorAtualId ? ' (atual)' : ''}
+                  {t(`auth:sectors.${setor.id}`, { defaultValue: setor.nome })}
+                  {setor.id === setorAtualId ? ` (${t('sectorSwitch.current')})` : ''}
                 </option>
               ))}
             </select>
           </label>
 
           <label htmlFor="sector-switch-password">
-            Senha do setor
+            {t('sectorSwitch.password')}
             <span className="sector-switch-password">
               <FaLock aria-hidden="true" />
               <input
@@ -160,14 +163,14 @@ function ModalAlterarSetor({ empresa, onClose, onSuccess }) {
                 type={mostrarSenha ? 'text' : 'password'}
                 value={senha}
                 onChange={(event) => setSenha(event.target.value)}
-                placeholder="Digite a senha do setor"
+                placeholder={t('sectorSwitch.passwordPlaceholder')}
                 autoComplete="current-password"
                 disabled={loading}
               />
               <button
                 type="button"
                 onClick={() => setMostrarSenha((current) => !current)}
-                aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                aria-label={mostrarSenha ? t('sectorSwitch.hidePassword') : t('sectorSwitch.showPassword')}
                 disabled={loading}
               >
                 {mostrarSenha ? <FaEyeSlash /> : <FaEye />}
@@ -176,9 +179,9 @@ function ModalAlterarSetor({ empresa, onClose, onSuccess }) {
           </label>
 
           <div className="sector-switch-actions">
-            <button type="button" onClick={onClose} disabled={loading}>Cancelar</button>
+            <button type="button" onClick={onClose} disabled={loading}>{t('sectorSwitch.cancel')}</button>
             <button type="submit" disabled={loading || !setorId}>
-              {loading ? 'Validando...' : 'Alterar setor'}
+              {loading ? t('sectorSwitch.validating') : t('sectorSwitch.title')}
             </button>
           </div>
         </form>

@@ -5,8 +5,11 @@ import './CadastroEscolha.css'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 function Cadastro() {
+  const { t } = useTranslation('auth')
+
   return (
     <>
       {/* Componente de navegação principal da aplicação. */}
@@ -16,48 +19,39 @@ function Cadastro() {
       <main className="cadastro-container">
         {/* Cabeçalho com título e descrição da finalidade da página. */}
         <div className="cadastro-header">
-          <span className="tag center">BEM-VINDO À SELECTIO · NOVA CONTA</span>
-          <h1>Qual cadastro irá fazer?</h1>
-          <p>
-            Escolha o perfil que melhor se adapta às suas necessidades e
-            comece a transformar o ecossistema de recrutamento conosco.
-          </p>
+          <span className="tag center">{t('registrationChoice.eyebrow')}</span>
+          <h1>{t('registrationChoice.title')}</h1>
+          <p>{t('registrationChoice.description')}</p>
         </div>
 
         {/* Área com os dois tipos de cadastro disponíveis. */}
         <div className="cadastro-cards">
           {/* Card que direciona para o cadastro de empresa. */}
           <div className="cadastro-card">
-            <h2>Cadastro de Empresa</h2>
-            <p>
-              Poste vagas e encontre os melhores talentos através de curadoria
-              inteligente e análise técnica humanizada.
-            </p>
+            <h2>{t('registrationChoice.companyTitle')}</h2>
+            <p>{t('registrationChoice.companyDescription')}</p>
 
             <ul>
-              <li>Acesso a banco de talentos pré-avaliados</li>
-              <li>Gestão simplificada de candidaturas</li>
+              <li>{t('registrationChoice.companyBenefitOne')}</li>
+              <li>{t('registrationChoice.companyBenefitTwo')}</li>
             </ul>
 
             {/* Rota interna para o formulário de cadastro de empresa. */}
-            <Link className="btn-primary" to={"/cadastro/empresa"}>Começar</Link>
+            <Link className="btn-primary" to="/cadastro/empresa">{t('registrationChoice.start')}</Link>
           </div>
 
           {/* Card que direciona para o cadastro de indicador. */}
           <div className="cadastro-card">
-            <h2>Cadastro de Indicador</h2>
-            <p>
-              Indique talentos da sua rede e seja recompensado por
-              contratações bem-sucedidas. Transforme seu networking em valor.
-            </p>
+            <h2>{t('registrationChoice.referrerTitle')}</h2>
+            <p>{t('registrationChoice.referrerDescription')}</p>
 
             <ul>
-              <li>Monetize suas indicações profissionais</li>
-              <li>Dashboard de acompanhamento em tempo real</li>
+              <li>{t('registrationChoice.referrerBenefitOne')}</li>
+              <li>{t('registrationChoice.referrerBenefitTwo')}</li>
             </ul>
 
             {/* Rota interna para o formulário de cadastro de indicador. */}
-            <Link className="btn-primary" to={"/cadastro/indicador"}>Começar</Link>
+            <Link className="btn-primary" to="/cadastro/indicador">{t('registrationChoice.start')}</Link>
           </div>
         </div>
       </main>

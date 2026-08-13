@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 import Home from './pages/public/Home'
 import Login from './pages/public/Login'
@@ -38,13 +39,15 @@ const proteger = (element, tipo) => (
   <ProtectedRoute tipo={tipo}>{element}</ProtectedRoute>
 )
 
-const adminPage = (element) => (
-  <Suspense fallback={<PageLoader label="Carregando painel administrativo..." />}>
+const adminPage = (element, loadingLabel) => (
+  <Suspense fallback={<PageLoader label={loadingLabel} />}>
     {element}
   </Suspense>
 )
 
 function App() {
+  const { t } = useTranslation('common')
+
   return (
     <BrowserRouter>
       <Routes>
@@ -76,16 +79,16 @@ function App() {
         {/* ROTAS ADMINISTRATIVAS */}
         <Route path="/admin" element={proteger(<AdminLayout />, 'admin')}>
           <Route index element={<Navigate to="/admin/visao-geral" replace />} />
-          <Route path="visao-geral" element={adminPage(<AdminVisaoGeral />)} />
-          <Route path="empresas" element={adminPage(<AdminEmpresas />)} />
-          <Route path="indicadores" element={adminPage(<AdminIndicadores />)} />
-          <Route path="vagas" element={adminPage(<AdminVagas />)} />
-          <Route path="candidatos" element={adminPage(<AdminCandidatos />)} />
-          <Route path="financeiro" element={adminPage(<AdminFinanceiro />)} />
-          <Route path="configuracoes" element={adminPage(<AdminConfiguracoesEmBreve />)} />
+          <Route path="visao-geral" element={adminPage(<AdminVisaoGeral />, t('loading.admin'))} />
+          <Route path="empresas" element={adminPage(<AdminEmpresas />, t('loading.admin'))} />
+          <Route path="indicadores" element={adminPage(<AdminIndicadores />, t('loading.admin'))} />
+          <Route path="vagas" element={adminPage(<AdminVagas />, t('loading.admin'))} />
+          <Route path="candidatos" element={adminPage(<AdminCandidatos />, t('loading.admin'))} />
+          <Route path="financeiro" element={adminPage(<AdminFinanceiro />, t('loading.admin'))} />
+          <Route path="configuracoes" element={adminPage(<AdminConfiguracoesEmBreve />, t('loading.admin'))} />
         </Route>
         {/* ROTA PAGE NOT FOUND */}
-        <Route path="*" element={<h1>PAGE NOT FOUND</h1>} />
+        <Route path="*" element={<h1>{t('notFound')}</h1>} />
       </Routes>
     </BrowserRouter>
   )
