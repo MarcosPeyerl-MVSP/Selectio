@@ -642,11 +642,11 @@
 :root[data-theme='dark'] .hero-modelo .tag,
 :root[data-theme='dark'] .hero-text h1 strong,
 :root[data-theme='dark'] .info-box strong {
-  color: var(--primary-dark);
+  color: var(--primary);
 }
 
 :root[data-theme='dark'] .hero-actions a:not(.home-button-primary) {
-  color: var(--primary-dark);
+  color: var(--primary);
 }
 
 :root[data-theme='dark'] .hero-actions a:not(.home-button-primary):hover {
@@ -656,8 +656,8 @@
 :root[data-theme='dark'] .hero-actions button:hover,
 :root[data-theme='dark'] .hero-actions .hero-indication:hover {
   background: var(--surface-soft);
-  border-color: var(--primary-dark);
-  color: var(--primary-dark) !important;
+  border-color: var(--primary);
+  color: var(--primary) !important;
 }
 
 :root[data-theme='dark'] .info-box,
