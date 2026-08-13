@@ -19,6 +19,7 @@ import { getFirebaseAuthErrorKey, isFirebaseAuthError } from '../../services/err
 import { buscarPerfilUsuario } from '../../services/firestoreUsers'
 import { useToast } from '../../hooks/useToast'
 import { useAuth } from '../../hooks/useAuth'
+import { obterRedirectInterno } from '../../utils/redirectSeguro'
 import {
   hashSenhaSetor,
   obterHashSenhaSetor,
@@ -44,7 +45,9 @@ function Login() {
   const location = useLocation()
   const toast = useToast()
   const { perfil: perfilSessao, carregando: carregandoSessao, adotarPerfil } = useAuth()
-  const redirectTo = new URLSearchParams(location.search).get('redirect')
+  const redirectTo = obterRedirectInterno(
+    new URLSearchParams(location.search).get('redirect')
+  )
 
   useEffect(() => {
     if (carregandoSessao || !perfilSessao) return
