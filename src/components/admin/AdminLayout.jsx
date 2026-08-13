@@ -9,12 +9,11 @@ import {
   FaChartPie,
   FaCog,
   FaMoneyCheckAlt,
-  FaMoon,
   FaSignOutAlt,
-  FaSun,
   FaUserFriends,
   FaUserTie,
 } from 'react-icons/fa'
+import { LuMoonStar, LuSunMedium } from 'react-icons/lu'
 import { signOut } from 'firebase/auth'
 
 import logoVermelho from '../../assets/Selectio_vermelho_sem_fundo.png'
@@ -32,6 +31,7 @@ const adminItems = [
   { to: '/admin/vagas', labelKey: 'layout.jobs', icon: FaBriefcase },
   { to: '/admin/candidatos', labelKey: 'layout.candidates', icon: FaUserFriends },
   { to: '/admin/financeiro', labelKey: 'layout.finance', icon: FaMoneyCheckAlt },
+  { to: '/admin/configuracoes', labelKey: 'layout.settings', icon: FaCog },
 ]
 
 function AdminLayout() {
@@ -101,14 +101,13 @@ function AdminTopbar({ perfil }) {
       </div>
 
       <div className="admin-topbar-actions">
-        <LanguageSwitcher />
         <button
           type="button"
           onClick={toggleTheme}
           aria-label={isDark ? t('common:theme.activateLight') : t('common:theme.activateDark')}
           title={isDark ? t('common:theme.light') : t('common:theme.dark')}
         >
-          {isDark ? <FaSun /> : <FaMoon />}
+          {isDark ? <LuSunMedium /> : <LuMoonStar />}
         </button>
 
         <div className="admin-account" ref={menuRef}>
@@ -126,6 +125,10 @@ function AdminTopbar({ perfil }) {
             <div className="admin-account-menu" role="menu">
               <strong>{perfil?.nome || t('layout.selectioAdmin')}</strong>
               <span>{perfil?.email || t('layout.administrator')}</span>
+              <LanguageSwitcher
+                variant="menu"
+                onLanguageChange={() => setMenuOpen(false)}
+              />
               <button type="button" onClick={handleLogout}>
                 <FaSignOutAlt /> {t('common:account.logout')}
               </button>
@@ -140,7 +143,6 @@ function AdminTopbar({ perfil }) {
 function AdminSidebar({ perfil }) {
   const { t } = useTranslation('admin')
   const location = useLocation()
-  const toast = useToast()
 
   return (
     <aside className="admin-sidebar">
@@ -173,15 +175,6 @@ function AdminSidebar({ perfil }) {
           )
         })}
 
-        <button
-          type="button"
-          className="disabled"
-          onClick={() => toast.info(t('layout.settingsFuture'))}
-        >
-          <FaCog />
-          <span>{t('layout.settings')}</span>
-          <small>{t('layout.comingSoon')}</small>
-        </button>
       </nav>
     </aside>
   )

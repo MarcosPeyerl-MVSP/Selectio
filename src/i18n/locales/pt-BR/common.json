@@ -1,6 +1,7 @@
 {
   "language": {
     "selectorLabel": "Selecionar idioma",
+    "menuLabel": "Idioma",
     "portuguese": "Português",
     "english": "English"
   },
@@ -28,6 +29,7 @@
     "accessChanged": "Acesso alterado para {{sector}}."
   },
   "theme": {
+    "selectorLabel": "Selecionar aparência",
     "activateLight": "Ativar tema claro",
     "activateDark": "Ativar tema escuro",
     "light": "Tema claro",
@@ -380,6 +382,11 @@
     "saving": "Salvando..."
   },
   "accountSettings": {
+    "preferences": "Preferências",
+    "languageTitle": "Idioma da plataforma",
+    "languageDescription": "Escolha o idioma usado nos menus, mensagens e formatos da plataforma.",
+    "appearanceTitle": "Aparência da plataforma",
+    "appearanceDescription": "Escolha entre os temas claro e escuro para personalizar sua experiência.",
     "fields": {
       "companyName": "Nome da empresa",
       "companyNamePlaceholder": "Nome exibido da empresa",

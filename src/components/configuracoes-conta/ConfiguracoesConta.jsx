@@ -23,8 +23,12 @@ import {
   FaUnlink,
   FaUserCircle
 } from 'react-icons/fa'
+import { MdTranslate } from 'react-icons/md'
+import { LuSunMoon } from 'react-icons/lu'
 
 import PageLoader from '../ui/PageLoader'
+import LanguageSwitcher from '../layout/LanguageSwitcher'
+import ThemeSwitcher from '../layout/ThemeSwitcher'
 import { auth } from '../../services/firebase'
 import { getFirebaseAuthErrorKey, isFirebaseAuthError } from '../../services/errosAutenticacao'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
@@ -563,6 +567,38 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
               </button>
             )}
           </div>
+        </article>
+
+        <article className="settings-card language-settings-card">
+          <div className="settings-card-title">
+            <MdTranslate />
+            <div>
+              <span>{t('accountSettings.preferences')}</span>
+              <h2>{t('accountSettings.languageTitle')}</h2>
+            </div>
+          </div>
+
+          <p className="settings-note">
+            {t('accountSettings.languageDescription')}
+          </p>
+
+          <LanguageSwitcher variant="settings" />
+        </article>
+
+        <article className="settings-card theme-settings-card">
+          <div className="settings-card-title">
+            <LuSunMoon />
+            <div>
+              <span>{t('accountSettings.preferences')}</span>
+              <h2>{t('accountSettings.appearanceTitle')}</h2>
+            </div>
+          </div>
+
+          <p className="settings-note">
+            {t('accountSettings.appearanceDescription')}
+          </p>
+
+          <ThemeSwitcher />
         </article>
 
         <article className="settings-card onboarding-card">

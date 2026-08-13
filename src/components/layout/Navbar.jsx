@@ -3,7 +3,8 @@ import './Navbar.css'
 import logoVermelho from '../../assets/Selectio_vermelho_sem_fundo.png'
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { FaCog, FaExchangeAlt, FaMoon, FaSignOutAlt, FaSun, FaUserAlt, FaUserCircle } from 'react-icons/fa'
+import { FaCog, FaExchangeAlt, FaSignOutAlt, FaUserAlt, FaUserCircle } from 'react-icons/fa'
+import { LuMoonStar, LuSunMedium } from 'react-icons/lu'
 import { signOut } from 'firebase/auth'
 import { useTranslation } from 'react-i18next'
 import { auth } from '../../services/firebase'
@@ -123,7 +124,6 @@ function Navbar() {
         {!carregandoSessao && session.type === 'publico' ? (
           <>
             <div className="user-actions">
-              <LanguageSwitcher />
               <button
                 type="button"
                 className="icon-button theme-toggle"
@@ -131,7 +131,7 @@ function Navbar() {
                 aria-label={isDark ? t('theme.activateLight') : t('theme.activateDark')}
                 title={isDark ? t('theme.light') : t('theme.dark')}
               >
-                {isDark ? <FaSun /> : <FaMoon />}
+                {isDark ? <LuSunMedium /> : <LuMoonStar />}
               </button>
             </div>
             <nav className="nav-auth">
@@ -141,7 +141,6 @@ function Navbar() {
           </>
         ) : (
           <div className="user-actions" data-tour="navbar-account-actions">
-            <LanguageSwitcher />
             <MenuNotificacoes user={session.user} />
             <div className="profile-menu-wrapper" ref={profileMenuRef}>
               <button
@@ -193,8 +192,12 @@ function Navbar() {
                   </div>
 
                   <div className="profile-menu-section">
+                    <LanguageSwitcher
+                      variant="menu"
+                      onLanguageChange={() => setProfileMenuOpen(false)}
+                    />
                     <button type="button" role="menuitem" onClick={toggleTheme}>
-                      {isDark ? <FaSun /> : <FaMoon />}
+                      {isDark ? <LuSunMedium /> : <LuMoonStar />}
                       <span>{t('theme.current', {
                         theme: isDark ? t('theme.darkValue') : t('theme.lightValue')
                       })}</span>

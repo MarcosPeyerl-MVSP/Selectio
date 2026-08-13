@@ -42,9 +42,16 @@
   animation-delay: 0.06s;
 }
 
+.language-settings-card {
+  animation-delay: 0.1s;
+}
+
+.theme-settings-card {
+  animation-delay: 0.14s;
+}
+
 .onboarding-card {
-  grid-column: 1 / -1;
-  max-width: 760px;
+  animation-delay: 0.18s;
 }
 
 .settings-card-title {

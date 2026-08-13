@@ -277,6 +277,20 @@
   transition: var(--transition);
 }
 
+.profile-menu-section .language-menu-item small {
+  margin-left: auto;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.profile-menu-section .language-menu-item:hover small {
+  color: var(--primary);
+}
+
 .profile-menu-section a:hover,
 .profile-menu-section button:hover {
   background: var(--surface-soft);

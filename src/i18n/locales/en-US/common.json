@@ -1,6 +1,7 @@
 {
   "language": {
     "selectorLabel": "Select language",
+    "menuLabel": "Language",
     "portuguese": "Português",
     "english": "English"
   },
@@ -28,6 +29,7 @@
     "accessChanged": "Access changed to {{sector}}."
   },
   "theme": {
+    "selectorLabel": "Select appearance",
     "activateLight": "Switch to light theme",
     "activateDark": "Switch to dark theme",
     "light": "Light theme",
@@ -380,6 +382,11 @@
     "saving": "Saving..."
   },
   "accountSettings": {
+    "preferences": "Preferences",
+    "languageTitle": "Platform language",
+    "languageDescription": "Choose the language used for platform menus, messages, and formats.",
+    "appearanceTitle": "Platform appearance",
+    "appearanceDescription": "Choose between light and dark themes to personalize your experience.",
     "fields": {
       "companyName": "Company name",
       "companyNamePlaceholder": "Displayed company name",

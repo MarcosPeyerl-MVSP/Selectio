@@ -142,6 +142,30 @@
   font-weight: 800;
 }
 
+.admin-account-menu .language-menu-item {
+  color: var(--text);
+}
+
+.admin-account-menu .language-menu-item > span {
+  margin: 0;
+  color: inherit;
+  font-size: 12px;
+  word-break: normal;
+}
+
+.admin-account-menu .language-menu-item small {
+  margin-left: auto;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.admin-account-menu .language-menu-item:hover {
+  color: var(--primary);
+}
+
 .admin-shell {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
