@@ -1,17 +1,20 @@
 import './ModalPerfilCandidato.css'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   FaBriefcase,
   FaCalendarAlt,
+  FaCamera,
   FaEnvelope,
+  FaDownload,
   FaFileAlt,
   FaLink,
   FaMoneyBillWave,
   FaPhone,
   FaHistory,
   FaTimes,
+  FaTrash,
   FaUser,
   FaUserTie
 } from 'react-icons/fa'
@@ -19,8 +22,17 @@ import {
 import LinhaStatusCandidato from './LinhaStatusCandidato'
 import EstadoDados from './EstadoDados'
 import PageLoader from './PageLoader'
+import AvatarProtegido from './AvatarProtegido'
 import { listarHistoricoCandidato } from '../../services/firestoreHistorico'
 import { formatDate as formatLocalizedDate } from '../../i18n/formatters'
+import { baixarCurriculoProtegido } from '../../services/storageCurriculos'
+import {
+  atualizarFotoCandidatoIndicado,
+  removerFotoCandidatoIndicado
+} from '../../services/firestoreCandidatos'
+import { getFirebaseUid } from '../../services/identidadeFirebase'
+import { useAuth } from '../../hooks/useAuth'
+import { useToast } from '../../hooks/useToast'
 
 const candidateValueKeys = {
   Feminino: 'candidateForm.options.gender.female',
@@ -77,12 +89,22 @@ function ModalPerfilCandidato({
   loadingStatus = false
 }) {
   const { t } = useTranslation('common')
+  const { perfil } = useAuth()
+  const toast = useToast()
   const isPreSalvo = variant === 'preSalvo'
   const emptyValue = t('candidateProfile.notProvided')
   const [historico, setHistorico] = useState([])
   const [loadingHistorico, setLoadingHistorico] = useState(true)
   const [erroHistorico, setErroHistorico] = useState('')
   const [historicoReloadKey, setHistoricoReloadKey] = useState(0)
+  const [baixandoCurriculo, setBaixandoCurriculo] = useState(false)
+  const [erroCurriculo, setErroCurriculo] = useState('')
+  const [fotoPerfil, setFotoPerfil] = useState(candidato?.fotoPerfil || {})
+  const [salvandoFoto, setSalvandoFoto] = useState(false)
+  const photoInputRef = useRef(null)
+  const podeEditarFoto = !isPreSalvo
+    && perfil?.tipo === 'indicador'
+    && getFirebaseUid(perfil) === String(candidato?.indicadorId || candidato?.indicadorUid || '')
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -148,8 +170,56 @@ function ModalPerfilCandidato({
       label: isPreSalvo ? t('candidateProfile.savedAt') : t('candidateProfile.referralDate'),
       value: formatDate(candidato.aplicadoEm || candidato.criadoEm || candidato.createdAt, emptyValue)
     },
-    { icon: FaFileAlt, label: t('candidateProfile.resume'), value: candidato.curriculoNome }
+    { icon: FaFileAlt, label: t('candidateProfile.resume'), value: candidato.curriculoNome, resume: true }
   ]
+
+  const baixarCurriculo = async () => {
+    setBaixandoCurriculo(true)
+    setErroCurriculo('')
+    try {
+      await baixarCurriculoProtegido(candidato.curriculo)
+    } catch (error) {
+      console.error('Erro ao baixar curriculo:', error)
+      setErroCurriculo(candidato.curriculo?.caminho
+        ? t('candidateProfile.resumeDownloadError')
+        : t('candidateProfile.resumeUnavailable'))
+    } finally {
+      setBaixandoCurriculo(false)
+    }
+  }
+
+  const handlePhoto = async (event) => {
+    const arquivo = event.target.files?.[0]
+    event.target.value = ''
+    if (!arquivo || !podeEditarFoto) return
+    try {
+      setSalvandoFoto(true)
+      const foto = await atualizarFotoCandidatoIndicado({
+        candidato: { ...candidato, fotoPerfil },
+        arquivo
+      })
+      setFotoPerfil(foto)
+      toast.success(t('profilePhoto.updated'))
+    } catch (error) {
+      toast.error(error?.message || t('profilePhoto.updateError'))
+    } finally {
+      setSalvandoFoto(false)
+    }
+  }
+
+  const handleRemovePhoto = async () => {
+    if (!podeEditarFoto || !fotoPerfil?.caminho) return
+    try {
+      setSalvandoFoto(true)
+      await removerFotoCandidatoIndicado({ ...candidato, fotoPerfil })
+      setFotoPerfil({})
+      toast.success(t('profilePhoto.removed'))
+    } catch {
+      toast.error(t('profilePhoto.removeError'))
+    } finally {
+      setSalvandoFoto(false)
+    }
+  }
 
   return (
     <div className="candidate-profile-backdrop" role="presentation" onMouseDown={onClose}>
@@ -165,6 +235,25 @@ function ModalPerfilCandidato({
         </button>
 
         <header className="candidate-profile-header">
+          <AvatarProtegido
+            className="candidate-profile-avatar"
+            foto={fotoPerfil}
+            alt={candidato.nome || t('candidateProfile.referredCandidate')}
+            fallback={String(candidato.nome || '?').charAt(0).toUpperCase()}
+          />
+          {podeEditarFoto && (
+            <div className="candidate-profile-photo-actions">
+              <input ref={photoInputRef} hidden type="file" accept="image/jpeg,image/png,image/webp" onChange={handlePhoto} />
+              <button type="button" disabled={salvandoFoto} onClick={() => photoInputRef.current?.click()}>
+                <FaCamera /> {salvandoFoto ? t('profilePhoto.saving') : t('profilePhoto.change')}
+              </button>
+              {fotoPerfil?.caminho && (
+                <button type="button" disabled={salvandoFoto} onClick={handleRemovePhoto}>
+                  <FaTrash /> {t('profilePhoto.remove')}
+                </button>
+              )}
+            </div>
+          )}
           <span>{t('candidateProfile.eyebrow')}</span>
           <h2 id="candidate-profile-title">{candidato.nome || emptyValue}</h2>
           <p>{candidato.cargoAtual || candidato.vagaTitulo || (isPreSalvo ? t('candidateProfile.preSavedCandidate') : t('candidateProfile.referredCandidate'))}</p>
@@ -249,7 +338,26 @@ function ModalPerfilCandidato({
               <div className="candidate-profile-detail" key={item.label}>
                 <Icon />
                 <span>{item.label}</span>
-                {item.link && item.value ? (
+                {item.resume && candidato.curriculo?.caminho ? (
+                  <>
+                    <button
+                      className="candidate-profile-download"
+                      type="button"
+                      disabled={baixandoCurriculo}
+                      onClick={baixarCurriculo}
+                    >
+                      <FaDownload aria-hidden="true" />
+                      {baixandoCurriculo ? t('candidateProfile.resumeDownloading') : item.value}
+                    </button>
+                    {erroCurriculo && (
+                      <small className="candidate-profile-download-error" role="alert">
+                        {erroCurriculo}
+                      </small>
+                    )}
+                  </>
+                ) : item.resume && item.value ? (
+                  <strong>{erroCurriculo || t('candidateProfile.resumeUnavailable')}</strong>
+                ) : item.link && item.value ? (
                   <a href={String(item.value).startsWith('http') ? item.value : `https://${item.value}`} target="_blank" rel="noreferrer">
                     {item.value}
                   </a>

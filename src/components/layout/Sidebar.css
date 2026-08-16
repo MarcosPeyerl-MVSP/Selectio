@@ -106,6 +106,15 @@
   font-size: 15px;
 }
 
+.app-sidebar-user-avatar {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  font-size: 12px;
+}
+
 .app-sidebar-user strong {
   display: block;
   max-width: 165px;
@@ -265,6 +274,11 @@
 .app-sidebar.collapsed .app-sidebar-user svg {
   width: 18px;
   height: 18px;
+}
+
+.app-sidebar.collapsed .app-sidebar-user-avatar {
+  width: 28px;
+  height: 28px;
 }
 
 .app-sidebar.collapsed .app-sidebar-menu a,

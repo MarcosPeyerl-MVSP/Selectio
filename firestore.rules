@@ -167,6 +167,7 @@ service cloud.firestore {
           'escolaridade',
           'expectativaSalarial',
           'fitCultural',
+          'fotoPerfil',
           'genero',
           'github',
           'hardSkills',
@@ -236,6 +237,26 @@ service cloud.firestore {
           || request.resource.data.fitCultural is string)
         && (!('genero' in request.resource.data)
           || request.resource.data.genero is string)
+        && (!('fotoPerfil' in request.resource.data) || (
+          request.resource.data.fotoPerfil is map
+          && request.resource.data.fotoPerfil.keys().hasOnly([
+            'caminho',
+            'nome',
+            'tamanho',
+            'tipo',
+            'status'
+          ])
+          && (!('caminho' in request.resource.data.fotoPerfil)
+            || request.resource.data.fotoPerfil.caminho is string)
+          && (!('nome' in request.resource.data.fotoPerfil)
+            || request.resource.data.fotoPerfil.nome is string)
+          && (!('tamanho' in request.resource.data.fotoPerfil)
+            || request.resource.data.fotoPerfil.tamanho is number)
+          && (!('tipo' in request.resource.data.fotoPerfil)
+            || request.resource.data.fotoPerfil.tipo in ['image/jpeg', 'image/png', 'image/webp'])
+          && (!('status' in request.resource.data.fotoPerfil)
+            || request.resource.data.fotoPerfil.status == 'disponivel')
+        ))
         && (!('github' in request.resource.data)
           || request.resource.data.github is string)
         && request.resource.data.hardSkills is list
@@ -264,7 +285,8 @@ service cloud.firestore {
           'nome',
           'tamanho',
           'tipo',
-          'url'
+          'url',
+          'status'
         ])
         && (!('caminho' in request.resource.data.curriculo)
           || request.resource.data.curriculo.caminho is string)
@@ -276,6 +298,8 @@ service cloud.firestore {
           || request.resource.data.curriculo.tipo is string)
         && (!('url' in request.resource.data.curriculo)
           || request.resource.data.curriculo.url is string)
+        && (!('status' in request.resource.data.curriculo)
+          || request.resource.data.curriculo.status in ['disponivel', 'pendente_reenvio'])
         && request.resource.data.createdAt is timestamp
         && request.resource.data.updatedAt is timestamp
         && request.resource.data.origem in ['manual', 'csv']
@@ -575,6 +599,49 @@ service cloud.firestore {
       return getAfter(/databases/$(database)/documents/candidatos/$(data.candidatoId)).data;
     }
 
+    function validIndicatedCandidatePhoto(candidatoId) {
+      return request.resource.data.fotoPerfil is map
+        && request.resource.data.fotoPerfil.keys().hasOnly([
+          'caminho',
+          'nome',
+          'tamanho',
+          'tipo',
+          'status'
+        ])
+        && (
+          request.resource.data.fotoPerfil.size() == 0
+          || (
+            request.resource.data.fotoPerfil.caminho is string
+            && request.resource.data.fotoPerfil.caminho.matches(
+              '^fotos-perfil/candidatos/' + request.auth.uid + '/indicados/' + candidatoId + '/[^/]+$'
+            )
+            && request.resource.data.fotoPerfil.nome is string
+            && request.resource.data.fotoPerfil.tamanho is number
+            && request.resource.data.fotoPerfil.tipo in ['image/jpeg', 'image/png', 'image/webp']
+            && request.resource.data.fotoPerfil.status == 'disponivel'
+          )
+        );
+    }
+
+    function indicatedCandidatePhotoUpdate(candidatoId) {
+      return isIndicador()
+        && resource.data.indicadorId == request.auth.uid
+        && sameCandidateOwnership()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'fotoPerfil',
+          'atualizadoEm'
+        ])
+        && validIndicatedCandidatePhoto(candidatoId);
+    }
+
+    function historyCanBeRead(data) {
+      return data.candidatoId is string
+        && exists(/databases/$(database)/documents/candidatos/$(data.candidatoId))
+        && isEmpresaOrIndicadorOwner(
+          get(/databases/$(database)/documents/candidatos/$(data.candidatoId)).data
+        );
+    }
+
     function historyCandidateMatches(data) {
       return data.candidatoId is string
         && data.empresaId is string
@@ -751,10 +818,13 @@ service cloud.firestore {
 
       allow read: if isEmpresaOrIndicadorOwner(resource.data);
 
-      allow update: if isEmpresaOwner(resource.data)
-        && sameCandidateOwnership()
-        && statusUpdateOnly()
-        && hasValidStatus(request.resource.data.status);
+      allow update: if (
+          isEmpresaOwner(resource.data)
+          && sameCandidateOwnership()
+          && statusUpdateOnly()
+          && hasValidStatus(request.resource.data.status)
+        )
+        || indicatedCandidatePhotoUpdate(candidatoId);
 
       allow delete: if false;
     }
@@ -813,7 +883,7 @@ service cloud.firestore {
     }
 
     match /historicoProcesso/{eventoId} {
-      allow read: if isEmpresaOrIndicadorOwner(resource.data);
+      allow read: if historyCanBeRead(resource.data);
       allow create: if historyCreateAllowed();
       allow update, delete: if false;
     }

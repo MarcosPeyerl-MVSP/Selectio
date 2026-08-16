@@ -62,8 +62,6 @@
 }
 
 .indicador-avatar {
-  display: grid;
-  place-items: center;
   width: 86px;
   height: 86px;
   border-radius: 50%;
@@ -71,6 +69,13 @@
   color: var(--white);
   font-size: 34px;
   font-weight: 900;
+  object-fit: cover;
+}
+
+.indicador-profile-card .indicador-photo-remove {
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--danger);
 }
 
 .indicador-profile-card h2 {

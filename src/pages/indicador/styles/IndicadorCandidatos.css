@@ -196,7 +196,7 @@
   height: 54px;
 }
 
-.candidate-avatar-wrap img {
+.candidate-avatar-wrap .candidate-card-avatar {
   width: 54px;
   height: 54px;
   border-radius: 10px;
@@ -204,12 +204,12 @@
   transition: transform var(--motion-fast), filter var(--motion-fast);
 }
 
-.candidate-card:hover .candidate-avatar-wrap img {
+.candidate-card:hover .candidate-avatar-wrap .candidate-card-avatar {
   transform: scale(1.04);
   filter: saturate(1.04);
 }
 
-.candidate-avatar-wrap span {
+.candidate-avatar-wrap .candidate-avatar-status {
   position: absolute;
   right: -3px;
   bottom: -3px;
@@ -221,15 +221,15 @@
 }
 
 /* Cores do indicador visual conforme status. */
-.candidate-card.entrevista .candidate-avatar-wrap span {
+.candidate-card.entrevista .candidate-avatar-wrap .candidate-avatar-status {
   background: #f59e0b;
 }
 
-.candidate-card.cancelado .candidate-avatar-wrap span {
+.candidate-card.cancelado .candidate-avatar-wrap .candidate-avatar-status {
   background: #dc2626;
 }
 
-.candidate-card.pre-salvo .candidate-avatar-wrap span {
+.candidate-card.pre-salvo .candidate-avatar-wrap .candidate-avatar-status {
   background: var(--primary);
 }
 

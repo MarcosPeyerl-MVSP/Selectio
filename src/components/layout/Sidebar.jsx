@@ -26,6 +26,7 @@ import {
   SETOR_RH,
   isModoEmpresarial
 } from '../../utils/modoEmpresarial'
+import AvatarProtegido from '../ui/AvatarProtegido'
 
 const sidebarConfig = {
   indicador: {
@@ -48,7 +49,6 @@ const sidebarConfig = {
     items: [
       { to: '/vagas', labelKey: 'sidebar.jobs', icon: FaBriefcase, activeOn: ['/vagas'], tourKey: 'vagas' },
       { to: '/candidatos/empresa', labelKey: 'sidebar.candidates', icon: FaUserFriends, activeOn: ['/candidatos/empresa'], tourKey: 'candidatos' },
-      { to: '/painel/empresa', labelKey: 'sidebar.dashboard', icon: FaChartBar, exact: true, tourKey: 'dashboard' },
       { to: '/painel/empresa?secao=perfil', labelKey: 'sidebar.profile', icon: FaUserTie, tourKey: 'perfil' },
       { to: '/painel/empresa?secao=pagamentos', labelKey: 'sidebar.payments', icon: FaCreditCard, tourKey: 'pagamentos' },
       { to: '/painel/empresa?secao=configuracoes', labelKey: 'sidebar.settings', icon: FaCog },
@@ -64,7 +64,6 @@ function getSidebarConfig(type, user) {
 
   const setorId = user?.setorEmpresarial?.id
   const commonItems = [
-    { to: '/painel/empresa', labelKey: 'sidebar.dashboard', icon: FaChartBar, exact: true, tourKey: 'dashboard' },
     { to: '/painel/empresa?secao=perfil', labelKey: 'sidebar.profile', icon: FaUserTie, tourKey: 'perfil' },
     { to: '/painel/empresa?secao=configuracoes', labelKey: 'sidebar.settings', icon: FaCog },
   ]
@@ -195,7 +194,12 @@ function Sidebar({ type, user }) {
       <h2 className="app-sidebar-title">{t(config.titleKey)}</h2>
 
       <div className="app-sidebar-user">
-        <FaUserTie />
+        <AvatarProtegido
+          className="app-sidebar-user-avatar"
+          foto={activeUser?.fotoPerfil}
+          alt={userName}
+          fallback={String(userName || '?').charAt(0).toUpperCase()}
+        />
         <div>
           <strong>{userName}</strong>
           <p>{userInfo}</p>

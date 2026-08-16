@@ -21,6 +21,7 @@ import Sidebar from '../../components/layout/Sidebar'
 import Footer from '../../components/layout/Footer'
 import EstadoDados from '../../components/ui/EstadoDados'
 import PageLoader from '../../components/ui/PageLoader'
+import SeletorFotoCandidato from '../../components/ui/SeletorFotoCandidato'
 import { buscarVagaPorId, vagaAceitaIndicacoes } from '../../services/firestoreVagas'
 import { criarCandidatoIndicado } from '../../services/firestoreCandidatos'
 import { listarCandidatosPreSalvos } from '../../services/firestoreCandidatosPreSalvos'
@@ -56,7 +57,8 @@ const initialForm = {
   curriculoNome: '',
   curriculoTipo: '',
   curriculoTamanho: 0,
-  curriculo: null
+  curriculo: null,
+  fotoPerfil: {}
 }
 
 const profileFields = [
@@ -80,26 +82,23 @@ const profileFields = [
   'curriculoNome',
   'curriculoTipo',
   'curriculoTamanho',
-  'curriculo'
+  'curriculo',
+  'fotoPerfil'
 ]
 
 const indicationFields = ['pontosFortes', 'fitCultural', 'destaquesProjetos', 'narrativa']
-const comparableProfileFields = profileFields.filter((field) => field !== 'curriculo')
+const comparableProfileFields = profileFields.filter((field) => !['curriculo', 'fotoPerfil'].includes(field))
 const maxResumeSize = 10 * 1024 * 1024
-const allowedResumeExtensions = new Set(['pdf', 'doc', 'docx', 'rtf'])
+const allowedResumeExtensions = new Set(['pdf', 'doc', 'docx'])
 const allowedResumeTypes = new Set([
   'application/pdf',
   'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/rtf',
-  'application/x-rtf',
-  'text/rtf'
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 ])
 const resumeTypeByExtension = {
   pdf: 'application/pdf',
   doc: 'application/msword',
-  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  rtf: 'application/rtf'
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 }
 
 const formatCurrencyInput = (value, language) => {
@@ -221,6 +220,7 @@ const mapSavedCandidateToForm = (candidato, language) => {
     fitCultural: toText(candidato?.fitCultural),
     destaquesProjetos: toText(candidato?.destaquesProjetos),
     narrativa: firstText(candidato?.narrativa, candidato?.observacoesProfissionais),
+    fotoPerfil: candidato?.fotoPerfil || {},
     ...getResumeMetadata(candidato)
   }
 }
@@ -343,6 +343,8 @@ function Indicar() {
   const [savedCandidatesReloadKey, setSavedCandidatesReloadKey] = useState(0)
   const [savedCandidateSearch, setSavedCandidateSearch] = useState('')
   const [selectedSavedId, setSelectedSavedId] = useState('')
+  const [resumeFile, setResumeFile] = useState(null)
+  const [photoFile, setPhotoFile] = useState(null)
 
   useEffect(() => {
     // Responsabilidade: buscar os dados da vaga selecionada antes de exibir o formulário.
@@ -461,6 +463,8 @@ function Indicar() {
     }
 
     setForm((current) => mergeSavedCandidate(current, incoming))
+    setResumeFile(null)
+    setPhotoFile(null)
     setSelectedSavedId(candidate.id)
     setSavedCandidateSearch('')
     setMessage('')
@@ -610,6 +614,7 @@ function Indicar() {
       curriculoTamanho: curriculo.tamanho,
       curriculo
     }))
+    setResumeFile(file)
   }
 
   // Responsabilidade: enviar a indicação do candidato para o Firestore.
@@ -632,14 +637,17 @@ function Indicar() {
         dados: form,
         indicador,
         vaga,
-        candidatoPreSalvoId: selectedSavedId
+        candidatoPreSalvoId: selectedSavedId,
+        arquivoCurriculo: resumeFile,
+        arquivoFoto: photoFile
       })
       toast.success(t('referral.success'))
 
       // Após criar a indicação, retorna para a página da vaga.
       navigate(`/vaga/${vagaId}`)
-    } catch {
-      const errorMessage = t('referral.submitError')
+    } catch (error) {
+      console.error('Falha ao finalizar a indicação:', error)
+      const errorMessage = error?.message || t('referral.submitError')
       setMessage(errorMessage)
       toast.error(errorMessage)
     } finally {
@@ -679,6 +687,17 @@ function Indicar() {
               <div className="indicar-main">
                 <section className="form-section">
                   <h2>{t('common:candidateForm.sections.personal')}</h2>
+                  <SeletorFotoCandidato
+                    fotoAtual={form.fotoPerfil}
+                    arquivo={photoFile}
+                    nome={form.nome}
+                    onChange={setPhotoFile}
+                    onRemove={() => {
+                      setPhotoFile(null)
+                      setForm((current) => ({ ...current, fotoPerfil: {} }))
+                    }}
+                    onError={(error) => toast.warning(error)}
+                  />
                   <div className="form-grid">
                     <Field label={t('common:candidateForm.fields.name')} name="nome" value={form.nome} onChange={updateField} placeholder={t('common:candidateForm.placeholders.name')} required />
                     <Field label={t('common:candidateForm.fields.email')} name="email" type="email" value={form.email} onChange={updateField} placeholder={t('common:candidateForm.placeholders.email')} required />
@@ -776,7 +795,7 @@ function Indicar() {
                         t('referral.resumeHelp')
                       )}
                     </small>
-                    <input type="file" accept=".pdf,.doc,.docx,.rtf" onChange={handleFile} />
+                    <input type="file" accept=".pdf,.doc,.docx" onChange={handleFile} />
                   </label>
                 </section>
 

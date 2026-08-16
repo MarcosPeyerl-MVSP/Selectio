@@ -1,5 +1,6 @@
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { db } from './firebase'
+import { enviarFotoPerfilUsuario, removerFotoPerfil } from './storageFotosPerfil'
 
 const collectionsByTipo = {
   empresa: 'empresas',
@@ -98,6 +99,41 @@ export const atualizarPerfilUsuario = async ({ uid, tipo, dados }) => {
     ...payload,
     atualizadoEm: new Date().toISOString()
   }
+}
+
+export const atualizarFotoPerfilUsuario = async ({ uid, tipo, arquivo, fotoAtual }) => {
+  if (!uid) throw new Error('UID do Firebase e obrigatorio para atualizar a foto.')
+
+  const collectionName = getCollectionByTipo(tipo)
+  const fotoPerfil = await enviarFotoPerfilUsuario({ arquivo, uid, tipoPerfil: tipo })
+
+  try {
+    await setDoc(doc(db, collectionName, uid), {
+      fotoPerfil,
+      atualizadoEm: serverTimestamp()
+    }, { merge: true })
+  } catch (error) {
+    await removerFotoPerfil(fotoPerfil.caminho).catch(() => {})
+    throw error
+  }
+
+  if (fotoAtual?.caminho && fotoAtual.caminho !== fotoPerfil.caminho) {
+    await removerFotoPerfil(fotoAtual.caminho).catch(() => {})
+  }
+
+  return fotoPerfil
+}
+
+export const removerFotoPerfilUsuario = async ({ uid, tipo, fotoAtual }) => {
+  if (!uid) throw new Error('UID do Firebase e obrigatorio para remover a foto.')
+
+  const collectionName = getCollectionByTipo(tipo)
+  await setDoc(doc(db, collectionName, uid), {
+    fotoPerfil: {},
+    atualizadoEm: serverTimestamp()
+  }, { merge: true })
+  await removerFotoPerfil(fotoAtual?.caminho).catch(() => {})
+  return {}
 }
 
 export const atualizarSetoresEmpresariais = async ({ uid, setoresEmpresariais }) => {

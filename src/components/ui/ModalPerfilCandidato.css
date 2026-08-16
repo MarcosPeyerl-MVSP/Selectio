@@ -211,6 +211,72 @@
   text-decoration-color: color-mix(in srgb, var(--primary) 38%, transparent);
 }
 
+.candidate-profile-avatar {
+  width: 88px;
+  height: 88px;
+  margin-bottom: 4px;
+  border-radius: 50%;
+  object-fit: cover;
+  font-size: 32px;
+}
+
+.candidate-profile-photo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.candidate-profile-photo-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.candidate-profile-photo-actions button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.candidate-profile-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  font: inherit;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.candidate-profile-download svg {
+  grid-row: auto;
+  margin: 0;
+}
+
+.candidate-profile-download:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.candidate-profile-download-error {
+  grid-column: 2;
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .candidate-profile-text {
   margin: 0;
   color: var(--text);

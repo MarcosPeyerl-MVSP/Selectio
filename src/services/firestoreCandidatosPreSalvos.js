@@ -12,11 +12,16 @@ import {
 } from 'firebase/firestore'
 
 import { db } from './firebase'
+import {
+  enviarCurriculo,
+  removerArquivoCurriculo
+} from './storageCurriculos'
+import { enviarFotoCandidato, removerFotoPerfil } from './storageFotosPerfil'
 
 const candidatosPreSalvosCollection = collection(db, 'candidatosPreSalvos')
 const MAX_WRITES_POR_BATCH = 400
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const CURRICULO_EXTENSIONS = new Set(['pdf', 'doc', 'docx', 'rtf'])
+const CURRICULO_EXTENSIONS = new Set(['pdf', 'doc', 'docx'])
 const CURRICULO_MAX_BYTES = 10 * 1024 * 1024
 
 const CAMPOS_TEXTO = [
@@ -87,9 +92,9 @@ const normalizeCurriculo = (dados) => {
       : curriculo.tamanho ?? curriculo.size ?? 0
   )
   const caminho = normalizeString(curriculo.caminho ?? curriculo.path)
-  const url = normalizeString(curriculo.url)
+  const statusInformado = normalizeString(curriculo.status)
 
-  if (!nome && !tipo && !tamanhoInformado && !caminho && !url) return {}
+  if (!nome && !tipo && !tamanhoInformado && !caminho) return {}
 
   return {
     nome,
@@ -98,7 +103,7 @@ const normalizeCurriculo = (dados) => {
       ? tamanhoInformado
       : 0,
     caminho,
-    url
+    status: caminho ? 'disponivel' : statusInformado || 'pendente_reenvio'
   }
 }
 
@@ -125,6 +130,9 @@ const normalizeCandidateData = (dados = {}) => {
   normalized.hardSkills = normalizeList(source.hardSkills)
   normalized.softSkills = normalizeList(source.softSkills)
   normalized.curriculo = curriculo
+  normalized.fotoPerfil = dados?.fotoPerfil && typeof dados.fotoPerfil === 'object'
+    ? dados.fotoPerfil
+    : {}
 
   return normalized
 }
@@ -138,7 +146,7 @@ const validateCurriculo = (dados) => {
   const extensao = nome.includes('.') ? nome.split('.').pop().toLowerCase() : ''
 
   if (!CURRICULO_EXTENSIONS.has(extensao)) {
-    throw new Error('O currículo deve estar em formato PDF, DOC, DOCX ou RTF.')
+    throw new Error('O currículo deve estar em formato PDF, DOC ou DOCX.')
   }
 
   if (curriculo.tamanho > CURRICULO_MAX_BYTES) {
@@ -293,10 +301,15 @@ export const buscarCandidatoPreSalvoPorId = async ({ candidatoId, indicadorId })
   }
 }
 
-export const criarCandidatoPreSalvo = async ({ dados, indicadorId }) => {
+export const criarCandidatoPreSalvo = async ({
+  dados,
+  indicadorId,
+  arquivoCurriculo = null,
+  arquivoFoto = null
+}) => {
   assertIndicadorId(indicadorId)
 
-  const candidatoDados = prepareCandidateData(dados)
+  let candidatoDados = prepareCandidateData(dados)
   if (await emailAlreadyExists({
     emailNormalizado: candidatoDados.emailNormalizado,
     indicadorId
@@ -305,6 +318,33 @@ export const criarCandidatoPreSalvo = async ({ dados, indicadorId }) => {
   }
 
   const candidatoRef = doc(candidatosPreSalvosCollection)
+  let caminhoEnviado = ''
+  let fotoEnviada = null
+
+  if (arquivoCurriculo) {
+    const curriculo = await enviarCurriculo({
+      arquivo: arquivoCurriculo,
+      indicadorId,
+      registroId: candidatoRef.id,
+      tipoRegistro: 'pre-salvos'
+    })
+    caminhoEnviado = curriculo.caminho
+    candidatoDados = prepareCandidateData({ ...candidatoDados, curriculo })
+  }
+  if (arquivoFoto) {
+    try {
+      fotoEnviada = await enviarFotoCandidato({
+        arquivo: arquivoFoto,
+        indicadorId,
+        candidatoId: candidatoRef.id,
+        tipoRegistro: 'pre-salvos'
+      })
+    } catch (error) {
+      await removerArquivoCurriculo(caminhoEnviado).catch(() => {})
+      throw error
+    }
+    candidatoDados = prepareCandidateData({ ...candidatoDados, fotoPerfil: fotoEnviada })
+  }
   const payload = buildCreatePayload({
     id: candidatoRef.id,
     indicadorId,
@@ -314,7 +354,13 @@ export const criarCandidatoPreSalvo = async ({ dados, indicadorId }) => {
   const batch = writeBatch(db)
 
   batch.set(candidatoRef, payload)
-  await batch.commit()
+  try {
+    await batch.commit()
+  } catch (error) {
+    await removerArquivoCurriculo(caminhoEnviado).catch(() => {})
+    await removerFotoPerfil(fotoEnviada?.caminho).catch(() => {})
+    throw error
+  }
 
   return buildMappedCreatedCandidate({
     id: candidatoRef.id,
@@ -324,7 +370,15 @@ export const criarCandidatoPreSalvo = async ({ dados, indicadorId }) => {
   })
 }
 
-export const atualizarCandidatoPreSalvo = async ({ candidatoId, dados, indicadorId }) => {
+export const atualizarCandidatoPreSalvo = async ({
+  candidatoId,
+  dados,
+  indicadorId,
+  arquivoCurriculo = null,
+  removerCurriculo = false,
+  arquivoFoto = null,
+  removerFoto = false
+}) => {
   assertIndicadorId(indicadorId)
 
   if (!candidatoId) {
@@ -337,12 +391,19 @@ export const atualizarCandidatoPreSalvo = async ({ candidatoId, dados, indicador
   }
 
   const atualParaMerge = { ...atual }
-  const hasCurriculoObject = Object.prototype.hasOwnProperty.call(dados || {}, 'curriculo')
+  const dadosParaMerge = { ...(dados || {}) }
+  const hasCurriculoObject = Object.prototype.hasOwnProperty.call(dadosParaMerge, 'curriculo')
   const hasFlatCurriculo = [
     'curriculoNome',
     'curriculoTipo',
     'curriculoTamanho'
-  ].some((campo) => Object.prototype.hasOwnProperty.call(dados || {}, campo))
+  ].some((campo) => Object.prototype.hasOwnProperty.call(dadosParaMerge, campo))
+
+  if (!arquivoCurriculo && !removerCurriculo && !hasCurriculoObject) {
+    delete dadosParaMerge.curriculoNome
+    delete dadosParaMerge.curriculoTipo
+    delete dadosParaMerge.curriculoTamanho
+  }
 
   if (hasCurriculoObject && !hasFlatCurriculo) {
     delete atualParaMerge.curriculoNome
@@ -350,7 +411,44 @@ export const atualizarCandidatoPreSalvo = async ({ candidatoId, dados, indicador
     delete atualParaMerge.curriculoTamanho
   }
 
-  const candidatoDados = prepareCandidateData({ ...atualParaMerge, ...dados })
+  let curriculoEnviado = null
+  let fotoEnviada = null
+  if (arquivoCurriculo) {
+    curriculoEnviado = await enviarCurriculo({
+      arquivo: arquivoCurriculo,
+      indicadorId,
+      registroId: candidatoId,
+      tipoRegistro: 'pre-salvos'
+    })
+    dadosParaMerge.curriculo = curriculoEnviado
+    delete dadosParaMerge.curriculoNome
+    delete dadosParaMerge.curriculoTipo
+    delete dadosParaMerge.curriculoTamanho
+  } else if (removerCurriculo) {
+    dadosParaMerge.curriculo = {}
+    dadosParaMerge.curriculoNome = ''
+    dadosParaMerge.curriculoTipo = ''
+    dadosParaMerge.curriculoTamanho = 0
+  }
+
+  if (arquivoFoto) {
+    try {
+      fotoEnviada = await enviarFotoCandidato({
+        arquivo: arquivoFoto,
+        indicadorId,
+        candidatoId,
+        tipoRegistro: 'pre-salvos'
+      })
+    } catch (error) {
+      await removerArquivoCurriculo(curriculoEnviado?.caminho).catch(() => {})
+      throw error
+    }
+    dadosParaMerge.fotoPerfil = fotoEnviada
+  } else if (removerFoto) {
+    dadosParaMerge.fotoPerfil = {}
+  }
+
+  const candidatoDados = prepareCandidateData({ ...atualParaMerge, ...dadosParaMerge })
   if (await emailAlreadyExists({
     emailNormalizado: candidatoDados.emailNormalizado,
     indicadorId,
@@ -359,10 +457,23 @@ export const atualizarCandidatoPreSalvo = async ({ candidatoId, dados, indicador
     throw duplicateEmailError()
   }
 
-  await updateDoc(doc(db, 'candidatosPreSalvos', candidatoId), {
-    ...candidatoDados,
-    updatedAt: serverTimestamp()
-  })
+  try {
+    await updateDoc(doc(db, 'candidatosPreSalvos', candidatoId), {
+      ...candidatoDados,
+      updatedAt: serverTimestamp()
+    })
+  } catch (error) {
+    await removerArquivoCurriculo(curriculoEnviado?.caminho).catch(() => {})
+    await removerFotoPerfil(fotoEnviada?.caminho).catch(() => {})
+    throw error
+  }
+
+  if ((curriculoEnviado || removerCurriculo) && atual.curriculo?.caminho !== curriculoEnviado?.caminho) {
+    await removerArquivoCurriculo(atual.curriculo?.caminho).catch(() => {})
+  }
+  if ((fotoEnviada || removerFoto) && atual.fotoPerfil?.caminho !== fotoEnviada?.caminho) {
+    await removerFotoPerfil(atual.fotoPerfil?.caminho).catch(() => {})
+  }
 
   const updatedAt = new Date().toISOString()
   return {
@@ -387,6 +498,8 @@ export const excluirCandidatoPreSalvo = async ({ candidatoId, indicadorId }) => 
   }
 
   await deleteDoc(doc(db, 'candidatosPreSalvos', candidatoId))
+  await removerArquivoCurriculo(candidato.curriculo?.caminho).catch(() => {})
+  await removerFotoPerfil(candidato.fotoPerfil?.caminho).catch(() => {})
   return candidato
 }
 

@@ -26,6 +26,7 @@ import LinhaStatusCandidato from '../../components/ui/LinhaStatusCandidato'
 import CardEsqueleto from '../../components/ui/CardEsqueleto'
 import EstadoDados from '../../components/ui/EstadoDados'
 import Paginacao from '../../components/ui/Paginacao'
+import AvatarProtegido from '../../components/ui/AvatarProtegido'
 import { listarCandidatosPorIndicador } from '../../services/firestoreCandidatos'
 import {
   excluirCandidatoPreSalvo,
@@ -107,15 +108,6 @@ const paymentStatusInfo = {
     icon: FaExclamationTriangle
   }
 }
-
-// Lista de imagens usadas como avatares visuais dos candidatos.
-const avatars = [
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80',
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=80',
-  'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=160&q=80',
-  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=160&q=80',
-  'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=160&q=80',
-]
 
 const PAGE_SIZE = 6
 
@@ -417,7 +409,7 @@ function Candidatos() {
               )}
 
               <section className="candidate-grid">
-              {candidatosPaginados.map((candidato, index) => {
+              {candidatosPaginados.map((candidato) => {
                 const normalizedStatus = normalizeCandidateStatus(candidato.status)
                 const status = getCandidateStatusLabel(t, normalizedStatus)
                 const cardClass = normalizedStatus === 'pre_salvo' ? 'pre-salvo' : normalizedStatus
@@ -431,8 +423,13 @@ function Candidatos() {
                   <article className={`candidate-card ${cardClass}`} key={candidato.registroKey}>
                     <div className="candidate-card-top">
                       <div className="candidate-avatar-wrap">
-                        <img src={avatars[index % avatars.length]} alt={candidato.nome} />
-                        <span />
+                        <AvatarProtegido
+                          className="candidate-card-avatar"
+                          foto={candidato.fotoPerfil}
+                          alt={candidato.nome}
+                          fallback={String(candidato.nome || '?').charAt(0).toUpperCase()}
+                        />
+                        <span className="candidate-avatar-status" />
                       </div>
                       <strong className="candidate-status">{status}</strong>
                     </div>

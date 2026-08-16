@@ -1,24 +1,31 @@
 import './styles/IndicadorPerfil.css'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   FaAward,
   FaBriefcase,
+  FaCamera,
   FaCheckCircle,
   FaExternalLinkAlt,
   FaIdCard,
   FaLinkedin,
   FaSave,
+  FaTrash,
   FaUserTie
 } from 'react-icons/fa'
 
 import PageLoader from '../../components/ui/PageLoader'
+import AvatarProtegido from '../../components/ui/AvatarProtegido'
 import { auth } from '../../services/firebase'
 import { listarCandidatosPorIndicador } from '../../services/firestoreCandidatos'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { listarIndicacoesPorIndicador } from '../../services/firestoreIndicacoes'
-import { atualizarPerfilUsuario } from '../../services/firestoreUsers'
+import {
+  atualizarFotoPerfilUsuario,
+  atualizarPerfilUsuario,
+  removerFotoPerfilUsuario
+} from '../../services/firestoreUsers'
 import { useToast } from '../../hooks/useToast'
 import { formatDate, formatPercent } from '../../i18n/formatters'
 
@@ -47,6 +54,8 @@ function IndicadorPerfil({ user, onUserUpdate }) {
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [savingPhoto, setSavingPhoto] = useState(false)
+  const photoInputRef = useRef(null)
   const [form, setForm] = useState(() => getInitialForm(user))
   const emailVerified = Boolean(auth.currentUser?.emailVerified)
   const emptyValue = t('profile.notProvided')
@@ -154,6 +163,48 @@ function IndicadorPerfil({ user, onUserUpdate }) {
     }
   }
 
+  const updateLocalPhoto = (fotoPerfil) => {
+    const updatedUser = { ...user, fotoPerfil }
+    localStorage.setItem('indicadorUser', JSON.stringify(updatedUser))
+    onUserUpdate?.(updatedUser)
+  }
+
+  const handlePhoto = async (event) => {
+    const arquivo = event.target.files?.[0]
+    event.target.value = ''
+    if (!arquivo || !indicadorUid) return
+
+    try {
+      setSavingPhoto(true)
+      const fotoPerfil = await atualizarFotoPerfilUsuario({
+        uid: indicadorUid,
+        tipo: 'indicador',
+        arquivo,
+        fotoAtual: user?.fotoPerfil
+      })
+      updateLocalPhoto(fotoPerfil)
+      toast.success(t('common:profilePhoto.updated'))
+    } catch (error) {
+      toast.error(error?.message || t('common:profilePhoto.updateError'))
+    } finally {
+      setSavingPhoto(false)
+    }
+  }
+
+  const handleRemovePhoto = async () => {
+    if (!indicadorUid || !user?.fotoPerfil?.caminho) return
+    try {
+      setSavingPhoto(true)
+      await removerFotoPerfilUsuario({ uid: indicadorUid, tipo: 'indicador', fotoAtual: user.fotoPerfil })
+      updateLocalPhoto({})
+      toast.success(t('common:profilePhoto.removed'))
+    } catch {
+      toast.error(t('common:profilePhoto.removeError'))
+    } finally {
+      setSavingPhoto(false)
+    }
+  }
+
   if (loading) {
     return <PageLoader label={t('profile.loading')} />
   }
@@ -171,7 +222,12 @@ function IndicadorPerfil({ user, onUserUpdate }) {
 
       <div className="indicador-profile-layout">
         <aside className="indicador-profile-card">
-          <div className="indicador-avatar">{initial}</div>
+          <AvatarProtegido
+            className="indicador-avatar"
+            foto={user?.fotoPerfil}
+            alt={user?.nome || t('profile.defaultRole')}
+            fallback={initial}
+          />
           <h2>{user?.nome || emptyValue}</h2>
           <p>{user?.tituloProfissional || t('profile.defaultRole')}</p>
           {emailVerified && <span className="verified-badge"><FaCheckCircle /> {t('profile.verified')}</span>}
@@ -179,6 +235,15 @@ function IndicadorPerfil({ user, onUserUpdate }) {
             {user?.linkedin && <a href={formatExternalLink(user.linkedin)} target="_blank" rel="noreferrer"><FaLinkedin /> LinkedIn</a>}
             {user?.portfolio && <a href={formatExternalLink(user.portfolio)} target="_blank" rel="noreferrer"><FaExternalLinkAlt /> Portfolio</a>}
           </div>
+          <input ref={photoInputRef} hidden type="file" accept="image/jpeg,image/png,image/webp" onChange={handlePhoto} />
+          <button type="button" disabled={savingPhoto} onClick={() => photoInputRef.current?.click()}>
+            <FaCamera /> {savingPhoto ? t('common:profilePhoto.saving') : t('common:profilePhoto.change')}
+          </button>
+          {user?.fotoPerfil?.caminho && (
+            <button type="button" className="indicador-photo-remove" disabled={savingPhoto} onClick={handleRemovePhoto}>
+              <FaTrash /> {t('common:profilePhoto.remove')}
+            </button>
+          )}
           <button type="button" onClick={() => setEditing((current) => !current)}>
             <FaUserTie /> {editing ? t('profile.cancelEdit') : t('profile.edit')}
           </button>

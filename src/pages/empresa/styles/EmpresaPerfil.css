@@ -47,8 +47,6 @@
 }
 
 .empresa-profile-avatar {
-  display: grid;
-  place-items: center;
   width: 76px;
   height: 76px;
   border-radius: 14px;
@@ -56,6 +54,7 @@
   color: var(--white);
   font-size: 32px;
   font-weight: 900;
+  object-fit: cover;
 }
 
 .empresa-profile-hero h2 {

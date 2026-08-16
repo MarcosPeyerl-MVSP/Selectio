@@ -5,6 +5,18 @@
     "portuguese": "Português",
     "english": "English"
   },
+  "profilePhoto": {
+    "candidate": "Candidate photo",
+    "choose": "Choose photo",
+    "change": "Change photo",
+    "remove": "Remove photo",
+    "saving": "Uploading...",
+    "updated": "Profile photo updated.",
+    "removed": "Profile photo removed.",
+    "updateError": "Could not update the photo.",
+    "removeError": "Could not remove the photo.",
+    "help": "JPG, PNG or WEBP up to 5 MB."
+  },
   "navigation": {
     "home": "Home",
     "jobs": "Jobs",
@@ -268,6 +280,9 @@
     "savedAt": "Saved on",
     "referralDate": "Referral date",
     "resume": "Resume",
+    "resumeDownloading": "Downloading resume...",
+    "resumeDownloadError": "The resume could not be downloaded.",
+    "resumeUnavailable": "Legacy record: ask for the resume to be uploaded again.",
     "close": "Close profile",
     "eyebrow": "Candidate profile",
     "preSavedCandidate": "Pre-saved candidate",

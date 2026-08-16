@@ -421,6 +421,31 @@ test('historico pode ser lido pelos participantes e nao pode ser alterado', asyn
   await assertFails(updateDoc(historicoRef, { titulo: 'Evento alterado' }))
 })
 
+test('historico pode ser consultado por candidato pelos participantes', async () => {
+  await criarProcessoSeletivo()
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore()
+    await setDoc(
+      doc(db, 'historicoProcesso', 'historico-consulta'),
+      historicoPayload({ candidatoId: 'candidato-1' })
+    )
+  })
+
+  const indicadorDb = testEnv.authenticatedContext('indicador-1').firestore()
+  const externoDb = testEnv.authenticatedContext('usuario-externo').firestore()
+  const consultaIndicador = query(
+    collection(indicadorDb, 'historicoProcesso'),
+    where('candidatoId', '==', 'candidato-1')
+  )
+  const consultaExterno = query(
+    collection(externoDb, 'historicoProcesso'),
+    where('candidatoId', '==', 'candidato-1')
+  )
+
+  await assertSucceeds(getDocs(consultaIndicador))
+  await assertFails(getDocs(consultaExterno))
+})
+
 test('historico nao pode ser criado sem a alteracao correspondente', async () => {
   await criarProcessoSeletivo()
 
@@ -487,6 +512,38 @@ test('indicador nao altera o status do candidato', async () => {
 
   await assertFails(updateDoc(doc(db, 'candidatos', 'candidato-1'), {
     status: 'contratado',
+    atualizadoEm: serverTimestamp()
+  }))
+})
+
+test('indicador proprietario altera apenas a foto do candidato indicado', async () => {
+  await criarProcessoSeletivo()
+  const donoDb = testEnv.authenticatedContext('indicador-1').firestore()
+  const outroDb = testEnv.authenticatedContext('indicador-2').firestore()
+  const empresaDb = testEnv.authenticatedContext('empresa-1').firestore()
+  const candidatoPath = 'candidatos/candidato-1'
+  const fotoPerfil = {
+    caminho: 'fotos-perfil/candidatos/indicador-1/indicados/candidato-1/foto.jpg',
+    nome: 'foto.jpg',
+    tamanho: 1024,
+    tipo: 'image/jpeg',
+    status: 'disponivel'
+  }
+
+  await assertSucceeds(updateDoc(doc(donoDb, candidatoPath), {
+    fotoPerfil,
+    atualizadoEm: serverTimestamp()
+  }))
+  await assertFails(updateDoc(doc(outroDb, candidatoPath), {
+    fotoPerfil: { ...fotoPerfil, caminho: 'fotos-perfil/candidatos/indicador-2/indicados/candidato-1/foto.jpg' },
+    atualizadoEm: serverTimestamp()
+  }))
+  await assertFails(updateDoc(doc(empresaDb, candidatoPath), {
+    fotoPerfil: { ...fotoPerfil, caminho: 'fotos-perfil/candidatos/indicador-1/indicados/candidato-1/empresa.jpg' },
+    atualizadoEm: serverTimestamp()
+  }))
+  await assertSucceeds(updateDoc(doc(donoDb, candidatoPath), {
+    fotoPerfil: {},
     atualizadoEm: serverTimestamp()
   }))
 })

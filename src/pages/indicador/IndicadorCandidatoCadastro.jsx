@@ -20,6 +20,7 @@ import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import EstadoDados from '../../components/ui/EstadoDados'
 import PageLoader from '../../components/ui/PageLoader'
+import SeletorFotoCandidato from '../../components/ui/SeletorFotoCandidato'
 import { useAuth } from '../../hooks/useAuth'
 import { useConfirmacao } from '../../hooks/useConfirmacao'
 import { useToast } from '../../hooks/useToast'
@@ -39,14 +40,11 @@ import {
 
 const MAX_RESUME_SIZE = 10 * 1024 * 1024
 const MAX_CSV_FILE_SIZE = 2 * 1024 * 1024
-const RESUME_EXTENSIONS = ['pdf', 'doc', 'docx', 'rtf']
+const RESUME_EXTENSIONS = ['pdf', 'doc', 'docx']
 const RESUME_TYPES = new Set([
   'application/pdf',
   'application/msword',
-  'application/rtf',
-  'application/x-rtf',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'text/rtf',
 ])
 
 const emptyForm = {
@@ -71,11 +69,12 @@ const emptyForm = {
   curriculoTipo: '',
   curriculoTamanho: 0,
   observacoesProfissionais: '',
+  fotoPerfil: {},
 }
 
-const textFormFields = Object.keys(emptyForm).filter((key) => !['hardSkills', 'softSkills', 'curriculoTamanho'].includes(key))
+const textFormFields = Object.keys(emptyForm).filter((key) => !['hardSkills', 'softSkills', 'curriculoTamanho', 'fotoPerfil'].includes(key))
 
-const cloneEmptyForm = () => ({ ...emptyForm, hardSkills: [], softSkills: [] })
+const cloneEmptyForm = () => ({ ...emptyForm, hardSkills: [], softSkills: [], fotoPerfil: {} })
 
 const toSkillList = (value) => {
   if (Array.isArray(value)) return [...new Set(value.map((item) => String(item).trim()).filter(Boolean))]
@@ -93,6 +92,7 @@ const mapCandidateToForm = (candidate) => {
   mapped.curriculoNome = candidate?.curriculoNome || candidate?.curriculo?.nome || ''
   mapped.curriculoTipo = candidate?.curriculoTipo || candidate?.curriculo?.tipo || ''
   mapped.curriculoTamanho = Number(candidate?.curriculoTamanho || candidate?.curriculo?.tamanho || 0)
+  mapped.fotoPerfil = candidate?.fotoPerfil || {}
   return mapped
 }
 
@@ -227,6 +227,10 @@ function IndicadorCandidatoCadastro() {
   const [origin, setOrigin] = useState('manual')
   const [formErrors, setFormErrors] = useState({})
   const [resumeError, setResumeError] = useState('')
+  const [resumeFile, setResumeFile] = useState(null)
+  const [originalResumePresent, setOriginalResumePresent] = useState(false)
+  const [photoFile, setPhotoFile] = useState(null)
+  const [originalPhotoPresent, setOriginalPhotoPresent] = useState(false)
   const [saving, setSaving] = useState(false)
   const [loadingCandidate, setLoadingCandidate] = useState(isEditing)
   const [loadError, setLoadError] = useState('')
@@ -255,6 +259,8 @@ function IndicadorCandidatoCadastro() {
         if (!active) return
 
         setForm(mapCandidateToForm(candidate))
+        setOriginalResumePresent(Boolean(candidate.curriculoNome || candidate.curriculo?.nome))
+        setOriginalPhotoPresent(Boolean(candidate.fotoPerfil?.caminho))
         setOrigin(candidate.origem || 'manual')
       } catch {
         if (active) setLoadError(t('candidateRegistration.loadError'))
@@ -318,6 +324,7 @@ function IndicadorCandidatoCadastro() {
     }
 
     setResumeError('')
+    setResumeFile(file)
     setForm((current) => ({
       ...current,
       curriculoNome: file.name,
@@ -334,6 +341,7 @@ function IndicadorCandidatoCadastro() {
       curriculoTamanho: 0,
     }))
     setResumeError('')
+    setResumeFile(null)
     if (resumeInputRef.current) resumeInputRef.current.value = ''
   }
 
@@ -356,10 +364,23 @@ function IndicadorCandidatoCadastro() {
       const data = buildManualPayload(form, isEditing ? origin : 'manual')
 
       if (isEditing) {
-        await atualizarCandidatoPreSalvo({ candidatoId, dados: data, indicadorId })
+        await atualizarCandidatoPreSalvo({
+          candidatoId,
+          dados: data,
+          indicadorId,
+          arquivoCurriculo: resumeFile,
+          removerCurriculo: originalResumePresent && !form.curriculoNome,
+          arquivoFoto: photoFile,
+          removerFoto: originalPhotoPresent && !form.fotoPerfil?.caminho && !photoFile
+        })
         toast.success(t('candidateRegistration.updated'))
       } else {
-        await criarCandidatoPreSalvo({ dados: data, indicadorId })
+        await criarCandidatoPreSalvo({
+          dados: data,
+          indicadorId,
+          arquivoCurriculo: resumeFile,
+          arquivoFoto: photoFile
+        })
         toast.success(t('candidateRegistration.saved'))
       }
 
@@ -575,6 +596,13 @@ function IndicadorCandidatoCadastro() {
                   onRemoveSkill={removeSkill}
                   onResume={handleResume}
                   onRemoveResume={removeResume}
+                  photoFile={photoFile}
+                  onPhotoChange={(file) => setPhotoFile(file)}
+                  onPhotoRemove={() => {
+                    setPhotoFile(null)
+                    setForm((current) => ({ ...current, fotoPerfil: {} }))
+                  }}
+                  onPhotoError={(message) => toast.warning(message)}
                   onSubmit={handleManualSubmit}
                 />
               ) : (
@@ -614,11 +642,15 @@ function ManualCandidateForm({
   onCurrencyChange,
   onPhoneChange,
   onRemoveResume,
+  onPhotoChange,
+  onPhotoError,
+  onPhotoRemove,
   onRemoveSkill,
   onResume,
   onSubmit,
   resumeError,
   resumeInputRef,
+  photoFile,
   saving,
 }) {
   const { t, i18n } = useTranslation(['referrer', 'common'])
@@ -627,6 +659,14 @@ function ManualCandidateForm({
   return (
     <form className="candidate-registration-form" onSubmit={onSubmit} noValidate>
       <FormSection title={t('common:candidateForm.sections.personal')}>
+        <SeletorFotoCandidato
+          fotoAtual={form.fotoPerfil}
+          arquivo={photoFile}
+          nome={form.nome}
+          onChange={onPhotoChange}
+          onRemove={onPhotoRemove}
+          onError={onPhotoError}
+        />
         <div className="candidate-registration-grid">
           <Field label={t('common:candidateForm.fields.name')} name="nome" value={form.nome} onChange={onChange} error={errors.nome} placeholder={t('common:candidateForm.placeholders.name')} required autoComplete="name" />
           <Field label={t('common:candidateForm.fields.email')} name="email" type="email" value={form.email} onChange={onChange} error={errors.email} placeholder={t('common:candidateForm.placeholders.email')} required autoComplete="email" />
@@ -680,7 +720,7 @@ function ManualCandidateForm({
           </div>
           <label className="candidate-registration-file-button">
             {form.curriculoNome ? t('candidateRegistration.replaceFile') : t('candidateRegistration.chooseFile')}
-            <input ref={resumeInputRef} type="file" accept=".pdf,.doc,.docx,.rtf" onChange={onResume} />
+            <input ref={resumeInputRef} type="file" accept=".pdf,.doc,.docx" onChange={onResume} />
           </label>
           {form.curriculoNome && (
             <button type="button" className="candidate-registration-remove-file" onClick={onRemoveResume} aria-label={t('common:candidateForm.removeResume')}>

@@ -165,6 +165,14 @@
   box-shadow: 0 8px 20px rgba(182, 28, 47, 0.15);
 }
 
+.icon-button .navbar-profile-photo {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  opacity: 1;
+}
+
 .profile-menu {
   position: absolute;
   top: calc(100% + 14px);
@@ -212,6 +220,7 @@
   background: rgba(182, 28, 47, 0.1);
   color: var(--primary);
   border: 1px solid rgba(182, 28, 47, 0.18);
+  object-fit: cover;
 }
 
 .profile-menu-avatar svg {

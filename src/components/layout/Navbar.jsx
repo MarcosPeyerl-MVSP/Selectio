@@ -16,6 +16,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { perfilExigeSetorEmpresarial } from '../../utils/modoEmpresarial'
 import ModalAlterarSetor from './ModalAlterarSetor'
 import LanguageSwitcher from './LanguageSwitcher'
+import AvatarProtegido from '../ui/AvatarProtegido'
 
 function Navbar() {
   const { t } = useTranslation(['common', 'auth'])
@@ -151,15 +152,20 @@ function Navbar() {
                 aria-haspopup="menu"
                 aria-expanded={profileMenuOpen}
               >
-                <FaUserCircle />
+                {session.user?.fotoPerfil?.caminho ? (
+                  <AvatarProtegido className="navbar-profile-photo" foto={session.user.fotoPerfil} alt={userName} fallback={String(userName || '?').charAt(0)} />
+                ) : <FaUserCircle />}
               </button>
 
               {profileMenuOpen && (
                 <section className="profile-menu" role="menu" aria-label={t('account.profileMenu')}>
                   <header className="profile-menu-header">
-                    <div className="profile-menu-avatar">
-                      <FaUserAlt />
-                    </div>
+                    <AvatarProtegido
+                      className="profile-menu-avatar"
+                      foto={session.user?.fotoPerfil}
+                      alt={userName}
+                      fallback={session.type === 'admin' ? <FaUserAlt /> : String(userName || '?').charAt(0).toUpperCase()}
+                    />
                     <div>
                       <strong>{userName || t('account.selectioUser')}</strong>
                       {userEmail && <span>{userEmail}</span>}

@@ -22,6 +22,7 @@ import LinhaStatusCandidato from '../../components/ui/LinhaStatusCandidato'
 import CardEsqueleto from '../../components/ui/CardEsqueleto'
 import EstadoDados from '../../components/ui/EstadoDados'
 import Paginacao from '../../components/ui/Paginacao'
+import AvatarProtegido from '../../components/ui/AvatarProtegido'
 import { atualizarStatusCandidato, listarCandidatosPorEmpresa } from '../../services/firestoreCandidatos'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { listarPagamentosPorEmpresa } from '../../services/firestorePagamentos'
@@ -36,15 +37,6 @@ const tabs = [
   { value: 'entrevista', labelKey: 'candidates.tabs.interview' },
   { value: 'contratado', labelKey: 'candidates.tabs.hired' },
   { value: 'cancelado', labelKey: 'candidates.tabs.cancelled' }
-]
-
-// Lista de imagens usadas como avatares visuais dos candidatos.
-const avatars = [
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80',
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=80',
-  'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=160&q=80',
-  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=160&q=80',
-  'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=160&q=80',
 ]
 
 const PAGE_SIZE = 6
@@ -390,7 +382,7 @@ function CandidatosEmpresa() {
           {!loading && !error && candidatosFiltrados.length > 0 && (
             <>
               <section className="empresa-candidate-grid">
-              {candidatosPaginados.map((candidato, index) => {
+              {candidatosPaginados.map((candidato) => {
                 // Regra de normalização: status "recusado" é tratado visualmente como "cancelado".
                 const status = candidato.status === 'recusado' ? 'cancelado' : candidato.status || 'indicado'
                 const pagamento = pagamentosPorCandidato.get(candidato.id)
@@ -402,7 +394,12 @@ function CandidatosEmpresa() {
                 return (
                   <article className="empresa-candidate-card" key={candidato.id}>
                     <div className="empresa-candidate-top">
-                      <img src={avatars[index % avatars.length]} alt={candidato.nome} />
+                      <AvatarProtegido
+                        className="empresa-candidate-avatar"
+                        foto={candidato.fotoPerfil}
+                        alt={candidato.nome}
+                        fallback={String(candidato.nome || '?').charAt(0).toUpperCase()}
+                      />
 
                       <strong className={`empresa-status-badge ${status}`}>
                         {t(`common:statuses.candidates.${status}`, { defaultValue: status })}

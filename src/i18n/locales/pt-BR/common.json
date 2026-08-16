@@ -5,6 +5,18 @@
     "portuguese": "Português",
     "english": "English"
   },
+  "profilePhoto": {
+    "candidate": "Foto do candidato",
+    "choose": "Escolher foto",
+    "change": "Alterar foto",
+    "remove": "Remover foto",
+    "saving": "Enviando...",
+    "updated": "Foto de perfil atualizada.",
+    "removed": "Foto de perfil removida.",
+    "updateError": "Não foi possível atualizar a foto.",
+    "removeError": "Não foi possível remover a foto.",
+    "help": "JPG, PNG ou WEBP de até 5 MB."
+  },
   "navigation": {
     "home": "Home",
     "jobs": "Vagas",
@@ -268,6 +280,9 @@
     "savedAt": "Salvo em",
     "referralDate": "Data da indicação",
     "resume": "Currículo",
+    "resumeDownloading": "Baixando currículo...",
+    "resumeDownloadError": "Não foi possível baixar o currículo.",
+    "resumeUnavailable": "Arquivo antigo: solicite o reenvio do currículo.",
     "close": "Fechar perfil",
     "eyebrow": "Perfil do candidato",
     "preSavedCandidate": "Candidato pré-salvo",

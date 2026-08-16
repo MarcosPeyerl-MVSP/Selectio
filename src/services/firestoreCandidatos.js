@@ -6,6 +6,7 @@ import {
   limit,
   query,
   serverTimestamp,
+  updateDoc,
   writeBatch,
   where
 } from 'firebase/firestore'
@@ -22,6 +23,16 @@ import {
 } from './firestoreNotificacoes'
 import { vagaAceitaIndicacoes } from './firestoreVagas'
 import { chamarFirebaseFunction } from './firebaseFunctions'
+import {
+  copiarCurriculoParaCandidato,
+  enviarCurriculo,
+  removerArquivoCurriculo
+} from './storageCurriculos'
+import {
+  copiarFotoParaCandidatoIndicado,
+  enviarFotoCandidato,
+  removerFotoPerfil
+} from './storageFotosPerfil'
 
 const candidatosCollection = collection(db, 'candidatos')
 const statusPermitidos = ['indicado', 'entrevista', 'contratado', 'cancelado', 'recusado']
@@ -106,7 +117,9 @@ export const criarCandidatoIndicado = async ({
   dados,
   indicador,
   vaga,
-  candidatoPreSalvoId = ''
+  candidatoPreSalvoId = '',
+  arquivoCurriculo = null,
+  arquivoFoto = null
 }) => {
   const indicadorId = getFirebaseUid(indicador)
   const empresaId = getEmpresaUidFromVaga(vaga)
@@ -124,8 +137,9 @@ export const criarCandidatoIndicado = async ({
     throw new Error('Esta vaga não está aberta para novas indicações.')
   }
 
+  let candidatoPreSalvo = null
   if (preSalvoId) {
-    const candidatoPreSalvo = await buscarCandidatoPreSalvoPorId({
+    candidatoPreSalvo = await buscarCandidatoPreSalvoPorId({
       candidatoId: preSalvoId,
       indicadorId
     })
@@ -145,9 +159,67 @@ export const criarCandidatoIndicado = async ({
     }
   }
 
+  const candidatoRef = doc(candidatosCollection)
+  let curriculo
+  let fotoPerfil
+
+  if (arquivoCurriculo) {
+    curriculo = await enviarCurriculo({
+      arquivo: arquivoCurriculo,
+      indicadorId,
+      registroId: candidatoRef.id,
+      tipoRegistro: 'candidatos',
+      empresaId
+    })
+  } else {
+    curriculo = await copiarCurriculoParaCandidato({
+      curriculo: candidatoPreSalvo?.curriculo || dados.curriculo,
+      indicadorId,
+      candidatoId: candidatoRef.id,
+      empresaId
+    })
+  }
+
+  if (!curriculo && (dados.curriculoNome || dados.curriculo?.nome)) {
+    curriculo = {
+      nome: dados.curriculoNome || dados.curriculo?.nome || '',
+      tamanho: Number(dados.curriculoTamanho || dados.curriculo?.tamanho || 0),
+      tipo: dados.curriculoTipo || dados.curriculo?.tipo || '',
+      caminho: '',
+      status: 'pendente_reenvio'
+    }
+  }
+
+  try {
+    if (arquivoFoto) {
+      fotoPerfil = await enviarFotoCandidato({
+        arquivo: arquivoFoto,
+        indicadorId,
+        candidatoId: candidatoRef.id,
+        tipoRegistro: 'indicados',
+        empresaId
+      })
+    } else {
+      fotoPerfil = await copiarFotoParaCandidatoIndicado({
+        foto: candidatoPreSalvo?.fotoPerfil || dados.fotoPerfil,
+        indicadorId,
+        candidatoId: candidatoRef.id,
+        empresaId
+      })
+    }
+  } catch (error) {
+    await removerArquivoCurriculo(curriculo?.caminho).catch(() => {})
+    throw error
+  }
+
   const recompensaValor = getFixedRewardValue(vaga)
   const candidato = {
     ...dados,
+    curriculo: curriculo || {},
+    curriculoNome: curriculo?.nome || '',
+    curriculoTipo: curriculo?.tipo || '',
+    curriculoTamanho: Number(curriculo?.tamanho || 0),
+    fotoPerfil: fotoPerfil || {},
     hardSkills: normalizeList(dados.hardSkills),
     softSkills: normalizeList(dados.softSkills),
     indicadorId,
@@ -170,7 +242,6 @@ export const criarCandidatoIndicado = async ({
     atualizadoEm: serverTimestamp()
   }
 
-  const candidatoRef = doc(candidatosCollection)
   const batch = writeBatch(db)
 
   batch.set(candidatoRef, candidato)
@@ -222,6 +293,8 @@ export const criarCandidatoIndicado = async ({
   try {
     await batch.commit()
   } catch (error) {
+    await removerArquivoCurriculo(curriculo?.caminho).catch(() => {})
+    await removerFotoPerfil(fotoPerfil?.caminho).catch(() => {})
     if (preSalvoId && error?.code === 'permission-denied') {
       throw erroIndicacaoPreSalvaDuplicada()
     }
@@ -278,4 +351,42 @@ export const atualizarStatusCandidato = async ({ candidatoId, status, empresaId 
     status,
     empresaId
   }, 'Não foi possível atualizar o status.')
+}
+
+export const atualizarFotoCandidatoIndicado = async ({ candidato, arquivo }) => {
+  const candidatoId = String(candidato?.id || '')
+  const indicadorId = String(candidato?.indicadorId || candidato?.indicadorUid || '')
+  const empresaId = String(candidato?.empresaId || candidato?.empresaUid || '')
+  if (!candidatoId || !indicadorId || !empresaId) throw new Error('Candidato invalido para atualizar a foto.')
+
+  const fotoPerfil = await enviarFotoCandidato({
+    arquivo,
+    indicadorId,
+    candidatoId,
+    tipoRegistro: 'indicados',
+    empresaId
+  })
+
+  try {
+    await updateDoc(doc(db, 'candidatos', candidatoId), {
+      fotoPerfil,
+      atualizadoEm: serverTimestamp()
+    })
+  } catch (error) {
+    await removerFotoPerfil(fotoPerfil.caminho).catch(() => {})
+    throw error
+  }
+
+  await removerFotoPerfil(candidato.fotoPerfil?.caminho).catch(() => {})
+  return fotoPerfil
+}
+
+export const removerFotoCandidatoIndicado = async (candidato) => {
+  if (!candidato?.id) throw new Error('Candidato invalido para remover a foto.')
+  await updateDoc(doc(db, 'candidatos', candidato.id), {
+    fotoPerfil: {},
+    atualizadoEm: serverTimestamp()
+  })
+  await removerFotoPerfil(candidato.fotoPerfil?.caminho).catch(() => {})
+  return {}
 }

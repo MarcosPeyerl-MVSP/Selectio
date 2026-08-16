@@ -1,0 +1,120 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(indicadorId) {
+      return signedIn() && request.auth.uid == indicadorId;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && firestore.exists(/databases/(default)/documents/users/$(request.auth.uid))
+        && (
+          firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.tipo == 'admin'
+          || firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin'
+          || firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.papel == 'admin'
+        );
+    }
+
+    function validResume(indicadorId, tipoRegistro, registroId) {
+      return request.resource != null
+        && request.resource.size > 0
+        && request.resource.size <= 10 * 1024 * 1024
+        && request.resource.contentType in [
+          'application/pdf',
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ]
+        && request.resource.metadata.indicadorId == indicadorId
+        && request.resource.metadata.tipoRegistro == tipoRegistro
+        && request.resource.metadata.registroId == registroId
+        && (
+          tipoRegistro == 'pre-salvos'
+          || (
+            request.resource.metadata.empresaId is string
+            && request.resource.metadata.empresaId.size() > 0
+          )
+        );
+    }
+
+    function validProfilePhoto() {
+      return request.resource != null
+        && request.resource.size > 0
+        && request.resource.size <= 5 * 1024 * 1024
+        && request.resource.contentType in ['image/jpeg', 'image/png', 'image/webp'];
+    }
+
+    function canReadCandidate(indicadorId, candidatoId) {
+      return isOwner(indicadorId)
+        || (
+          signedIn()
+          && resource.metadata.indicadorId == indicadorId
+          && resource.metadata.registroId == candidatoId
+          && resource.metadata.tipoRegistro == 'candidatos'
+          && resource.metadata.empresaId == request.auth.uid
+        )
+        || isAdmin();
+    }
+
+    match /curriculos/{indicadorId}/pre-salvos/{registroId}/{arquivoId} {
+      allow read: if isOwner(indicadorId) || isAdmin();
+      allow create, update: if isOwner(indicadorId)
+        && validResume(indicadorId, 'pre-salvos', registroId);
+      allow delete: if isOwner(indicadorId);
+    }
+
+    match /curriculos/{indicadorId}/candidatos/{candidatoId}/{arquivoId} {
+      allow read: if canReadCandidate(indicadorId, candidatoId);
+      allow create, update: if isOwner(indicadorId)
+        && validResume(indicadorId, 'candidatos', candidatoId);
+      allow delete: if isOwner(indicadorId);
+    }
+
+    match /fotos-perfil/usuarios/{uid}/{arquivoId} {
+      allow read: if signedIn();
+      allow create, update: if isOwner(uid)
+        && validProfilePhoto()
+        && request.resource.metadata.uid == uid
+        && request.resource.metadata.tipoRegistro == 'usuario';
+      allow delete: if isOwner(uid);
+    }
+
+    match /fotos-perfil/candidatos/{indicadorId}/pre-salvos/{candidatoId}/{arquivoId} {
+      allow read: if isOwner(indicadorId) || isAdmin();
+      allow create, update: if isOwner(indicadorId)
+        && validProfilePhoto()
+        && request.resource.metadata.indicadorId == indicadorId
+        && request.resource.metadata.candidatoId == candidatoId
+        && request.resource.metadata.tipoRegistro == 'pre-salvos';
+      allow delete: if isOwner(indicadorId);
+    }
+
+    match /fotos-perfil/candidatos/{indicadorId}/indicados/{candidatoId}/{arquivoId} {
+      allow read: if isOwner(indicadorId)
+        || (
+          signedIn()
+          && resource.metadata.indicadorId == indicadorId
+          && resource.metadata.candidatoId == candidatoId
+          && resource.metadata.tipoRegistro == 'indicados'
+          && resource.metadata.empresaId == request.auth.uid
+        )
+        || isAdmin();
+      allow create, update: if isOwner(indicadorId)
+        && validProfilePhoto()
+        && request.resource.metadata.indicadorId == indicadorId
+        && request.resource.metadata.candidatoId == candidatoId
+        && request.resource.metadata.tipoRegistro == 'indicados'
+        && request.resource.metadata.empresaId is string
+        && request.resource.metadata.empresaId.size() > 0;
+      allow delete: if isOwner(indicadorId);
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

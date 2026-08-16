@@ -213,7 +213,7 @@
   margin-bottom: 18px;
 }
 
-.empresa-candidate-top img {
+.empresa-candidate-top .empresa-candidate-avatar {
   width: 64px;
   height: 64px;
   border-radius: 8px;
@@ -221,7 +221,7 @@
   transition: transform var(--motion-fast), filter var(--motion-fast);
 }
 
-.empresa-candidate-card:hover .empresa-candidate-top img {
+.empresa-candidate-card:hover .empresa-candidate-top .empresa-candidate-avatar {
   transform: scale(1.04);
   filter: saturate(1.04);
 }

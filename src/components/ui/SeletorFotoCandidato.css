@@ -1,0 +1,48 @@
+.candidate-photo-picker {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px dashed color-mix(in srgb, var(--primary) 38%, var(--border));
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+
+.candidate-photo-picker-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  font-size: 26px;
+}
+
+.candidate-photo-picker > div strong,
+.candidate-photo-picker > div small { display: block; }
+.candidate-photo-picker > div strong { color: var(--text-heading); }
+.candidate-photo-picker > div small { margin-top: 5px; color: var(--muted); }
+
+.candidate-photo-picker label,
+.candidate-photo-picker button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.candidate-photo-picker label input { display: none; }
+.candidate-photo-picker button { width: 40px; padding: 0; color: var(--danger); }
+
+@media (max-width: 640px) {
+  .candidate-photo-picker { grid-template-columns: auto 1fr auto; }
+  .candidate-photo-picker label { grid-column: 1 / -1; }
+}
