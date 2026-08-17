@@ -18,6 +18,7 @@
     "storage:migrate": "node scripts/migrar-curriculos-legados.cjs",
     "storage:deploy": "firebase deploy --only storage",
     "test:functions": "firebase emulators:exec --only functions \"node --test tests/mercadoPagoFunctions.test.cjs\"",
+    "test:compatibility": "node --test tests/compatibilidade.test.mjs",
     "preview": "vite preview",
     "security:check": "node scripts/check-secrets.cjs",
     "security:history": "node scripts/check-secrets.cjs --history",
@@ -28,12 +29,15 @@
     "firebase": "^12.13.0",
     "i18next": "^26.3.6",
     "i18next-browser-languagedetector": "^8.2.1",
+    "mammoth": "^1.12.1",
+    "pdfjs-dist": "^6.2.108",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-i18next": "^17.0.11",
     "react-icons": "^5.6.0",
     "react-router-dom": "^7.18.2",
-    "recharts": "^3.8.1"
+    "recharts": "^3.8.1",
+    "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

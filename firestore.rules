@@ -38,6 +38,98 @@ service cloud.firestore {
       return status in ['aberta', 'pausada', 'encerrada'];
     }
 
+    function validCompatibilityRubric(data) {
+      return !('rubricaCompatibilidade' in data)
+        || data.rubricaCompatibilidade == null
+        || (
+          data.rubricaCompatibilidade is map
+          && data.rubricaCompatibilidade.keys().hasOnly([
+            'ativa',
+            'criteriosEliminatorios',
+            'escolaridadeMinima',
+            'experienciaMinima',
+            'idiomasExigidos',
+            'modeloTrabalho',
+            'perfilIdeal',
+            'pesos',
+            'requisitosDesejaveis',
+            'requisitosObrigatorios',
+            'versao'
+          ])
+          && data.rubricaCompatibilidade.keys().hasAll([
+            'ativa',
+            'criteriosEliminatorios',
+            'escolaridadeMinima',
+            'experienciaMinima',
+            'idiomasExigidos',
+            'modeloTrabalho',
+            'perfilIdeal',
+            'pesos',
+            'requisitosDesejaveis',
+            'requisitosObrigatorios',
+            'versao'
+          ])
+          && data.rubricaCompatibilidade.ativa == true
+          && data.rubricaCompatibilidade.perfilIdeal is string
+          && data.rubricaCompatibilidade.perfilIdeal.size() <= 5000
+          && data.rubricaCompatibilidade.requisitosObrigatorios is list
+          && data.rubricaCompatibilidade.requisitosObrigatorios.size() <= 100
+          && data.rubricaCompatibilidade.requisitosDesejaveis is list
+          && data.rubricaCompatibilidade.requisitosDesejaveis.size() <= 100
+          && data.rubricaCompatibilidade.criteriosEliminatorios is list
+          && data.rubricaCompatibilidade.criteriosEliminatorios.size() <= 50
+          && data.rubricaCompatibilidade.idiomasExigidos is list
+          && data.rubricaCompatibilidade.idiomasExigidos.size() <= 30
+          && data.rubricaCompatibilidade.experienciaMinima is number
+          && data.rubricaCompatibilidade.experienciaMinima >= 0
+          && data.rubricaCompatibilidade.experienciaMinima <= 60
+          && data.rubricaCompatibilidade.escolaridadeMinima is string
+          && data.rubricaCompatibilidade.modeloTrabalho is string
+          && data.rubricaCompatibilidade.versao is number
+          && data.rubricaCompatibilidade.versao >= 1
+          && (
+            data.rubricaCompatibilidade.perfilIdeal.size() > 0
+            || data.rubricaCompatibilidade.requisitosObrigatorios.size() > 0
+            || data.rubricaCompatibilidade.requisitosDesejaveis.size() > 0
+          )
+          && data.rubricaCompatibilidade.pesos is map
+          && data.rubricaCompatibilidade.pesos.keys().hasOnly([
+            'escolaridade',
+            'experiencia',
+            'hardSkills',
+            'idiomas',
+            'modeloTrabalho',
+            'responsabilidades'
+          ])
+          && data.rubricaCompatibilidade.pesos.keys().hasAll([
+            'escolaridade',
+            'experiencia',
+            'hardSkills',
+            'idiomas',
+            'modeloTrabalho',
+            'responsabilidades'
+          ])
+          && data.rubricaCompatibilidade.pesos.escolaridade is number
+          && data.rubricaCompatibilidade.pesos.experiencia is number
+          && data.rubricaCompatibilidade.pesos.hardSkills is number
+          && data.rubricaCompatibilidade.pesos.idiomas is number
+          && data.rubricaCompatibilidade.pesos.modeloTrabalho is number
+          && data.rubricaCompatibilidade.pesos.responsabilidades is number
+          && data.rubricaCompatibilidade.pesos.escolaridade >= 0
+          && data.rubricaCompatibilidade.pesos.experiencia >= 0
+          && data.rubricaCompatibilidade.pesos.hardSkills >= 0
+          && data.rubricaCompatibilidade.pesos.idiomas >= 0
+          && data.rubricaCompatibilidade.pesos.modeloTrabalho >= 0
+          && data.rubricaCompatibilidade.pesos.responsabilidades >= 0
+          && data.rubricaCompatibilidade.pesos.escolaridade
+            + data.rubricaCompatibilidade.pesos.experiencia
+            + data.rubricaCompatibilidade.pesos.hardSkills
+            + data.rubricaCompatibilidade.pesos.idiomas
+            + data.rubricaCompatibilidade.pesos.modeloTrabalho
+            + data.rubricaCompatibilidade.pesos.responsabilidades == 100
+        );
+    }
+
     function ownUserPayload(uid) {
       return isOwner(uid)
         && request.resource.data.uid == uid
@@ -634,6 +726,86 @@ service cloud.firestore {
         && validIndicatedCandidatePhoto(candidatoId);
     }
 
+    function compatibilityAnalysisSourceMatches(data) {
+      return data.candidatoId is string
+        && data.vagaId is string
+        && data.empresaId is string
+        && exists(/databases/$(database)/documents/candidatos/$(data.candidatoId))
+        && exists(/databases/$(database)/documents/vagas/$(data.vagaId))
+        && get(/databases/$(database)/documents/candidatos/$(data.candidatoId)).data.empresaId == data.empresaId
+        && get(/databases/$(database)/documents/candidatos/$(data.candidatoId)).data.vagaId == data.vagaId
+        && get(/databases/$(database)/documents/vagas/$(data.vagaId)).data.empresaId == data.empresaId;
+    }
+
+    function validCompatibilityAnalysis(analiseId) {
+      return request.resource.data.keys().hasOnly([
+          'alertas',
+          'atualizadoEm',
+          'candidatoId',
+          'candidatoNome',
+          'cobertura',
+          'criadoEm',
+          'criterios',
+          'discrepancias',
+          'empresaId',
+          'extracao',
+          'indicadorId',
+          'nota',
+          'requerRevisao',
+          'rubricaVersao',
+          'semantica',
+          'status',
+          'vagaId',
+          'vagaTitulo',
+          'versao'
+        ])
+        && request.resource.data.keys().hasAll([
+          'alertas',
+          'atualizadoEm',
+          'candidatoId',
+          'candidatoNome',
+          'cobertura',
+          'criadoEm',
+          'criterios',
+          'discrepancias',
+          'empresaId',
+          'extracao',
+          'indicadorId',
+          'nota',
+          'requerRevisao',
+          'rubricaVersao',
+          'semantica',
+          'status',
+          'vagaId',
+          'vagaTitulo',
+          'versao'
+        ])
+        && analiseId == request.resource.data.vagaId + '__' + request.resource.data.candidatoId
+        && request.resource.data.empresaId == request.auth.uid
+        && request.resource.data.status == 'concluida'
+        && request.resource.data.candidatoNome is string
+        && request.resource.data.vagaTitulo is string
+        && request.resource.data.indicadorId is string
+        && request.resource.data.nota is number
+        && request.resource.data.nota >= 0
+        && request.resource.data.nota <= 100
+        && request.resource.data.cobertura is number
+        && request.resource.data.cobertura >= 0
+        && request.resource.data.cobertura <= 100
+        && request.resource.data.requerRevisao is bool
+        && request.resource.data.rubricaVersao is number
+        && request.resource.data.versao is string
+        && request.resource.data.criterios is list
+        && request.resource.data.criterios.size() <= 20
+        && request.resource.data.alertas is list
+        && request.resource.data.alertas.size() <= 100
+        && request.resource.data.discrepancias is list
+        && request.resource.data.discrepancias.size() <= 50
+        && request.resource.data.extracao is map
+        && request.resource.data.semantica is map
+        && compatibilityAnalysisSourceMatches(request.resource.data);
+    }
+
     function historyCanBeRead(data) {
       return data.candidatoId is string
         && exists(/databases/$(database)/documents/candidatos/$(data.candidatoId))
@@ -791,12 +963,14 @@ service cloud.firestore {
       allow create: if isEmpresa()
         && request.resource.data.empresaId == request.auth.uid
         && validVagaStatus(request.resource.data.status)
+        && validCompatibilityRubric(request.resource.data)
         && (!('empresaUid' in request.resource.data) || request.resource.data.empresaUid == request.auth.uid);
 
       allow update: if isEmpresa()
         && resource.data.empresaId == request.auth.uid
         && request.resource.data.empresaId == resource.data.empresaId
         && validVagaStatus(request.resource.data.status)
+        && validCompatibilityRubric(request.resource.data)
         && (!('empresaUid' in request.resource.data)
           || request.resource.data.empresaUid == request.auth.uid);
 
@@ -886,6 +1060,15 @@ service cloud.firestore {
       allow read: if historyCanBeRead(resource.data);
       allow create: if historyCreateAllowed();
       allow update, delete: if false;
+    }
+
+    match /analisesCompatibilidade/{analiseId} {
+      allow read: if signedIn()
+        && (resource.data.empresaId == request.auth.uid || isAdmin());
+      allow create, update: if isEmpresa()
+        && validCompatibilityAnalysis(analiseId);
+      allow delete: if isEmpresa()
+        && resource.data.empresaId == request.auth.uid;
     }
 
     match /pagamentos/{pagamentoId} {

@@ -164,3 +164,11 @@ export const baixarCurriculoProtegido = async (curriculo) => {
   link.remove()
   window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60000)
 }
+
+export const obterBlobCurriculoProtegido = async (curriculo) => {
+  if (!curriculo?.caminho || curriculo.status !== 'disponivel') {
+    throw new Error('Este curriculo antigo ainda precisa ser reenviado.')
+  }
+
+  return getBlob(ref(storage, curriculo.caminho), CURRICULO_MAX_BYTES)
+}

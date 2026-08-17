@@ -421,6 +421,29 @@ test('historico pode ser lido pelos participantes e nao pode ser alterado', asyn
   await assertFails(updateDoc(historicoRef, { titulo: 'Evento alterado' }))
 })
 
+test('empresa salva apenas rubrica de compatibilidade valida', async () => {
+  const db = testEnv.authenticatedContext('empresa-1').firestore()
+  const vagaValida = doc(db, 'vagas', 'vaga-rubrica-valida')
+  const vagaInvalida = doc(db, 'vagas', 'vaga-rubrica-invalida')
+
+  await assertSucceeds(setDoc(vagaValida, {
+    empresaId: 'empresa-1',
+    empresaUid: 'empresa-1',
+    titulo: 'Analista',
+    status: 'aberta',
+    rubricaCompatibilidade: rubricaCompatibilidadePayload()
+  }))
+  await assertFails(setDoc(vagaInvalida, {
+    empresaId: 'empresa-1',
+    empresaUid: 'empresa-1',
+    titulo: 'Analista',
+    status: 'aberta',
+    rubricaCompatibilidade: rubricaCompatibilidadePayload({
+      pesos: { ...rubricaCompatibilidadePayload().pesos, hardSkills: 34 }
+    })
+  }))
+})
+
 test('historico pode ser consultado por candidato pelos participantes', async () => {
   await criarProcessoSeletivo()
   await testEnv.withSecurityRulesDisabled(async (context) => {
@@ -681,6 +704,57 @@ test('cliente nao cria registros financeiros diretamente', async () => {
   }))
 })
 
+test('empresa proprietaria cria, consulta, atualiza e exclui analise de compatibilidade', async () => {
+  await criarProcessoSeletivo()
+  const db = testEnv.authenticatedContext('empresa-1').firestore()
+  const analiseRef = doc(db, 'analisesCompatibilidade', 'vaga-1__candidato-1')
+
+  await assertSucceeds(setDoc(analiseRef, analiseCompatibilidadePayload()))
+  await assertSucceeds(getDoc(analiseRef))
+  await assertSucceeds(updateDoc(analiseRef, {
+    nota: 84,
+    cobertura: 90,
+    atualizadoEm: serverTimestamp()
+  }))
+  await assertSucceeds(deleteDoc(analiseRef))
+})
+
+test('analise de compatibilidade valida vinculo e fica privada para a empresa', async () => {
+  await criarProcessoSeletivo()
+  const empresaDb = testEnv.authenticatedContext('empresa-1').firestore()
+  const indicadorDb = testEnv.authenticatedContext('indicador-1').firestore()
+  const outraEmpresaDb = testEnv.authenticatedContext('empresa-2').firestore()
+  const adminDb = testEnv.authenticatedContext('admin-1').firestore()
+  const analiseId = 'vaga-1__candidato-1'
+
+  await assertSucceeds(setDoc(
+    doc(empresaDb, 'analisesCompatibilidade', analiseId),
+    analiseCompatibilidadePayload()
+  ))
+  await assertSucceeds(getDoc(doc(adminDb, 'analisesCompatibilidade', analiseId)))
+  await assertFails(getDoc(doc(indicadorDb, 'analisesCompatibilidade', analiseId)))
+  await assertFails(getDoc(doc(outraEmpresaDb, 'analisesCompatibilidade', analiseId)))
+  await assertFails(setDoc(
+    doc(empresaDb, 'analisesCompatibilidade', 'vaga-2__candidato-1'),
+    analiseCompatibilidadePayload({ vagaId: 'vaga-2' })
+  ))
+})
+
+test('consulta de analises exige filtro pela empresa autenticada', async () => {
+  await criarProcessoSeletivo()
+  const db = testEnv.authenticatedContext('empresa-1').firestore()
+  await assertSucceeds(setDoc(
+    doc(db, 'analisesCompatibilidade', 'vaga-1__candidato-1'),
+    analiseCompatibilidadePayload()
+  ))
+
+  await assertSucceeds(getDocs(query(
+    collection(db, 'analisesCompatibilidade'),
+    where('empresaId', '==', 'empresa-1')
+  )))
+  await assertFails(getDocs(collection(db, 'analisesCompatibilidade')))
+})
+
 async function criarProcessoSeletivo() {
   await testEnv.withSecurityRulesDisabled(async (context) => {
     const db = context.firestore()
@@ -795,6 +869,55 @@ function historicoPayload(overrides = {}) {
     statusAtual: 'indicado',
     criadoPor: 'indicador-1',
     criadoEm: serverTimestamp(),
+    ...overrides
+  }
+}
+
+function analiseCompatibilidadePayload(overrides = {}) {
+  return {
+    candidatoId: 'candidato-1',
+    candidatoNome: 'Pessoa Candidata',
+    vagaId: 'vaga-1',
+    vagaTitulo: 'Desenvolvedor',
+    empresaId: 'empresa-1',
+    indicadorId: 'indicador-1',
+    status: 'concluida',
+    nota: 78,
+    cobertura: 85,
+    requerRevisao: true,
+    criterios: [],
+    alertas: [],
+    discrepancias: [],
+    extracao: { metodo: 'pdf_texto' },
+    semantica: { motor: 'wasm' },
+    versao: '1.0.0',
+    rubricaVersao: 1,
+    criadoEm: serverTimestamp(),
+    atualizadoEm: serverTimestamp(),
+    ...overrides
+  }
+}
+
+function rubricaCompatibilidadePayload(overrides = {}) {
+  return {
+    ativa: true,
+    versao: 1,
+    perfilIdeal: 'Profissional com experiencia em desenvolvimento.',
+    requisitosObrigatorios: ['React'],
+    requisitosDesejaveis: ['TypeScript'],
+    criteriosEliminatorios: [],
+    experienciaMinima: 3,
+    escolaridadeMinima: 'superior_completo',
+    idiomasExigidos: ['Ingles avancado'],
+    modeloTrabalho: 'hibrido',
+    pesos: {
+      hardSkills: 35,
+      experiencia: 20,
+      escolaridade: 10,
+      idiomas: 10,
+      modeloTrabalho: 10,
+      responsabilidades: 15
+    },
     ...overrides
   }
 }

@@ -192,6 +192,86 @@
     "payReward": "Pagar recompensa",
     "moreOptions": "Mais opções"
   },
+  "compatibilityRubric": {
+    "title": "Análise de compatibilidade",
+    "description": "Defina uma rubrica única e explicável para comparar todos os candidatos desta vaga.",
+    "enable": "Ativar ranking",
+    "idealProfile": "Descrição do candidato ideal",
+    "idealProfilePlaceholder": "Descreva responsabilidades, contexto e características profissionais relevantes para a função.",
+    "required": "Requisitos obrigatórios",
+    "desirable": "Requisitos desejáveis",
+    "listPlaceholder": "Separe os critérios por vírgula ou por linha",
+    "eliminatory": "Critérios eliminatórios",
+    "eliminatoryPlaceholder": "Critérios críticos que sempre exigirão revisão humana",
+    "minimumExperience": "Experiência mínima em anos",
+    "minimumEducation": "Escolaridade mínima",
+    "languages": "Idiomas exigidos",
+    "languagesPlaceholder": "Ex.: Inglês avançado, Espanhol intermediário",
+    "workModel": "Modelo de trabalho necessário",
+    "notRequired": "Não exigir",
+    "education": {
+      "highSchool": "Ensino médio",
+      "technical": "Ensino técnico",
+      "higherOngoing": "Superior cursando",
+      "higherComplete": "Superior completo",
+      "postgraduate": "Pós-graduação"
+    },
+    "models": {
+      "onsite": "Presencial",
+      "hybrid": "Híbrido",
+      "remote": "Remoto"
+    },
+    "weights": "Pesos da avaliação",
+    "weightsHelp": "A soma deve ser exatamente 100%. A análise semântica localiza evidências, mas não recebe um peso separado.",
+    "total": "Total: {{total}}%",
+    "weightLabels": {
+      "hardSkills": "Requisitos e habilidades",
+      "experiencia": "Experiência",
+      "escolaridade": "Escolaridade",
+      "idiomas": "Idiomas",
+      "modeloTrabalho": "Modelo de trabalho",
+      "responsabilidades": "Responsabilidades"
+    },
+    "humanReview": "O ranking é um apoio à revisão humana e nunca rejeita candidatos automaticamente.",
+    "errors": {
+      "sem_criterios": "Informe o candidato ideal ou pelo menos um requisito para ativar o ranking.",
+      "pesos": "Os pesos da análise devem ser válidos e somar exatamente 100%.",
+      "experiencia": "A experiência mínima não pode ser negativa."
+    }
+  },
+  "compatibility": {
+    "title": "Ranking de compatibilidade",
+    "subtitle": "Compare candidatos por critérios, nota, cobertura e evidências.",
+    "loading": "Carregando análises de compatibilidade...",
+    "loadError": "Não foi possível carregar o ranking de compatibilidade.",
+    "noJobs": "Nenhuma vaga com candidatos foi encontrada.",
+    "selectJob": "Vaga analisada",
+    "analyzeAll": "Analisar candidatos",
+    "analyzing": "Analisando...",
+    "completed": "Análises concluídas.",
+    "completedWithErrors": "Análises concluídas com {{count}} pendência(s).",
+    "noRubric": "Esta vaga ainda não possui uma rubrica.",
+    "noRubricDescription": "Configure os critérios e pesos sem alterar os candidatos já cadastrados.",
+    "configureRubric": "Configurar rubrica",
+    "advisory": "O resultado organiza evidências para revisão humana. Ele não deve ser usado para rejeição automática.",
+    "failures": "Currículos que precisam de atenção",
+    "coverage": "Cobertura {{value}}%",
+    "review": "Requer revisão",
+    "outdated": "Análise desatualizada",
+    "processing": "Processando",
+    "notAnalyzed": "Ainda não analisado",
+    "alerts": "Requisitos críticos e alertas",
+    "discrepancies": "Divergências entre formulário e currículo",
+    "discrepancyLine": "{{field}}: formulário informa {{form}}; currículo indica {{resume}}.",
+    "engine": "Extração: {{extraction}} · Comparação: {{semantic}}",
+    "results": {
+      "atende": "Atende",
+      "atende_parcialmente": "Atende parcialmente",
+      "nao_atende": "Não atende",
+      "nao_comprovado": "Não comprovado",
+      "nao_aplicavel": "Não aplicável"
+    }
+  },
   "jobForm": {
     "departmentOnly": "Somente o Chefe de departamento pode solicitar vagas no modo empresarial.",
     "requiredFields": "Preencha título, área, descrição e localização.",

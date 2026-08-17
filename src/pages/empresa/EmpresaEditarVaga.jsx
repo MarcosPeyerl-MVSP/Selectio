@@ -11,9 +11,16 @@ import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import Footer from '../../components/layout/Footer'
 import PageLoader from '../../components/ui/PageLoader'
+import RubricaCompatibilidadeForm from '../../components/compatibilidade/RubricaCompatibilidadeForm'
 import { buscarVagaPorId, editarVaga } from '../../services/firestoreVagas'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { useToast } from '../../hooks/useToast'
+import {
+  criarRubricaCompatibilidadePadrao,
+  normalizarRubricaDaVaga,
+  prepararRubricaParaSalvar,
+  validarRubricaCompatibilidade
+} from '../../utils/rubricaCompatibilidade'
 
 // Estado inicial do formulário de edição da vaga.
 const initialForm = {
@@ -165,6 +172,7 @@ function EditarVagaEmpresa() {
     ...initialForm,
     recompensaValor: formatCurrency('2500', language)
   }))
+  const [rubrica, setRubrica] = useState(() => criarRubricaCompatibilidadePadrao({ ativa: false }))
 
   // Controla o envio da atualização.
   const [loading, setLoading] = useState(false)
@@ -239,6 +247,7 @@ function EditarVagaEmpresa() {
           status: data.status === 'expirada' ? 'aberta' : data.status || 'aberta',
           imagem: data.imagem || '',
         })
+        setRubrica(normalizarRubricaDaVaga(data.rubricaCompatibilidade))
         setCanEdit(true)
       } catch {
         setMessage(t('jobForm.loadError'))
@@ -315,6 +324,14 @@ function EditarVagaEmpresa() {
       return
     }
 
+    const validacaoRubrica = validarRubricaCompatibilidade(rubrica)
+    if (!validacaoRubrica.valida) {
+      const mensagem = t(`compatibilityRubric.errors.${validacaoRubrica.motivo}`)
+      setMessage(mensagem)
+      toast.warning(mensagem)
+      return
+    }
+
     const salario = form.salarioMin || form.salarioMax
       ? `${form.salarioMin || 'A combinar'} - ${form.salarioMax || 'A combinar'}`
       : 'A combinar'
@@ -355,6 +372,7 @@ function EditarVagaEmpresa() {
       area: form.area,
       status: form.status,
       dataLimite: form.dataLimite,
+      rubricaCompatibilidade: prepararRubricaParaSalvar(rubrica, rubrica.versao),
     }
 
     try {
@@ -403,6 +421,8 @@ function EditarVagaEmpresa() {
             </section>
           ) : (
             <form className="empresa-vaga-form" onSubmit={handleSubmit}>
+              <RubricaCompatibilidadeForm rubrica={rubrica} onChange={setRubrica} />
+
               <section className="vaga-step">
                 <div className="step-header">
                   <h2>{t('jobForm.steps.foundations')}</h2>

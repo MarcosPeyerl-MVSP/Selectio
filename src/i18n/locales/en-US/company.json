@@ -192,6 +192,86 @@
     "payReward": "Pay reward",
     "moreOptions": "More options"
   },
+  "compatibilityRubric": {
+    "title": "Compatibility analysis",
+    "description": "Define one explainable rubric to compare every candidate for this job.",
+    "enable": "Enable ranking",
+    "idealProfile": "Ideal candidate description",
+    "idealProfilePlaceholder": "Describe responsibilities, context, and professional characteristics relevant to the role.",
+    "required": "Required criteria",
+    "desirable": "Preferred criteria",
+    "listPlaceholder": "Separate criteria with commas or line breaks",
+    "eliminatory": "Eliminatory criteria",
+    "eliminatoryPlaceholder": "Critical criteria that will always require human review",
+    "minimumExperience": "Minimum years of experience",
+    "minimumEducation": "Minimum education",
+    "languages": "Required languages",
+    "languagesPlaceholder": "E.g. Advanced English, Intermediate Spanish",
+    "workModel": "Required work model",
+    "notRequired": "Not required",
+    "education": {
+      "highSchool": "High school",
+      "technical": "Technical education",
+      "higherOngoing": "Higher education in progress",
+      "higherComplete": "Completed higher education",
+      "postgraduate": "Postgraduate"
+    },
+    "models": {
+      "onsite": "On-site",
+      "hybrid": "Hybrid",
+      "remote": "Remote"
+    },
+    "weights": "Assessment weights",
+    "weightsHelp": "The total must be exactly 100%. Semantic analysis locates evidence but does not receive a separate weight.",
+    "total": "Total: {{total}}%",
+    "weightLabels": {
+      "hardSkills": "Requirements and skills",
+      "experiencia": "Experience",
+      "escolaridade": "Education",
+      "idiomas": "Languages",
+      "modeloTrabalho": "Work model",
+      "responsabilidades": "Responsibilities"
+    },
+    "humanReview": "The ranking supports human review and never rejects candidates automatically.",
+    "errors": {
+      "sem_criterios": "Enter an ideal candidate description or at least one criterion to enable ranking.",
+      "pesos": "Assessment weights must be valid and add up to exactly 100%.",
+      "experiencia": "Minimum experience cannot be negative."
+    }
+  },
+  "compatibility": {
+    "title": "Compatibility ranking",
+    "subtitle": "Compare candidates by criteria, score, coverage, and evidence.",
+    "loading": "Loading compatibility analyses...",
+    "loadError": "We couldn't load the compatibility ranking.",
+    "noJobs": "No jobs with candidates were found.",
+    "selectJob": "Job being analyzed",
+    "analyzeAll": "Analyze candidates",
+    "analyzing": "Analyzing...",
+    "completed": "Analyses completed.",
+    "completedWithErrors": "Analyses completed with {{count}} pending item(s).",
+    "noRubric": "This job does not have a rubric yet.",
+    "noRubricDescription": "Configure criteria and weights without changing existing candidates.",
+    "configureRubric": "Configure rubric",
+    "advisory": "The result organizes evidence for human review. It must not be used for automatic rejection.",
+    "failures": "Resumes that need attention",
+    "coverage": "Coverage {{value}}%",
+    "review": "Requires review",
+    "outdated": "Outdated analysis",
+    "processing": "Processing",
+    "notAnalyzed": "Not analyzed yet",
+    "alerts": "Critical criteria and alerts",
+    "discrepancies": "Differences between the form and resume",
+    "discrepancyLine": "{{field}}: form says {{form}}; resume indicates {{resume}}.",
+    "engine": "Extraction: {{extraction}} · Comparison: {{semantic}}",
+    "results": {
+      "atende": "Meets",
+      "atende_parcialmente": "Partially meets",
+      "nao_atende": "Does not meet",
+      "nao_comprovado": "Not demonstrated",
+      "nao_aplicavel": "Not applicable"
+    }
+  },
   "jobForm": {
     "departmentOnly": "Only the Department Head can request jobs in enterprise mode.",
     "requiredFields": "Complete the title, area, description, and location.",

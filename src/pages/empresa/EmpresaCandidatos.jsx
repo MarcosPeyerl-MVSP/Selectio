@@ -23,6 +23,7 @@ import CardEsqueleto from '../../components/ui/CardEsqueleto'
 import EstadoDados from '../../components/ui/EstadoDados'
 import Paginacao from '../../components/ui/Paginacao'
 import AvatarProtegido from '../../components/ui/AvatarProtegido'
+import PainelRankingCompatibilidade from '../../components/compatibilidade/PainelRankingCompatibilidade'
 import { atualizarStatusCandidato, listarCandidatosPorEmpresa } from '../../services/firestoreCandidatos'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { listarPagamentosPorEmpresa } from '../../services/firestorePagamentos'
@@ -304,6 +305,8 @@ function CandidatosEmpresa() {
             <p>{t('candidates.description')}</p>
             <a href="/vagas">{t('candidates.backJobs')}</a>
           </header>
+
+          <PainelRankingCompatibilidade candidatos={candidatos} empresaId={empresaUid} />
 
           {/* Barra de busca e filtros por status. */}
           <section className="empresa-candidatos-toolbar">

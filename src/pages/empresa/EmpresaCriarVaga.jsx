@@ -10,6 +10,7 @@ import Navbar from '../../components/layout/Navbar'
 import Sidebar from '../../components/layout/Sidebar'
 import Footer from '../../components/layout/Footer'
 import EstadoDados from '../../components/ui/EstadoDados'
+import RubricaCompatibilidadeForm from '../../components/compatibilidade/RubricaCompatibilidadeForm'
 import { criarVaga } from '../../services/firestoreVagas'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { useToast } from '../../hooks/useToast'
@@ -18,6 +19,11 @@ import {
   obterSetorAtual,
   podeSolicitarVagaEmpresarial
 } from '../../utils/modoEmpresarial'
+import {
+  criarRubricaCompatibilidadePadrao,
+  prepararRubricaParaSalvar,
+  validarRubricaCompatibilidade
+} from '../../utils/rubricaCompatibilidade'
 
 // Estado inicial do formulário de criação de vaga.
 const initialForm = {
@@ -78,6 +84,7 @@ function CriarVagaEmpresa() {
     ...initialForm,
     recompensaValor: formatCurrency('2500', language)
   }))
+  const [rubrica, setRubrica] = useState(() => criarRubricaCompatibilidadePadrao())
 
   // Controla o estado de envio da vaga.
   const [loading, setLoading] = useState(false)
@@ -184,6 +191,14 @@ function CriarVagaEmpresa() {
       return
     }
 
+    const validacaoRubrica = validarRubricaCompatibilidade(rubrica)
+    if (!validacaoRubrica.valida) {
+      const mensagem = t(`compatibilityRubric.errors.${validacaoRubrica.motivo}`)
+      setMessage(mensagem)
+      toast.warning(mensagem)
+      return
+    }
+
     // Monta o texto de salário exibido na vaga.
     const salario = form.salarioMin || form.salarioMax
       ? `${form.salarioMin || 'A combinar'} – ${form.salarioMax || 'A combinar'}`
@@ -239,6 +254,7 @@ function CriarVagaEmpresa() {
         usuario: empresa.nomeEmpresa || empresa.nome || '',
         criadoEm: new Date().toISOString()
       }] : [],
+      rubricaCompatibilidade: prepararRubricaParaSalvar(rubrica),
     }
 
     try {
@@ -256,6 +272,7 @@ function CriarVagaEmpresa() {
       setMessage(mensagemSucesso)
       toast.success(mensagemSucesso)
       setForm({ ...initialForm, recompensaValor: formatCurrency('2500', language) })
+      setRubrica(criarRubricaCompatibilidadePadrao())
       navigate(modoEmpresarialAtivo ? '/painel/empresa?secao=aprovacoes' : '/vagas')
     } catch {
       setMessage(t('jobForm.saveError'))
@@ -313,6 +330,8 @@ function CriarVagaEmpresa() {
           </section>
 
           <form className="empresa-vaga-form" onSubmit={handleSubmit}>
+            <RubricaCompatibilidadeForm rubrica={rubrica} onChange={setRubrica} />
+
             <section className="vaga-step">
               <div className="step-header">
                 <h2>{t('jobForm.steps.foundations')}</h2>
