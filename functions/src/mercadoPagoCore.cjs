@@ -1,6 +1,8 @@
 const crypto = require('node:crypto')
 const { getApp, getApps, initializeApp } = require('firebase-admin/app')
 const { getAuth } = require('firebase-admin/auth')
+const { getAppCheck } = require('firebase-admin/app-check')
+const { criarLimitador, validarCorpoJson } = require('./protecaoAbuso.cjs')
 const { FieldValue, Timestamp, getFirestore } = require('firebase-admin/firestore')
 
 const moedaPadrao = 'BRL'
@@ -9,6 +11,7 @@ const statusEncerrados = new Set(['approved', 'rejected', 'cancelled', 'refunded
 if (!getApps().length) initializeApp()
 
 const db = getFirestore()
+const limitar = criarLimitador({ db })
 
 async function handleMercadoPagoRequest(req, res) {
   const origem = req.headers.origin || ''
@@ -29,6 +32,7 @@ async function handleMercadoPagoRequest(req, res) {
   }
 
   try {
+    validarCorpoJson(req)
     if (req.method === 'GET' && ['/health', '/status'].includes(pathname)) {
       responderJson(res, 200, {
         ok: true,
@@ -73,8 +77,9 @@ async function handleMercadoPagoRequest(req, res) {
 
     responderJson(res, 404, { error: 'Rota nao encontrada.' })
   } catch (error) {
-    console.error('Erro na API Mercado Pago:', error)
     const status = Number(error.status) || 500
+    if (status >= 500) console.error('Erro na API Mercado Pago:', { status, code: error.code || 'internal' })
+    if (status === 429) res.setHeader('Retry-After', String(error.retryAfter || 60))
     responderJson(res, status, {
       error: status < 500
         ? error.message || 'Nao foi possivel processar a operacao.'
@@ -116,7 +121,7 @@ async function criarPreferencia(req, res, usuario) {
       return
     }
 
-    await invalidarPagamentoPendente(existente.pendente)
+    erro(409, 'Nao foi possivel confirmar o checkout existente. Consulte o pagamento antes de criar outra cobranca.')
   }
 
   const pagamentoValidado = await validarPagamento({
@@ -138,8 +143,13 @@ async function criarPreferencia(req, res, usuario) {
   const agora = FieldValue.serverTimestamp()
   const tentativaPreferenciaId = crypto.randomUUID()
 
-  await db.batch()
-    .set(pagamentoRef, {
+  await db.runTransaction(async (tx) => {
+    const atual = (await tx.get(pagamentoRef)).data()
+    if (atual?.creditado || atual?.status === 'approved') erro(409, 'Pagamento ja aprovado para este candidato.')
+    if (atual && ['created', 'pending', 'in_process', 'authorized'].includes(atual.status)) {
+      erro(409, 'Pagamento em processamento. Consulte o pagamento antes de tentar novamente.')
+    }
+    tx.set(pagamentoRef, {
       ...pagamentoValidado,
       ambiente: obterMpEnvironment(),
       mercadoPagoPreferenceId: '',
@@ -155,7 +165,7 @@ async function criarPreferencia(req, res, usuario) {
       criadoEm: agora,
       atualizadoEm: agora
     }, { merge: true })
-    .set(transacaoRef, {
+    tx.set(transacaoRef, {
       pagamentoId: pagamentoRef.id,
       empresaId: pagamentoValidado.empresaId,
       indicadorId: pagamentoValidado.indicadorId,
@@ -172,7 +182,7 @@ async function criarPreferencia(req, res, usuario) {
       encerradoEm: null,
       transacaoEm: null
     }, { merge: true })
-    .commit()
+  })
 
   let preferencia
 
@@ -185,30 +195,31 @@ async function criarPreferencia(req, res, usuario) {
       appUrl
     })
   } catch (error) {
-    await marcarPagamentoComoFalhou({
-      pagamentoRef,
-      transacaoRef,
-      pagamento: pagamentoValidado,
-      detalhe: error.message || 'erro_criar_preferencia'
-    })
+    // Timeout/5xx pode ocorrer depois de o provedor criar a cobranca.
+    // Mantem a reserva nesses casos para exigir conciliacao antes de outra tentativa.
+    if (error.mercadoPagoStatus >= 400 && error.mercadoPagoStatus < 500
+      && ![408, 429].includes(error.mercadoPagoStatus)) {
+      await marcarPagamentoComoFalhou({
+        pagamentoRef,
+        transacaoRef,
+        pagamento: pagamentoValidado,
+        detalhe: error.message || 'erro_criar_preferencia'
+      })
+    }
     throw error
   }
 
   const checkoutUrl = escolherCheckoutUrl(preferencia)
 
   if (!checkoutUrl) {
-    await marcarPagamentoComoFalhou({
-      pagamentoRef,
-      transacaoRef,
-      pagamento: pagamentoValidado,
-      detalhe: 'checkout_url_ausente'
-    })
     responderJson(res, 502, { error: 'O Mercado Pago nao retornou uma URL de checkout.' })
     return
   }
 
-  await db.batch()
-    .update(pagamentoRef, {
+  await db.runTransaction(async (tx) => {
+    const atual = (await tx.get(pagamentoRef)).data()
+    if (atual?.tentativaPreferenciaId !== tentativaPreferenciaId || atual.status !== 'created') return
+    tx.update(pagamentoRef, {
       mercadoPagoPreferenceId: preferencia.id || '',
       status: 'pending',
       statusDetail: '',
@@ -216,13 +227,13 @@ async function criarPreferencia(req, res, usuario) {
       sandboxCheckoutUrl: preferencia.sandbox_init_point || '',
       atualizadoEm: FieldValue.serverTimestamp()
     })
-    .update(transacaoRef, {
+    tx.update(transacaoRef, {
       mercadoPagoPreferenceId: preferencia.id || '',
       status: 'pending',
       statusDetail: '',
       atualizadoEm: FieldValue.serverTimestamp()
     })
-    .commit()
+  })
 
   await notificarPagamento({
     pagamentoId: pagamentoRef.id,
@@ -250,6 +261,9 @@ async function criarPreferencia(req, res, usuario) {
 
 async function sincronizarPagamento(req, res, usuario) {
   const dados = await lerJson(req)
+  if (dados.paymentId || dados.mercadoPagoPaymentId) {
+    if (!/^\d{1,30}$/.test(String(dados.paymentId || dados.mercadoPagoPaymentId))) erro(400, 'Identificador de pagamento invalido.')
+  }
   const resultado = await sincronizarPagamentoMercadoPago({
     pagamentoId: textoSeguro(dados.pagamentoId),
     preferenceId: textoSeguro(dados.preferenceId),
@@ -269,10 +283,10 @@ async function receberWebhookMercadoPago(req, res, requestUrl) {
   }
 
   const paymentId = textoSeguro(
-    dados?.data?.id
-    || dados?.id
-    || requestUrl.searchParams.get('data.id')
+    requestUrl.searchParams.get('data.id')
     || requestUrl.searchParams.get('id')
+    || dados?.data?.id
+    || dados?.id
   )
 
   if (!paymentId) {
@@ -290,7 +304,8 @@ async function solicitarSaque(req, res, usuario) {
   const valor = Number(dados.valor || 0)
   const chavePix = textoSeguro(dados.chavePix)
 
-  if (!indicadorId || !valor || valor <= 0 || !chavePix) {
+  if (!indicadorId || !Number.isFinite(valor) || valor <= 0 || !Number.isSafeInteger(Math.round(valor * 100))
+    || Math.abs(valor * 100 - Math.round(valor * 100)) > 0.000001 || !chavePix || chavePix.length > 200) {
     responderJson(res, 400, { error: 'Indicador, valor e chave Pix sao obrigatorios.' })
     return
   }
@@ -624,23 +639,6 @@ async function validarPagamentoPendente(pagamento) {
   return pagamentoAtualizado
 }
 
-async function invalidarPagamentoPendente(pagamento) {
-  const atualizacao = {
-    status: 'expired',
-    statusDetail: 'preference_invalid_or_inaccessible',
-    atualizadoEm: FieldValue.serverTimestamp()
-  }
-
-  await db.batch()
-    .set(db.collection('pagamentos').doc(pagamento.id), atualizacao, { merge: true })
-    .set(
-      db.collection('transacoesPagamento').doc(pagamento.transacaoId || pagamento.id),
-      atualizacao,
-      { merge: true }
-    )
-    .commit()
-}
-
 async function sincronizarPagamentoMercadoPago({ pagamentoId, preferenceId, paymentId, empresaId = '' }) {
   const contexto = await resolverPagamentoInterno({ pagamentoId, preferenceId, paymentId })
 
@@ -672,7 +670,7 @@ async function sincronizarPagamentoMercadoPago({ pagamentoId, preferenceId, paym
 
   const referencia = textoSeguro(pagamentoMp.external_reference)
 
-  if (referencia && referencia !== contexto.pagamento.externalReference) {
+  if (!referencia || referencia !== contexto.pagamento.externalReference) {
     erro(403, 'Pagamento retornado nao pertence ao registro interno.')
   }
 
@@ -739,7 +737,8 @@ async function processarPagamentoMercadoPago({ pagamentoId, pagamentoMp }) {
   }
 
   const pagamentoInicial = pagamentoInicialDoc.data() || {}
-  const valorEsperadoAtual = await obterValorAtualPagamento(pagamentoInicial)
+  // A cobranca usa o valor contratado, nao uma recompensa editada depois do checkout.
+  const valorEsperadoAtual = Number(pagamentoInicial.valor)
   let resultado
   let notificacaoContexto
 
@@ -755,9 +754,14 @@ async function processarPagamentoMercadoPago({ pagamentoId, pagamentoMp }) {
     let status = statusOriginal
     let detalhe = statusDetail
 
-    if (Math.abs(valorPago - valorEsperado) >= 0.01) {
+    if (!Number.isFinite(valorPago) || !Number.isFinite(valorEsperado) || valorEsperado <= 0
+      || Math.abs(valorPago - valorEsperado) >= 0.01 || pagamentoMp.currency_id !== moedaPadrao) {
       status = 'failed'
       detalhe = 'valor_divergente'
+    }
+    if (pagamento.ambiente !== 'sandbox' && pagamentoMp.live_mode !== true) {
+      status = 'failed'
+      detalhe = 'ambiente_divergente'
     }
 
     const agora = FieldValue.serverTimestamp()
@@ -957,22 +961,6 @@ function prioridadeStatusPagamento(status) {
   }[status] ?? -1
 }
 
-async function obterValorAtualPagamento(pagamento) {
-  const candidatoDoc = pagamento.candidatoId
-    ? await db.collection('candidatos').doc(pagamento.candidatoId).get()
-    : null
-  const candidato = candidatoDoc?.exists ? candidatoDoc.data() || {} : {}
-  const vagaId = textoSeguro(candidato.vagaId || pagamento.vagaId)
-  const vagaDoc = vagaId ? await db.collection('vagas').doc(vagaId).get() : null
-  const vaga = vagaDoc?.exists ? vagaDoc.data() || {} : {}
-
-  try {
-    return obterValorRecompensaFixa({ vaga, candidato })
-  } catch {
-    return Number(pagamento.valor || 0)
-  }
-}
-
 async function marcarPagamentoComoFalhou({ pagamentoRef, transacaoRef, pagamento, detalhe }) {
   const atualizacao = {
     status: 'failed',
@@ -981,10 +969,14 @@ async function marcarPagamentoComoFalhou({ pagamentoRef, transacaoRef, pagamento
     encerradoEm: FieldValue.serverTimestamp()
   }
 
-  await db.batch()
-    .update(pagamentoRef, atualizacao)
-    .update(transacaoRef, atualizacao)
-    .commit()
+  const alterado = await db.runTransaction(async (tx) => {
+    const atual = (await tx.get(pagamentoRef)).data()
+    if (!atual || atual.status !== 'created' || atual.creditado) return false
+    tx.update(pagamentoRef, atualizacao)
+    tx.update(transacaoRef, atualizacao)
+    return true
+  })
+  if (!alterado) return
 
   await notificarPagamento({
     pagamentoId: pagamentoRef.id,
@@ -1271,6 +1263,7 @@ async function chamarMercadoPago(caminho, opcoes = {}) {
 
   const resposta = await fetch(`https://api.mercadopago.com${caminho}`, {
     ...opcoes,
+    signal: AbortSignal.timeout(15000),
     headers: {
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
@@ -1301,11 +1294,19 @@ async function autenticarRequisicao(req) {
     erro(401, 'Autenticacao Firebase obrigatoria.')
   }
 
+  let usuario
   try {
-    return await getAuth().verifyIdToken(match[1], true)
+    usuario = await getAuth().verifyIdToken(match[1], true)
   } catch {
     erro(401, 'Sessao Firebase invalida ou expirada.')
   }
+  if (process.env.FUNCTIONS_EMULATOR !== 'true') {
+    const token = req.headers['x-firebase-appcheck']
+    if (typeof token !== 'string' || !token) erro(401, 'Verificacao do aplicativo obrigatoria.')
+    try { await getAppCheck().verifyToken(token) } catch { erro(401, 'Verificacao do aplicativo invalida.') }
+  }
+  await limitar(usuario.uid, 'financeiro')
+  return usuario
 }
 
 function validarWebhookMercadoPago(req, requestUrl, dados) {
@@ -1328,6 +1329,12 @@ function validarWebhookMercadoPago(req, requestUrl, dados) {
   )
 
   if (!partes.ts || !partes.v1 || !requestId || !dataId) return false
+  if (!/^\d{1,30}$/.test(dataId) || !/^\d+$/.test(partes.ts) || !/^[a-f0-9]{64}$/i.test(partes.v1)) return false
+  // Aceita timestamps em segundos ou milissegundos; evita replay indefinido.
+  const timestamp = Number(partes.ts) * (partes.ts.length <= 10 ? 1000 : 1)
+  if (!Number.isFinite(timestamp) || Math.abs(Date.now() - timestamp) > 10 * 60 * 1000) return false
+  const bodyId = textoSeguro(dados?.data?.id || dados?.id).toLowerCase()
+  if (bodyId && bodyId !== dataId) return false
 
   const manifesto = `id:${dataId};request-id:${requestId};ts:${partes.ts};`
   const esperado = crypto
@@ -1346,7 +1353,7 @@ function validarWebhookMercadoPago(req, requestUrl, dados) {
 function aplicarCors(res, origem) {
   if (origem) res.setHeader('Access-Control-Allow-Origin', origem)
   res.setHeader('Vary', 'Origin')
-  res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type')
+  res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Firebase-AppCheck')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
 }
 
@@ -1354,7 +1361,7 @@ function origemPermitida(origem) {
   try {
     const url = new URL(origem)
     const appUrl = new URL(obterAppUrlPadrao())
-    return ['localhost', '127.0.0.1'].includes(url.hostname)
+    return (process.env.FUNCTIONS_EMULATOR === 'true' && ['localhost', '127.0.0.1'].includes(url.hostname))
       || url.origin === appUrl.origin
   } catch {
     return false
@@ -1417,21 +1424,25 @@ function obterProjectId() {
 }
 
 function responderJson(res, status, corpo) {
+  res.setHeader('Cache-Control', 'no-store')
+  res.setHeader('X-Content-Type-Options', 'nosniff')
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' })
   res.end(JSON.stringify(corpo))
 }
 
 function lerJson(req) {
+  validarCorpoJson(req)
+  const parse = (value) => {
+    let parsed
+    try {
+      parsed = Buffer.isBuffer(value) || typeof value === 'string'
+        ? JSON.parse(value.toString() || '{}') : value
+    } catch { erro(400, 'JSON invalido.') }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) erro(400, 'Envie um objeto JSON.')
+    return parsed
+  }
   if (req.body !== undefined && req.body !== null) {
-    if (Buffer.isBuffer(req.body)) {
-      try {
-        return Promise.resolve(req.body.length ? JSON.parse(req.body.toString('utf8')) : {})
-      } catch {
-        return Promise.reject(new Error('JSON invalido.'))
-      }
-    }
-
-    if (typeof req.body === 'object') return Promise.resolve(req.body)
+    return Promise.resolve(parse(req.body))
   }
 
   return new Promise((resolve, reject) => {
@@ -1440,16 +1451,16 @@ function lerJson(req) {
     req.on('data', (parte) => {
       corpo += parte
       if (corpo.length > 100_000) {
-        reject(new Error('Corpo da requisicao muito grande.'))
+        reject(Object.assign(new Error('Corpo da requisicao muito grande.'), { status: 413 }))
         req.destroy()
       }
     })
 
     req.on('end', () => {
       try {
-        resolve(corpo ? JSON.parse(corpo) : {})
-      } catch {
-        reject(new Error('JSON invalido.'))
+        resolve(parse(corpo || '{}'))
+      } catch (error) {
+        reject(error)
       }
     })
 
@@ -1464,5 +1475,6 @@ function erro(status, message) {
 }
 
 module.exports = {
-  handleMercadoPagoRequest
+  handleMercadoPagoRequest,
+  validarWebhookMercadoPago
 }

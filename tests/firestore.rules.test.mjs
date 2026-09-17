@@ -13,6 +13,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  limit,
   query,
   serverTimestamp,
   setDoc,
@@ -98,6 +99,19 @@ test('vagas continuam publicas para leitura', async () => {
   const db = testEnv.unauthenticatedContext().firestore()
 
   await assertSucceeds(getDoc(doc(db, 'vagas', 'vaga-1')))
+})
+
+test('consulta publica sem limite ou acima de 100 e recusada; pagina limitada funciona', async () => {
+  const db = testEnv.unauthenticatedContext().firestore()
+  await assertFails(getDocs(collection(db, 'vagas')))
+  await assertFails(getDocs(query(collection(db, 'vagas'), limit(101))))
+  await assertSucceeds(getDocs(query(collection(db, 'vagas'), limit(100))))
+})
+
+test('cliente nao pode ler nem reiniciar as cotas do servidor', async () => {
+  const db = testEnv.authenticatedContext('indicador-1').firestore()
+  await assertFails(getDoc(doc(db, 'limitesUso', 'qualquer')))
+  await assertFails(setDoc(doc(db, 'limitesUso', 'qualquer'), { porDia: 0 }))
 })
 
 test('nota forjada nao autoriza escrita e snapshots de elegibilidade sao imutaveis', async () => {

@@ -41,6 +41,9 @@
     "browseJobs": "Procurar vagas"
   },
   "jobs": {
+    "moreAvailable": "Há mais vagas disponíveis. Carregue mais para ampliar os resultados dos filtros.",
+    "loadMore": "Carregar mais vagas",
+    "loadingMore": "Carregando...",
     "opportunities": "OPORTUNIDADES",
     "headers": {
       "public": {

@@ -5,6 +5,11 @@ const path = require('node:path')
 const { extrairCurriculo } = require('../functions/src/indicacoesCore.cjs')
 const deps = createRequire(path.resolve('functions/package.json'))
 
+test('extracao recusa arquivo acima de 10 MB antes de iniciar o parser', async () => {
+  await assert.rejects(extrairCurriculo(Buffer.alloc(10 * 1024 * 1024 + 1), 'application/pdf'),
+    (error) => error.details.motivo === 'curriculo_invalido')
+})
+
 function pdfTexto(texto) {
   const stream = `BT /F1 12 Tf 40 750 Td (${texto}) Tj ET`
   const objects = [

@@ -9,6 +9,7 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  startAfter,
   Timestamp,
   updateDoc,
   where
@@ -81,13 +82,18 @@ export const criarVaga = async (dados) => {
   return docRef.id
 }
 
-export const listarVagas = async () => {
-  const snapshot = await getDocs(query(vagasCollection, orderBy('criadoEm', 'desc')))
-  return snapshot.docs.map(mapVagaDoc).filter(Boolean)
+export const listarVagasPagina = async (cursor = null) => {
+  const snapshot = await getDocs(query(vagasCollection, orderBy('criadoEm', 'desc'),
+    ...(cursor ? [startAfter(cursor)] : []), limit(100)))
+  return {
+    vagas: snapshot.docs.map(mapVagaDoc).filter(Boolean),
+    cursor: snapshot.docs.at(-1) || null,
+    temMais: snapshot.size === 100
+  }
 }
 
 export const listarVagasBanner = async () => {
-  const vagas = (await listarVagas()).filter(vagaAceitaIndicacoes)
+  const vagas = (await listarVagasPagina()).vagas.filter(vagaAceitaIndicacoes)
   const vagasBanner = vagas.filter((vaga) => vaga.bannerAtivo || vaga.destaqueBanner)
 
   return (vagasBanner.length ? vagasBanner : vagas).slice(0, 4)

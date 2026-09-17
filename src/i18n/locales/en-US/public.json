@@ -41,6 +41,9 @@
     "browseJobs": "Browse jobs"
   },
   "jobs": {
+    "moreAvailable": "More jobs are available. Load more to expand your filtered results.",
+    "loadMore": "Load more jobs",
+    "loadingMore": "Loading...",
     "opportunities": "OPPORTUNITIES",
     "headers": {
       "public": {

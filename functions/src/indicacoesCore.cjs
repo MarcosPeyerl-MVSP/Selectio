@@ -1,5 +1,6 @@
 const { createHash, randomUUID } = require('node:crypto')
 const path = require('node:path')
+const { Worker } = require('node:worker_threads')
 const { HttpsError } = require('firebase-functions/v2/https')
 const { Timestamp } = require('firebase-admin/firestore')
 
@@ -44,7 +45,30 @@ function validarVaga(vaga, agora) {
   if (limite && (!Number.isFinite(millis) || millis < agora)) throw erro('vaga_fechada', 'Esta vaga não está aberta para indicações.')
 }
 
-async function extrairCurriculo(bytes, tipo) {
+function extrairCurriculo(bytes, tipo) {
+  if (!bytes?.length || bytes.length > MAX_CURRICULO) return Promise.reject(erro('curriculo_invalido', 'Curriculo invalido ou maior que 10 MB.'))
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(path.join(__dirname, 'extracaoWorker.cjs'), {
+      workerData: { bytes, tipo }, resourceLimits: { maxOldGenerationSizeMb: 128, maxYoungGenerationSizeMb: 16 }
+    })
+    const timer = setTimeout(() => finish(erro('curriculo_invalido', 'O curriculo excedeu o tempo de processamento.')), 15000)
+    let encerrado = false
+    function finish(error, value) {
+      if (encerrado) return
+      encerrado = true
+      clearTimeout(timer)
+      void worker.terminate()
+      if (error) reject(error)
+      else resolve(value)
+    }
+    worker.once('message', (result) => result.error
+      ? finish(erro(result.error.motivo, result.error.message)) : finish(null, result.value))
+    worker.once('error', () => finish(erro('extracao_falhou', 'Nao foi possivel processar o curriculo com seguranca.')))
+    worker.once('exit', () => finish(erro('extracao_falhou', 'O processamento do curriculo foi interrompido.')))
+  })
+}
+
+async function extrairCurriculoInterno(bytes, tipo) {
   try {
     let texto = ''
     let paginas = 0
@@ -60,6 +84,7 @@ async function extrairCurriculo(bytes, tipo) {
           const page = await pdf.getPage(i)
           const content = await page.getTextContent()
           texto += content.items.map((item) => item.str || '').join(' ') + '\n'
+          if (texto.length > 200000) throw erro('curriculo_invalido', 'O curriculo excede o limite de texto para analise.')
           page.cleanup()
         }
       } finally { await task.destroy() }
@@ -296,4 +321,4 @@ function recompensaFixa(vaga) {
   return Number(texto.replace(/[^\d,]/g, '').replace(',', '.')) || null
 }
 
-module.exports = { criarServicoIndicacoes, extrairCurriculo, normalizarDados, validarVaga }
+module.exports = { criarServicoIndicacoes, extrairCurriculo, extrairCurriculoInterno, normalizarDados, validarVaga }

@@ -958,7 +958,9 @@ service cloud.firestore {
     }
 
     match /vagas/{vagaId} {
-      allow read: if true;
+      allow get: if true;
+      allow list: if request.query.limit != null
+        && (request.query.limit <= 100 || (isAdmin() && request.query.limit <= 500));
 
       allow create: if isEmpresa()
         && request.resource.data.empresaId == request.auth.uid

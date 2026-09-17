@@ -14,7 +14,7 @@ import EstadoDados from '../../components/ui/EstadoDados'
 import Paginacao from '../../components/ui/Paginacao'
 import { FiSearch } from 'react-icons/fi'
 import {
-  listarVagas,
+  listarVagasPagina,
   vagaAceitaIndicacoes
 } from '../../services/firestoreVagas'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
@@ -72,6 +72,9 @@ function Vagas() {
 
   // Estado com as vagas retornadas pelo Firestore.
   const [vagas, setVagas] = useState([])
+  const [cursor, setCursor] = useState(null)
+  const [temMais, setTemMais] = useState(false)
+  const [carregandoMais, setCarregandoMais] = useState(false)
 
   // Controla o carregamento inicial da listagem.
   const [loading, setLoading] = useState(true)
@@ -89,22 +92,40 @@ function Vagas() {
     : ''
 
   useEffect(() => {
+    let cancelado = false
     // Responsabilidade: buscar a lista de vagas cadastradas.
     const fetchVagas = async () => {
       try {
         setError(null)
-        const data = await listarVagas()
-        setVagas(data)
+        const data = await listarVagasPagina()
+        if (cancelado) return
+        setVagas(data.vagas)
+        setCursor(data.cursor)
+        setTemMais(data.temMais)
       } catch {
+        if (cancelado) return
         setError(t('jobs.loadError'))
         toast.error(t('jobs.loadToastError'))
       } finally {
-        setLoading(false)
+        if (!cancelado) setLoading(false)
       }
     }
 
     fetchVagas()
+    return () => { cancelado = true }
   }, [reloadKey, t, toast])
+
+  const carregarMais = async () => {
+    if (carregandoMais || !temMais) return
+    setCarregandoMais(true)
+    try {
+      const data = await listarVagasPagina(cursor)
+      setVagas((atuais) => [...new Map([...atuais, ...data.vagas].map((vaga) => [vaga.id, vaga])).values()])
+      setCursor(data.cursor)
+      setTemMais(data.temMais)
+    } catch { toast.error(t('jobs.loadToastError')) }
+    finally { setCarregandoMais(false) }
+  }
 
   // Aplica filtros locais por busca textual, área e salário mínimo.
   const vagasFiltradas = useMemo(() => vagas.filter((vaga) => {
@@ -350,6 +371,14 @@ function Vagas() {
             total={vagasFiltradas.length}
             onPageChange={setPagina}
           />
+        )}
+        {!loading && !error && temMais && (
+          <div>
+            <p>{t('jobs.moreAvailable')}</p>
+            <button type="button" className="vaga-action-primary" disabled={carregandoMais} onClick={carregarMais}>
+              {t(carregandoMais ? 'jobs.loadingMore' : 'jobs.loadMore')}
+            </button>
+          </div>
         )}
         </main>
       </div>

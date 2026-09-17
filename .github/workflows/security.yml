@@ -10,6 +10,7 @@ permissions:
 jobs:
   security:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,8 +39,14 @@ jobs:
       - name: Test secret detector
         run: npm run security:test
 
-      - name: Test Firestore rules
-        run: npm run test:rules
+      - name: Lint
+        run: npm run lint
+
+      - name: Test application and document extraction
+        run: npm run test:unit
+
+      - name: Test rules, quotas, referrals and concurrent payments
+        run: npm run test:security:emulators
 
       - name: Test Cloud Functions API
         run: npm run test:functions

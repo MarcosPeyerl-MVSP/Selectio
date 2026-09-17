@@ -1,4 +1,5 @@
-import { auth } from './firebase'
+import { getToken } from 'firebase/app-check'
+import { auth, appCheck } from './firebase'
 
 const functionsRegion = 'southamerica-east1'
 const firebaseProjectId = String(import.meta.env.VITE_FIREBASE_PROJECT_ID || '').trim()
@@ -21,6 +22,7 @@ export const chamarFirebaseFunction = async (caminho, payload, fallback) => {
   if (!currentUser) throw new Error('Sua sessão expirou. Entre novamente para continuar.')
 
   const idToken = await currentUser.getIdToken()
+  const appCheckHeaders = appCheck ? { 'X-Firebase-AppCheck': (await getToken(appCheck)).token } : {}
   let resposta
 
   try {
@@ -28,9 +30,11 @@ export const chamarFirebaseFunction = async (caminho, payload, fallback) => {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${idToken}`,
+        ...appCheckHeaders,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(45000)
     })
   } catch {
     throw new Error(`API indisponível em ${functionsApiUrl}.`)

@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "deploy:check": "node scripts/check-deploy-config.cjs",
+    "test:security:emulators": "firebase emulators:exec --only firestore,storage \"node --test --test-concurrency=1 tests/firestore.rules.test.mjs tests/storage.rules.test.mjs tests/indicacoesServidor.test.cjs tests/protecaoAbuso.test.cjs tests/pagamentosServidor.test.cjs\"",
+    "test:unit": "node --test tests/candidatoCsv.test.mjs tests/compatibilidade.test.mjs tests/curriculoCandidato.test.mjs tests/elegibilidadeIndicacao.test.mjs tests/extracaoServidor.test.cjs tests/indicadorDashboard.test.mjs tests/redirectSeguro.test.mjs",
     "functions:install": "npm --prefix functions install",
     "functions:serve": "firebase emulators:start --only functions,firestore",
     "functions:deploy": "firebase deploy --only functions:mercadoPagoApi",
