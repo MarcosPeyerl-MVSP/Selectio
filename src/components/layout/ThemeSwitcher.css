@@ -1,0 +1,110 @@
+.theme-settings-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.theme-option {
+  position: relative;
+  min-width: 0;
+  min-height: 138px;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-content: start;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  color: var(--text);
+  text-align: left;
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast);
+}
+
+.theme-option:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-soft);
+}
+
+.theme-option:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 24%, transparent);
+  outline-offset: 2px;
+}
+
+.theme-option.selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.theme-option-preview {
+  grid-column: 1 / -1;
+  height: 42px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 0.42fr;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
+  border-radius: 7px;
+}
+
+.theme-option-preview span {
+  display: block;
+}
+
+.theme-option-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--primary);
+  font-size: 17px;
+}
+
+.theme-option-copy {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.theme-option-copy strong {
+  color: var(--text-heading);
+  font-size: 13px;
+}
+
+.theme-option-copy small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.theme-option-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: 0 0 0 1px rgba(23, 23, 23, 0.18);
+}
+
+.theme-option.selected .theme-option-check {
+  background: var(--primary);
+}
+
+@media (max-width: 700px) {
+  .theme-settings-options {
+    grid-template-columns: 1fr;
+  }
+
+  .theme-option {
+    min-height: 118px;
+  }
+}

@@ -17,6 +17,10 @@ import {
   removerArquivoCurriculo
 } from './storageCurriculos'
 import { enviarFotoCandidato, removerFotoPerfil } from './storageFotosPerfil'
+import {
+  metadadosPlanosCurriculo,
+  normalizarMetadadosCurriculo
+} from '../utils/curriculoCandidato'
 
 const candidatosPreSalvosCollection = collection(db, 'candidatosPreSalvos')
 const MAX_WRITES_POR_BATCH = 400
@@ -68,52 +72,13 @@ const normalizeList = (value) => {
   return [...new Set(values.map(normalizeString).filter(Boolean))]
 }
 
-const normalizeCurriculo = (dados) => {
-  const curriculoInformado = dados?.curriculo
-  const curriculo = curriculoInformado
-    && typeof curriculoInformado === 'object'
-    && !Array.isArray(curriculoInformado)
-    ? curriculoInformado
-    : {}
-  const hasFlatMetadata = [
-    'curriculoNome',
-    'curriculoTipo',
-    'curriculoTamanho'
-  ].some((campo) => Object.prototype.hasOwnProperty.call(dados || {}, campo))
-  const nome = normalizeString(
-    hasFlatMetadata ? dados?.curriculoNome : curriculo.nome ?? curriculo.name
-  )
-  const tipo = normalizeString(
-    hasFlatMetadata ? dados?.curriculoTipo : curriculo.tipo ?? curriculo.type
-  )
-  const tamanhoInformado = Number(
-    hasFlatMetadata
-      ? dados?.curriculoTamanho ?? 0
-      : curriculo.tamanho ?? curriculo.size ?? 0
-  )
-  const caminho = normalizeString(curriculo.caminho ?? curriculo.path)
-  const statusInformado = normalizeString(curriculo.status)
-
-  if (!nome && !tipo && !tamanhoInformado && !caminho) return {}
-
-  return {
-    nome,
-    tipo,
-    tamanho: Number.isFinite(tamanhoInformado) && tamanhoInformado >= 0
-      ? tamanhoInformado
-      : 0,
-    caminho,
-    status: caminho ? 'disponivel' : statusInformado || 'pendente_reenvio'
-  }
-}
-
 const normalizeCandidateData = (dados = {}) => {
   const source = dados && typeof dados === 'object' ? dados : {}
   const normalized = CAMPOS_TEXTO.reduce((resultado, campo) => ({
     ...resultado,
     [campo]: normalizeString(source[campo])
   }), {})
-  const curriculo = normalizeCurriculo(source)
+  const curriculo = normalizarMetadadosCurriculo(source)
 
   normalized.nome = normalizeString(source.nome || source.nomeCompleto)
   normalized.email = normalizarEmailCandidato(source.email)
@@ -178,17 +143,7 @@ const validateCandidateData = (dados) => {
 
 const prepareCandidateData = (dados) => validateCandidateData(normalizeCandidateData(dados))
 
-const getCurriculoFlatFields = (dados) => {
-  const curriculo = dados?.curriculo && typeof dados.curriculo === 'object'
-    ? dados.curriculo
-    : {}
-
-  return {
-    curriculoNome: normalizeString(dados?.curriculoNome || curriculo.nome),
-    curriculoTipo: normalizeString(curriculo.tipo),
-    curriculoTamanho: Number(curriculo.tamanho || 0)
-  }
-}
+const getCurriculoFlatFields = metadadosPlanosCurriculo
 
 const mapCandidatoPreSalvoDoc = (snapshot) => {
   if (!snapshot.exists()) return null
@@ -197,9 +152,7 @@ const mapCandidatoPreSalvoDoc = (snapshot) => {
   const createdAt = timestampToValue(data.createdAt)
   const updatedAt = timestampToValue(data.updatedAt)
 
-  const curriculo = data.curriculo && typeof data.curriculo === 'object'
-    ? data.curriculo
-    : {}
+  const curriculo = normalizarMetadadosCurriculo(data)
 
   return {
     ...data,

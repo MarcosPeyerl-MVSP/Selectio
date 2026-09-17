@@ -21,7 +21,7 @@ import AvatarProtegido from '../ui/AvatarProtegido'
 function Navbar() {
   const { t } = useTranslation(['common', 'auth'])
   const navigate = useNavigate()
-  const { isDark, toggleTheme } = useTema()
+  const { theme, isDark, toggleTheme } = useTema()
   const confirm = useConfirmacao()
   const toast = useToast()
   const { perfil, carregando: carregandoSessao, adotarPerfil } = useAuth()
@@ -205,7 +205,7 @@ function Navbar() {
                     <button type="button" role="menuitem" onClick={toggleTheme}>
                       {isDark ? <LuSunMedium /> : <LuMoonStar />}
                       <span>{t('theme.current', {
-                        theme: isDark ? t('theme.darkValue') : t('theme.lightValue')
+                        theme: t(`theme.${theme}Value`)
                       })}</span>
                     </button>
                   </div>

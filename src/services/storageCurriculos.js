@@ -156,8 +156,9 @@ export const baixarCurriculoProtegido = async (curriculo) => {
   const blob = await getBlob(ref(storage, curriculo.caminho), CURRICULO_MAX_BYTES)
   const objectUrl = URL.createObjectURL(blob)
   const link = document.createElement('a')
+  const extensao = extensaoDoArquivo(curriculo.caminho)
   link.href = objectUrl
-  link.download = curriculo.nome || 'curriculo'
+  link.download = curriculo.nome || (CURRICULO_EXTENSOES.has(extensao) ? `curriculo.${extensao}` : 'curriculo')
   link.rel = 'noopener'
   document.body.appendChild(link)
   link.click()

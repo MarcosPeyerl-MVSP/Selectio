@@ -5,6 +5,19 @@
     <link rel="icon" type="image/svg+xml" href="/FAVICO_CERTO.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Selectio</title>
+    <script>
+      (() => {
+        let savedTheme
+        try {
+          savedTheme = localStorage.getItem('selectioTheme')
+        } catch {
+          savedTheme = null
+        }
+        const theme = ['light', 'dark'].includes(savedTheme) ? savedTheme : 'light'
+        document.documentElement.dataset.theme = theme
+        document.documentElement.style.colorScheme = theme === 'dark' ? 'dark' : 'light'
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

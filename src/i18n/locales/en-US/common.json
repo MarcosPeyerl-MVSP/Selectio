@@ -45,7 +45,9 @@
     "activateLight": "Switch to light theme",
     "activateDark": "Switch to dark theme",
     "light": "Light theme",
+    "lightDescription": "Neutral and bright",
     "dark": "Dark theme",
+    "darkDescription": "Comfortable in low light",
     "current": "Theme: {{theme}}",
     "lightValue": "light",
     "darkValue": "dark"
@@ -404,7 +406,7 @@
     "languageTitle": "Platform language",
     "languageDescription": "Choose the language used for platform menus, messages, and formats.",
     "appearanceTitle": "Platform appearance",
-    "appearanceDescription": "Choose between light and dark themes to personalize your experience.",
+    "appearanceDescription": "Choose between light and dark themes. Your preference is saved in this browser.",
     "fields": {
       "companyName": "Company name",
       "companyNamePlaceholder": "Displayed company name",
