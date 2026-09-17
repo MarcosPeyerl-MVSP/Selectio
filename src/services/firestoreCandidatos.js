@@ -7,27 +7,12 @@ import {
   query,
   serverTimestamp,
   updateDoc,
-  writeBatch,
   where
 } from 'firebase/firestore'
 import { db } from './firebase'
 import { getFirebaseUid } from './identidadeFirebase'
-import {
-  adicionarIndicacaoAoBatch,
-  listarIndicacoesPorIndicador
-} from './firestoreIndicacoes'
-import { buscarCandidatoPreSalvoPorId } from './firestoreCandidatosPreSalvos'
-import { adicionarHistoricoAoBatch } from './firestoreHistorico'
-import {
-  notificarNovoCandidatoIndicado
-} from './firestoreNotificacoes'
-import { vagaAceitaIndicacoes } from './firestoreVagas'
 import { chamarFirebaseFunction } from './firebaseFunctions'
-import {
-  copiarCurriculoParaCandidato,
-  enviarCurriculo,
-  removerArquivoCurriculo
-} from './storageCurriculos'
+import { finalizarIndicacaoValidada } from './indicacoesApi'
 import {
   copiarFotoParaCandidatoIndicado,
   enviarFotoCandidato,
@@ -44,32 +29,6 @@ const timestampToValue = (value) => {
 }
 
 const normalizeList = (value) => Array.isArray(value) ? value : []
-
-const parseMoneyValue = (value) => {
-  const normalized = String(value || '')
-    .replace(/[^\d,.-]/g, '')
-    .replace(/\./g, '')
-    .replace(',', '.')
-
-  return Number(normalized || 0)
-}
-
-const isFixedRewardText = (value) => {
-  const text = String(value || '').trim()
-
-  return Boolean(text)
-    && !/%|percent|sal[aá]rio|combinar|consultar|a definir|sob consulta/i.test(text)
-    && /^(r\$\s*)?\d[\d.\s]*(,\d{1,2})?$/i.test(text)
-}
-
-const getFixedRewardValue = (vaga) => {
-  if (vaga?.recompensaTipo && vaga.recompensaTipo !== 'fixo') return null
-
-  const numericValue = Number(vaga?.recompensaValorFixo || 0)
-  if (Number.isFinite(numericValue) && numericValue > 0) return numericValue
-
-  return isFixedRewardText(vaga?.recompensa) ? parseMoneyValue(vaga.recompensa) : null
-}
 
 const getOrigem = (dados) => {
   if (dados.linkedin) return 'LinkedIn'
@@ -103,217 +62,22 @@ const sortByCreatedDesc = (a, b) => {
   return dateB - dateA
 }
 
-const getEmpresaUidFromVaga = (vaga) => String(vaga?.empresaId || vaga?.empresaUid || '')
-
-const getIndicacaoPreSalvaId = ({ candidatoPreSalvoId, indicadorId, vagaId }) => (
-  `${indicadorId}__${vagaId}__${candidatoPreSalvoId}`
-)
-
-const erroIndicacaoPreSalvaDuplicada = () => (
-  new Error('Este candidato já foi indicado para esta vaga.')
-)
-
-export const criarCandidatoIndicado = async ({
-  dados,
-  indicador,
-  vaga,
-  candidatoPreSalvoId = '',
-  arquivoCurriculo = null,
-  arquivoFoto = null
-}) => {
+// O servidor valida a analise e grava o processo atomicamente.
+export const criarCandidatoIndicado = async ({ dados, indicador, vaga, candidatoPreSalvoId = '', arquivoFoto = null, analise }) => {
+  if (!analise?.analiseId || !analise.resultado?.podeIndicar) {
+    throw new Error('Analise a compatibilidade antes de finalizar a indicacao.')
+  }
   const indicadorId = getFirebaseUid(indicador)
-  const empresaId = getEmpresaUidFromVaga(vaga)
-  const preSalvoId = String(candidatoPreSalvoId || '').trim()
-
-  if (!indicadorId) {
-    throw new Error('UID do indicador e obrigatório para criar candidato.')
-  }
-
-  if (!vaga?.id || !empresaId) {
-    throw new Error('Vaga e empresa da vaga são obrigatórias para criar candidato.')
-  }
-
-  if (!vagaAceitaIndicacoes(vaga)) {
-    throw new Error('Esta vaga não está aberta para novas indicações.')
-  }
-
-  let candidatoPreSalvo = null
-  if (preSalvoId) {
-    candidatoPreSalvo = await buscarCandidatoPreSalvoPorId({
-      candidatoId: preSalvoId,
-      indicadorId
-    })
-
-    if (!candidatoPreSalvo) {
-      throw new Error('Candidato pré-salvo não encontrado.')
-    }
-
-    const indicacoes = await listarIndicacoesPorIndicador(indicadorId)
-    const jaIndicado = indicacoes.some((indicacao) => (
-      indicacao.candidatoPreSalvoId === preSalvoId
-      && indicacao.vagaId === vaga.id
-    ))
-
-    if (jaIndicado) {
-      throw erroIndicacaoPreSalvaDuplicada()
-    }
-  }
-
-  const candidatoRef = doc(candidatosCollection)
-  let curriculo
-  let fotoPerfil
-
-  if (arquivoCurriculo) {
-    curriculo = await enviarCurriculo({
-      arquivo: arquivoCurriculo,
-      indicadorId,
-      registroId: candidatoRef.id,
-      tipoRegistro: 'candidatos',
-      empresaId
-    })
-  } else {
-    curriculo = await copiarCurriculoParaCandidato({
-      curriculo: candidatoPreSalvo?.curriculo || dados.curriculo,
-      indicadorId,
-      candidatoId: candidatoRef.id,
-      empresaId
-    })
-  }
-
-  if (!curriculo && (dados.curriculoNome || dados.curriculo?.nome)) {
-    curriculo = {
-      nome: dados.curriculoNome || dados.curriculo?.nome || '',
-      tamanho: Number(dados.curriculoTamanho || dados.curriculo?.tamanho || 0),
-      tipo: dados.curriculoTipo || dados.curriculo?.tipo || '',
-      caminho: '',
-      status: 'pendente_reenvio'
-    }
-  }
-
-  try {
-    if (arquivoFoto) {
-      fotoPerfil = await enviarFotoCandidato({
-        arquivo: arquivoFoto,
-        indicadorId,
-        candidatoId: candidatoRef.id,
-        tipoRegistro: 'indicados',
-        empresaId
-      })
-    } else {
-      fotoPerfil = await copiarFotoParaCandidatoIndicado({
-        foto: candidatoPreSalvo?.fotoPerfil || dados.fotoPerfil,
-        indicadorId,
-        candidatoId: candidatoRef.id,
-        empresaId
-      })
-    }
-  } catch (error) {
-    await removerArquivoCurriculo(curriculo?.caminho).catch(() => {})
-    throw error
-  }
-
-  const recompensaValor = getFixedRewardValue(vaga)
-  const candidato = {
-    ...dados,
-    curriculo: curriculo || {},
-    curriculoNome: curriculo?.nome || '',
-    curriculoTipo: curriculo?.tipo || '',
-    curriculoTamanho: Number(curriculo?.tamanho || 0),
-    fotoPerfil: fotoPerfil || {},
-    hardSkills: normalizeList(dados.hardSkills),
-    softSkills: normalizeList(dados.softSkills),
-    indicadorId,
-    indicadorUid: indicadorId,
-    indicadorNome: indicador?.nome || indicador?.nomeCompleto || '',
-    vagaId: vaga.id,
-    vagaTitulo: vaga.titulo || '',
-    vagaEmpresa: vaga.empresa || '',
-    empresaId,
-    empresaUid: empresaId,
-    recompensa: vaga.recompensa || '',
-    recompensaTipo: vaga.recompensaTipo || (recompensaValor ? 'fixo' : 'personalizado'),
-    recompensaValor,
-    recompensaValorFixo: recompensaValor,
-    status: 'indicado',
-    origem: getOrigem(dados),
-    ...(preSalvoId ? { candidatoPreSalvoId: preSalvoId } : {}),
-    aplicadoEm: serverTimestamp(),
-    criadoEm: serverTimestamp(),
-    atualizadoEm: serverTimestamp()
-  }
-
-  const batch = writeBatch(db)
-
-  batch.set(candidatoRef, candidato)
-  const indicacaoId = preSalvoId
-    ? getIndicacaoPreSalvaId({
-        candidatoPreSalvoId: preSalvoId,
-        indicadorId,
-        vagaId: vaga.id
-      })
-    : ''
-
-  adicionarIndicacaoAoBatch(batch, {
-    candidatoId: candidatoRef.id,
-    candidatoNome: dados.nome || '',
-    indicadorId,
-    indicadorUid: indicadorId,
-    indicadorNome: candidato.indicadorNome,
-    vagaId: vaga.id,
-    vagaTitulo: vaga.titulo || '',
-    vagaEmpresa: vaga.empresa || '',
-    empresaId,
-    empresaUid: empresaId,
-    recompensa: vaga.recompensa || '',
-    recompensaTipo: vaga.recompensaTipo || (recompensaValor ? 'fixo' : 'personalizado'),
-    recompensaValor,
-    recompensaValorFixo: recompensaValor,
-    status: 'indicado',
-    ...(preSalvoId ? { candidatoPreSalvoId: preSalvoId } : {})
-  }, indicacaoId)
-  adicionarHistoricoAoBatch(batch, {
-    candidatoId: candidatoRef.id,
-    candidatoNome: dados.nome || '',
-    vagaId: vaga.id,
-    vagaTitulo: vaga.titulo || '',
-    empresaId,
-    indicadorId,
-    tipo: 'indicacao_criada',
-    titulo: 'Indicação enviada',
-    tituloKey: 'notifications.messages.referralSentTitle',
-    descricao: `${dados.nome || 'Candidato'} foi indicado para ${vaga.titulo || 'a vaga'}.`,
-    descricaoKey: 'candidateProfile.historyEvents.referralCreated',
-    descricaoParams: {
-      candidate: dados.nome || '',
-      job: vaga.titulo || ''
-    },
-    statusAtual: 'indicado',
-    criadoPor: indicadorId
+  const empresaId = vaga.empresaId || vaga.empresaUid
+  const candidatoId = analise.analiseId
+  const fotoPerfil = arquivoFoto
+    ? await enviarFotoCandidato({ arquivo: arquivoFoto, indicadorId, candidatoId, tipoRegistro: 'indicados', empresaId })
+    : await copiarFotoParaCandidatoIndicado({ foto: dados.fotoPerfil, indicadorId, candidatoId, empresaId })
+  // Em falha de rede a transacao pode ter sido concluida. Repeticoes sao idempotentes.
+  return finalizarIndicacaoValidada({
+    analiseId: analise.analiseId, dados, vagaId: vaga.id, candidatoPreSalvoId,
+    curriculoCaminho: analise.curriculoCaminho, fotoPerfil: fotoPerfil || {}
   })
-  try {
-    await batch.commit()
-  } catch (error) {
-    await removerArquivoCurriculo(curriculo?.caminho).catch(() => {})
-    await removerFotoPerfil(fotoPerfil?.caminho).catch(() => {})
-    if (preSalvoId && error?.code === 'permission-denied') {
-      throw erroIndicacaoPreSalvaDuplicada()
-    }
-
-    throw error
-  }
-
-  const now = new Date().toISOString()
-  const candidatoCriado = {
-    ...candidato,
-    id: candidatoRef.id,
-    aplicadoEm: now,
-    criadoEm: now,
-    atualizadoEm: now
-  }
-
-  await notificarNovoCandidatoIndicado(candidatoCriado)
-
-  return candidatoCriado
 }
 
 export const listarCandidatosPorIndicador = async (indicadorId) => {

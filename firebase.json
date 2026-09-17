@@ -9,6 +9,22 @@
   "storage": {
     "rules": "storage.rules"
   },
+  "hosting": {
+    "site": "selectio-1f022",
+    "public": "dist",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [{ "source": "**", "destination": "/index.html" }],
+    "headers": [
+      {
+        "source": "/index.html",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      },
+      {
+        "source": "/assets/**",
+        "headers": [{ "key": "Cache-Control", "value": "public,max-age=31536000,immutable" }]
+      }
+    ]
+  },
   "emulators": {
     "functions": {
       "host": "127.0.0.1",

@@ -1,0 +1,20 @@
+.validacao-indicacao { border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin: 24px 0; background: var(--surface); color: var(--text); }
+.indicar-campos { display: contents; }
+.validacao-indicacao h2 { font-size: 1.2rem; margin: 0 0 10px; }
+.validacao-indicacao h2, .validacao-indicacao h3, .validacao-indicacao summary, .validacao-indicacao-criterios strong { color: var(--text-heading); }
+.validacao-indicacao > p, .validacao-indicacao-criterios p, .validacao-indicacao-criterios span { color: var(--muted); }
+.validacao-indicacao p { line-height: 1.6; }
+.validacao-indicacao-status { border-radius: 10px; padding: 12px 16px; background: var(--surface-soft); color: var(--text); margin: 16px 0; }
+.validacao-indicacao-status.compativel { background: var(--success-bg); color: var(--success); }
+.validacao-indicacao-status.compatibilidade_insuficiente, .validacao-indicacao-status.erro { background: var(--warning-bg); color: var(--warning); }
+.validacao-indicacao-status p { color: inherit; }
+.validacao-indicacao .draft-button { color: var(--primary-dark); }
+.validacao-indicacao summary:focus-visible, .validacao-indicacao .draft-button:focus-visible { outline: 2px solid var(--primary-dark); outline-offset: 4px; }
+.validacao-indicacao-nota { font-size: 1.65rem; }
+.validacao-indicacao details { margin: 16px 0; }
+.validacao-indicacao summary { cursor: pointer; font-weight: 600; }
+.validacao-indicacao-criterios { list-style: none; padding: 0; }
+.validacao-indicacao-criterios li { padding: 12px 0; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+.validacao-indicacao-criterios span { display: block; margin-top: 4px; }
+.validacao-indicacao button:disabled, .indicar-form button:disabled { opacity: .6; cursor: not-allowed; }
+@media (max-width: 600px) { .validacao-indicacao { padding: 16px; } }

@@ -19,6 +19,11 @@ export default defineConfig([
     },
   },
   {
+    files: ['functions/shared/**/*.mjs'],
+    extends: [js.configs.recommended],
+    languageOptions: { sourceType: 'module' },
+  },
+  {
     files: ['scripts/**/*.cjs', 'functions/**/*.cjs'],
     extends: [js.configs.recommended],
     languageOptions: {

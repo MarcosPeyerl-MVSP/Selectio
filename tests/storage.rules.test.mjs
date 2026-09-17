@@ -66,6 +66,34 @@ test('indicador envia, le e remove o proprio curriculo pre-salvo', async () => {
   await assertSucceeds(arquivo.delete())
 })
 
+test('curriculo temporario e privado e nao pode ser sobrescrito', async () => {
+  const caminho = 'curriculos/indicador-1/temporarios/analise-1/cv.pdf'
+  const arquivo = testEnv.authenticatedContext('indicador-1').storage().ref(caminho)
+  await assertSucceeds(arquivo.put(pdf, metadata('temporarios', 'analise-1')))
+  await assertSucceeds(arquivo.getMetadata())
+  await assertFails(arquivo.put(pdf, metadata('temporarios', 'analise-1')))
+  await assertFails(testEnv.authenticatedContext('empresa-1').storage().ref(caminho).getMetadata())
+  await assertFails(testEnv.authenticatedContext('indicador-2').storage().ref(caminho).getMetadata())
+  await assertSucceeds(arquivo.delete())
+})
+
+test('snapshot do curriculo indicado so pode ser gravado pelo servidor', async () => {
+  const caminho = 'curriculos/indicador-1/candidatos/candidato-1/cv.pdf'
+  const arquivo = testEnv.authenticatedContext('indicador-1').storage().ref(caminho)
+  await assertFails(arquivo.put(pdf, metadata('candidatos', 'candidato-1')))
+  await testEnv.withSecurityRulesDisabled((context) => context.storage().ref(caminho).put(pdf, metadata('candidatos', 'candidato-1')))
+  await assertFails(arquivo.put(pdf, metadata('candidatos', 'candidato-1')))
+  await assertFails(arquivo.delete())
+  const privado = 'validacoes-curriculos/indicador-1/analise-1/curriculo'
+  await assertFails(testEnv.authenticatedContext('indicador-1').storage().ref(privado).put(pdf, metadata('candidatos', 'candidato-1')))
+})
+
+test('empresa nao acessa snapshot antes da indicacao existir', async () => {
+  const caminho = 'curriculos/indicador-1/candidatos/inexistente/cv.pdf'
+  await testEnv.withSecurityRulesDisabled((context) => context.storage().ref(caminho).put(pdf, metadata('candidatos', 'inexistente')))
+  await assertFails(testEnv.authenticatedContext('empresa-1').storage().ref(caminho).getMetadata())
+})
+
 test('anonimo, outro indicador e empresa nao acessam curriculo pre-salvo', async () => {
   const caminho = 'curriculos/indicador-1/pre-salvos/pre-1/arquivo.pdf'
   const dono = testEnv.authenticatedContext('indicador-1').storage().ref(caminho)
@@ -78,8 +106,8 @@ test('anonimo, outro indicador e empresa nao acessam curriculo pre-salvo', async
 
 test('empresa do candidato e admin leem o curriculo indicado, terceiros nao', async () => {
   const caminho = 'curriculos/indicador-1/candidatos/candidato-1/arquivo.pdf'
-  await testEnv.authenticatedContext('indicador-1').storage().ref(caminho)
-    .put(pdf, metadata('candidatos', 'candidato-1'))
+  await testEnv.withSecurityRulesDisabled((context) => context.storage().ref(caminho)
+    .put(pdf, metadata('candidatos', 'candidato-1')))
 
   await assertSucceeds(testEnv.authenticatedContext('empresa-1').storage().ref(caminho).getMetadata())
   await assertSucceeds(testEnv.authenticatedContext('admin-1').storage().ref(caminho).getMetadata())
@@ -88,8 +116,8 @@ test('empresa do candidato e admin leem o curriculo indicado, terceiros nao', as
 
 test('empresa pode baixar, mas nao alterar nem excluir o curriculo', async () => {
   const caminho = 'curriculos/indicador-1/candidatos/candidato-1/arquivo.pdf'
-  await testEnv.authenticatedContext('indicador-1').storage().ref(caminho)
-    .put(pdf, metadata('candidatos', 'candidato-1'))
+  await testEnv.withSecurityRulesDisabled((context) => context.storage().ref(caminho)
+    .put(pdf, metadata('candidatos', 'candidato-1')))
 
   const empresaArquivo = testEnv.authenticatedContext('empresa-1').storage().ref(caminho)
   await assertSucceeds(empresaArquivo.getDownloadURL())

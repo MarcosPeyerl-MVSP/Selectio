@@ -24,6 +24,8 @@ import PageLoader from '../../components/ui/PageLoader'
 import SeletorFotoCandidato from '../../components/ui/SeletorFotoCandidato'
 import { buscarVagaPorId, vagaAceitaIndicacoes } from '../../services/firestoreVagas'
 import { criarCandidatoIndicado } from '../../services/firestoreCandidatos'
+import { analisarIndicacao } from '../../services/indicacoesApi'
+import ValidacaoIndicacao from '../../components/compatibilidade/ValidacaoIndicacao'
 import { listarCandidatosPreSalvos } from '../../services/firestoreCandidatosPreSalvos'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { useAuth } from '../../hooks/useAuth'
@@ -345,6 +347,43 @@ function Indicar() {
   const [selectedSavedId, setSelectedSavedId] = useState('')
   const [resumeFile, setResumeFile] = useState(null)
   const [photoFile, setPhotoFile] = useState(null)
+  const [analise, setAnalise] = useState(null)
+  const [analisando, setAnalisando] = useState(false)
+  const [erroAnalise, setErroAnalise] = useState('')
+  const envioEmCurso = useRef(false)
+  const assinaturaAnalise = JSON.stringify({ form, selectedSavedId, vaga })
+  const analiseAtual = Boolean(analise && analise.assinatura === assinaturaAnalise && analise.arquivo === resumeFile)
+
+  useEffect(() => {
+    if (!analise?.expiraEm) return
+    const id = analise.analiseId
+    const timer = window.setTimeout(() => {
+      setAnalise((atual) => atual?.analiseId === id ? { ...atual, expiraEm: 0, assinatura: '' } : atual)
+    }, Math.max(0, analise.expiraEm - Date.now()))
+    return () => window.clearTimeout(timer)
+  }, [analise])
+
+  const mensagemCompatibilidade = (error) => t(`referralCompatibility.errors.${error?.details?.motivo || 'generico'}`, {
+    defaultValue: t('referralCompatibility.errors.generico')
+  })
+
+  const handleAnalisar = async () => {
+    if (envioEmCurso.current || !vaga) return
+    envioEmCurso.current = true
+    setAnalisando(true)
+    setErroAnalise('')
+    setMessage('')
+    try {
+      const resposta = await analisarIndicacao({ dados: form, indicadorId, vagaId: vaga.id, candidatoPreSalvoId: selectedSavedId, arquivoCurriculo: resumeFile })
+      setAnalise({ ...resposta, assinatura: assinaturaAnalise, arquivo: resumeFile })
+    } catch (error) {
+      setAnalise(null)
+      setErroAnalise(mensagemCompatibilidade(error))
+    } finally {
+      envioEmCurso.current = false
+      setAnalisando(false)
+    }
+  }
 
   useEffect(() => {
     // Responsabilidade: buscar os dados da vaga selecionada antes de exibir o formulário.
@@ -620,12 +659,18 @@ function Indicar() {
   // Responsabilidade: enviar a indicação do candidato para o Firestore.
   const handleSubmit = async (event) => {
     event.preventDefault()
-    if (saving) return
+    if (envioEmCurso.current) return
+    if (!analiseAtual || !analise.resultado?.podeIndicar) {
+      setErroAnalise(t('referralCompatibility.states.aguardando'))
+      return
+    }
 
+    envioEmCurso.current = true
     setSaving(true)
     setMessage('')
 
     if (!vaga) {
+      envioEmCurso.current = false
       setSaving(false)
       setMessage(t('referral.jobMissingSubmit'))
       toast.warning(t('referral.jobMissingSubmit'))
@@ -638,8 +683,8 @@ function Indicar() {
         indicador,
         vaga,
         candidatoPreSalvoId: selectedSavedId,
-        arquivoCurriculo: resumeFile,
-        arquivoFoto: photoFile
+        arquivoFoto: photoFile,
+        analise
       })
       toast.success(t('referral.success'))
 
@@ -647,10 +692,15 @@ function Indicar() {
       navigate(`/vaga/${vagaId}`)
     } catch (error) {
       console.error('Falha ao finalizar a indicação:', error)
-      const errorMessage = error?.message || t('referral.submitError')
+      const errorMessage = error?.details?.motivo ? mensagemCompatibilidade(error) : error?.message || t('referral.submitError')
+      if (error?.details?.motivo === 'analise_desatualizada' || error?.details?.motivo === 'vaga_fechada') {
+        setAnalise(null)
+        setErroAnalise(errorMessage)
+      }
       setMessage(errorMessage)
       toast.error(errorMessage)
     } finally {
+      envioEmCurso.current = false
       setSaving(false)
     }
   }
@@ -684,6 +734,7 @@ function Indicar() {
             />
           ) : (
             <form className="indicar-form" onSubmit={handleSubmit}>
+              <fieldset disabled={saving} className="indicar-campos">
               <div className="indicar-main">
                 <section className="form-section">
                   <h2>{t('common:candidateForm.sections.personal')}</h2>
@@ -809,9 +860,12 @@ function Indicar() {
                   </div>
                 )}
 
+                <ValidacaoIndicacao analise={analise} atual={analiseAtual} analisando={analisando} erro={erroAnalise}
+                  onAnalisar={handleAnalisar} saving={saving} />
+
                 <div className="form-actions">
                   <button type="button" className="draft-button">{t('referral.draft')}</button>
-                  <button type="submit" className="submit-button" disabled={saving}>
+                  <button type="submit" className="submit-button" disabled={saving || analisando || !analiseAtual || !analise?.resultado?.podeIndicar || Boolean(erroAnalise)}>
                     {saving ? t('referral.finishing') : t('referral.finish')}
                   </button>
                 </div>
@@ -906,6 +960,7 @@ function Indicar() {
                   </>
                 )}
               </aside>
+              </fieldset>
             </form>
           )}
         </main>

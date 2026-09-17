@@ -260,6 +260,9 @@
     "close": "Close"
   },
   "candidateProfile": {
+    "referralCompatibility": "Compatibility at referral",
+    "referralCompatibilityScore": "{{nota}}% compatibility when the candidate was referred.",
+    "referralCompatibilityDescription": "The referral was authorized because compatibility exceeded 45%. This score is preserved after subsequent company assessments.",
     "notProvided": "Not provided",
     "datePending": "Date pending",
     "preSaved": "Pre-saved",

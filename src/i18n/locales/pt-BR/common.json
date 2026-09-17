@@ -260,6 +260,9 @@
     "close": "Fechar"
   },
   "candidateProfile": {
+    "referralCompatibility": "Compatibilidade na indicação",
+    "referralCompatibilityScore": "{{nota}}% de compatibilidade no momento da indicação.",
+    "referralCompatibilityDescription": "O envio foi autorizado por superar 45%. Essa nota permanece registrada mesmo após novas avaliações da empresa.",
     "notProvided": "Não informado",
     "datePending": "Data pendente",
     "preSaved": "Pré-salvo",

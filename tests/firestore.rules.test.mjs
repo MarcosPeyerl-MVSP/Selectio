@@ -100,7 +100,29 @@ test('vagas continuam publicas para leitura', async () => {
   await assertSucceeds(getDoc(doc(db, 'vagas', 'vaga-1')))
 })
 
-test('indicador cria candidato, indicacao e historico no mesmo batch', async () => {
+test('nota forjada nao autoriza escrita e snapshots de elegibilidade sao imutaveis', async () => {
+  await criarProcessoSeletivo()
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'analisesIndicacao', 'analise-1'), {
+      indicadorId: 'indicador-1', empresaId: 'empresa-1', nota: 50
+    })
+    await updateDoc(doc(context.firestore(), 'candidatos', 'candidato-1'), { compatibilidadeIndicacao: { nota: 50 } })
+  })
+  for (const uid of ['indicador-1', 'empresa-1', 'admin-1']) {
+    const db = testEnv.authenticatedContext(uid).firestore()
+    await assertFails(setDoc(doc(db, 'candidatos', 'forjado'), candidatoPayload({ compatibilidadeIndicacao: { nota: 100, podeIndicar: true } })))
+    await assertFails(setDoc(doc(db, 'indicacoes', 'forjada'), indicacaoPayload({ candidatoId: 'candidato-1', nota: 100 })))
+    await assertFails(setDoc(doc(db, 'validacoesIndicacao', 'forjada'), { indicadorId: uid, resultado: { notaPrecisa: 100 } }))
+    await assertFails(updateDoc(doc(db, 'candidatos', 'candidato-1'), { compatibilidadeIndicacao: { nota: 100 } }))
+    await assertFails(updateDoc(doc(db, 'analisesIndicacao', 'analise-1'), { nota: 100 }))
+    await assertFails(deleteDoc(doc(db, 'analisesIndicacao', 'analise-1')))
+  }
+  await assertSucceeds(getDoc(doc(testEnv.authenticatedContext('indicador-1').firestore(), 'analisesIndicacao', 'analise-1')))
+  await assertSucceeds(getDoc(doc(testEnv.authenticatedContext('empresa-1').firestore(), 'analisesIndicacao', 'analise-1')))
+  await assertFails(getDoc(doc(testEnv.authenticatedContext('indicador-2').firestore(), 'analisesIndicacao', 'analise-1')))
+})
+
+test('cliente nao cria candidato, indicacao e historico diretamente', async () => {
   const db = testEnv.authenticatedContext('indicador-1').firestore()
   const candidatoRef = doc(db, 'candidatos', 'candidato-batch')
   const indicacaoRef = doc(db, 'indicacoes', 'indicacao-batch')
@@ -111,10 +133,10 @@ test('indicador cria candidato, indicacao e historico no mesmo batch', async () 
   batch.set(indicacaoRef, indicacaoPayload())
   batch.set(historicoRef, historicoPayload())
 
-  await assertSucceeds(batch.commit())
-  await assertSucceeds(getDoc(candidatoRef))
-  await assertSucceeds(getDoc(indicacaoRef))
-  await assertSucceeds(getDoc(historicoRef))
+  await assertFails(batch.commit())
+  await assertFails(getDoc(candidatoRef))
+  await assertFails(getDoc(indicacaoRef))
+  await assertFails(getDoc(historicoRef))
 })
 
 test('criacao da indicacao falha quando o candidato nao faz parte do batch', async () => {
@@ -250,59 +272,14 @@ test('snapshot de candidato pre-salvo exige indicacao canonica no mesmo batch', 
   ))
 })
 
-test('mesmo candidato pre-salvo nao pode ser indicado duas vezes para a mesma vaga', async () => {
-  await criarCandidatoPreSalvoComRegras('pre-salvo-unico')
-  await assertSucceeds(criarIndicacaoPreSalvaBatch({
-    candidatoId: 'candidato-pre-salvo-1',
-    candidatoPreSalvoId: 'pre-salvo-unico',
-    historicoId: 'historico-pre-salvo-1',
-    indicacaoId: 'indicador-1__vaga-1__pre-salvo-unico'
-  }).commit())
-
-  await assertFails(criarIndicacaoPreSalvaBatch({
-    candidatoId: 'candidato-pre-salvo-duplicado',
-    candidatoPreSalvoId: 'pre-salvo-unico',
-    historicoId: 'historico-pre-salvo-duplicado',
-    indicacaoId: 'indicador-1__vaga-1__pre-salvo-unico'
-  }).commit())
-
-  await testEnv.withSecurityRulesDisabled(async (context) => {
-    const snapshot = await getDoc(doc(
-      context.firestore(),
-      'candidatos',
-      'candidato-pre-salvo-duplicado'
-    ))
-    assert.equal(snapshot.exists(), false)
-  })
-})
-
-test('mesmo candidato pre-salvo pode ser indicado para vagas diferentes', async () => {
-  await criarCandidatoPreSalvoComRegras('pre-salvo-multivaga')
-
-  await assertSucceeds(criarIndicacaoPreSalvaBatch({
-    candidatoId: 'candidato-multivaga-1',
-    candidatoPreSalvoId: 'pre-salvo-multivaga',
-    historicoId: 'historico-multivaga-1',
-    indicacaoId: 'indicador-1__vaga-1__pre-salvo-multivaga'
-  }).commit())
-  await assertSucceeds(criarIndicacaoPreSalvaBatch({
-    candidatoId: 'candidato-multivaga-2',
-    candidatoPreSalvoId: 'pre-salvo-multivaga',
-    historicoId: 'historico-multivaga-2',
-    indicacaoId: 'indicador-1__vaga-2__pre-salvo-multivaga',
-    vagaId: 'vaga-2',
-    vagaTitulo: 'Desenvolvedor Front-end'
-  }).commit())
-})
-
 test('indicacao mantem master privado e libera apenas snapshot para empresa', async () => {
   await criarCandidatoPreSalvoComRegras('pre-salvo-snapshot')
-  await assertSucceeds(criarIndicacaoPreSalvaBatch({
+  await criarSnapshotServidor({
     candidatoId: 'candidato-snapshot',
     candidatoPreSalvoId: 'pre-salvo-snapshot',
     historicoId: 'historico-snapshot',
     indicacaoId: 'indicador-1__vaga-1__pre-salvo-snapshot'
-  }).commit())
+  })
 
   const indicadorDb = testEnv.authenticatedContext('indicador-1').firestore()
   const empresaDb = testEnv.authenticatedContext('empresa-1').firestore()
@@ -777,7 +754,7 @@ async function criarCandidatoPreSalvoComRegras(candidatoId) {
   )
 }
 
-function criarIndicacaoPreSalvaBatch({
+async function criarSnapshotServidor({
   candidatoId,
   candidatoPreSalvoId,
   historicoId,
@@ -785,23 +762,25 @@ function criarIndicacaoPreSalvaBatch({
   vagaId = 'vaga-1',
   vagaTitulo = 'Desenvolvedor'
 }) {
-  const db = testEnv.authenticatedContext('indicador-1').firestore()
-  const batch = writeBatch(db)
+  return testEnv.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore()
+    const batch = writeBatch(db)
 
-  batch.set(
-    doc(db, 'candidatos', candidatoId),
-    candidatoPayload({ candidatoPreSalvoId, vagaId })
-  )
-  batch.set(
-    doc(db, 'indicacoes', indicacaoId),
-    indicacaoPayload({ candidatoId, candidatoPreSalvoId, vagaId })
-  )
-  batch.set(
-    doc(db, 'historicoProcesso', historicoId),
-    historicoPayload({ candidatoId, vagaId, vagaTitulo })
-  )
+    batch.set(
+      doc(db, 'candidatos', candidatoId),
+      candidatoPayload({ candidatoPreSalvoId, vagaId })
+    )
+    batch.set(
+      doc(db, 'indicacoes', indicacaoId),
+      indicacaoPayload({ candidatoId, candidatoPreSalvoId, vagaId })
+    )
+    batch.set(
+      doc(db, 'historicoProcesso', historicoId),
+      historicoPayload({ candidatoId, vagaId, vagaTitulo })
+    )
 
-  return batch
+    await batch.commit()
+  })
 }
 
 function candidatoPreSalvoPayload(overrides = {}) {

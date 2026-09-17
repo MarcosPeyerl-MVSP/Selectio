@@ -1,4 +1,35 @@
 {
+  "referralCompatibility": {
+    "title": "Job compatibility",
+    "rule": "Compatibility must exceed 45% to refer a candidate. The analysis considers professional information and the available resume.",
+    "details": "View criteria and evidence",
+    "analyze": "Analyze compatibility",
+    "reanalyze": "Analyze again",
+    "analyzing": "Analyzing compatibility…",
+    "review": "Alerts remain available for company review and do not prevent a referral when the score exceeds 45%.",
+    "states": {
+      "aguardando": "Analyze compatibility before completing the referral.",
+      "analisando": "Please wait while the candidate information and resume are analyzed.",
+      "compativel": "Compatibility: {{nota}}%. This candidate can be referred to the job.",
+      "compatibilidade_insuficiente": "Compatibility: {{nota}}%. Compatibility must exceed 45% to refer this candidate.",
+      "vaga_sem_criterios": "This job does not have enough information to assess compatibility. Referrals will be available once the requirements are completed.",
+      "candidato_sem_dados": "There is not enough evidence to assess this candidate. Complete the skills, experience, education and other information relevant to the job requirements.",
+      "analise_desatualizada": "The information used for the analysis has changed. Analyze again to continue.",
+      "erro": "The analysis could not be completed. Please try again."
+    },
+    "errors": {
+      "generico": "The compatibility analysis could not be completed. Check your connection and try again before submitting the referral.",
+      "campos_obrigatorios": "Enter the candidate's name and a valid email before analyzing.",
+      "dados_invalidos": "Review the candidate information. Each field accepts up to 5,000 characters and each list up to 100 skills of 200 characters.",
+      "sessao_expirada": "Your session has expired. Sign in again to continue.",
+      "acesso_negado": "You do not have access to this candidate or file.",
+      "vaga_fechada": "This job is not accepting new referrals.",
+      "analise_desatualizada": "The analysis expired or the candidate, resume or job information changed. Analyze again.",
+      "curriculo_invalido": "Use a PDF with selectable text or a DOCX resume, up to 10 MB and 50 pages. DOC files must be converted.",
+      "extracao_falhou": "The resume could not be read. Upload a PDF with selectable text or DOCX and analyze again.",
+      "indicacao_duplicada": "This candidate has already been referred to this job."
+    }
+  },
   "panel": {
     "eyebrow": "WELCOME - Main dashboard",
     "greeting": "Welcome,",

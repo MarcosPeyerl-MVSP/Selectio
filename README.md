@@ -33,6 +33,7 @@ O projeto combina uma aplicação React/Vite com Firebase Authentication, Firest
 - Pipeline de candidatos com status como indicado, entrevista, contratado, recusado e cancelado.
 - Agendamento e acompanhamento de entrevistas com histórico e notificações.
 - Ranking de compatibilidade por vaga, com rubrica ponderada, evidências, alertas e revisão humana.
+- Validação obrigatória antes da indicação, com compatibilidade superior a 45% e autorização no servidor. [Funcionamento, testes e publicação](docs/validacao-indicacao.md).
 - Extração de currículo no navegador para PDF e DOCX, com OCR para PDFs pouco textuais quando suportado pelo navegador.
 - Integração com Mercado Pago para pagamento de recompensas, webhook assinado e registro de transações.
 - Painel administrativo para visão geral, empresas, indicadores, vagas, candidatos e financeiro em modo de leitura.
@@ -116,7 +117,7 @@ Selectio/
 - Rotas protegidas validam sessão e tipo de perfil antes de liberar cada painel.
 - Operações financeiras não são gravadas diretamente pelo cliente. Elas passam por `mercadoPagoApi`, uma Cloud Function v2 na região `southamerica-east1`.
 - Regras de Firestore e Storage limitam leitura e escrita por papel, propriedade do registro e formato do payload.
-- Análises de compatibilidade são calculadas no navegador, em Web Worker, e salvas em `analisesCompatibilidade` pela empresa dona da vaga.
+- As análises do ranking são calculadas no navegador, em Web Worker, e salvas em `analisesCompatibilidade` pela empresa dona da vaga. A validação prévia à indicação é calculada no servidor e preservada separadamente em `analisesIndicacao`.
 
 ### Coleções Principais
 
@@ -335,9 +336,16 @@ Publique as regras do Storage:
 npm run storage:deploy
 ```
 
-O `firebase.json` atual configura Functions, Firestore, Storage e emuladores. Ele ainda não define uma seção de Hosting para o frontend.
+O `firebase.json` configura Functions, Firestore, Storage, emuladores e Firebase Hosting. O frontend usa o site `selectio-1f022`, em https://selectio-1f022.web.app, com fallback das rotas para `index.html`.
 
-TODO: definir oficialmente o destino de deploy da aplicação web, como Firebase Hosting, Vercel, Netlify ou outro provedor estático.
+Para publicar o frontend, gere o build com a configuração Firebase de produção e execute:
+
+```powershell
+npm run build
+npx firebase deploy --only hosting --project selectio-1f022
+```
+
+Para publicar a validação de indicações, siga a [ordem de publicação das funções, regras e frontend](docs/validacao-indicacao.md#publicação).
 
 ## Mercado Pago
 
@@ -404,7 +412,6 @@ Fluxo sugerido:
 
 - TODO: definir licença pública ou política interna de uso.
 - TODO: criar `.env.example` sem valores sensíveis.
-- TODO: formalizar o deploy do frontend no `firebase.json` ou no provedor escolhido.
 - TODO: adicionar pipeline de CI para lint, build, testes de regras e scanner de segredos.
 - TODO: documentar matriz completa de permissões por papel.
 - TODO: expandir configurações administrativas globais, atualmente sinalizadas como recurso futuro.

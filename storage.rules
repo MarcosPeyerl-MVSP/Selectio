@@ -33,7 +33,7 @@ service firebase.storage {
         && request.resource.metadata.tipoRegistro == tipoRegistro
         && request.resource.metadata.registroId == registroId
         && (
-          tipoRegistro == 'pre-salvos'
+          tipoRegistro in ['pre-salvos', 'temporarios']
           || (
             request.resource.metadata.empresaId is string
             && request.resource.metadata.empresaId.size() > 0
@@ -56,6 +56,8 @@ service firebase.storage {
           && resource.metadata.registroId == candidatoId
           && resource.metadata.tipoRegistro == 'candidatos'
           && resource.metadata.empresaId == request.auth.uid
+          && firestore.exists(/databases/(default)/documents/candidatos/$(candidatoId))
+          && firestore.get(/databases/(default)/documents/candidatos/$(candidatoId)).data.empresaId == request.auth.uid
         )
         || isAdmin();
     }
@@ -69,9 +71,14 @@ service firebase.storage {
 
     match /curriculos/{indicadorId}/candidatos/{candidatoId}/{arquivoId} {
       allow read: if canReadCandidate(indicadorId, candidatoId);
-      allow create, update: if isOwner(indicadorId)
-        && validResume(indicadorId, 'candidatos', candidatoId);
-      allow delete: if isOwner(indicadorId);
+      // O servidor preserva o arquivo efetivamente avaliado na indicação.
+      allow write: if false;
+    }
+
+    match /curriculos/{indicadorId}/temporarios/{registroId}/{arquivoId} {
+      allow read, delete: if isOwner(indicadorId);
+      allow create: if resource == null && isOwner(indicadorId) && validResume(indicadorId, 'temporarios', registroId);
+      allow update: if false;
     }
 
     match /fotos-perfil/usuarios/{uid}/{arquivoId} {
@@ -101,6 +108,8 @@ service firebase.storage {
           && resource.metadata.candidatoId == candidatoId
           && resource.metadata.tipoRegistro == 'indicados'
           && resource.metadata.empresaId == request.auth.uid
+          && firestore.exists(/databases/(default)/documents/candidatos/$(candidatoId))
+          && firestore.get(/databases/(default)/documents/candidatos/$(candidatoId)).data.empresaId == request.auth.uid
         )
         || isAdmin();
       allow create, update: if isOwner(indicadorId)

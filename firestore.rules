@@ -979,16 +979,8 @@ service cloud.firestore {
     }
 
     match /candidatos/{candidatoId} {
-      allow create: if isIndicador()
-        && request.resource.data.indicadorId == request.auth.uid
-        && (!('indicadorUid' in request.resource.data)
-          || request.resource.data.indicadorUid == request.auth.uid)
-        && (!('empresaUid' in request.resource.data)
-          || request.resource.data.empresaUid == request.resource.data.empresaId)
-        && request.resource.data.status == 'indicado'
-        && preSavedCandidateReferenceMatchesOwner(request.resource.data)
-        && candidateHasCanonicalPreSavedIndication(candidatoId, request.resource.data)
-        && vagaAceitaIndicacoes(request.resource.data);
+      // Criacao exclusivamente pela Cloud Function.
+      allow create: if false;
 
       allow read: if isEmpresaOrIndicadorOwner(resource.data);
 
@@ -1018,17 +1010,8 @@ service cloud.firestore {
     }
 
     match /indicacoes/{indicacaoId} {
-      allow create: if isIndicador()
-        && request.resource.data.indicadorId == request.auth.uid
-        && (!('indicadorUid' in request.resource.data)
-          || request.resource.data.indicadorUid == request.auth.uid)
-        && (!('empresaUid' in request.resource.data)
-          || request.resource.data.empresaUid == request.resource.data.empresaId)
-        && request.resource.data.status == 'indicado'
-        && vagaAceitaIndicacoes(request.resource.data)
-        && referencedCandidateMatches(request.resource.data)
-        && indicationPreSavedReferenceMatchesCandidate(request.resource.data)
-        && canonicalPreSavedIndicationId(indicacaoId, request.resource.data);
+      // Criacao exclusivamente pela Cloud Function.
+      allow create: if false;
 
       allow read: if isEmpresaOrIndicadorOwner(resource.data);
 
@@ -1058,8 +1041,21 @@ service cloud.firestore {
 
     match /historicoProcesso/{eventoId} {
       allow read: if historyCanBeRead(resource.data);
-      allow create: if historyCreateAllowed();
+      allow create: if request.resource.data.tipo != 'indicacao_criada' && historyCreateAllowed();
       allow update, delete: if false;
+    }
+
+    match /analisesIndicacao/{analiseId} {
+      allow read: if isEmpresaOrIndicadorOwner(resource.data);
+      allow write: if false;
+    }
+
+    match /validacoesIndicacao/{analiseId} {
+      allow read, write: if false;
+    }
+
+    match /indicacoesUnicas/{chave} {
+      allow read, write: if false;
     }
 
     match /analisesCompatibilidade/{analiseId} {

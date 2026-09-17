@@ -24,7 +24,7 @@ import EstadoDados from './EstadoDados'
 import PageLoader from './PageLoader'
 import AvatarProtegido from './AvatarProtegido'
 import { listarHistoricoCandidato } from '../../services/firestoreHistorico'
-import { formatDate as formatLocalizedDate } from '../../i18n/formatters'
+import { formatDate as formatLocalizedDate, formatNumber } from '../../i18n/formatters'
 import { baixarCurriculoProtegido } from '../../services/storageCurriculos'
 import {
   atualizarFotoCandidatoIndicado,
@@ -272,6 +272,16 @@ function ModalPerfilCandidato({
               loading={loadingStatus}
               onChangeStatus={onChangeStatus}
             />
+          </section>
+        )}
+
+        {!isPreSalvo && Number.isFinite(candidato.compatibilidadeIndicacao?.nota) && (
+          <section className="candidate-profile-section">
+            <h3>{t('candidateProfile.referralCompatibility')}</h3>
+            <p>{t('candidateProfile.referralCompatibilityScore', {
+              nota: formatNumber(candidato.compatibilidadeIndicacao.nota, { maximumFractionDigits: 12 })
+            })}</p>
+            <p>{t('candidateProfile.referralCompatibilityDescription')}</p>
           </section>
         )}
 

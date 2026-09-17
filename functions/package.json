@@ -14,7 +14,9 @@
   },
   "dependencies": {
     "firebase-admin": "^14.2.0",
-    "firebase-functions": "^7.3.2"
+    "firebase-functions": "^7.3.2",
+    "mammoth": "^1.12.1",
+    "pdfjs-dist": "^6.2.108"
   },
   "overrides": {
     "gaxios": {

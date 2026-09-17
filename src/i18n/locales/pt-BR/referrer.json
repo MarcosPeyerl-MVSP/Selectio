@@ -1,4 +1,35 @@
 {
+  "referralCompatibility": {
+    "title": "Compatibilidade com a vaga",
+    "rule": "Para indicar, a compatibilidade precisa ser superior a 45%. A análise considera os dados profissionais e o currículo disponível.",
+    "details": "Ver critérios e evidências",
+    "analyze": "Analisar compatibilidade",
+    "reanalyze": "Analisar novamente",
+    "analyzing": "Analisando compatibilidade…",
+    "review": "Os alertas ficam disponíveis para revisão da empresa e não impedem a indicação quando a nota supera 45%.",
+    "states": {
+      "aguardando": "Analise a compatibilidade antes de finalizar a indicação.",
+      "analisando": "Aguarde enquanto os dados e o currículo são analisados.",
+      "compativel": "Compatibilidade de {{nota}}%. Este candidato pode ser indicado para a vaga.",
+      "compatibilidade_insuficiente": "Compatibilidade de {{nota}}%. Para indicar este candidato, a compatibilidade precisa ser superior a 45%.",
+      "vaga_sem_criterios": "Esta vaga ainda não possui informações suficientes para avaliar a compatibilidade. A indicação ficará disponível quando os requisitos forem completados.",
+      "candidato_sem_dados": "Não há evidências suficientes para avaliar o candidato. Complete as habilidades, a experiência, a formação e os demais dados relevantes aos requisitos da vaga.",
+      "analise_desatualizada": "Os dados utilizados na análise foram alterados. Analise novamente para continuar.",
+      "erro": "Não foi possível concluir a análise. Tente novamente."
+    },
+    "errors": {
+      "generico": "Não foi possível concluir a análise de compatibilidade. Verifique a conexão e tente novamente antes de enviar a indicação.",
+      "campos_obrigatorios": "Informe o nome e um e-mail válido do candidato antes de analisar.",
+      "dados_invalidos": "Revise os dados do candidato. Cada campo aceita até 5.000 caracteres e cada lista até 100 habilidades de 200 caracteres.",
+      "sessao_expirada": "Sua sessão expirou. Entre novamente para continuar.",
+      "acesso_negado": "Você não tem acesso a este candidato ou arquivo.",
+      "vaga_fechada": "Esta vaga não está aberta para novas indicações.",
+      "analise_desatualizada": "A análise expirou ou os dados do candidato, currículo ou vaga foram alterados. Analise novamente.",
+      "curriculo_invalido": "Use um currículo PDF com texto selecionável ou DOCX, com até 10 MB e 50 páginas. Arquivos DOC precisam ser convertidos.",
+      "extracao_falhou": "Não foi possível ler o currículo. Envie um PDF com texto selecionável ou DOCX e analise novamente.",
+      "indicacao_duplicada": "Este candidato já foi indicado para esta vaga."
+    }
+  },
   "panel": {
     "eyebrow": "BOAS-VINDAS - Painel central",
     "greeting": "Bem-vindo,",

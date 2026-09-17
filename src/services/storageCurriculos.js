@@ -68,7 +68,7 @@ const novoArquivoId = () => (
 )
 
 const caminhoCurriculo = ({ indicadorId, registroId, tipoRegistro, extensao }) => {
-  if (!indicadorId || !registroId || !['pre-salvos', 'candidatos'].includes(tipoRegistro)) {
+  if (!indicadorId || !registroId || !['pre-salvos', 'candidatos', 'temporarios'].includes(tipoRegistro)) {
     throw new Error('Nao foi possivel identificar o proprietario do curriculo.')
   }
 
