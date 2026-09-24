@@ -1,36 +1,38 @@
 import './GuidedTour.css'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 
 const cardWidth = 340
 const padding = 18
 
-function GuidedTour({ steps = [], storageKey, active = true, onFinish }) {
+function GuidedTour(props) {
+  return props.active === false ? null : <GuidedTourContent key={props.storageKey} {...props} />
+}
+
+function GuidedTourContent({ steps = [], storageKey, active = true, onFinish }) {
   const { t } = useTranslation('common')
   const [currentIndex, setCurrentIndex] = useState(0)
   const [targetRect, setTargetRect] = useState(null)
   const [cardStyle, setCardStyle] = useState({})
-  const currentStep = steps[currentIndex]
+  const cardRef = useRef(null)
+  const finishedRef = useRef(false)
 
   const visibleSteps = useMemo(() => steps.filter(Boolean), [steps])
+  const currentStep = visibleSteps[currentIndex]
 
   const finish = useCallback(() => {
+    if (finishedRef.current) return
+    finishedRef.current = true
     onFinish?.()
   }, [onFinish])
 
-  const goNextMissingTarget = useCallback(() => {
-    setTargetRect(null)
-
-    setCurrentIndex((index) => {
-      if (index >= visibleSteps.length - 1) {
-        window.setTimeout(finish, 0)
-        return index
-      }
-
-      return index + 1
-    })
-  }, [finish, visibleSteps.length])
+  useEffect(() => {
+    const previous = document.activeElement
+    cardRef.current?.focus()
+    return () => { if (previous?.isConnected) previous.focus() }
+  }, [])
 
   useEffect(() => {
     if (!active || !currentStep) return undefined
@@ -47,7 +49,8 @@ function GuidedTour({ steps = [], storageKey, active = true, onFinish }) {
       const element = document.querySelector(currentStep.selector)
 
       if (!element) {
-        goNextMissingTarget()
+        setTargetRect(null)
+        setCardStyle(getCenteredCardPosition())
         return
       }
 
@@ -61,6 +64,11 @@ function GuidedTour({ steps = [], storageKey, active = true, onFinish }) {
 
       rafId = window.requestAnimationFrame(() => {
         const rect = element.getBoundingClientRect()
+        if (!rect.width || !rect.height) {
+          setTargetRect(null)
+          setCardStyle(getCenteredCardPosition())
+          return
+        }
         const viewportWidth = window.innerWidth
         const viewportHeight = window.innerHeight
         const nextRect = {
@@ -78,16 +86,19 @@ function GuidedTour({ steps = [], storageKey, active = true, onFinish }) {
     const handleViewportChange = () => updatePosition()
 
     const timeoutId = window.setTimeout(() => updatePosition({ shouldScroll: true }), 0)
+    const observer = new MutationObserver(handleViewportChange)
+    observer.observe(document.getElementById('root') || document.body, { childList: true, subtree: true })
     window.addEventListener('resize', handleViewportChange)
     window.addEventListener('scroll', handleViewportChange, true)
 
     return () => {
       window.clearTimeout(timeoutId)
+      observer.disconnect()
       window.cancelAnimationFrame(rafId)
       window.removeEventListener('resize', handleViewportChange)
       window.removeEventListener('scroll', handleViewportChange, true)
     }
-  }, [active, currentIndex, currentStep, goNextMissingTarget])
+  }, [active, currentIndex, currentStep])
 
   if (!active || !visibleSteps.length || !currentStep) return null
 
@@ -107,7 +118,25 @@ function GuidedTour({ steps = [], storageKey, active = true, onFinish }) {
     setCurrentIndex((index) => Math.min(index + 1, visibleSteps.length - 1))
   }
 
-  return (
+  const handleKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      finish()
+    }
+    if (event.key !== 'Tab') return
+    const buttons = cardRef.current.querySelectorAll('button:not(:disabled)')
+    const first = buttons[0]
+    const last = buttons[buttons.length - 1]
+    if (event.shiftKey && (document.activeElement === first || document.activeElement === cardRef.current)) {
+      event.preventDefault()
+      last?.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first?.focus()
+    }
+  }
+
+  return createPortal(
     <div className="guided-tour" data-tour-key={storageKey} role="dialog" aria-modal="true" aria-labelledby="guided-tour-title">
       {targetRect ? (
         <div
@@ -123,7 +152,7 @@ function GuidedTour({ steps = [], storageKey, active = true, onFinish }) {
         <div className="guided-tour-scrim" />
       )}
 
-      <section className="guided-tour-card" style={cardStyle}>
+      <section ref={cardRef} tabIndex={-1} onKeyDown={handleKeyDown} className="guided-tour-card" style={cardStyle}>
         <span className="guided-tour-progress">
           {t('guidedTour.progress', { current: currentIndex + 1, total: visibleSteps.length })}
         </span>
@@ -145,7 +174,7 @@ function GuidedTour({ steps = [], storageKey, active = true, onFinish }) {
           </div>
         </div>
       </section>
-    </div>
+    </div>, document.body
   )
 }
 

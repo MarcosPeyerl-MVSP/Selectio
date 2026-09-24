@@ -48,6 +48,8 @@
       "settings": { "title": "Configurações", "description": "Gerencie sua conta, preferências de acesso e opções de segurança.", "action": "Configurar conta" }
     },
     "tour": {
+      "welcomeTitle": "Conheça seu painel de indicador",
+      "welcomeDescription": "Aqui você encontra vagas, cadastra candidatos e acompanha suas indicações. Vamos conhecer os principais atalhos.",
       "performanceTitle": "Seu desempenho em um só lugar",
       "performanceDescription": "Este painel reúne indicações, conversões, contratações e recompensas.",
       "menuTitle": "Menu lateral",

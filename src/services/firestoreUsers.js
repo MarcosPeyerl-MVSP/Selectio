@@ -1,5 +1,6 @@
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { db } from './firebase'
+import { mesclarEstadoOnboarding } from '../utils/onboarding'
 import { enviarFotoPerfilUsuario, removerFotoPerfil } from './storageFotosPerfil'
 
 const collectionsByTipo = {
@@ -186,6 +187,7 @@ export const buscarPerfilUsuario = async (uid) => {
   return {
     ...userData,
     ...perfilData,
+    ...mesclarEstadoOnboarding(userData, perfilData),
     id: perfilData.id || uid,
     uid,
     firebaseUid: uid,

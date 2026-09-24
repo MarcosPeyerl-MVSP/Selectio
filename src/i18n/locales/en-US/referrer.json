@@ -48,6 +48,8 @@
       "settings": { "title": "Settings", "description": "Manage your account, access preferences, and security options.", "action": "Configure account" }
     },
     "tour": {
+      "welcomeTitle": "Explore your referrer dashboard",
+      "welcomeDescription": "Find jobs, register candidates, and track your referrals here. Let's explore the main shortcuts.",
       "performanceTitle": "Your performance in one place",
       "performanceDescription": "This dashboard brings together referrals, conversions, hires, and rewards.",
       "menuTitle": "Side menu",

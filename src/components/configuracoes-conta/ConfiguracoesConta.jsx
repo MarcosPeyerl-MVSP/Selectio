@@ -35,6 +35,7 @@ import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { atualizarPerfilUsuario, definirTourUsuarioConcluido } from '../../services/firestoreUsers'
 import { useConfirmacao } from '../../hooks/useConfirmacao'
 import { useToast } from '../../hooks/useToast'
+import { useAuth } from '../../hooks/useAuth'
 
 const googleProviderId = 'google.com'
 const passwordProviderId = 'password'
@@ -84,6 +85,7 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
   const { t } = useTranslation(['common', 'auth'])
   const navigate = useNavigate()
   const toast = useToast()
+  const { adotarPerfil } = useAuth()
   const confirm = useConfirmacao()
   const [firebaseUser, setFirebaseUser] = useState(() => snapshotFirebaseUser(auth.currentUser))
   const [authReady, setAuthReady] = useState(false)
@@ -132,7 +134,7 @@ function ConfiguracoesConta({ user, tipo, onUserUpdate }) {
       }
     }
 
-    localStorage.setItem(storageKey, JSON.stringify(updatedUser))
+    adotarPerfil(updatedUser)
     onUserUpdate?.(updatedUser)
 
     try {

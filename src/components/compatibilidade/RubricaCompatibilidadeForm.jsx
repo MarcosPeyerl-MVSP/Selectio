@@ -29,10 +29,14 @@ function RubricaCompatibilidadeForm({ rubrica, onChange }) {
   }
 
   return (
-    <section className="vaga-step compatibilidade-rubrica-form">
+    <details className="vaga-step compatibilidade-rubrica-form">
+      <summary className="compatibilidade-rubrica-toggle">
+        <span>{t('compatibilityRubric.title')}</span>
+        <span className="compatibilidade-rubrica-chevron" aria-hidden="true" />
+      </summary>
+      <div className="compatibilidade-rubrica-content">
       <div className="step-header">
         <div>
-          <h2>{t('compatibilityRubric.title')}</h2>
           <p>{t('compatibilityRubric.description')}</p>
         </div>
         <label className="compatibilidade-switch">
@@ -159,7 +163,8 @@ function RubricaCompatibilidadeForm({ rubrica, onChange }) {
           <p className="compatibilidade-human-review">{t('compatibilityRubric.humanReview')}</p>
         </>
       )}
-    </section>
+      </div>
+    </details>
   )
 }
 

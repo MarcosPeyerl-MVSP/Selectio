@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   z-index: 1000;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .guided-tour-scrim,
@@ -36,6 +36,8 @@
   color: var(--text);
   box-shadow: var(--shadow);
   animation: selectioSlideUp 0.24s var(--ease-premium) both;
+  max-height: calc(100dvh - 36px);
+  overflow-y: auto;
 }
 
 .guided-tour-progress {

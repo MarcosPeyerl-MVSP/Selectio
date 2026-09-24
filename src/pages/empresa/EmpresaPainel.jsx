@@ -21,6 +21,8 @@ import DashboardActionCard from '../../components/dashboard/DashboardActionCard'
 import DashboardHeader from '../../components/dashboard/DashboardHeader'
 import DashboardLayout from '../../components/dashboard/DashboardLayout'
 import GuidedTour from '../../components/onboarding/GuidedTour'
+import { useAuth } from '../../hooks/useAuth'
+import { useToast } from '../../hooks/useToast'
 import PageLoader from '../../components/ui/PageLoader'
 import EmpresaEntrevistas from './EmpresaEntrevistas'
 import { EmpresaFluxoEmpresarial, EmpresaSetoresEmpresariais } from './EmpresaModoEmpresarial'
@@ -205,6 +207,8 @@ const getEmpresaTourSteps = (t) => [
 
 function PainelEmpresa() {
   const { t } = useTranslation(['company', 'auth'])
+  const { adotarPerfil } = useAuth()
+  const toast = useToast()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const activeSection = searchParams.get('secao') || 'dashboard'
@@ -290,13 +294,11 @@ function PainelEmpresa() {
       }
     }
 
-    setEmpresa((empresaAtual) => {
-      const merged = { ...empresaAtual, ...atualizacao }
-      localStorage.setItem('empresaUser', JSON.stringify(merged))
-      return merged
-    })
-
-    await marcarTourUsuarioConcluido({ uid: empresaUid, tipo: 'empresa' }).catch(() => {})
+    const updated = { ...empresa, ...atualizacao }
+    setEmpresa(updated)
+    adotarPerfil(updated)
+    try { await marcarTourUsuarioConcluido({ uid: empresaUid, tipo: 'empresa' }) }
+    catch { toast.warning(t('common:accountSettings.tourSessionOnly')) }
   }
 
   return (

@@ -7,48 +7,13 @@ import { useTranslation } from 'react-i18next'
 
 import ConfiguracoesConta from '../../components/configuracoes-conta/ConfiguracoesConta'
 import DashboardLayout from '../../components/dashboard/DashboardLayout'
-import GuidedTour from '../../components/onboarding/GuidedTour'
 import PageLoader from '../../components/ui/PageLoader'
-import { buscarPerfilUsuario, marcarTourUsuarioConcluido } from '../../services/firestoreUsers'
+import { buscarPerfilUsuario } from '../../services/firestoreUsers'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import IndicadorFinanceiro from './IndicadorFinanceiro'
 import IndicadorPerfil from './IndicadorPerfil'
 
 const IndicadorDashboard = lazy(() => import('./IndicadorDashboard'))
-
-const getIndicadorTourSteps = (t) => [
-  {
-    title: t('panel.tour.performanceTitle'),
-    description: t('panel.tour.performanceDescription'),
-  },
-  {
-    selector: '[data-tour="indicador-sidebar"]',
-    align: 'start',
-    title: t('panel.tour.menuTitle'),
-    description: t('panel.tour.menuDescription'),
-  },
-  {
-    selector: '[data-tour="indicador-dashboard-metricas"]',
-    title: t('panel.tour.metricsTitle'),
-    description: t('panel.tour.metricsDescription'),
-  },
-  {
-    selector: '[data-tour="indicador-dashboard-recentes"]',
-    title: t('panel.tour.pipelineTitle'),
-    description: t('panel.tour.pipelineDescription'),
-  },
-  {
-    selector: '[data-tour="indicador-dashboard-grafico"]',
-    title: t('panel.tour.financeTitle'),
-    description: t('panel.tour.financeDescription'),
-  },
-  {
-    selector: '[data-tour="navbar-account-actions"]',
-    scroll: false,
-    title: t('panel.tour.accountTitle'),
-    description: t('panel.tour.accountDescription'),
-  },
-]
 
 function Painel() {
   const { t } = useTranslation('referrer')
@@ -110,31 +75,6 @@ function Painel() {
     return <PageLoader label={t('panel.loading')} />
   }
 
-  const tourConcluido = Boolean(
-    user.tourIndicadorConcluido || user.onboardingTour?.indicadorConcluido,
-  )
-
-  const concluirTour = async () => {
-    const atualizacao = {
-      tourIndicadorConcluido: true,
-      onboardingTour: {
-        ...(user.onboardingTour || {}),
-        indicadorConcluido: true,
-      },
-    }
-
-    setUser((usuarioAtual) => {
-      const merged = { ...usuarioAtual, ...atualizacao }
-      localStorage.setItem('indicadorUser', JSON.stringify(merged))
-      return merged
-    })
-
-    await marcarTourUsuarioConcluido({
-      uid: indicadorUid,
-      tipo: 'indicador',
-    }).catch(() => {})
-  }
-
   return (
     <DashboardLayout
       sidebarType="indicador"
@@ -152,14 +92,6 @@ function Painel() {
           <Suspense fallback={<PageLoader label={t('panel.loadingPerformance')} compact />}>
             <IndicadorDashboard user={user} />
           </Suspense>
-
-          <GuidedTour
-            key={`indicador-tour-${indicadorUid}`}
-            active={activeSection === 'dashboard' && !tourConcluido}
-            steps={getIndicadorTourSteps(t)}
-            storageKey={`indicador-${indicadorUid}`}
-            onFinish={concluirTour}
-          />
         </>
       )}
     </DashboardLayout>
