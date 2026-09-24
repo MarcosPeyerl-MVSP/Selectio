@@ -16,7 +16,7 @@
   max-width: none;
   min-width: 0;
   margin: 0;
-  padding: 38px 38px 80px;
+  padding: var(--page-padding) var(--page-padding) 64px;
   background: var(--surface);
   animation: selectioFadeIn 0.36s ease both;
 }
@@ -24,7 +24,7 @@
 /* Cabeçalho com contexto, título, descrição e link de retorno. */
 .empresa-candidatos-header {
   max-width: 920px;
-  margin-bottom: 34px;
+  margin-bottom: var(--section-gap);
   animation: selectioSlideUp 0.44s var(--ease-premium) both;
 }
 
@@ -41,15 +41,17 @@
 .empresa-candidatos-header h1 {
   margin: 0 0 8px;
   color: var(--text-heading);
-  font-size: 40px;
-  line-height: 1.05;
+  font-size: var(--page-title-size);
+  line-height: var(--page-title-leading);
+  letter-spacing: -0.03em;
+  font-weight: 800;
 }
 
 .empresa-candidatos-header p {
   max-width: 660px;
   margin: 0 0 8px;
   color: var(--muted);
-  font-size: 14px;
+  font-size: var(--font-body-size);
   line-height: 1.6;
 }
 
@@ -86,10 +88,10 @@
 }
 
 .empresa-candidate-vacancy-filter select {
-  min-height: 44px;
+  min-height: var(--control-height);
   padding: 0 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   background: var(--surface-soft);
   color: var(--text);
   font: inherit;
@@ -122,8 +124,8 @@
 .empresa-candidate-search:focus-within {
   background: var(--surface);
   border-color: rgba(182, 28, 47, 0.24);
-  box-shadow: 0 0 0 3px rgba(182, 28, 47, 0.1);
-  transform: translateY(-1px);
+  box-shadow: var(--focus-ring);
+  transform: none;
 }
 
 /* Abas de status. */
@@ -137,9 +139,9 @@
 
 .empresa-candidate-tabs button {
   min-width: 86px;
-  height: 34px;
+  height: 36px;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--radius-control);
   background: var(--surface-soft);
   color: var(--muted);
   font-weight: 800;
@@ -155,22 +157,23 @@
 
 /* Estado visual da aba ativa. */
 .empresa-candidate-tabs button.active {
-  background: var(--primary);
-  color: #fff;
+  background: var(--surface);
+  color: var(--primary);
+  box-shadow: var(--shadow-soft);
 }
 
 /* Grade de cards de candidatos. */
 .empresa-candidate-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 22px;
+  gap: var(--card-gap);
 }
 
 /* Base visual dos cards e do botão de carregar mais. */
 .empresa-candidate-card,
 .empresa-load-more {
   min-height: 246px;
-  border-radius: 10px;
+  border-radius: var(--radius-card);
   background: var(--surface);
   border: 1px solid var(--border);
   animation: selectioSlideUp 0.42s var(--ease-premium) both;
@@ -230,12 +233,12 @@
   display: inline-flex;
   align-items: center;
   min-height: 32px;
-  padding: 0 11px;
+  padding: 6px 12px;
   border-radius: 999px;
-  background: var(--danger-bg);
-  color: var(--primary);
-  font-size: 10px;
-  font-weight: 900;
+  background: var(--info-bg);
+  color: var(--info);
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
 }
 
@@ -249,7 +252,8 @@
   color: var(--success);
 }
 
-.empresa-status-badge.cancelado {
+.empresa-status-badge.cancelado,
+.empresa-status-badge.recusado {
   background: var(--danger-bg);
   color: var(--danger);
 }
@@ -295,14 +299,15 @@
 
 .empresa-candidate-actions button {
   flex: 1;
-  height: 36px;
+  height: var(--control-height);
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius-control);
   background: var(--primary);
   color: #fff;
   font-weight: 800;
   cursor: pointer;
   transition: background var(--motion-fast), color var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast);
+  font-size: 13px;
 }
 
 .empresa-candidate-actions button:hover {
@@ -311,7 +316,7 @@
 }
 
 .empresa-candidate-actions button:last-child {
-  flex: 0 0 36px;
+  flex: 0 0 var(--control-height);
   background: var(--surface-soft);
   color: var(--muted);
 }
@@ -391,7 +396,7 @@
   }
 
   .empresa-candidatos-page {
-    padding: 32px 24px 64px;
+    padding: var(--page-padding) var(--page-padding) 64px;
   }
 
   .empresa-candidatos-toolbar {
@@ -404,20 +409,25 @@
 
   .empresa-candidate-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--card-gap);
   }
 }
 
 /* Ajustes para telas pequenas. */
 @media (max-width: 720px) {
   .empresa-candidatos-page {
-    padding: 28px 16px 56px;
+    padding: var(--page-padding) var(--page-padding) 64px;
   }
 
   .empresa-candidatos-header h1 {
-    font-size: 32px;
+    font-size: var(--page-title-size);
+    line-height: var(--page-title-leading);
+    letter-spacing: -0.03em;
+    font-weight: 800;
   }
 
   .empresa-candidate-grid {
     grid-template-columns: 1fr;
+    gap: var(--card-gap);
   }
 }

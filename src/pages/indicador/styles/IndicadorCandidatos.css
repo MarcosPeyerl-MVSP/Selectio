@@ -15,7 +15,7 @@
   max-width: none;
   min-width: 0;
   margin: 0;
-  padding: 38px 38px 80px;
+  padding: var(--page-padding) var(--page-padding) 64px;
   background: var(--surface);
   animation: selectioFadeIn 0.36s ease both;
 }
@@ -23,7 +23,7 @@
 /* Cabeçalho com contexto, título e descrição. */
 .candidatos-header {
   max-width: 900px;
-  margin-bottom: 34px;
+  margin-bottom: var(--section-gap);
   animation: selectioSlideUp 0.44s var(--ease-premium) both;
 }
 
@@ -40,15 +40,17 @@
 .candidatos-header h1 {
   margin: 0 0 6px;
   color: var(--text-heading);
-  font-size: 40px;
-  line-height: 1.05;
+  font-size: var(--page-title-size);
+  line-height: var(--page-title-leading);
+  letter-spacing: -0.03em;
+  font-weight: 800;
 }
 
 .candidatos-header p {
   max-width: 650px;
   margin: 0;
   color: var(--muted);
-  font-size: 14px;
+  font-size: var(--font-body-size);
   line-height: 1.6;
 }
 
@@ -92,8 +94,8 @@
 .candidate-search:focus-within {
   background: var(--surface);
   border-color: rgba(182, 28, 47, 0.24);
-  box-shadow: 0 0 0 3px rgba(182, 28, 47, 0.1);
-  transform: translateY(-1px);
+  box-shadow: var(--focus-ring);
+  transform: none;
 }
 
 /* Abas de filtro por status. */
@@ -139,14 +141,14 @@
 .candidate-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 22px;
+  gap: var(--card-gap);
 }
 
 /* Estilo base dos cards de candidato e do card de adicionar. */
 .candidate-card,
 .candidate-add-card {
   min-height: 174px;
-  border-radius: 10px;
+  border-radius: var(--radius-card);
   background: var(--surface);
   border: 1px solid var(--border);
   animation: selectioSlideUp 0.42s var(--ease-premium) both;
@@ -235,35 +237,27 @@
 
 /* Etiqueta de status do candidato. */
 .candidate-status {
-  padding: 6px 10px;
+  padding: 6px 12px;
   border-radius: 999px;
-  background: #dbeafe;
-  color: #2563eb;
-  font-size: 10px;
+  background: var(--info-bg);
+  color: var(--info);
+  font-size: 11px;
   text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  font-weight: 700;
 }
 
 .candidate-card.entrevista .candidate-status {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-/* Estado visual específico para candidato contratado. */
-.candidate-card.contratado {
-  background: linear-gradient(135deg, #15803d 0%, #16a34a 100%);
-  color: var(--white);
-  border-color: transparent;
-}
-
-.candidate-card.contratado .candidate-status {
-  background: rgba(255, 255, 255, 0.24);
-  color: var(--white);
-}
+  background: var(--warning-bg);
+  color: var(--warning);
+}/* Estado visual específico para candidato contratado. */
 
 /* Estado visual específico para candidato cancelado. */
 .candidate-card.cancelado .candidate-status {
-  background: #fee2e2;
-  color: #dc2626;
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .candidate-card.pre-salvo .candidate-status {
@@ -292,10 +286,6 @@
   white-space: nowrap;
 }
 
-.candidate-card.contratado p {
-  color: rgba(255, 255, 255, 0.78);
-}
-
 /* Metadados do candidato, como origem e data. */
 .candidate-meta {
   display: grid;
@@ -303,10 +293,6 @@
   gap: 12px;
   padding-top: 16px;
   border-top: 1px solid var(--border);
-}
-
-.candidate-card.contratado .candidate-meta {
-  border-top-color: rgba(255, 255, 255, 0.18);
 }
 
 .candidate-meta span {
@@ -318,39 +304,12 @@
   text-transform: uppercase;
 }
 
-.candidate-card.contratado .candidate-meta span {
-  color: rgba(255, 255, 255, 0.62);
-}
-
 .candidate-meta strong {
   font-size: 11px;
 }
 
 .candidate-card .candidate-status-timeline {
   margin-top: 18px;
-}
-
-.candidate-card.contratado .timeline-track::before {
-  background: rgba(255, 255, 255, 0.26);
-}
-
-.candidate-card.contratado .timeline-node {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.32);
-  color: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 0 0 5px transparent;
-}
-
-.candidate-card.contratado .timeline-step.completed,
-.candidate-card.contratado .timeline-step.active {
-  color: var(--white);
-}
-
-.candidate-card.contratado .timeline-step.completed .timeline-node,
-.candidate-card.contratado .timeline-step.active .timeline-node {
-  background: var(--white);
-  border-color: var(--white);
-  color: #15803d;
 }
 
 .candidate-vacancy-filter {
@@ -366,10 +325,10 @@
 }
 
 .candidate-vacancy-filter select {
-  min-height: 44px;
+  min-height: var(--control-height);
   padding: 0 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   background: var(--surface-soft);
   color: var(--text);
   font: inherit;
@@ -381,12 +340,6 @@
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface-soft);
-}
-
-.candidate-card.contratado .candidate-payment-summary {
-  border-color: rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--white);
 }
 
 .candidate-payment-summary-main {
@@ -434,10 +387,6 @@
   line-height: 1.45;
 }
 
-.candidate-card.contratado .candidate-payment-summary p {
-  color: rgba(255, 255, 255, 0.78);
-}
-
 .candidate-payment-summary-meta {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -447,10 +396,6 @@
   border-top: 1px solid var(--border);
 }
 
-.candidate-card.contratado .candidate-payment-summary-meta {
-  border-top-color: rgba(255, 255, 255, 0.18);
-}
-
 .candidate-payment-summary-meta span {
   color: var(--muted);
   font-size: 9px;
@@ -458,18 +403,10 @@
   text-transform: uppercase;
 }
 
-.candidate-card.contratado .candidate-payment-summary-meta span {
-  color: rgba(255, 255, 255, 0.62);
-}
-
 .candidate-payment-summary-meta strong {
   margin-top: 4px;
   color: var(--text-heading);
   font-size: 12px;
-}
-
-.candidate-card.contratado .candidate-payment-summary-meta strong {
-  color: var(--white);
 }
 
 .candidate-payment-link {
@@ -483,10 +420,6 @@
   text-decoration: none;
 }
 
-.candidate-card.contratado .candidate-payment-link {
-  color: var(--white);
-}
-
 .candidate-card-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -497,15 +430,15 @@
 .candidate-card-actions button,
 .candidate-card-actions a {
   width: 100%;
-  min-height: 36px;
+  min-height: var(--control-height);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   padding: 7px 10px;
   border: 1px solid transparent;
-  border-radius: 6px;
-  font-size: 11px;
+  border-radius: var(--radius-control);
+  font-size: 13px;
   font-weight: 800;
   text-align: center;
 }
@@ -538,11 +471,6 @@
   cursor: wait;
   opacity: 0.62;
   transform: none;
-}
-
-.candidate-card.contratado .candidate-card-actions button {
-  background: var(--white);
-  color: #15803d;
 }
 
 .candidate-card:not(.pre-salvo) .candidate-card-actions {
@@ -610,7 +538,7 @@
   }
 
   .candidatos-page {
-    padding: 32px 24px 64px;
+    padding: var(--page-padding) var(--page-padding) 64px;
   }
 
   .candidatos-toolbar {
@@ -623,20 +551,36 @@
 
   .candidate-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--card-gap);
   }
 }
 
 /* Ajustes para telas pequenas. */
 @media (max-width: 720px) {
   .candidatos-page {
-    padding: 28px 16px 56px;
+    padding: var(--page-padding) var(--page-padding) 64px;
   }
 
   .candidatos-header h1 {
-    font-size: 34px;
+    font-size: var(--page-title-size);
+    line-height: var(--page-title-leading);
+    letter-spacing: -0.03em;
+    font-weight: 800;
   }
 
   .candidate-grid {
     grid-template-columns: 1fr;
+    gap: var(--card-gap);
   }
+}
+
+/* Keep cards neutral; status uses the same semantic colors in both profiles. */
+.candidate-card.contratado .candidate-status {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.candidate-card.recusado .candidate-status {
+  background: var(--danger-bg);
+  color: var(--danger);
 }

@@ -1,3 +1,4 @@
+import { useEditorFoto } from '../../hooks/useEditorFoto'
 import './styles/IndicadorPerfil.css'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -56,6 +57,7 @@ function IndicadorPerfil({ user, onUserUpdate }) {
   const [saving, setSaving] = useState(false)
   const [savingPhoto, setSavingPhoto] = useState(false)
   const photoInputRef = useRef(null)
+  const { editarFoto, editorFoto } = useEditorFoto()
   const [form, setForm] = useState(() => getInitialForm(user))
   const emailVerified = Boolean(auth.currentUser?.emailVerified)
   const emptyValue = t('profile.notProvided')
@@ -170,11 +172,13 @@ function IndicadorPerfil({ user, onUserUpdate }) {
   }
 
   const handlePhoto = async (event) => {
-    const arquivo = event.target.files?.[0]
+    let arquivo = event.target.files?.[0]
     event.target.value = ''
     if (!arquivo || !indicadorUid) return
 
     try {
+      arquivo = await editarFoto(arquivo)
+      if (!arquivo) return
       setSavingPhoto(true)
       const fotoPerfil = await atualizarFotoPerfilUsuario({
         uid: indicadorUid,
@@ -214,6 +218,7 @@ function IndicadorPerfil({ user, onUserUpdate }) {
 
   return (
     <section className="indicador-profile">
+      {editorFoto}
       <header className="profile-page-header">
         <span>{t('profile.eyebrow')}</span>
         <h1>{t('profile.title')}</h1>

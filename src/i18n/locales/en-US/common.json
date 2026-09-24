@@ -622,5 +622,17 @@
     "sectors": "Departments",
     "jobFlow": "Job workflow"
   },
-  "notFound": "Page not found"
+  "notFound": "Page not found",
+  "photoEditor": {
+    "title": "Adjust photo",
+    "help": "Adjust zoom and framing before confirming.",
+    "preview": "Photo crop preview",
+    "zoom": "Zoom",
+    "x": "Horizontal position",
+    "y": "Vertical position",
+    "cancel": "Cancel",
+    "confirm": "Use photo",
+    "preparing": "Preparing...",
+    "error": "Unable to prepare this image. Try another photo."
+  }
 }

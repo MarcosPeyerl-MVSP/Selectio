@@ -1,14 +1,16 @@
+import { useEditorFoto } from '../../hooks/useEditorFoto'
 import './SeletorFotoCandidato.css'
 
 import { useEffect, useMemo } from 'react'
 import { FaCamera, FaTrash } from 'react-icons/fa'
 import { useTranslation } from 'react-i18next'
 
-import { validarFotoPerfil } from '../../services/storageFotosPerfil'
+
 import AvatarProtegido from './AvatarProtegido'
 
 function SeletorFotoCandidato({ fotoAtual, arquivo, nome, onChange, onRemove, onError }) {
   const { t } = useTranslation('common')
+  const { editarFoto, editorFoto } = useEditorFoto()
   const fallback = String(nome || '?').trim().charAt(0).toUpperCase() || '?'
   const preview = useMemo(() => arquivo ? URL.createObjectURL(arquivo) : '', [arquivo])
 
@@ -18,13 +20,13 @@ function SeletorFotoCandidato({ fotoAtual, arquivo, nome, onChange, onRemove, on
     }
   }, [preview])
 
-  const handleFile = (event) => {
+  const handleFile = async (event) => {
     const selected = event.target.files?.[0]
     event.target.value = ''
     if (!selected) return
     try {
-      validarFotoPerfil(selected)
-      onChange(selected)
+      const edited = await editarFoto(selected)
+      if (edited) onChange(edited)
     } catch (error) {
       onError?.(error.message)
     }
@@ -32,6 +34,7 @@ function SeletorFotoCandidato({ fotoAtual, arquivo, nome, onChange, onRemove, on
 
   return (
     <div className="candidate-photo-picker">
+      {editorFoto}
       {preview ? (
         <img className="candidate-photo-picker-avatar" src={preview} alt={nome || t('profilePhoto.candidate')} />
       ) : (

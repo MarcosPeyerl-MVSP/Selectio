@@ -1,3 +1,4 @@
+import { useEditorFoto } from '../../hooks/useEditorFoto'
 import './ModalPerfilCandidato.css'
 
 import { useEffect, useRef, useState } from 'react'
@@ -102,6 +103,7 @@ function ModalPerfilCandidato({
   const [fotoPerfil, setFotoPerfil] = useState(candidato?.fotoPerfil || {})
   const [salvandoFoto, setSalvandoFoto] = useState(false)
   const photoInputRef = useRef(null)
+  const { editarFoto, editorFoto } = useEditorFoto()
   const podeEditarFoto = !isPreSalvo
     && perfil?.tipo === 'indicador'
     && getFirebaseUid(perfil) === String(candidato?.indicadorId || candidato?.indicadorUid || '')
@@ -189,10 +191,12 @@ function ModalPerfilCandidato({
   }
 
   const handlePhoto = async (event) => {
-    const arquivo = event.target.files?.[0]
+    let arquivo = event.target.files?.[0]
     event.target.value = ''
     if (!arquivo || !podeEditarFoto) return
     try {
+      arquivo = await editarFoto(arquivo)
+      if (!arquivo) return
       setSalvandoFoto(true)
       const foto = await atualizarFotoCandidatoIndicado({
         candidato: { ...candidato, fotoPerfil },
@@ -223,6 +227,7 @@ function ModalPerfilCandidato({
 
   return (
     <div className="candidate-profile-backdrop" role="presentation" onMouseDown={onClose}>
+      {editorFoto}
       <aside
         className={`candidate-profile-modal ${isPreSalvo ? 'pre-salvo' : ''}`}
         role="dialog"

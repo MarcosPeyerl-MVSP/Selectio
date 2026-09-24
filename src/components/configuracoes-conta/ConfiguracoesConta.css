@@ -7,15 +7,16 @@
   display: flex;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 28px;
+  margin-bottom: var(--section-gap);
 }
 
 .settings-header h1 {
   margin-bottom: 12px;
   color: var(--text-heading);
-  font-size: 44px;
+  font-size: var(--page-title-size);
   font-weight: 800;
-  line-height: 1.1;
+  line-height: var(--page-title-leading);
+  letter-spacing: -0.03em;
 }
 
 .settings-header h1 span {
@@ -25,14 +26,14 @@
 .settings-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(360px, 0.78fr);
-  gap: 22px;
+  gap: var(--card-gap);
 }
 
 .settings-card {
   min-width: 0;
   padding: 24px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-card);
   background: var(--surface);
   box-shadow: var(--shadow-soft);
   animation: selectioSlideUp 0.42s var(--ease-premium) both;
@@ -309,10 +310,10 @@
 
 .settings-field-grid input {
   width: 100%;
-  min-height: 44px;
+  min-height: var(--control-height);
   padding: 11px 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   background: var(--input-bg);
   color: var(--text);
   font-family: inherit;
@@ -322,7 +323,7 @@
 .settings-field-grid input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(182, 28, 47, 0.12);
+  box-shadow: var(--focus-ring);
 }
 
 .provider-actions {
@@ -335,7 +336,7 @@
 .settings-secondary-button,
 .settings-danger-button {
   width: 100%;
-  min-height: 46px;
+  min-height: var(--control-height);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -401,6 +402,7 @@
 @media (max-width: 1050px) {
   .settings-grid {
     grid-template-columns: 1fr;
+    gap: var(--card-gap);
   }
 }
 
@@ -425,7 +427,10 @@
 
 @media (max-width: 600px) {
   .settings-header h1 {
-    font-size: 34px;
+    font-size: var(--page-title-size);
+    line-height: var(--page-title-leading);
+    letter-spacing: -0.03em;
+    font-weight: 800;
   }
 
   .settings-card {

@@ -18,14 +18,14 @@
 /* Área principal com coluna introdutória e formulário. */
 .empresa-vaga-content {
   display: grid;
-  grid-template-columns: minmax(220px, 330px) minmax(520px, 720px);
-  gap: 72px;
+  grid-template-columns: minmax(200px, 0.7fr) minmax(0, 1.6fr);
+  gap: var(--section-gap);
   align-items: start;
   width: 100%;
   max-width: none;
   min-width: 0;
   margin: 0;
-  padding: 56px 56px 72px;
+  padding: var(--page-padding);
   background: var(--surface);
 }
 
@@ -43,18 +43,20 @@
 .empresa-vaga-intro h1 {
   margin: 12px 0;
   color: var(--text-heading);
-  font-size: 42px;
-  line-height: 1.15;
+  font-size: var(--page-title-size);
+  line-height: var(--page-title-leading);
+  letter-spacing: -0.03em;
+  font-weight: 800;
 }
 
 .empresa-vaga-intro h1 strong {
-  color: #c51d32;
+  color: var(--primary);
 }
 
 .empresa-vaga-intro p {
   max-width: 270px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-body-size);
   line-height: 1.6;
 }
 
@@ -68,8 +70,8 @@
 .vaga-step {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 30px;
+  border-radius: var(--radius-card);
+  padding: clamp(20px, 2.5vw, 28px);
 }
 
 /* Cabeçalho das etapas. */
@@ -88,13 +90,14 @@
 .step-header p {
   margin-top: 12px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
+  line-height: 1.6;
 }
 
 .step-header > span {
   align-self: start;
-  background: #fde9ec;
-  color: #c51d32;
+  background: var(--danger-bg);
+  color: var(--primary);
   padding: 6px 8px;
   border-radius: 2px;
   font-size: 9px;
@@ -107,9 +110,10 @@
   display: block;
   margin-bottom: 8px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--font-label-size);
   font-weight: 800;
   text-transform: uppercase;
+  line-height: 1.5;
 }
 
 /* Campos de entrada e áreas de texto. */
@@ -117,19 +121,19 @@
 .empresa-vaga-form textarea {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-control);
   background: var(--surface-soft);
   color: var(--text);
   font: inherit;
-  font-size: 13px;
-  padding: 16px;
+  font-size: var(--font-body-size);
+  padding: 12px 14px;
   outline: none;
 }
 
 /* Estado visual de foco dos campos. */
 .empresa-vaga-form input:focus,
 .empresa-vaga-form textarea:focus {
-  border-color: #c51d32;
+  border-color: var(--primary);
   background: var(--surface);
 }
 
@@ -196,14 +200,14 @@
 }
 
 .option-grid button.selected {
-  background: #c51d32;
-  border-color: #c51d32;
+  background: var(--primary);
+  border-color: var(--primary);
   color: #fff;
 }
 
 .option-grid button.selected.outline {
   background: var(--surface);
-  color: #c51d32;
+  color: var(--primary);
 }
 
 /* Grade das opções de recompensa. */
@@ -233,7 +237,7 @@
 }
 
 .reward-grid button.selected {
-  border: 2px solid #c51d32;
+  border: 2px solid var(--primary);
 }
 
 /* Prévia visual dos itens separados por vírgula. */
@@ -263,12 +267,12 @@
   width: 14px;
   height: 14px;
   padding: 0;
-  accent-color: #c51d32;
+  accent-color: var(--primary);
 }
 
 /* Mensagem de validação, erro ou sucesso. */
 .empresa-vaga-message {
-  color: #c51d32;
+  color: var(--primary);
   font-weight: 700;
   text-align: right;
 }
@@ -292,9 +296,9 @@
 
 .finish-btn {
   min-width: 220px;
-  min-height: 46px;
-  border-radius: 6px;
-  background: #b41427;
+  min-height: var(--control-height);
+  border-radius: var(--radius-control);
+  background: var(--primary);
   color: #fff;
 }
 
@@ -322,7 +326,8 @@
 /* Ajustes para telas pequenas. */
 @media (max-width: 720px) {
   .empresa-vaga-content {
-    padding: 32px 18px;
+    padding: var(--page-padding);
+    gap: var(--section-gap);
   }
 
   .form-grid.two,
@@ -331,4 +336,30 @@
   .temporary-contract-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.empresa-vaga-form input:not([type="checkbox"]):not([type="radio"]) {
+  min-height: var(--control-height);
+}
+
+.empresa-vaga-form :is(input, textarea):focus {
+  box-shadow: var(--focus-ring);
+}
+
+.draft-btn {
+  min-height: var(--control-height);
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  color: var(--text);
+}
+
+@media (max-width: 480px) {
+  .form-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .finish-btn { min-width: 0; }
+  .step-header { flex-wrap: wrap; gap: 12px; }
 }

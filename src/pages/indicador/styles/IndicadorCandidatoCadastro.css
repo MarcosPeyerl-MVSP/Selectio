@@ -8,7 +8,7 @@
 .candidate-registration-page {
   width: 100%;
   min-width: 0;
-  padding: 38px 38px 80px;
+  padding: var(--page-padding) var(--page-padding) 64px;
   color: var(--text);
   animation: selectioFadeIn 0.36s ease both;
 }
@@ -18,10 +18,11 @@
 .candidate-registration-header,
 .candidate-registration-panel {
   width: min(1120px, 100%);
+  margin-bottom: var(--section-gap);
 }
 
 .candidate-registration-header {
-  margin-bottom: 30px;
+  margin-bottom: var(--section-gap);
   animation: selectioSlideUp 0.44s var(--ease-premium) both;
 }
 
@@ -38,15 +39,17 @@
 .candidate-registration-header h1 {
   margin: 0 0 10px;
   color: var(--text-heading);
-  font-size: clamp(34px, 4vw, 48px);
-  line-height: 1;
+  font-size: var(--page-title-size);
+  line-height: var(--page-title-leading);
+  letter-spacing: -0.03em;
+  font-weight: 800;
 }
 
 .candidate-registration-header p {
   max-width: 700px;
   margin: 0 0 12px;
   color: var(--muted);
-  font-size: 14px;
+  font-size: var(--font-body-size);
   line-height: 1.6;
 }
 
@@ -73,7 +76,7 @@
 .candidate-registration-panel {
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: var(--radius-card);
   background: var(--surface);
   box-shadow: var(--shadow);
   animation: selectioSlideUp 0.44s var(--ease-premium) 0.05s both;
@@ -177,7 +180,7 @@
 .candidate-registration-field textarea {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   background: var(--surface-soft);
   color: var(--text);
   font: inherit;
@@ -188,7 +191,7 @@
 
 .candidate-registration-field input,
 .candidate-registration-field select {
-  min-height: 46px;
+  min-height: var(--control-height);
   padding: 0 14px;
 }
 
@@ -210,8 +213,8 @@
 .candidate-registration-field textarea:focus {
   border-color: color-mix(in srgb, var(--primary) 48%, var(--border));
   background: var(--surface);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
-  transform: translateY(-1px);
+  box-shadow: var(--focus-ring);
+  transform: none;
 }
 
 .candidate-registration-field.has-error input {
@@ -251,7 +254,7 @@
 .candidate-registration-skills:focus-within {
   border-color: color-mix(in srgb, var(--primary) 48%, var(--border));
   background: var(--surface);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
+  box-shadow: var(--focus-ring);
 }
 
 .candidate-registration-skills button {
@@ -357,7 +360,7 @@
 .candidate-registration-file-button:hover,
 .candidate-registration-file-button:focus-within {
   border-color: color-mix(in srgb, var(--primary) 42%, var(--border));
-  box-shadow: 0 8px 20px color-mix(in srgb, var(--primary) 10%, transparent);
+  box-shadow: var(--focus-ring);
 }
 
 .candidate-registration-file-button input {
@@ -555,8 +558,8 @@
 .candidate-csv-dropzone.drag-active {
   border-color: var(--primary);
   background: color-mix(in srgb, var(--primary) 6%, var(--surface));
-  transform: translateY(-2px);
-  box-shadow: 0 20px 36px color-mix(in srgb, var(--primary) 10%, transparent);
+  transform: none;
+  box-shadow: var(--focus-ring);
 }
 
 .candidate-csv-dropzone input {
@@ -830,17 +833,20 @@
   }
 
   .candidate-registration-page {
-    padding: 32px 24px 64px;
+    padding: var(--page-padding) var(--page-padding) 64px;
   }
 }
 
 @media (max-width: 720px) {
   .candidate-registration-page {
-    padding: 26px 16px 52px;
+    padding: var(--page-padding) var(--page-padding) 64px;
   }
 
   .candidate-registration-header h1 {
-    font-size: 34px;
+    font-size: var(--page-title-size);
+    line-height: var(--page-title-leading);
+    letter-spacing: -0.03em;
+    font-weight: 800;
   }
 
   .candidate-registration-tabs {
@@ -947,5 +953,7 @@
   .candidate-registration-header,
   .candidate-registration-panel {
     animation: none;
+    padding: var(--page-padding) var(--page-padding) 64px;
+    margin-bottom: var(--section-gap);
   }
 }

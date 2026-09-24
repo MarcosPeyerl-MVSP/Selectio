@@ -14,7 +14,7 @@
 .indicar-page {
   width: 100%;
   min-width: 0;
-  padding: 28px 24px 60px;
+  padding: var(--page-padding) var(--page-padding) 64px;
   animation: selectioFadeIn 0.36s ease both;
 }
 
@@ -24,7 +24,7 @@
 
 /* Cabeçalho com contexto, título, link de retorno e vaga selecionada. */
 .indicar-header {
-  margin-bottom: 52px;
+  margin-bottom: var(--section-gap);
   animation: selectioSlideUp 0.44s var(--ease-premium) both;
 }
 
@@ -41,8 +41,10 @@
 .indicar-header h1 {
   margin: 0 0 10px;
   color: var(--text-heading);
-  font-size: 42px;
-  line-height: 0.92;
+  font-size: var(--page-title-size);
+  line-height: var(--page-title-leading);
+  letter-spacing: -0.03em;
+  font-weight: 800;
 }
 
 .indicar-header a {
@@ -65,7 +67,7 @@
 .indicar-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 230px;
-  gap: 70px;
+  gap: var(--section-gap);
   align-items: start;
   animation: selectioFadeIn 0.34s ease 0.05s both;
 }
@@ -73,7 +75,7 @@
 /* Coluna principal do formulário. */
 .indicar-main {
   display: grid;
-  gap: 44px;
+  gap: var(--section-gap);
 }
 
 /* Seção de campos do formulário. */
@@ -139,7 +141,7 @@
 .saved-candidate-search input {
   width: 100%;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius-control);
   background: var(--surface-soft);
   color: var(--text);
   font: inherit;
@@ -164,16 +166,16 @@
 .field-label textarea:focus,
 .saved-candidate-card select:focus,
 .saved-candidate-search input:focus {
-  box-shadow: 0 0 0 2px rgba(182, 28, 47, 0.18);
+  box-shadow: var(--focus-ring);
   background: var(--surface);
-  transform: translateY(-1px);
+  transform: none;
 }
 
 .field-label input,
 .field-label select,
 .saved-candidate-card select,
 .saved-candidate-search input {
-  height: 42px;
+  height: var(--control-height);
   padding: 0 14px;
 }
 
@@ -203,7 +205,7 @@
 
 .large-textarea {
   min-height: 160px;
-  border-radius: 0 0 6px 6px;
+  border-radius: var(--radius-control);
 }
 
 /* Texto auxiliar do campo de habilidades. */
@@ -220,22 +222,22 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  min-height: 42px;
+  min-height: var(--control-height);
   padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: var(--radius-control);
   background: var(--surface-soft);
   transition: background var(--motion-fast), box-shadow var(--motion-fast);
 }
 
 .skill-input:focus-within {
   background: var(--surface);
-  box-shadow: 0 0 0 2px rgba(182, 28, 47, 0.18);
+  box-shadow: var(--focus-ring);
 }
 
 /* Token removível de habilidade. */
 .skill-input button {
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--radius-control);
   padding: 6px 8px;
   background: #f4dde2;
   color: var(--primary);
@@ -570,7 +572,7 @@
   gap: 4px;
   padding: 12px;
   border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--border));
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   background: color-mix(in srgb, var(--primary) 7%, var(--surface));
 }
 
@@ -670,7 +672,7 @@
 @media (max-width: 1100px) {
   .indicar-form {
     grid-template-columns: 1fr;
-    gap: 28px;
+    gap: var(--section-gap);
   }
 
   .saved-candidate-card {
@@ -689,15 +691,18 @@
 /* Ajustes para telas pequenas. */
 @media (max-width: 720px) {
   .indicar-page {
-    padding: 22px 16px 44px;
+    padding: var(--page-padding) var(--page-padding) 64px;
   }
 
   .indicar-header {
-    margin-bottom: 32px;
+    margin-bottom: var(--section-gap);
   }
 
   .indicar-header h1 {
-    font-size: 34px;
+    font-size: var(--page-title-size);
+    line-height: var(--page-title-leading);
+    letter-spacing: -0.03em;
+    font-weight: 800;
   }
 
   .form-grid,

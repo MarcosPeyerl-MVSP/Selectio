@@ -622,5 +622,17 @@
     "sectors": "Setores",
     "jobFlow": "Fluxo de vagas"
   },
-  "notFound": "Página não encontrada"
+  "notFound": "Página não encontrada",
+  "photoEditor": {
+    "title": "Ajustar foto",
+    "help": "Ajuste o zoom e o enquadramento antes de confirmar.",
+    "preview": "Prévia do enquadramento da foto",
+    "zoom": "Zoom",
+    "x": "Posição horizontal",
+    "y": "Posição vertical",
+    "cancel": "Cancelar",
+    "confirm": "Usar foto",
+    "preparing": "Preparando...",
+    "error": "Não foi possível preparar a imagem. Tente outra foto."
+  }
 }

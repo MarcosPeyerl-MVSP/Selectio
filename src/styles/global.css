@@ -3,6 +3,19 @@
 :root {
   --primary: #b61c2f;
   --primary-dark: #6a0f21;
+  --page-title-size: clamp(1.75rem, 2.5vw, 2.5rem);
+  --page-title-leading: 1.2;
+  --page-padding: clamp(20px, 3vw, 40px);
+  --section-gap: 32px;
+  --card-gap: 24px;
+  --radius-card: 12px;
+  --radius-control: 8px;
+  --control-height: 44px;
+  --font-body-size: 14px;
+  --font-label-size: 12px;
+  --focus-ring: 0 0 0 3px rgba(182, 28, 47, 0.18);
+  --info: #1d4ed8;
+  --info-bg: #eff6ff;
   --background: #efefef;
   --surface: #ffffff;
   --surface-soft: #fafafa;
@@ -31,6 +44,10 @@
 }
 
 :root[data-theme='dark'] {
+  --info: #93c5fd;
+  --info-bg: #172b46;
+  --danger: #ff9aa6;
+  --focus-ring: 0 0 0 3px rgba(255, 154, 166, 0.28);
   --primary-dark: #ff9aa6;
   --background: #111111;
   --surface: #181818;
@@ -86,6 +103,16 @@ button {
   cursor: pointer;
   font-family: inherit;
   transition: var(--transition);
+}
+
+/* Shared keyboard focus without changing the shape of individual controls. */
+:is(button, a, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--primary-dark);
+  outline-offset: 3px;
+}
+
+button:disabled {
+  cursor: not-allowed;
 }
 
 .page {

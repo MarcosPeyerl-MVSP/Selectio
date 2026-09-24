@@ -11,7 +11,7 @@
   max-width: none;
   min-width: 0;
   margin: 0;
-  padding: 38px;
+  padding: var(--page-padding) var(--page-padding) 64px;
   background: var(--surface);
   animation: selectioFadeIn 0.36s ease both;
 }
@@ -29,10 +29,11 @@
 .dashboard-title {
   margin-bottom: 12px;
   color: var(--text-heading);
-  font-size: 46px;
+  font-size: var(--page-title-size);
   font-weight: 800;
-  line-height: 1.08;
+  line-height: var(--page-title-leading);
   animation: selectioSlideUp 0.44s var(--ease-premium) 0.04s both;
+  letter-spacing: -0.03em;
 }
 
 .dashboard-title span,
@@ -44,7 +45,7 @@
   max-width: 640px;
   margin-bottom: 34px;
   color: var(--muted);
-  font-size: 15px;
+  font-size: var(--font-body-size);
   line-height: 1.6;
   animation: selectioSlideUp 0.44s var(--ease-premium) 0.08s both;
 }
@@ -52,14 +53,14 @@
 .dashboard-cards {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 22px;
+  gap: var(--card-gap);
 }
 
 .dashboard-card {
   min-height: 230px;
   padding: 24px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-card);
   background: var(--surface);
   color: var(--text);
   animation: selectioSlideUp 0.42s var(--ease-premium) both;
@@ -94,7 +95,7 @@
 .dashboard-card h3 {
   margin-bottom: 14px;
   color: var(--text-heading);
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
 }
 
@@ -200,6 +201,7 @@
 @media (max-width: 1250px) {
   .dashboard-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--card-gap);
   }
 }
 
@@ -209,11 +211,12 @@
   }
 
   .dashboard-content {
-    padding: 28px 18px;
+    padding: var(--page-padding) var(--page-padding) 64px;
   }
 
   .dashboard-cards {
     grid-template-columns: 1fr;
+    gap: var(--card-gap);
   }
 
   .dashboard-stats {
@@ -225,11 +228,14 @@
 @media (max-width: 600px) {
   .dashboard-title,
   .panel-placeholder h1 {
-    font-size: 34px;
+    font-size: var(--page-title-size);
+    line-height: var(--page-title-leading);
+    letter-spacing: -0.03em;
+    font-weight: 800;
   }
 
   .dashboard-card h3 {
-    font-size: 22px;
+    font-size: 20px;
   }
 
   .dashboard-stats h2 {

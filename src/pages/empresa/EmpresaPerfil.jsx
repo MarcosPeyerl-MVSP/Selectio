@@ -1,3 +1,4 @@
+import { useEditorFoto } from '../../hooks/useEditorFoto'
 import './styles/EmpresaPerfil.css'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -62,6 +63,7 @@ function EmpresaPerfil({ empresa, onUserUpdate }) {
   const [saving, setSaving] = useState(false)
   const [savingPhoto, setSavingPhoto] = useState(false)
   const photoInputRef = useRef(null)
+  const { editarFoto, editorFoto } = useEditorFoto()
   const [form, setForm] = useState(() => getInitialForm(empresa))
   const emptyValue = t('profile.notProvided')
 
@@ -156,11 +158,13 @@ function EmpresaPerfil({ empresa, onUserUpdate }) {
   }
 
   const handlePhoto = async (event) => {
-    const arquivo = event.target.files?.[0]
+    let arquivo = event.target.files?.[0]
     event.target.value = ''
     if (!arquivo || !empresaUid) return
 
     try {
+      arquivo = await editarFoto(arquivo)
+      if (!arquivo) return
       setSavingPhoto(true)
       const fotoPerfil = await atualizarFotoPerfilUsuario({
         uid: empresaUid,
@@ -201,6 +205,7 @@ function EmpresaPerfil({ empresa, onUserUpdate }) {
 
   return (
     <section className="empresa-profile">
+      {editorFoto}
       <header className="profile-page-header">
         <span>{t('profile.eyebrow')}</span>
         <h1>{t('profile.title')}</h1>
