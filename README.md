@@ -398,6 +398,8 @@ npm run i18n:check
 
 ## Contribuição
 
+Consulte [CONTRIBUTING.md](CONTRIBUTING.md) para o fluxo da equipe, [AGENTS.md](AGENTS.md) para instruções de desenvolvimento por agentes e [PROJECT_STATE.md](PROJECT_STATE.md) para o snapshot operacional e suas limitações de verificação.
+
 Fluxo sugerido:
 
 1. Crie uma branch a partir da base principal.
