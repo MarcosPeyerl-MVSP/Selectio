@@ -156,7 +156,8 @@
   text-transform: uppercase;
 }
 
-.indicador-profile-form input {
+.indicador-profile-form input,
+.indicador-profile-form textarea {
   min-height: 42px;
   padding: 0 12px;
   border: 1px solid var(--border);
@@ -168,6 +169,24 @@
 
 .indicador-profile-form button {
   align-self: end;
+}
+
+.indicador-profile-form .indicador-experience-field {
+  grid-column: 1 / -1;
+}
+
+.indicador-profile-form textarea {
+  padding: 12px;
+  resize: vertical;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.indicador-experience-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
 }
 
 .indicador-profile-metrics {

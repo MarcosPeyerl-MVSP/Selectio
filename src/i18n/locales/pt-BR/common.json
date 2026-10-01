@@ -625,11 +625,9 @@
   "notFound": "Página não encontrada",
   "photoEditor": {
     "title": "Ajustar foto",
-    "help": "Ajuste o zoom e o enquadramento antes de confirmar.",
+    "help": "Segure e arraste a foto para ajustar o enquadramento. Use o zoom para aproximar. Você também pode usar as setas do teclado ao selecionar a foto.",
     "preview": "Prévia do enquadramento da foto",
     "zoom": "Zoom",
-    "x": "Posição horizontal",
-    "y": "Posição vertical",
     "cancel": "Cancelar",
     "confirm": "Usar foto",
     "preparing": "Preparando...",

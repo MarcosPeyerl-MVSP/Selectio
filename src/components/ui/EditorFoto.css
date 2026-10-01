@@ -31,8 +31,13 @@
   border-radius: 50%;
   background: var(--surface-soft);
   outline: 1px solid var(--border);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
 }
-.photo-editor-preview img { position: absolute; object-fit: cover; }
+.photo-editor-preview.is-dragging { cursor: grabbing; }
+.photo-editor-preview:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
+.photo-editor-preview img { position: absolute; object-fit: cover; pointer-events: none; }
 .photo-editor-control { display: grid; gap: 8px; margin-top: 14px; font-size: 13px; }
 .photo-editor-control span { display: flex; justify-content: space-between; }
 .photo-editor-control input { width: 100%; accent-color: var(--primary); min-height: 24px; }

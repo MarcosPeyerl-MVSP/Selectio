@@ -48,7 +48,6 @@ const initialForm = {
   portfolio: '',
   github: '',
   pontosFortes: '',
-  fitCultural: '',
   destaquesProjetos: '',
   narrativa: '',
   hardSkills: [],
@@ -88,7 +87,7 @@ const profileFields = [
   'fotoPerfil'
 ]
 
-const indicationFields = ['pontosFortes', 'fitCultural', 'destaquesProjetos', 'narrativa']
+const indicationFields = ['pontosFortes', 'destaquesProjetos', 'narrativa']
 const comparableProfileFields = profileFields.filter((field) => !['curriculo', 'fotoPerfil'].includes(field))
 const maxResumeSize = 10 * 1024 * 1024
 const allowedResumeExtensions = new Set(['pdf', 'doc', 'docx'])
@@ -219,7 +218,6 @@ const mapSavedCandidateToForm = (candidato, language) => {
     modeloTrabalho: toText(candidato?.modeloTrabalho),
     avisoPrevio: toText(candidato?.avisoPrevio),
     pontosFortes: toText(candidato?.pontosFortes),
-    fitCultural: toText(candidato?.fitCultural),
     destaquesProjetos: toText(candidato?.destaquesProjetos),
     narrativa: firstText(candidato?.narrativa, candidato?.observacoesProfissionais),
     fotoPerfil: candidato?.fotoPerfil || {},
@@ -787,7 +785,6 @@ function Indicar() {
                 <section className="form-section">
                   <h2>{t('referral.whyRefer')}</h2>
                   <Textarea label={t('referral.strengths')} name="pontosFortes" value={form.pontosFortes} onChange={updateField} placeholder={t('referral.strengthsPlaceholder')} />
-                  <Textarea label={t('referral.cultureFit')} name="fitCultural" value={form.fitCultural} onChange={updateField} placeholder={t('referral.cultureFitPlaceholder')} />
                   <Textarea label={t('referral.projectHighlights')} name="destaquesProjetos" value={form.destaquesProjetos} onChange={updateField} placeholder={t('referral.projectHighlightsPlaceholder')} />
 
                   <label className="field-label full-field">

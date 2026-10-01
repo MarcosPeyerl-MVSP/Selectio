@@ -36,6 +36,7 @@ const getInitialForm = (indicador) => ({
   pix: indicador?.pix || '',
   linkedin: indicador?.linkedin || '',
   portfolio: indicador?.portfolio || '',
+  experienciaProfissional: indicador?.experienciaProfissional || '',
   especialidades: Array.isArray(indicador?.especialidades)
     ? indicador.especialidades.join(', ')
     : indicador?.especialidades || ''
@@ -249,7 +250,10 @@ function IndicadorPerfil({ user, onUserUpdate }) {
               <FaTrash /> {t('common:profilePhoto.remove')}
             </button>
           )}
-          <button type="button" onClick={() => setEditing((current) => !current)}>
+          <button type="button" disabled={saving} onClick={() => {
+            setForm(getInitialForm(user))
+            setEditing((current) => !current)
+          }}>
             <FaUserTie /> {editing ? t('profile.cancelEdit') : t('profile.edit')}
           </button>
         </aside>
@@ -263,6 +267,11 @@ function IndicadorPerfil({ user, onUserUpdate }) {
               <ProfileField label="LinkedIn" name="linkedin" value={form.linkedin} onChange={handleChange} />
               <ProfileField label="Portfolio" name="portfolio" value={form.portfolio} onChange={handleChange} />
               <ProfileField label={t('profile.specialties')} name="especialidades" value={form.especialidades} onChange={handleChange} placeholder={t('profile.specialtiesPlaceholder')} />
+              <label className="indicador-experience-field">
+                {t('profile.experience')}
+                <textarea name="experienciaProfissional" value={form.experienciaProfissional}
+                  onChange={handleChange} rows={5} disabled={saving} />
+              </label>
               <button type="submit" disabled={saving}>
                 <FaSave /> {saving ? t('profile.saving') : t('profile.save')}
               </button>
@@ -305,7 +314,7 @@ function IndicadorPerfil({ user, onUserUpdate }) {
 
           <section className="indicador-empty-card">
             <h3>{t('profile.experience')}</h3>
-            <p>{t('profile.noExperience')}</p>
+            <p className="indicador-experience-text">{user?.experienciaProfissional || t('profile.noExperience')}</p>
           </section>
 
           <section className="indicador-recent-card">

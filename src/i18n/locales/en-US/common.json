@@ -625,11 +625,9 @@
   "notFound": "Page not found",
   "photoEditor": {
     "title": "Adjust photo",
-    "help": "Adjust zoom and framing before confirming.",
+    "help": "Press and drag the photo to adjust the framing. Use zoom to get closer. You can also use the arrow keys when the photo is focused.",
     "preview": "Photo crop preview",
     "zoom": "Zoom",
-    "x": "Horizontal position",
-    "y": "Vertical position",
     "cancel": "Cancel",
     "confirm": "Use photo",
     "preparing": "Preparing...",

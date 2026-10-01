@@ -7,7 +7,6 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   FaCalendarAlt,
-  FaChartBar,
   FaClipboardCheck,
   FaCreditCard,
   FaSuitcase,
@@ -59,12 +58,6 @@ const empresaCards = [
     dataTour: 'empresa-card-perfil'
   },
   {
-    icon: FaChartBar,
-    copyKey: 'dashboard',
-    to: '/painel/empresa',
-    dataTour: 'empresa-card-dashboard'
-  },
-  {
     icon: FaCalendarAlt,
     copyKey: 'interviews',
     to: '/painel/empresa?secao=entrevistas',
@@ -102,11 +95,6 @@ const getEmpresaCards = (empresa) => {
         copyKey: 'reviewRequests',
         to: '/painel/empresa?secao=aprovacoes',
         dataTour: 'empresa-card-vagas'
-      },
-      {
-        icon: FaChartBar,
-        copyKey: 'requestsDashboard',
-        to: '/painel/empresa',
       }
     ],
     [SETOR_RH]: [
@@ -145,12 +133,6 @@ const getEmpresaCards = (empresa) => {
         copyKey: 'jobFlow',
         to: '/painel/empresa?secao=aprovacoes',
         dataTour: 'empresa-card-vagas'
-      },
-      {
-        icon: FaChartBar,
-        copyKey: 'generalDashboard',
-        to: '/painel/empresa',
-        dataTour: 'empresa-card-dashboard'
       }
     ]
   }
