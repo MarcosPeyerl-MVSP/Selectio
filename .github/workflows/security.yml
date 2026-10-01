@@ -1,64 +1,103 @@
-name: Security checks
+﻿name: Security checks
 
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
-jobs:
-  security:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+jobs:
+  quality:
+    name: Code, secrets and translations
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Functions dependencies
-        run: npm --prefix functions ci
-
+      - run: npm ci
       - name: Check committed secrets
         run: npm run security:check
-
       - name: Test secret detector
         run: npm run security:test
-
       - name: Lint
         run: npm run lint
-
-      - name: Test application and document extraction
-        run: npm run test:unit
-
-      - name: Test rules, quotas, referrals and concurrent payments
-        run: npm run test:security:emulators
-
-      - name: Test Cloud Functions API
-        run: npm run test:functions
-
       - name: Check translation catalogs
         run: npm run i18n:check
 
+  tests:
+    name: Application and Firebase tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            functions/package-lock.json
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm --prefix functions ci
+      - name: Test application and document extraction
+        run: npm run test:unit
+      - name: Test rules, quotas, referrals and concurrent payments
+        run: npm run test:security:emulators
+      - name: Test Cloud Functions API
+        run: npm run test:functions
+
+  audit:
+    name: Dependency audit (${{ matrix.directory }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        directory: ['.', 'functions']
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
       - name: Audit production dependencies
-        run: npm audit --omit=dev --audit-level=high
+        working-directory: ${{ matrix.directory }}
+        run: npm audit --package-lock-only --omit=dev --audit-level=high
 
-      - name: Audit Functions dependencies
-        run: npm --prefix functions audit --omit=dev --audit-level=high
+  build:
+    name: Production build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
 
-      - name: Build
-        run: npm run build
+  # Preserve the existing check name for branch protection rules.
+  security:
+    if: ${{ always() }}
+    needs: [quality, tests, audit, build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Require all checks to pass
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          node -e 'const jobs = JSON.parse(process.env.RESULTS); for (const [name, job] of Object.entries(jobs)) { console.log(`${name}: ${job.result}`); } if (Object.values(jobs).some(job => job.result !== "success")) process.exit(1);'

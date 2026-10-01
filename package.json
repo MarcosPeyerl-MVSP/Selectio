@@ -59,6 +59,9 @@
     "vite": "^8.0.10"
   },
   "overrides": {
+    "@firebase/firestore": {
+      "@grpc/grpc-js": "^1.14.5"
+    },
     "@google-cloud/pubsub": {
       "@opentelemetry/core": "^2.10.0"
     },
