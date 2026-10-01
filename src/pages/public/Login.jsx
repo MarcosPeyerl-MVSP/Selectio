@@ -3,7 +3,7 @@ import './Login.css'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { FaApple, FaEye, FaEyeSlash, FaGoogle, FaLock, FaUser } from 'react-icons/fa'
+import { FaEye, FaEyeSlash, FaGoogle, FaLock, FaUser } from 'react-icons/fa'
 import {
   GoogleAuthProvider,
   sendPasswordResetEmail,
@@ -399,7 +399,6 @@ function Login() {
             <button type="button" className="google" onClick={handleGoogleLogin} disabled={loading}>
               <FaGoogle /> Google
             </button>
-            <button type="button" className="apple"><FaApple /> Apple</button>
           </div>
 
           <p className="register-link">

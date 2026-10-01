@@ -2,13 +2,16 @@ import './Footer.css'
 
 import logoVermelho from '../../assets/Selectio_vermelho_sem_fundo.png'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 
 function Footer() {
   const { t } = useTranslation('common')
 
   return (
     <footer className="footer">
-      <img className="footer-logo" src={logoVermelho} alt="Selectio" />
+      <Link to="/" aria-label={`Selectio — ${t('navigation.home')}`}>
+        <img className="footer-logo" src={logoVermelho} alt="Selectio" />
+      </Link>
 
       <div>
         <a href="#">{t('footer.privacy')}</a>

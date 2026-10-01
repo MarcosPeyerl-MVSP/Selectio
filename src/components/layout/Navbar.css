@@ -158,6 +158,29 @@
   opacity: 1;
 }
 
+.icon-button.home-theme-toggle {
+  position: fixed;
+  right: calc(24px + env(safe-area-inset-right, 0px));
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  width: 48px;
+  height: 48px;
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
+  z-index: 50;
+}
+
+.icon-button.home-theme-toggle:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.icon-button.home-theme-toggle:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
 .profile-trigger[aria-expanded='true'] {
   background: var(--surface);
   border-color: var(--primary);

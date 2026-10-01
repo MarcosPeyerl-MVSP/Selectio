@@ -111,7 +111,9 @@ function Navbar() {
 
   return (
     <header className="navbar">
-      <img className="logo-img" src={logoVermelho} alt="Selectio" />
+      <Link to="/" aria-label={`Selectio — ${t('navigation.home')}`}>
+        <img className="logo-img" src={logoVermelho} alt="Selectio" />
+      </Link>
 
       <nav className="nav-links">
         <NavLink to="/">{t('navigation.home')}</NavLink>
@@ -125,9 +127,10 @@ function Navbar() {
         {!carregandoSessao && session.type === 'publico' ? (
           <>
             <div className="user-actions">
+              <LanguageSwitcher />
               <button
                 type="button"
-                className="icon-button theme-toggle"
+                className="icon-button theme-toggle home-theme-toggle"
                 onClick={toggleTheme}
                 aria-label={isDark ? t('theme.activateLight') : t('theme.activateDark')}
                 title={isDark ? t('theme.light') : t('theme.dark')}

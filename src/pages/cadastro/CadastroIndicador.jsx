@@ -426,14 +426,16 @@ function CadastroIndicador() {
                 required
               />
 
-              <input
-                name="cpf"
-                placeholder={t('referrerRegistration.cpf')}
-                value={form.cpf}
-                onChange={handleChange}
-                required
-              />
-              {form.cpfError && <span className="error">{form.cpfError}</span>}
+              <div className="indicador-cpf-field">
+                <input
+                  name="cpf"
+                  placeholder={t('referrerRegistration.cpf')}
+                  value={form.cpf}
+                  onChange={handleChange}
+                  required
+                />
+                {form.cpfError && <span className="error">{form.cpfError}</span>}
+              </div>
 
               <input
                 name="pix"
@@ -448,26 +450,69 @@ function CadastroIndicador() {
                 onChange={handleChange}
               />
 
-              {/* Campo de senha com botão para mostrar ou ocultar o valor digitado. */}
-              <div className="password-field">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="senha"
-                  placeholder={isGoogleSignup ? t('registration.googleAccess') : t('registration.password')}
-                  value={form.senha}
-                  onChange={handleChange}
-                  required={!isGoogleSignup}
-                  disabled={isGoogleSignup}
-                />
-                <button
-                  type="button"
-                  className="password-toggle"
-                  onClick={() => setShowPassword((visible) => !visible)}
-                  aria-label={showPassword ? t('registration.hidePassword') : t('registration.showPassword')}
-                  disabled={isGoogleSignup}
-                >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </button>
+              <div className="indicador-access-fields">
+                <div>
+                  <label className="indicador-access-label" htmlFor="indicador-senha">{t('registration.password')}</label>
+                  {/* Campo de senha com botão para mostrar ou ocultar o valor digitado. */}
+                  <div className="password-field">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      id="indicador-senha"
+                      autoComplete="new-password"
+                      name="senha"
+                      placeholder={isGoogleSignup ? t('registration.googleAccess') : t('registration.password')}
+                      value={form.senha}
+                      onChange={handleChange}
+                      required={!isGoogleSignup}
+                      disabled={isGoogleSignup}
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowPassword((visible) => !visible)}
+                      aria-label={showPassword ? t('registration.hidePassword') : t('registration.showPassword')}
+                      disabled={isGoogleSignup}
+                    >
+                      {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="indicador-access-label" htmlFor="indicador-confirmar-senha">{t('registration.confirmPassword')}</label>
+                  {/* Campo de confirmação de senha com estado visual de compatibilidade. */}
+                  <div className={`confirm-password-field ${confirmPasswordStatus}`}>
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      id="indicador-confirmar-senha"
+                      autoComplete="new-password"
+                      name="confirmarSenha"
+                      placeholder={isGoogleSignup ? t('registration.googleAccess') : t('registration.confirmPassword')}
+                      value={form.confirmarSenha}
+                      onChange={handleChange}
+                      required={!isGoogleSignup}
+                      disabled={isGoogleSignup}
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowConfirmPassword((visible) => !visible)}
+                      disabled={isGoogleSignup}
+                      aria-label={showConfirmPassword
+                        ? t('registration.hidePasswordConfirmation')
+                        : t('registration.showPasswordConfirmation')}
+                    >
+                      {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                    {!isGoogleSignup && confirmPasswordStatus && (
+                      <span className="confirm-password-message">
+                        {confirmPasswordStatus === 'match'
+                          ? t('registration.passwordsMatch')
+                          : t('registration.passwordsDoNotMatch')}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Painel de análise da força da senha, exibido após digitação. */}
@@ -511,35 +556,6 @@ function CadastroIndicador() {
                 </div>
               )}
 
-              {/* Campo de confirmação de senha com estado visual de compatibilidade. */}
-              <div className={`confirm-password-field ${confirmPasswordStatus}`}>
-                <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  name="confirmarSenha"
-                  placeholder={isGoogleSignup ? t('registration.googleAccess') : t('registration.confirmPassword')}
-                  value={form.confirmarSenha}
-                  onChange={handleChange}
-                  required={!isGoogleSignup}
-                  disabled={isGoogleSignup}
-                />
-                <button
-                  type="button"
-                  className="password-toggle"
-                  onClick={() => setShowConfirmPassword((visible) => !visible)}
-                  aria-label={showConfirmPassword
-                    ? t('registration.hidePasswordConfirmation')
-                    : t('registration.showPasswordConfirmation')}
-                >
-                  {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                </button>
-                {!isGoogleSignup && confirmPasswordStatus && (
-                  <span className="confirm-password-message">
-                    {confirmPasswordStatus === 'match'
-                      ? t('registration.passwordsMatch')
-                      : t('registration.passwordsDoNotMatch')}
-                  </span>
-                )}
-              </div>
             </div>
 
             {/* Botão de envio bloqueado quando a senha ainda não é forte. */}

@@ -214,11 +214,11 @@ html, body, #root {
 /* Grade dos botões de login social. */
 .social-login {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 14px;
 }
 
-/* Estilo visual dos botões Google e Apple. */
+/* Estilo visual do botão de login social. */
 .social-login button {
   display: inline-flex;
   align-items: center;
