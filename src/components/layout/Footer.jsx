@@ -13,12 +13,18 @@ function Footer() {
         <img className="footer-logo" src={logoVermelho} alt="Selectio" />
       </Link>
 
-      <div>
-        <a href="#">{t('footer.privacy')}</a>
-        <a href="#">{t('footer.terms')}</a>
-        <a href="#">{t('footer.contact')}</a>
-        <a href="#">{t('footer.faq')}</a>
-      </div>
+      <nav className="footer-group" aria-labelledby="footer-institutional">
+        <h2 id="footer-institutional">{t('footer.institutional')}</h2>
+        <Link to="/equipe">{t('footer.team')}</Link>
+        <Link to="/contato">{t('footer.contact')}</Link>
+      </nav>
+      <nav className="footer-group" aria-labelledby="footer-help">
+        <h2 id="footer-help">{t('footer.help')}</h2>
+        <Link to="/faq">{t('footer.faq')}</Link>
+        <Link to="/privacidade">{t('footer.privacy')}</Link>
+        <Link to="/termos">{t('footer.terms')}</Link>
+      </nav>
+      <p className="footer-copyright">{t('footer.copyright', { year: new Date().getFullYear() })}</p>
     </footer>
   )
 }

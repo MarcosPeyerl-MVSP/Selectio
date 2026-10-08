@@ -1,0 +1,262 @@
+{
+  "eyebrow": "Selectio • Conexões que aproximam talentos",
+  "breadcrumb": "Caminho da página",
+  "home": "Início",
+  "updated": "Última atualização: {{date}}",
+  "contactLink": "Consultar informações de contato",
+  "legalContact": "Para dúvidas sobre este documento ou solicitações relacionadas a dados pessoais, consulte a página de Contato. O canal oficial de atendimento ainda está em definição.",
+  "privacy": {
+    "title": "Política de Privacidade",
+    "intro": "Esta política apresenta como informações pessoais podem ser utilizadas na Selectio, uma plataforma de recrutamento por indicação. É o conteúdo institucional inicial do MVP e poderá ser atualizado com a evolução do serviço.",
+    "sections": {
+      "data": {
+        "title": "Dados tratados na plataforma",
+        "body": "As informações dependem do perfil e das funcionalidades utilizadas.",
+        "items": {
+          "accounts": "Contas: nome, e-mail, telefone, dados cadastrais e de perfil, documentos de identificação informados e identificadores de conta.",
+          "companies": "Empresas: dados cadastrais e profissionais de seus representantes, informações de contato, oportunidades publicadas e registros de processos seletivos.",
+          "referrers": "Indicadores: perfil profissional, histórico de indicações, candidatos cadastrados e registros relacionados a recompensas e pagamentos.",
+          "candidates": "Candidatos: nome e contato fornecidos pelo indicador, informações profissionais, experiência, habilidades, escolaridade, idiomas, currículo, foto quando enviada e andamento no processo seletivo."
+        }
+      },
+      "purposes": {
+        "title": "Finalidades de uso",
+        "body": "Os dados são utilizados nas funcionalidades da plataforma e nas operações associadas ao serviço.",
+        "items": {
+          "accounts": "Criar e autenticar contas, manter perfis e permitir o uso das funcionalidades.",
+          "hiring": "Publicar oportunidades, cadastrar talentos, realizar indicações e acompanhar processos seletivos e entrevistas.",
+          "analysis": "Processar currículos e dados profissionais para apoiar a análise de compatibilidade.",
+          "operations": "Exibir notificações e registros financeiros, processar pagamentos e prevenir fraude e abuso."
+        }
+      },
+      "candidates": {
+        "title": "Currículos e análise de compatibilidade",
+        "body": "Currículos e informações profissionais podem ser processados para comparar o perfil com os requisitos de uma vaga. A plataforma oferece indicadores de compatibilidade e pode exigir uma validação prévia para enviar a indicação. Essa validação não é uma decisão de contratação: a avaliação e a decisão final permanecem com as pessoas responsáveis pelo processo seletivo."
+      },
+      "sharing": {
+        "title": "Acesso e compartilhamento",
+        "body": "Dados de candidatos são disponibilizados ao indicador responsável e à empresa vinculada à indicação, conforme o fluxo da plataforma. Informações de vagas são apresentadas no catálogo. Serviços de infraestrutura e pagamento podem tratar informações necessárias às suas funções. O indicador deve ter uma justificativa adequada para cadastrar e compartilhar dados de terceiros, informar o candidato e respeitar seus direitos."
+      },
+      "providers": {
+        "title": "Serviços de terceiros",
+        "body": "A Selectio utiliza serviços Firebase/Google para funcionalidades como autenticação, armazenamento e operação da aplicação, e Mercado Pago no fluxo de pagamentos. Recursos de análise também podem carregar bibliotecas e modelos de distribuição externa. O uso desses serviços está sujeito às condições e políticas de seus provedores."
+      },
+      "browser": {
+        "title": "Informações no navegador",
+        "body": "O navegador pode guardar preferências de idioma e tema e informações necessárias à sessão. A plataforma utiliza recursos para autenticação e proteção contra abuso. Essas informações não substituem as verificações de permissão realizadas pelo serviço."
+      },
+      "security": {
+        "title": "Proteção das informações",
+        "body": "A plataforma utiliza controles de acesso, validações e medidas técnicas para reduzir o risco de uso indevido. Nenhuma medida elimina todos os riscos. Proteja suas credenciais e evite compartilhar documentos ou dados pessoais além do necessário."
+      },
+      "retention": {
+        "title": "Conservação de dados",
+        "body": "O tratamento e a conservação devem considerar as finalidades do serviço, obrigações aplicáveis e a necessidade de manter registros de operações. Esta versão não estabelece um prazo único de retenção nem promete exclusão imediata de todos os registros. Os procedimentos operacionais de conservação e atendimento a solicitações precisam ser definidos para o lançamento comercial."
+      },
+      "rights": {
+        "title": "Direitos sobre seus dados",
+        "body": "Conforme o contexto e a legislação aplicável, você pode solicitar informações sobre o tratamento, confirmação e acesso aos dados, correção de informações incompletas ou desatualizadas e exclusão quando cabível. Quando o tratamento se basear em consentimento, poderá solicitar sua revogação. Algumas informações podem precisar ser conservadas nas hipóteses previstas em lei. Consulte a orientação pública da ANPD para conhecer seus direitos."
+      },
+      "updates": {
+        "title": "Atualizações desta política",
+        "body": "Mudanças nas funcionalidades ou nas práticas de tratamento podem exigir uma nova versão. A data desta página identifica a atualização do texto. A definição dos responsáveis pelo tratamento, bases legais, canais de atendimento e procedimentos de retenção deve receber revisão jurídica e operacional antes do lançamento comercial definitivo."
+      }
+    }
+  },
+  "terms": {
+    "title": "Termos de Uso",
+    "intro": "Estes termos apresentam orientações de uso da Selectio, plataforma que conecta empresas, indicadores e talentos por meio de indicações. Este é o conteúdo institucional inicial do MVP.",
+    "sections": {
+      "acceptance": {
+        "title": "Uso da plataforma",
+        "body": "Ao utilizar a Selectio, observe estes termos e as condições apresentadas nos fluxos que você acessar. Leia também a Política de Privacidade. O cadastro possui aceite de termos; estes textos devem ser revisados antes do lançamento comercial definitivo."
+      },
+      "users": {
+        "title": "Perfis e participação",
+        "body": "Empresas publicam vagas e acompanham processos seletivos. Indicadores cadastram talentos e fazem indicações. Candidatos têm informações incluídas no processo pelo indicador responsável. As funcionalidades disponíveis dependem do perfil e das permissões de cada conta."
+      },
+      "account": {
+        "title": "Responsabilidade pela conta",
+        "body": "Informe dados corretos e atualizados, proteja suas credenciais e utilize somente contas e informações que você esteja autorizado a administrar. Não compartilhe acessos de forma que permita uso indevido da plataforma."
+      },
+      "jobs": {
+        "title": "Publicação de vagas",
+        "body": "A empresa é responsável pelas informações e requisitos das oportunidades que publica e por manter sua disponibilidade atualizada. Descrições devem ser claras, pertinentes à atividade profissional e respeitar as normas aplicáveis."
+      },
+      "referrals": {
+        "title": "Indicações e dados de candidatos",
+        "body": "O indicador é responsável por fornecer informações corretas e utilizar dados de candidatos de forma legítima e transparente. Antes de cadastrar ou compartilhar um currículo, informe o candidato sobre a finalidade e assegure que possui a autorização ou justificativa adequada para esse uso. Uma indicação não representa contratação garantida."
+      },
+      "analysis": {
+        "title": "Compatibilidade e decisão humana",
+        "body": "A análise de compatibilidade auxilia a comparação entre requisitos da vaga e informações profissionais disponíveis. Pode haver validação prévia para permitir uma indicação. Resultados são apoio ao processo, podem ter limitações e não garantem entrevista ou contratação. A decisão final pertence aos responsáveis humanos pelo processo seletivo."
+      },
+      "rewards": {
+        "title": "Recompensas e pagamentos",
+        "body": "Uma indicação pode estar associada a uma recompensa, conforme a oportunidade e as condições apresentadas na plataforma. O fluxo de pagamentos utiliza Mercado Pago. Consulte as informações da vaga e da Área financeira para acompanhar operações; iniciar ou retornar de um checkout não equivale à confirmação de pagamento. Estes termos não estabelecem valores, comissões ou prazos adicionais."
+      },
+      "conduct": {
+        "title": "Uso responsável",
+        "items": {
+          "fraud": "Não pratique fraude, inclua informações falsas ou manipule indicações e processos seletivos.",
+          "data": "Não utilize dados, currículos ou documentos de terceiros sem uma justificativa adequada.",
+          "security": "Não tente acessar informações sem permissão, comprometer a segurança ou contornar controles da plataforma.",
+          "abuse": "Não pratique discriminação, assédio ou uso abusivo das funcionalidades."
+        }
+      },
+      "availability": {
+        "title": "Disponibilidade e limites",
+        "body": "O serviço pode passar por manutenção, ajustes ou indisponibilidade, inclusive em integrações de terceiros. A versão MVP está em evolução. Não há garantia de disponibilidade contínua, contratação ou geração de recompensa."
+      },
+      "updates": {
+        "title": "Atualizações dos termos",
+        "body": "Estes termos podem ser atualizados conforme o produto evoluir. Consulte a data de atualização e as condições apresentadas nos fluxos. Responsabilidades jurídicas, procedimentos de atendimento e condições comerciais definitivas precisam ser revisados antes do lançamento comercial."
+      }
+    }
+  },
+  "contact": {
+    "title": "Entre em contato",
+    "intro": "Conheça os assuntos que podem ser encaminhados à equipe Selectio e a situação atual do atendimento.",
+    "topicsTitle": "Como podemos ajudar",
+    "topics": {
+      "support": "Dúvidas sobre o uso da plataforma e suporte.",
+      "business": "Interesse de empresas e indicadores na Selectio.",
+      "privacy": "Questões de privacidade e solicitações sobre dados pessoais.",
+      "other": "Outros assuntos relacionados ao projeto."
+    },
+    "channelTitle": "Canal oficial em definição",
+    "channelBody": "O canal oficial de atendimento ainda está sendo definido. Não há envio de mensagens nesta página. As informações de contato serão publicadas aqui quando forem confirmadas pela equipe.",
+    "sensitiveData": "Não publique currículos, documentos ou dados de candidatos em canais públicos. Enquanto isso, consulte as perguntas frequentes e a política de privacidade.",
+    "faqLink": "Ver perguntas frequentes",
+    "privacyLink": "Ler Política de Privacidade"
+  },
+  "team": {
+    "title": "Nossa equipe",
+    "intro": "A Selectio nasceu de uma equipe de três estudantes do Curso Técnico de Informática da FECAP — Fundação Escola de Comércio Álvares Penteado. Reunimos frentes complementares para desenvolver uma plataforma de recrutamento por indicação.",
+    "membersLabel": "Integrantes da Selectio",
+    "members": {
+      "kalil": {
+        "role": "Administração",
+        "description": "Organização de rotinas administrativas, documentação e relacionamento com fornecedores."
+      },
+      "marcos": {
+        "role": "Gestão de projetos",
+        "description": "Organização de cronogramas, entregas, prioridades e comunicação entre as frentes do projeto."
+      },
+      "gustavo": {
+        "role": "Desenvolvimento técnico",
+        "description": "Desenvolvimento da plataforma, testes, implementação e arquitetura do sistema."
+      }
+    },
+    "purposeTitle": "Conectar pessoas e oportunidades",
+    "purpose": "Nosso propósito é facilitar o encontro entre empresas e talentos por meio das conexões dos indicadores. Transparência, responsabilidade e agilidade orientam a construção do projeto."
+  },
+  "notFound": {
+    "title": "Página não encontrada",
+    "intro": "Parece que essa oportunidade não está mais por aqui.",
+    "help": "Não encontramos a página que você tentou acessar. Você pode voltar ao início ou explorar as vagas disponíveis.",
+    "home": "Voltar ao início",
+    "jobs": "Ver vagas"
+  },
+  "faq": {
+    "title": "Perguntas frequentes",
+    "intro": "Respostas para conhecer a Selectio e entender os principais caminhos da plataforma.",
+    "groups": {
+      "general": {
+        "title": "Sobre a Selectio",
+        "questions": {
+          "what": {
+            "question": "O que é a Selectio?",
+            "answer": "Uma plataforma web de recrutamento por indicação que conecta empresas, indicadores e talentos."
+          },
+          "how": {
+            "question": "Como funciona a plataforma?",
+            "answer": "Empresas publicam vagas; indicadores cadastram e indicam candidatos. A empresa acompanha as etapas do processo seletivo e decide sobre a contratação."
+          },
+          "who": {
+            "question": "Quem pode utilizar?",
+            "answer": "Os principais perfis de conta são empresa e indicador. Candidatos participam dos processos por meio das indicações realizadas na plataforma."
+          }
+        }
+      },
+      "referrers": {
+        "title": "Indicadores",
+        "questions": {
+          "who": {
+            "question": "O que é um indicador?",
+            "answer": "É a pessoa que conecta talentos que conhece às oportunidades publicadas pelas empresas."
+          },
+          "refer": {
+            "question": "Como indicar um candidato?",
+            "answer": "Acesse sua conta de indicador, escolha uma vaga disponível e utilize a ação de indicar. Forneça as informações solicitadas e passe pela validação de compatibilidade antes de enviar."
+          },
+          "save": {
+            "question": "Posso cadastrar talentos para indicar depois?",
+            "answer": "Sim. O banco pessoal permite manter candidatos pré-salvos e utilizar seus dados em futuras indicações. Cadastre somente informações que você possa tratar de forma legítima."
+          },
+          "track": {
+            "question": "Como acompanho minhas indicações?",
+            "answer": "Na Área do indicador, consulte a lista de candidatos e o dashboard para acompanhar os status atuais."
+          },
+          "analysis": {
+            "question": "Como funciona a análise de compatibilidade?",
+            "answer": "A análise compara requisitos da vaga e informações profissionais, incluindo o currículo. No fluxo atual, a validação prévia exige compatibilidade superior a 45% para permitir o envio. Isso não garante entrevista ou contratação; a decisão final é humana."
+          }
+        }
+      },
+      "companies": {
+        "title": "Empresas",
+        "questions": {
+          "publish": {
+            "question": "Como publicar uma vaga?",
+            "answer": "Utilize a criação de vagas na Área da empresa. Informe título, requisitos e condições da oportunidade. No modo empresarial, a publicação também segue o fluxo de aprovação disponível."
+          },
+          "track": {
+            "question": "Como acompanhar candidatos?",
+            "answer": "A Área da empresa reúne os candidatos vinculados às suas vagas e permite acompanhar os status do processo."
+          },
+          "process": {
+            "question": "Quais etapas posso acompanhar?",
+            "answer": "O processo permite acompanhar indicações, entrevistas e decisões como contratação, recusa ou cancelamento. A empresa conduz a avaliação dos candidatos."
+          }
+        }
+      },
+      "rewards": {
+        "title": "Recompensas",
+        "questions": {
+          "when": {
+            "question": "Quando uma indicação pode gerar recompensa?",
+            "answer": "Quando a oportunidade possui recompensa e as condições correspondentes são atendidas no fluxo da plataforma. Confira as informações da vaga; a simples indicação não garante pagamento."
+          },
+          "where": {
+            "question": "Onde acompanho informações financeiras?",
+            "answer": "Na Área financeira do indicador ou da empresa, conforme seu perfil. Os registros disponíveis permitem acompanhar pagamentos e operações relacionadas."
+          }
+        }
+      },
+      "privacy": {
+        "title": "Dados e privacidade",
+        "questions": {
+          "use": {
+            "question": "Como os dados de candidatos são utilizados?",
+            "answer": "Dados profissionais e currículos são usados para realizar indicações, apoiar a análise de compatibilidade e acompanhar o processo seletivo. O indicador deve informar o candidato e utilizar os dados de forma responsável."
+          },
+          "policy": {
+            "question": "Onde encontro a Política de Privacidade?",
+            "answer": "A política está disponível em uma página pública e nos links de Ajuda do rodapé."
+          }
+        }
+      },
+      "support": {
+        "title": "Atendimento",
+        "questions": {
+          "contact": {
+            "question": "Como entro em contato com a Selectio?",
+            "answer": "Consulte a página de Contato para verificar a disponibilidade do canal oficial. No MVP, o canal ainda está em definição e não há envio de mensagens por formulário."
+          }
+        }
+      }
+    }
+  },
+  "rightsLink": "Consultar direitos do titular na ANPD"
+}

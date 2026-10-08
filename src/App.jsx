@@ -3,6 +3,12 @@ import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
 import Home from './pages/public/Home'
+import Privacidade from './pages/public/Privacidade'
+import Termos from './pages/public/Termos'
+import Contato from './pages/public/Contato'
+import FAQ from './pages/public/FAQ'
+import Equipe from './pages/public/Equipe'
+import NotFound from './pages/public/NotFound'
 import Login from './pages/public/Login'
 // CADASTRO:
 import CadastroEscolha from './pages/cadastro/CadastroEscolha'
@@ -53,6 +59,11 @@ function App() {
       <Routes>
         {/* ROTA HOME */}
         <Route path="/" element={<Home />} />
+        <Route path="/privacidade" element={<Privacidade />} />
+        <Route path="/termos" element={<Termos />} />
+        <Route path="/contato" element={<Contato />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/equipe" element={<Equipe />} />
         {/* ROTA LOGIN */}
         <Route path="/login" element={<Login />} />
         {/* ROTA CADASTROS */}
@@ -88,7 +99,7 @@ function App() {
           <Route path="configuracoes" element={adminPage(<AdminConfiguracoesEmBreve />, t('loading.admin'))} />
         </Route>
         {/* ROTA PAGE NOT FOUND */}
-        <Route path="*" element={<h1>{t('notFound')}</h1>} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   )

@@ -15,6 +15,8 @@ Plataforma de recrutamento por indicação: empresas publicam vagas e acompanham
 
 ## Runtime / stack
 
+**Páginas públicas verificadas localmente em 2026-10-08, base `207dd2f`, na `main`:** criadas Privacidade, Termos, Contato, FAQ, Equipe e 404; Footer com destinos reais em grupos Institucional/Ajuda. Evidências: `App.jsx`, `Footer.jsx`, `pages/public/InstitutionalLayout.jsx`, catálogos `institutional` e `tests/institutional.test.mjs`. Scanner, lint, i18n, 57 unitários e build passaram; prévia isolada conferiu rotas públicas, navegação, scroll, título/idioma, accordion, URL inválida e visual desktop/mobile. Fontes de equipe, limites e pendências em [páginas institucionais](docs/paginas-institucionais.md). Contato permanece com canal em definição, sem envio; Privacidade/Termos são textos iniciais do MVP e exigem revisão jurídica/operacional antes do lançamento comercial. Nenhum deploy, alteração de Rules ou backend foi realizado nesta tarefa.
+
 ### Dashboard do indicador — verificação local em 2026-10-08
 
 Base `fde78b8`, branch `feat/dashboard-indicador`, inicialmente limpa. Evidências: `IndicadorDashboard.jsx`, `indicadorDashboardDados.js`, `services/recomendacoes/recomendacoesVagas.js` e `tests/indicadorDashboard.test.mjs`.
@@ -68,6 +70,8 @@ Na revisão de processo de 2026-10-08, `security:check`, `lint`, `i18n:check` e 
 
 ## Known technical debt / risks
 
+**Auditoria verificada em 2026-10-08, base `207dd2f`, em `main`:** o [run 37773410282](https://github.com/MarcosPeyerl-MVSP/Selectio/actions/runs/37773410282) passou quality, build, auditoria da raiz e testes (incluindo emuladores/Functions), mas falhou na auditoria das Functions por `proxy-addr` 2.0.7 (crítico); o agregador `security` falhou por consequência. Correção local limitada a `functions/package-lock.json`: `proxy-addr` 2.0.8 e `@fastify/busboy` 3.2.2. Auditorias `--package-lock-only --omit=dev --audit-level=high` da raiz e Functions, scanner, extração PDF/DOCX (3 testes) e API HTTP no emulador Functions passaram localmente, em Node 24 (CI usa 22). Permanecem três alertas moderados na cadeia `mammoth → argparse → sprintf-js`; não foi aplicado o downgrade incompatível sugerido por `audit fix --force`. Esta correção ainda não foi publicada nem validada por novo CI/deploy; não comprova exposição ou correção do ambiente remoto.
+
 Revisão da [auditoria de 17/09/2026](docs/auditoria-pre-deploy.md) contra o commit-base; nenhuma dessas áreas foi corrigida nesta tarefa.
 
 | Item histórico | Classificação atual | Evidência / limite |
@@ -80,7 +84,7 @@ Revisão da [auditoria de 17/09/2026](docs/auditoria-pre-deploy.md) contra o com
 | App Check ausente na máquina | Possivelmente desatualizado | `npm run deploy:check` passou nesta sessão sem imprimir valores; o bloqueio local relatado em setembro não se reproduziu. Isso não prova chave válida/enforcement remoto: **Requires production verification** |
 | Retenção e limpeza | Parcialmente resolvido | `limparExpiradas` remove cópias/órfãos associados e temporários, porém limita validações a 100 por execução diária e percorre `curriculos/`. Retenção geral e capacidade com crescimento permanecem pendentes; TTL/lifecycle remotos: **Requires production verification** |
 | Paginação e índices | Parcialmente resolvido | `listarVagasPagina` usa cursor/orderBy/100. Pré-salvos seguem sem limite; notificações usam 50 e ordenação local; admin limita 500 e agrega no cliente. `firebase.json` não referencia manifesto de índices e nenhum está versionado. Índices reais: **Requires production verification** |
-| Privacidade / operação / recuperação | Confirmado em parte; verificação externa necessária | `Footer.jsx` mantém links de privacidade/termos com `href="#"`. Políticas operacionais, backup/restauração, IAM, CORS e orçamento: **Requires production verification** |
+| Privacidade / operação / recuperação | Parcialmente resolvido localmente em 08/10; verificação externa necessária | Footer aponta para páginas reais de Privacidade/Termos; textos iniciais ainda precisam de revisão jurídica e canal confirmado para titulares. Políticas operacionais, backup/restauração, IAM, CORS e orçamento: **Requires production verification** |
 | Números antigos de npm audit | Possivelmente desatualizado | Resultados de setembro não representam as dependências atuais. CI audita produção; auditoria npm não foi reexecutada nesta tarefa de documentação |
 
 Proteções já presentes, não pendências a reabrir sem evidência: cotas transacionais e validação de corpo (`protecaoAbuso.cjs`), App Check nas APIs, reserva de checkout e prevenção de crédito duplicado (`mercadoPagoCore.cjs`), extração em worker com prazo/limites (`indicacoesCore.cjs`), paginação pública e suites no CI. Inspeção confirma implementação; homologação remota continua distinta.

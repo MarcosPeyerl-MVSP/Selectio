@@ -1,0 +1,262 @@
+{
+  "eyebrow": "Selectio • Connections that bring talent closer",
+  "breadcrumb": "Page breadcrumb",
+  "home": "Home",
+  "updated": "Last updated: {{date}}",
+  "contactLink": "View contact information",
+  "legalContact": "For questions about this document or requests concerning personal data, visit the Contact page. The official support channel is still being defined.",
+  "privacy": {
+    "title": "Privacy Policy",
+    "intro": "This policy describes how personal information may be used in Selectio, a recruitment platform based on referrals. It is the initial institutional content for the MVP and may be updated as the service evolves.",
+    "sections": {
+      "data": {
+        "title": "Information processed by the platform",
+        "body": "Information depends on the profile and features used.",
+        "items": {
+          "accounts": "Accounts: name, email, phone number, registration and profile information, identification documents provided and account identifiers.",
+          "companies": "Companies: registration and professional information about their representatives, contact details, published opportunities and recruitment records.",
+          "referrers": "Referrers: professional profiles, referral history, registered candidates and records related to rewards and payments.",
+          "candidates": "Candidates: names and contact details provided by referrers, professional information, experience, skills, education, languages, résumés, photos when uploaded and recruitment progress."
+        }
+      },
+      "purposes": {
+        "title": "How information is used",
+        "body": "Information is used in platform features and operations related to the service.",
+        "items": {
+          "accounts": "Create and authenticate accounts, maintain profiles and enable platform features.",
+          "hiring": "Publish opportunities, register talent, make referrals and track recruitment processes and interviews.",
+          "analysis": "Process résumés and professional information to support compatibility analysis.",
+          "operations": "Display notifications and financial records, process payments and prevent fraud and abuse."
+        }
+      },
+      "candidates": {
+        "title": "Résumés and compatibility analysis",
+        "body": "Résumés and professional information may be processed to compare a profile with job requirements. The platform provides compatibility indicators and may require preliminary validation before a referral can be submitted. This validation is not a hiring decision: assessment and the final decision remain with the people responsible for recruitment."
+      },
+      "sharing": {
+        "title": "Access and sharing",
+        "body": "Candidate information is made available to the responsible referrer and the company linked to the referral, according to the platform workflow. Job information appears in the catalog. Infrastructure and payment services may process information needed for their functions. Referrers must have an appropriate basis for registering and sharing third-party information, inform candidates and respect their rights."
+      },
+      "providers": {
+        "title": "Third-party services",
+        "body": "Selectio uses Firebase/Google services for features such as authentication, storage and application operations, and Mercado Pago for payment processing. Analysis features may also load libraries and models distributed by external services. These services are subject to their providers' terms and policies."
+      },
+      "browser": {
+        "title": "Information stored in your browser",
+        "body": "The browser may store language and theme preferences and information needed for your session. The platform uses authentication and abuse prevention features. This information does not replace permission checks performed by the service."
+      },
+      "security": {
+        "title": "Protecting information",
+        "body": "The platform uses access controls, validation and technical measures to reduce the risk of misuse. No measure eliminates every risk. Protect your credentials and avoid sharing more documents or personal information than necessary."
+      },
+      "retention": {
+        "title": "Data retention",
+        "body": "Processing and retention should consider service purposes, applicable obligations and the need to maintain transaction records. This version does not establish a single retention period or promise immediate deletion of every record. Operational retention and request handling procedures must be defined for the commercial launch."
+      },
+      "rights": {
+        "title": "Rights concerning your information",
+        "body": "Depending on the context and applicable law, you may request information about processing, confirmation and access to your data, correction of incomplete or outdated information and deletion where applicable. Where processing is based on consent, you may request its withdrawal. Some information may need to be retained in situations provided for by law. Consult ANPD's public guidance to learn about your rights."
+      },
+      "updates": {
+        "title": "Updates to this policy",
+        "body": "Changes in features or processing practices may require a new version. The date on this page identifies the latest text update. The identification of parties responsible for processing, legal bases, support channels and retention procedures requires legal and operational review before the definitive commercial launch."
+      }
+    }
+  },
+  "terms": {
+    "title": "Terms of Use",
+    "intro": "These terms provide guidance on using Selectio, a platform connecting companies, referrers and talent through referrals. This is the initial institutional content for the MVP.",
+    "sections": {
+      "acceptance": {
+        "title": "Using the platform",
+        "body": "When using Selectio, follow these terms and the conditions presented in the workflows you access. Also read the Privacy Policy. Registration includes acceptance of terms; these documents require review before the definitive commercial launch."
+      },
+      "users": {
+        "title": "Profiles and participation",
+        "body": "Companies publish jobs and track recruitment processes. Referrers register talent and submit referrals. Candidate information is included in the process by the responsible referrer. Available features depend on each account's profile and permissions."
+      },
+      "account": {
+        "title": "Account responsibility",
+        "body": "Provide accurate, current information, protect your credentials and use only accounts and information you are authorized to manage. Do not share access in ways that allow platform misuse."
+      },
+      "jobs": {
+        "title": "Publishing jobs",
+        "body": "Companies are responsible for the information and requirements of their published opportunities and for keeping availability up to date. Descriptions should be clear, relevant to professional duties and comply with applicable rules."
+      },
+      "referrals": {
+        "title": "Referrals and candidate information",
+        "body": "Referrers are responsible for providing accurate information and using candidate data legitimately and transparently. Before registering or sharing a résumé, inform the candidate of the purpose and make sure you have appropriate authorization or another suitable basis for that use. A referral does not guarantee employment."
+      },
+      "analysis": {
+        "title": "Compatibility and human decisions",
+        "body": "Compatibility analysis helps compare job requirements and available professional information. Preliminary validation may be required to submit a referral. Results support the process, may have limitations and do not guarantee an interview or hiring. The final decision belongs to the people responsible for recruitment."
+      },
+      "rewards": {
+        "title": "Rewards and payments",
+        "body": "A referral may be associated with a reward according to the opportunity and conditions shown in the platform. Payments use Mercado Pago. Consult job information and the financial area to track transactions; starting or returning from checkout does not mean payment has been confirmed. These terms do not establish additional amounts, fees or deadlines."
+      },
+      "conduct": {
+        "title": "Responsible use",
+        "items": {
+          "fraud": "Do not commit fraud, provide false information or manipulate referrals and recruitment processes.",
+          "data": "Do not use third-party data, résumés or documents without an appropriate basis.",
+          "security": "Do not attempt unauthorized access, compromise security or bypass platform controls.",
+          "abuse": "Do not discriminate, harass or abuse platform features."
+        }
+      },
+      "availability": {
+        "title": "Availability and limitations",
+        "body": "The service may undergo maintenance, changes or interruptions, including in third-party integrations. The MVP is evolving. Continuous availability, employment or rewards are not guaranteed."
+      },
+      "updates": {
+        "title": "Updates to these terms",
+        "body": "These terms may change as the product evolves. Check the update date and the conditions shown in the workflows. Legal responsibilities, support procedures and definitive commercial conditions require review before commercial launch."
+      }
+    }
+  },
+  "contact": {
+    "title": "Contact us",
+    "intro": "Learn which topics you can raise with the Selectio team and the current support status.",
+    "topicsTitle": "How we can help",
+    "topics": {
+      "support": "Questions about platform use and support.",
+      "business": "Interest from companies and referrers in Selectio.",
+      "privacy": "Privacy questions and requests concerning personal data.",
+      "other": "Other matters related to the project."
+    },
+    "channelTitle": "Official channel being defined",
+    "channelBody": "The official support channel is still being defined. This page does not send messages. Contact details will be published here once confirmed by the team.",
+    "sensitiveData": "Do not publish résumés, documents or candidate information in public channels. In the meantime, consult the frequently asked questions and Privacy Policy.",
+    "faqLink": "View frequently asked questions",
+    "privacyLink": "Read Privacy Policy"
+  },
+  "team": {
+    "title": "Our team",
+    "intro": "Selectio started with a team of three students in the Technical Computing course at FECAP — Fundação Escola de Comércio Álvares Penteado. We combine complementary areas to develop a recruitment platform based on referrals.",
+    "membersLabel": "Selectio team members",
+    "members": {
+      "kalil": {
+        "role": "Administration",
+        "description": "Organization of administrative routines, documentation and supplier relationships."
+      },
+      "marcos": {
+        "role": "Project management",
+        "description": "Organization of schedules, deliverables, priorities and communication across the project."
+      },
+      "gustavo": {
+        "role": "Technical development",
+        "description": "Platform development, testing, implementation and system architecture."
+      }
+    },
+    "purposeTitle": "Connecting people and opportunities",
+    "purpose": "Our purpose is to help companies meet talent through referrers' connections. Transparency, responsibility and agility guide the project's development."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "intro": "It looks like this opportunity is no longer here.",
+    "help": "We could not find the page you tried to access. You can return home or explore available jobs.",
+    "home": "Back to home",
+    "jobs": "Browse jobs"
+  },
+  "faq": {
+    "title": "Frequently asked questions",
+    "intro": "Answers to help you get to know Selectio and understand the platform's main workflows.",
+    "groups": {
+      "general": {
+        "title": "About Selectio",
+        "questions": {
+          "what": {
+            "question": "What is Selectio?",
+            "answer": "A web recruitment platform based on referrals, connecting companies, referrers and talent."
+          },
+          "how": {
+            "question": "How does the platform work?",
+            "answer": "Companies publish jobs; referrers register and refer candidates. Companies track recruitment stages and decide whether to hire."
+          },
+          "who": {
+            "question": "Who can use it?",
+            "answer": "The main account profiles are company and referrer. Candidates participate in recruitment through referrals submitted on the platform."
+          }
+        }
+      },
+      "referrers": {
+        "title": "Referrers",
+        "questions": {
+          "who": {
+            "question": "What is a referrer?",
+            "answer": "A person who connects talent they know with opportunities published by companies."
+          },
+          "refer": {
+            "question": "How do I refer a candidate?",
+            "answer": "Sign in to your referrer account, choose an available job and use the referral action. Provide the requested information and complete compatibility validation before submitting."
+          },
+          "save": {
+            "question": "Can I register talent for future referrals?",
+            "answer": "Yes. Your personal candidate bank lets you keep saved profiles and reuse their information in future referrals. Only register information you can legitimately process."
+          },
+          "track": {
+            "question": "How can I track my referrals?",
+            "answer": "In the referrer area, use the candidate list and dashboard to follow current statuses."
+          },
+          "analysis": {
+            "question": "How does compatibility analysis work?",
+            "answer": "Analysis compares job requirements and professional information, including résumés. In the current workflow, preliminary validation requires compatibility above 45% to allow submission. This does not guarantee an interview or hiring; the final decision is human."
+          }
+        }
+      },
+      "companies": {
+        "title": "Companies",
+        "questions": {
+          "publish": {
+            "question": "How do I publish a job?",
+            "answer": "Use job creation in the company area. Provide the title, requirements and opportunity conditions. In enterprise mode, publication also follows the available approval workflow."
+          },
+          "track": {
+            "question": "How can I track candidates?",
+            "answer": "The company area brings together candidates linked to your jobs and lets you follow recruitment statuses."
+          },
+          "process": {
+            "question": "Which stages can I track?",
+            "answer": "You can track referrals, interviews and decisions such as hiring, rejection or cancellation. The company conducts candidate assessment."
+          }
+        }
+      },
+      "rewards": {
+        "title": "Rewards",
+        "questions": {
+          "when": {
+            "question": "When can a referral earn a reward?",
+            "answer": "When an opportunity includes a reward and the corresponding conditions are met in the platform workflow. Check the job information; a referral alone does not guarantee payment."
+          },
+          "where": {
+            "question": "Where can I track financial information?",
+            "answer": "In the referrer or company financial area, depending on your profile. Available records let you track payments and related transactions."
+          }
+        }
+      },
+      "privacy": {
+        "title": "Data and privacy",
+        "questions": {
+          "use": {
+            "question": "How is candidate information used?",
+            "answer": "Professional information and résumés are used for referrals, compatibility analysis and tracking recruitment. Referrers must inform candidates and use their information responsibly."
+          },
+          "policy": {
+            "question": "Where can I find the Privacy Policy?",
+            "answer": "The policy is available on a public page and through the footer's Help links."
+          }
+        }
+      },
+      "support": {
+        "title": "Support",
+        "questions": {
+          "contact": {
+            "question": "How do I contact Selectio?",
+            "answer": "Check the Contact page for the official channel's availability. In the MVP, the channel is still being defined and no messages are submitted through a form."
+          }
+        }
+      }
+    }
+  },
+  "rightsLink": "Read ANPD guidance on data subject rights"
+}

@@ -56,7 +56,11 @@
     "privacy": "Privacy",
     "terms": "Terms of Use",
     "contact": "Contact",
-    "faq": "FAQ"
+    "faq": "FAQ",
+    "institutional": "About Selectio",
+    "help": "Help",
+    "team": "Team",
+    "copyright": "© {{year}} Selectio"
   },
   "loading": {
     "default": "Loading...",

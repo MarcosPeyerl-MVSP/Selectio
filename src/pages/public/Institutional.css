@@ -1,0 +1,46 @@
+.institutional-page { display: flex; flex-direction: column; }
+.institutional-main > * { animation: selectioSlideUp 0.44s var(--ease-premium) 0.06s both; }
+.institutional-main > .institutional-breadcrumb { animation: selectioFadeIn 0.28s ease both; }
+.institutional-main > .institutional-heading { animation: selectioSlideUp 0.48s var(--ease-premium) both; }
+.institutional-team article { animation: selectioScaleIn 0.42s var(--ease-premium) 0.08s both; }
+.institutional-team article:nth-child(2) { animation-delay: 0.14s; }
+.institutional-team article:nth-child(3) { animation-delay: 0.2s; }
+.institutional-faq-item > div:not([hidden]) { animation: selectioFadeIn 0.24s ease both; }
+.institutional-main { width: 100%; max-width: 960px; padding: 28px var(--page-padding) 72px; flex: 1; }
+.institutional-breadcrumb { display: flex; flex-wrap: wrap; gap: 12px; color: var(--muted); font-size: 13px; margin-bottom: 48px; }
+.institutional-breadcrumb a { text-decoration: underline; text-underline-offset: 3px; }
+.institutional-heading { margin-bottom: 32px; }
+.institutional-eyebrow { color: var(--primary-dark); font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 14px; }
+.institutional-heading h1 { font-size: var(--page-title-size); line-height: var(--page-title-leading); margin-bottom: 18px; overflow-wrap: anywhere; }
+.institutional-heading > p:last-child { color: var(--muted); font-size: 17px; line-height: 1.8; max-width: 68ch; }
+.institutional-updated { color: var(--muted); font-size: 13px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+.institutional-prose { font-size: 15px; line-height: 1.85; overflow-wrap: anywhere; }
+.institutional-prose section { margin-top: 32px; }
+.institutional-prose h2, .institutional-notice h2, .institutional-faq h2 { font-size: 20px; line-height: 1.4; margin: 28px 0 14px; }
+.institutional-prose ul { padding-left: 24px; margin: 16px 0; }
+.institutional-prose li + li { margin-top: 10px; }
+.institutional-prose a, .institutional-faq-item a { color: var(--primary-dark); text-decoration: underline; text-underline-offset: 4px; }
+.institutional-notice { margin-top: 32px; background: var(--surface); border-left: 4px solid var(--primary); padding: 4px 24px 24px; border-radius: var(--radius-control); }
+.institutional-notice p { line-height: 1.8; font-size: 15px; margin-top: 12px; }
+.institutional-actions { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 32px; }
+.institutional-actions > a { width: auto; max-width: 100%; white-space: normal; height: auto; min-height: 47px; line-height: 1.4; }
+.institutional-faq section + section { margin-top: 36px; }
+.institutional-faq-item { border-bottom: 1px solid var(--border); }
+.institutional-faq-item h3 { font-family: inherit; }
+.institutional-faq-item button { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 24px; text-align: left; background: transparent; color: var(--text); font-weight: 600; font-size: 15px; line-height: 1.6; padding: 18px 4px; min-height: 48px; }
+.institutional-faq-item button span { color: var(--primary-dark); font-size: 22px; }
+.institutional-faq-item > div { font-size: 15px; line-height: 1.85; padding: 0 4px 22px; }
+.institutional-faq-item a { display: inline-block; margin-top: 12px; }
+.institutional-team { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--card-gap); margin-bottom: 48px; }
+.institutional-team article { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 24px; }
+.institutional-initials { display: inline-flex; width: 52px; height: 52px; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 50%; color: var(--primary-dark); font-weight: 800; margin-bottom: 24px; }
+.institutional-team h2 { font-size: 19px; line-height: 1.5; margin-bottom: 12px; }
+.institutional-team p { font-size: 14px; line-height: 1.8; }
+.institutional-team .institutional-role { color: var(--primary-dark); font-weight: 700; margin-bottom: 12px; }
+.institutional-error-code { font-family: 'Montserrat', Arial, sans-serif; font-size: clamp(80px, 18vw, 150px); font-weight: 900; line-height: 1; color: var(--primary-dark); margin: 24px 0; }
+.institutional-not-found-help { color: var(--muted); line-height: 1.8; }
+@media (max-width: 700px) {
+  .institutional-breadcrumb { margin-bottom: 32px; }
+  .institutional-team { grid-template-columns: 1fr; }
+  .institutional-main { padding-bottom: 48px; }
+}
