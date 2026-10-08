@@ -5,16 +5,10 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   FaArrowRight,
-  FaBriefcase,
-  FaCalendarCheck,
   FaChartLine,
-  FaCheckCircle,
   FaClock,
-  FaLightbulb,
-  FaMoneyBillWave,
   FaUserCheck,
   FaUserFriends,
-  FaUserTie,
 } from 'react-icons/fa'
 import {
   Bar,
@@ -29,6 +23,10 @@ import {
 import EstadoDados from '../../components/ui/EstadoDados'
 import PageLoader from '../../components/ui/PageLoader'
 import { listarCandidatosPorIndicador } from '../../services/firestoreCandidatos'
+import { listarCandidatosPreSalvosParaRecomendacao } from '../../services/firestoreCandidatosPreSalvos'
+import { listarIndicacoesPorIndicador } from '../../services/firestoreIndicacoes'
+import { listarVagasPagina } from '../../services/firestoreVagas'
+import { recomendarVagas } from '../../services/recomendacoes/recomendacoesVagas'
 import {
   listarMovimentacoesIndicador,
   listarPagamentosPorIndicador,
@@ -52,11 +50,13 @@ function IndicadorDashboard({ user }) {
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
+  const [recomendacoes, setRecomendacoes] = useState({ indicadorId: '', erro: false, resultado: null })
 
   useEffect(() => {
     let ativo = true
 
     const carregarDashboard = async () => {
+      setRecomendacoes({ indicadorId, erro: false, resultado: null })
       if (!indicadorId) {
         if (ativo) {
           setErro(t('dashboard.missingUid'))
@@ -67,15 +67,25 @@ function IndicadorDashboard({ user }) {
 
       try {
         setErro('')
+        setCarregando(true)
 
-        const [candidatos, pagamentos, movimentacoes] = await Promise.all([
+        const dadosRecomendacoes = Promise.all([
+          listarVagasPagina(), listarIndicacoesPorIndicador(indicadorId),
+          listarCandidatosPreSalvosParaRecomendacao(indicadorId),
+        ])
+        // Uma falha da shortlist não deve indisponibilizar as métricas do painel.
+        const [candidatos, pagamentos, movimentacoes, extras] = await Promise.all([
           listarCandidatosPorIndicador(indicadorId),
           listarPagamentosPorIndicador(indicadorId),
           listarMovimentacoesIndicador(indicadorId),
+          dadosRecomendacoes.then((valor) => ({ valor }), () => ({ erro: true })),
         ])
 
         if (!ativo) return
         setDados({ candidatos, pagamentos, movimentacoes })
+        setRecomendacoes({ indicadorId, erro: Boolean(extras.erro),
+          resultado: extras.erro ? null : recomendarVagas({ indicadorId, candidatos,
+            vagas: extras.valor[0].vagas, indicacoes: extras.valor[1], preSalvos: extras.valor[2] }) })
       } catch {
         if (ativo) {
           setErro(t('dashboard.loadError'))
@@ -97,12 +107,10 @@ function IndicadorDashboard({ user }) {
     [dados, i18n.language, i18n.resolvedLanguage],
   )
 
-  const proximosPassos = useMemo(
-    () => montarProximosPassos({ resumo, user, t }),
-    [resumo, t, user],
-  )
+  const distribuicao = resumo.desempenho.map((item) => ({ ...item,
+    label: t(`common:statuses.candidates.${item.status}`, { defaultValue: t('dashboard.unknownStatus') }) }))
 
-  if (carregando) {
+  if (carregando || recomendacoes.indicadorId && recomendacoes.indicadorId !== indicadorId) {
     return <PageLoader label={t('dashboard.loading')} compact />
   }
 
@@ -155,14 +163,6 @@ function IndicadorDashboard({ user }) {
           helper={t('dashboard.conversionHelper', { value: formatPercent(resumo.taxaContratacao) })}
         />
         <MetricCard
-          icon={FaMoneyBillWave}
-          label={t('dashboard.totalRewards')}
-          value={formatCurrency(resumo.totalPremios)}
-          helper={t('dashboard.approvedPayments')}
-          tone="primary"
-          badge={t('dashboard.finance')}
-        />
-        <MetricCard
           icon={FaClock}
           label={t('dashboard.activeReferrals')}
           value={resumo.totalAtivas}
@@ -176,45 +176,43 @@ function IndicadorDashboard({ user }) {
             <article className="indicador-dashboard-card indicador-network-card">
               <div className="indicador-dashboard-card-heading">
                 <div>
-                  <span>{t('dashboard.conversion')}</span>
-                  <h2>{t('dashboard.networkPerformance')}</h2>
+                  <span>{t('dashboard.networkPerformance')}</span>
+                  <h2>{t('dashboard.referralConversion')}</h2>
                 </div>
                 <FaChartLine />
               </div>
 
+              <p className="indicador-performance-description">{t('dashboard.conversionDescription')}</p>
+              <div className="indicador-conversion-summary">
+                <strong>{formatPercent(resumo.taxaContratacao)}</strong>
+                <span>{t('dashboard.hireRatio', { count: resumo.totalContratacoes, hired: resumo.totalContratacoes, total: resumo.totalIndicacoes })}</span>
+              </div>
+              <p className="indicador-performance-description">{t('dashboard.statusDescription')}</p>
+              <div className="indicador-performance-chart" aria-hidden="true">
+                <ResponsiveContainer width="100%" height={235}>
+                  <BarChart data={distribuicao} layout="vertical" margin={{ top: 4, right: 28, left: 0, bottom: 0 }} accessibilityLayer={false}>
+                    <CartesianGrid stroke="var(--border)" strokeDasharray="4 6" horizontal={false} />
+                    <XAxis type="number" allowDecimals={false} tick={{ fill: 'var(--muted)', fontSize: 12 }} />
+                    <YAxis type="category" dataKey="label" width={100} tick={{ fill: 'var(--text)', fontSize: 12 }} tickLine={false} axisLine={false} />
+                    <Bar dataKey="quantidade" fill="var(--primary)" radius={[0, 5, 5, 0]} label={{ position: 'right', fill: 'var(--text)' }} maxBarSize={24} isAnimationActive={false} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <ul className="indicador-performance-counts">
+                {distribuicao.map((item) => <li key={item.status}>{item.label}: {item.quantidade} ({formatPercent(item.percentual)})</li>)}
+              </ul>
               <ConversionRow
-                label={t('dashboard.referralsToInterviews')}
+                label={t('dashboard.referralsAdvanced')}
                 value={resumo.taxaEntrevista}
                 detail={t('dashboard.ratio', { part: resumo.totalAvancaram, total: resumo.totalIndicacoes })}
               />
               <ConversionRow
-                label={t('dashboard.interviewsToHires')}
+                label={t('dashboard.advancedToHires')}
                 value={resumo.taxaEntrevistaContratacao}
                 detail={t('dashboard.ratio', { part: resumo.totalContratacoes, total: resumo.totalAvancaram })}
               />
-            </article>
-
-            <article className="indicador-dashboard-card indicador-pending-card">
-              <div className="indicador-dashboard-card-heading">
-                <div>
-                  <span>{t('dashboard.tracking')}</span>
-                  <h2>{t('dashboard.pendingRewards')}</h2>
-                </div>
-                <FaMoneyBillWave />
-              </div>
-
-              <div className="indicador-pending-value">
-                <strong>{resumo.premiosPendentes}</strong>
-                <span>{t('dashboard.reward', { count: resumo.premiosPendentes })}</span>
-              </div>
-              <p>
-                {resumo.premiosPendentes
-                  ? t('dashboard.pendingValue', { value: formatCurrency(resumo.valorPendente) })
-                  : t('dashboard.noPending')}
-              </p>
-              <Link to="/painel/indicador/dashboard?secao=financeiro">
-                {t('dashboard.openFinance')} <FaArrowRight />
-              </Link>
+              <p className="indicador-performance-description">{t('dashboard.advancedDescription')}</p>
+              <p className="indicador-performance-description">{t('dashboard.sampleDescription')}</p>
             </article>
           </section>
 
@@ -277,6 +275,42 @@ function IndicadorDashboard({ user }) {
               </div>
             )}
           </article>
+
+
+        </div>
+
+        <aside className="indicador-dashboard-aside" aria-label={t('dashboard.recommendations.title')}>
+          <article className="indicador-dashboard-card indicador-recommendations-card">
+            <div className="indicador-dashboard-card-heading">
+              <div>
+                <h2>{t('dashboard.recommendations.title')}</h2>
+              </div>
+            </div>
+
+            {recomendacoes.erro ? (
+              <EstadoDados title={t('dashboard.recommendations.errorTitle')} description={t('dashboard.recommendations.errorDescription')}
+                actionLabel={t('dashboard.retry')} onAction={() => { setCarregando(true); setReloadKey((value) => value + 1) }} tone="error" />
+            ) : (
+              <>
+                <p>{t(recomendacoes.resultado?.personalizada ? 'dashboard.recommendations.description' : 'dashboard.recommendations.newUser')}</p>
+                <p className="indicador-recommendations-note">{t('dashboard.recommendations.shortlist')}</p>
+                <div className="indicador-recommendations-list">
+                  {recomendacoes.resultado?.vagas.map(({ vaga, motivos }) => (
+                    <article className="indicador-recommendation" key={vaga.id}>
+                      <h3>{vaga.titulo || t('dashboard.job')}</h3>
+                      <p>{vaga.empresa || vaga.empresaNome || t('dashboard.company')}</p>
+                      <p>{[vaga.area, vaga.rubricaCompatibilidade?.modeloTrabalho, vaga.localizacao].filter(Boolean).join(' • ')}</p>
+                      <ul>{motivos.map((motivo) => <li key={motivo.tipo}>{t(`dashboard.recommendations.reasons.${motivo.tipo}`, { count: motivo.count })}</li>)}</ul>
+                      <Link to={`/vaga/${vaga.id}`}>{t('dashboard.recommendations.viewJob')} <FaArrowRight aria-hidden="true" /></Link>
+                    </article>
+                  ))}
+                </div>
+                {!recomendacoes.resultado?.vagas.length && <p role="status">{t('dashboard.recommendations.empty')}</p>}
+              </>
+            )}
+            <Link className="indicador-recommendations-all" to="/vagas">{t('dashboard.recommendations.viewAll')} <FaArrowRight aria-hidden="true" /></Link>
+          </article>
+        </aside>
 
           <article
             className="indicador-dashboard-card indicador-chart-card"
@@ -345,47 +379,6 @@ function IndicadorDashboard({ user }) {
               )}
             </footer>
           </article>
-        </div>
-
-        <aside className="indicador-dashboard-aside">
-          <article className="indicador-editorial-card">
-            <span><FaLightbulb /> {t('dashboard.editorTip')}</span>
-            <h2>{t('dashboard.successTitle')}</h2>
-            <p>{t('dashboard.successDescription')}</p>
-            <ul>
-              <li>{t('dashboard.tipExperience')}</li>
-              <li>{t('dashboard.tipResults')}</li>
-              <li>{t('dashboard.tipProfile')}</li>
-            </ul>
-            <Link to="/vagas">{t('dashboard.findOpportunity')} <FaArrowRight /></Link>
-          </article>
-
-          <article className="indicador-next-steps-card">
-            <div className="indicador-dashboard-card-heading">
-              <div>
-                <span>{t('dashboard.now')}</span>
-                <h2>{t('dashboard.nextSteps')}</h2>
-              </div>
-            </div>
-
-            <div className="indicador-next-steps-list">
-              {proximosPassos.map((passo) => {
-                const Icon = passo.icon
-
-                return (
-                  <Link to={passo.to} key={passo.title}>
-                    <span><Icon /></span>
-                    <div>
-                      <strong>{passo.title}</strong>
-                      <p>{passo.description}</p>
-                    </div>
-                    <FaArrowRight className="indicador-next-step-arrow" />
-                  </Link>
-                )
-              })}
-            </div>
-          </article>
-        </aside>
       </div>
     </section>
   )
@@ -433,67 +426,6 @@ function GanhosTooltip({ active, payload }) {
       <strong>{formatCurrency(item?.valor)}</strong>
     </div>
   )
-}
-
-function montarProximosPassos({ resumo, user, t }) {
-  const passos = []
-  const perfilIncompleto = !user?.linkedin || !user?.especialidades
-
-  if (!resumo.totalIndicacoes) {
-    passos.push({
-      icon: FaBriefcase,
-      title: t('dashboard.next.firstTitle'),
-      description: t('dashboard.next.firstDescription'),
-      to: '/vagas',
-    })
-  }
-
-  if (resumo.totalAtivas) {
-    passos.push({
-      icon: FaCalendarCheck,
-      title: t('dashboard.next.activeTitle'),
-      description: t('dashboard.next.activeDescription', { count: resumo.totalAtivas }),
-      to: '/candidatos/indicador',
-    })
-  }
-
-  if (resumo.premiosPendentes) {
-    passos.push({
-      icon: FaMoneyBillWave,
-      title: t('dashboard.next.rewardsTitle'),
-      description: t('dashboard.next.rewardsDescription', { count: resumo.premiosPendentes }),
-      to: '/painel/indicador/dashboard?secao=financeiro',
-    })
-  }
-
-  if (perfilIncompleto) {
-    passos.push({
-      icon: FaUserTie,
-      title: t('dashboard.next.profileTitle'),
-      description: t('dashboard.next.profileDescription'),
-      to: '/painel/indicador/dashboard?secao=perfil',
-    })
-  }
-
-  if (passos.length < 3) {
-    passos.push({
-      icon: FaCheckCircle,
-      title: t('dashboard.next.reviewTitle'),
-      description: t('dashboard.next.reviewDescription'),
-      to: '/candidatos/indicador',
-    })
-  }
-
-  if (passos.length < 3) {
-    passos.push({
-      icon: FaBriefcase,
-      title: t('dashboard.next.networkTitle'),
-      description: t('dashboard.next.networkDescription'),
-      to: '/vagas',
-    })
-  }
-
-  return passos.slice(0, 3)
 }
 
 function primeiroNome(nome, fallback) {

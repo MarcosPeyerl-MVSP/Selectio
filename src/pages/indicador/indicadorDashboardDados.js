@@ -53,12 +53,25 @@ export function montarResumoDashboard(
     taxaContratacao: calcularPercentual(totalContratacoes, totalIndicacoes),
     taxaEntrevista: calcularPercentual(totalAvancaram, totalIndicacoes),
     taxaEntrevistaContratacao: calcularPercentual(totalContratacoes, totalAvancaram),
+    desempenho: montarDesempenhoIndicacoes(candidatos),
     recentes: candidatos.slice(0, 5),
     ganhosMensais,
     totalPeriodoGrafico: ganhosMensais.reduce((total, item) => total + item.valor, 0),
     fonteGanhos,
     ultimoCredito: datasCredito[0] || null,
   }
+}
+
+// Distribuição atual, não um funil cumulativo de eventos de entrevista.
+export function montarDesempenhoIndicacoes(candidatos = []) {
+  const status = ['indicado', 'entrevista', 'contratado', 'recusado', 'cancelado']
+  const contagens = new Map(status.map((item) => [item, 0]))
+  for (const candidato of candidatos) {
+    const chave = candidato.status || 'indicado'
+    contagens.set(chave, (contagens.get(chave) || 0) + 1)
+  }
+  return [...contagens].map(([status, quantidade]) => ({ status, quantidade,
+    percentual: calcularPercentual(quantidade, candidatos.length) }))
 }
 
 function montarGanhosMensais(itens, fonte, agora, locale) {

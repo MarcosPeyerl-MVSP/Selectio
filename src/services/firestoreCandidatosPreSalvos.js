@@ -4,6 +4,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  limit,
   query,
   serverTimestamp,
   updateDoc,
@@ -233,6 +234,14 @@ export const listarCandidatosPreSalvos = async (indicadorId) => {
     .map(mapCandidatoPreSalvoDoc)
     .filter(Boolean)
     .sort(sortByUpdatedDesc)
+}
+
+// Amostra limitada para shortlist do dashboard; não altera a listagem do banco pessoal.
+export const listarCandidatosPreSalvosParaRecomendacao = async (indicadorId) => {
+  assertIndicadorId(indicadorId)
+  const snapshot = await getDocs(query(candidatosPreSalvosCollection,
+    where('indicadorId', '==', indicadorId), limit(100)))
+  return snapshot.docs.map(mapCandidatoPreSalvoDoc).filter(Boolean).sort(sortByUpdatedDesc)
 }
 
 export const buscarCandidatoPreSalvoPorId = async ({ candidatoId, indicadorId }) => {

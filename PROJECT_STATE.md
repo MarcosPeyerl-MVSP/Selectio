@@ -15,6 +15,17 @@ Plataforma de recrutamento por indicação: empresas publicam vagas e acompanham
 
 ## Runtime / stack
 
+### Dashboard do indicador — verificação local em 2026-10-08
+
+Base `fde78b8`, branch `feat/dashboard-indicador`, inicialmente limpa. Evidências: `IndicadorDashboard.jsx`, `indicadorDashboardDados.js`, `services/recomendacoes/recomendacoesVagas.js` e `tests/indicadorDashboard.test.mjs`.
+
+- KPIs monetários e card de recompensas pendentes removidos apenas desta tela; gráfico dos últimos seis meses preservado e colocado no final. Serviços e regras financeiras permanecem intactos.
+- Conversão mantém contratados / indicações carregadas; o gráfico mostra distribuição de status atuais, não etapas acumuladas. Amostra existente limitada a 100 indicações.
+- Shortlist lexical determinística de até quatro vagas: histórico recente (30), histórico carregado (20), similaridade (20), candidatos próprios (30). Usa campos profissionais estruturados, sem currículos, OCR, embeddings ou chamadas de IA; não substitui elegibilidade/autorização da indicação.
+- Leituras limitadas: primeira página de até 100 vagas, até 200 registros de histórico, 100 candidatos associados já carregados e 100 pré-salvos do próprio indicador. A nova consulta de pré-salvos usa ownership e limite, sem ordenação composta ou novo índice composto. Ordenação local não garante os 100 pré-salvos mais recentes; histórico carregado não representa necessariamente toda a carreira. Vagas antigas fora da página só contribuem pelo título salvo na indicação.
+- Filtros locais excluem vagas fechadas, pausadas, expiradas, sem empresa e solicitações empresariais ainda não publicadas. Ausência de dados profissionais gera sugestões recentes neutras; ausência de afinidade suficiente gera estado vazio. Rules e validações server-side continuam sendo a autoridade.
+- Validação local: scanner, lint, i18n, 54 testes unitários e build; 15 testes de dashboard/recomendação, incluindo ownership, deduplicação, disponibilidade e fallbacks. Prévia isolada com dados fictícios em 390/1024/1440 px e pt-BR/en-US, sem Firebase real. Build mantém aviso de chunks acima de 500 kB. Não houve teste autenticado contra Firebase, emuladores, Functions, auditoria npm ou deploy nesta tarefa; Rules/Functions não foram alteradas. Esta verificação não atualiza os demais fatos do snapshot de 01/10 nem comprova configuração remota.
+
 **VERIFICADO:** `package.json` declara React 18, Vite 8, JavaScript ESM, React Router 7, Firebase SDK 12, i18next/react-i18next e Recharts. PDF/DOCX/OCR usam pdfjs-dist, mammoth e tesseract.js. Functions usam CommonJS, firebase-admin 14, firebase-functions 7 e Node 22 (`functions/package.json`, `firebase.json`). Node local: 24.1.0; npm: 11.3.0. CI usa Node 22; resultado local não substitui esse runtime.
 
 ## Architecture / critical paths
