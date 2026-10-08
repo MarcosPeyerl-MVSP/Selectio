@@ -37,7 +37,15 @@
 .institutional-team h2 { font-size: 19px; line-height: 1.5; margin-bottom: 12px; }
 .institutional-team p { font-size: 14px; line-height: 1.8; }
 .institutional-team .institutional-role { color: var(--primary-dark); font-weight: 700; margin-bottom: 12px; }
-.institutional-error-code { font-family: 'Montserrat', Arial, sans-serif; font-size: clamp(80px, 18vw, 150px); font-weight: 900; line-height: 1; color: var(--primary-dark); margin: 24px 0; }
+.institutional-main--notFound { max-width: none; min-height: 65vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 64px var(--page-padding); text-align: center; }
+.institutional-main--notFound .institutional-heading { margin-bottom: 8px; }
+.institutional-main--notFound .institutional-heading h1 { font-family: inherit; font-size: clamp(24px, 4vw, 36px); line-height: 1.3; margin-bottom: 12px; }
+.institutional-main--notFound .institutional-heading > p:last-child { font-size: clamp(17px, 2.5vw, 24px); line-height: 1.5; }
+.institutional-main--notFound .institutional-heading h1,
+.institutional-main--notFound .institutional-heading > p,
+.institutional-main--notFound .institutional-not-found-help { color: var(--primary); }
+.institutional-main--notFound .institutional-actions { justify-content: center; margin-top: 36px; }
+.institutional-error-code { font-family: 'Montserrat', Arial, sans-serif; font-size: clamp(100px, 20vw, 160px); font-weight: 900; line-height: 1; color: var(--text); margin: 0 0 24px; }
 .institutional-not-found-help { color: var(--muted); line-height: 1.8; }
 @media (max-width: 700px) {
   .institutional-breadcrumb { margin-bottom: 32px; }

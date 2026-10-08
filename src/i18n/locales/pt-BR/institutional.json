@@ -1,5 +1,5 @@
 {
-  "eyebrow": "Selectio • Conexões que aproximam talentos",
+  "eyebrow": "Selectio • Seja você mesmo a conexão!",
   "breadcrumb": "Caminho da página",
   "home": "Início",
   "updated": "Última atualização: {{date}}",
@@ -153,10 +153,9 @@
   },
   "notFound": {
     "title": "Página não encontrada",
-    "intro": "Parece que essa oportunidade não está mais por aqui.",
-    "help": "Não encontramos a página que você tentou acessar. Você pode voltar ao início ou explorar as vagas disponíveis.",
-    "home": "Voltar ao início",
-    "jobs": "Ver vagas"
+    "intro": "O link pode estar incorreto",
+    "help": "ou a página pode ter sido removida.",
+    "home": "Voltar ao início"
   },
   "faq": {
     "title": "Perguntas frequentes",

@@ -1,5 +1,5 @@
 {
-  "eyebrow": "Selectio • Connections that bring talent closer",
+  "eyebrow": "Selectio • Be the connection yourself!",
   "breadcrumb": "Page breadcrumb",
   "home": "Home",
   "updated": "Last updated: {{date}}",
@@ -153,10 +153,9 @@
   },
   "notFound": {
     "title": "Page not found",
-    "intro": "It looks like this opportunity is no longer here.",
-    "help": "We could not find the page you tried to access. You can return home or explore available jobs.",
-    "home": "Back to home",
-    "jobs": "Browse jobs"
+    "intro": "The link might be incorrect",
+    "help": "or the page may have been removed.",
+    "home": "Back to home"
   },
   "faq": {
     "title": "Frequently asked questions",

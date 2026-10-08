@@ -55,8 +55,12 @@ test('FAQ conecta botões aos painéis ocultos e 404 oferece recuperação sem r
   assert.equal(ids.length, 16)
   for (const id of ids) assert.ok(faq.includes(`id="${id}" hidden=""`))
   assert.equal((faq.match(/aria-expanded="false"/g) || []).length, ids.length)
-  const notFound = await render('NotFound', 'en-US')
-  assert.match(notFound, /Page not found/)
-  assert.match(notFound, /href="\/vagas"/)
-  assert.doesNotMatch(notFound, /http-equiv="refresh"/)
+  for (const language of ['pt-BR', 'en-US']) {
+    const notFound = await render('NotFound', language)
+    const main = notFound.match(/<main\b[^>]*>([\s\S]*?)<\/main>/)[1]
+    assert.match(main, />404<\/p>/)
+    assert.deepEqual([...main.matchAll(/href="([^"]+)"/g)].map((match) => match[1]), ['/'])
+    assert.doesNotMatch(main, /institutional-eyebrow|institutional-breadcrumb|\/vagas/)
+    assert.doesNotMatch(notFound, /http-equiv="refresh"/)
+  }
 })

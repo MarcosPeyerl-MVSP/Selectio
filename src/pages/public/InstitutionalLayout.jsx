@@ -19,11 +19,11 @@ export default function InstitutionalLayout({ page, children }) {
     <div className="page institutional-page">
       <Navbar />
       <main key={pathname} className={`institutional-main institutional-main--${page}`}>
-        <nav className="institutional-breadcrumb" aria-label={t('breadcrumb')}>
+        {page !== 'notFound' && <nav className="institutional-breadcrumb" aria-label={t('breadcrumb')}>
           <Link to="/">{t('home')}</Link><span aria-hidden="true">/</span><span aria-current="page">{title}</span>
-        </nav>
+        </nav>}
         <header className="institutional-heading">
-          <p className="institutional-eyebrow">{t('eyebrow')}</p>
+          {page !== 'notFound' && <p className="institutional-eyebrow">{t('eyebrow')}</p>}
           {page === 'notFound' && <p className="institutional-error-code" aria-hidden="true">404</p>}
           <h1>{title}</h1>
           <p>{t(`${page}.intro`)}</p>

@@ -8,7 +8,6 @@ export default function NotFound() {
       <p className="institutional-not-found-help">{t('notFound.help')}</p>
       <div className="institutional-actions">
         <Link className="btn-primary" to="/">{t('notFound.home')}</Link>
-        <Link className="btn-secondary" to="/vagas">{t('notFound.jobs')}</Link>
       </div>
     </InstitutionalLayout>
   )
