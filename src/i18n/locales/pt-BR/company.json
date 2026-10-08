@@ -99,8 +99,6 @@
     "eyebrow": "Financeiro da empresa",
     "title": "Pagamentos de recompensas",
     "description": "Acompanhe recompensas pagas, pendentes e aprovadas para indicadores vinculados aos candidatos contratados.",
-    "localEnvironment": "Ambiente local Mercado Pago",
-    "backendNotConfigured": "Cloud Function de pagamentos não configurada",
     "approvedVolume": "Volume aprovado",
     "pendingVolume": "Volume pendente",
     "totalCreated": "Total criado",

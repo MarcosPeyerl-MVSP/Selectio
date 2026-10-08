@@ -1,4 +1,5 @@
 .footer { padding: 24px max(28px, calc((100vw - 1180px) / 2)); background: var(--surface); border-top: 1px solid var(--border); display: grid; grid-template-columns: minmax(90px, 1fr) auto auto; align-items: center; gap: 12px 36px; color: var(--muted); font-size: 13px; }
+.footer > a { justify-self: start; }
 .footer-logo { display: block; width: 90px; max-width: 90px; height: auto; max-height: 45px; object-fit: contain; }
 .footer-group { display: flex; flex-wrap: wrap; align-items: center; gap: 0 18px; }
 .footer-group h2 { flex-basis: 100%; font-size: 12px; color: var(--text); margin-bottom: 4px; }

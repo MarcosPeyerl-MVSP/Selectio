@@ -11,7 +11,6 @@ import { formatCurrency, formatDate } from '../../i18n/formatters'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import {
   listarPagamentosPorEmpresa,
-  obterMercadoPagoBackendUrl,
   obterCheckoutUrlPagamento,
   sincronizarPagamentoMercadoPago
 } from '../../services/firestorePagamentos'
@@ -25,7 +24,6 @@ function EmpresaPagamentos({ empresa }) {
   const [carregando, setCarregando] = useState(true)
   const [sincronizandoId, setSincronizandoId] = useState('')
   const retornoProcessado = useRef('')
-  const backendUrl = obterMercadoPagoBackendUrl()
   const formatDateTime = (value) => formatDate(value, {
     dateStyle: 'short',
     timeStyle: 'short'
@@ -135,10 +133,6 @@ function EmpresaPagamentos({ empresa }) {
         <span>{t('payments.eyebrow')}</span>
         <h1>{t('payments.title')}</h1>
         <p>{t('payments.description')}</p>
-        <div className="empresa-pagamentos-env">
-          <strong>{t('payments.localEnvironment')}</strong>
-          <span>{backendUrl || t('payments.backendNotConfigured')}</span>
-        </div>
       </header>
 
       <section className="empresa-pagamentos-metricas">
