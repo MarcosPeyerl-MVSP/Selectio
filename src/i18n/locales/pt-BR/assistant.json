@@ -1,0 +1,30 @@
+{
+  "title": "Assistente de candidatos",
+  "intro": "Consulte evidências profissionais dos candidatos indicados para uma vaga da sua empresa.",
+  "review": "As respostas são apoio à análise e devem ser revisadas pela equipe responsável pelo processo seletivo.",
+  "selectJob": "Vaga", "chooseJob": "Selecionar vaga", "newConversation": "Nova conversa", "refresh": "Atualizar documentos",
+  "noJobs": "Sua empresa ainda não possui vagas.", "jobsLimit": "São exibidas as primeiras 50 vagas. Vagas fora desse limite ainda não estão disponíveis neste MVP.",
+  "selectFirst": "Selecione uma vaga para começar.", "candidateCount": "{{count}} candidatos disponíveis", "noCandidates": "Esta vaga ainda não possui candidatos indicados.",
+  "partialSources": "Alguns currículos estão ausentes ou não possuem texto extraível. A análise usará as fontes profissionais disponíveis, sem OCR automático.",
+  "loading": "Carregando vagas…", "indexing": "Preparando documentos…", "sending": "Buscando evidências e preparando resposta…",
+  "conversation": "Conversa sobre candidatos", "user": "Você", "assistant": "Assistente", "question": "Sua pergunta", "inputHelp": "Enter envia. Shift + Enter insere uma nova linha.", "send": "Enviar",
+  "sources": "Fontes", "sourceLink": "Consultar fonte {{id}}", "viewCandidate": "Ver candidato: {{name}}", "suggestionsLabel": "Sugestões de perguntas",
+  "suggestions": {
+    "technical": "Comparar aderência aos requisitos técnicos da vaga",
+    "experience": "Quais candidatos têm evidências de experiência relacionada à vaga?",
+    "leadership": "Mostrar evidências documentadas de liderança profissional",
+    "missing": "Quais requisitos obrigatórios não estão comprovados?",
+    "differences": "Resumir as principais diferenças documentadas entre os candidatos"
+  },
+  "sourceTypes": { "resume": "Currículo", "form": "Formulário de indicação" },
+  "fields": { "resume": "Texto extraído", "cargoAtual": "Cargo atual", "anosExperiencia": "Experiência declarada", "escolaridade": "Formação", "proficienciaIdiomas": "Idiomas", "hardSkills": "Habilidades técnicas", "pontosFortes": "Pontos fortes profissionais", "destaquesProjetos": "Projetos", "narrativa": "Narrativa da indicação", "observacoesProfissionais": "Observações profissionais" },
+  "limitations": { "human_review": "Revise as fontes antes de usar esta análise. O assistente não decide contratações ou rejeições.", "insufficient_evidence": "Não encontrei evidência suficiente nos materiais recuperados. Isso não significa ausência da habilidade.", "partial_sources": "Há fontes incompletas. Apenas trechos selecionados foram analisados; podem existir informações adicionais nos documentos.", "no_candidates": "Nenhum candidato disponível nesta vaga.", "professional_only": "Compare apenas critérios profissionais. O assistente não usa atributos pessoais ou protegidos nem executa decisões de contratação.", "initiative_only": "Não é possível determinar personalidade pelo currículo. A comparação trata apenas de evidências documentadas de iniciativa profissional." },
+  "errors": {
+    "entrada_invalida": "Confira a pergunta e seus limites de tamanho.", "sessao_expirada": "Entre novamente para usar o assistente.", "acesso_negado": "Você não tem acesso a esta vaga ou a estes candidatos.", "vaga_inexistente": "Esta vaga não está mais disponível.",
+    "muitos_candidatos": "Esta vaga excede o limite de 24 candidatos do MVP. A análise não foi feita para evitar uma comparação parcial.",
+    "curriculo_nao_autorizado": "Não foi possível validar o vínculo de um currículo. Revise o cadastro antes de continuar.", "indice_desatualizado": "Os documentos mudaram ou o índice expirou. Use Atualizar documentos antes de perguntar novamente.",
+    "limite_uso": "Limite de uso atingido. Aguarde antes de tentar novamente.", "limite_provider": "O serviço de IA atingiu sua cota. Tente novamente mais tarde.",
+    "provider_nao_configurado": "Assistente de IA ainda não configurado neste ambiente.", "privacidade_provider": "O envio de dados ao serviço de IA ainda não foi habilitado para este ambiente.",
+    "provider_timeout": "O serviço de IA demorou para responder. Tente novamente mais tarde.", "provider_indisponivel": "Assistente indisponível. Tente novamente mais tarde.", "resposta_invalida": "A resposta não passou pela validação de fontes. Reformule a pergunta ou tente novamente."
+  }
+}

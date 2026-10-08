@@ -18,6 +18,7 @@ import {
   FaUserTie,
   FaUsersCog,
   FaTimes,
+  FaComments,
 } from 'react-icons/fa'
 import {
   SETOR_ADMIN_EMPRESA,
@@ -49,6 +50,7 @@ const sidebarConfig = {
     items: [
       { to: '/vagas', labelKey: 'sidebar.jobs', icon: FaBriefcase, activeOn: ['/vagas'], tourKey: 'vagas' },
       { to: '/candidatos/empresa', labelKey: 'sidebar.candidates', icon: FaUserFriends, activeOn: ['/candidatos/empresa'], tourKey: 'candidatos' },
+      { to: '/painel/empresa?secao=assistente', labelKey: 'sidebar.assistant', icon: FaComments },
       { to: '/painel/empresa?secao=perfil', labelKey: 'sidebar.profile', icon: FaUserTie, tourKey: 'perfil' },
       { to: '/painel/empresa?secao=pagamentos', labelKey: 'sidebar.payments', icon: FaCreditCard, tourKey: 'pagamentos' },
       { to: '/painel/empresa?secao=configuracoes', labelKey: 'sidebar.settings', icon: FaCog },
@@ -64,6 +66,7 @@ function getSidebarConfig(type, user) {
 
   const setorId = user?.setorEmpresarial?.id
   const commonItems = [
+    { to: '/painel/empresa?secao=assistente', labelKey: 'sidebar.assistant', icon: FaComments },
     { to: '/painel/empresa?secao=perfil', labelKey: 'sidebar.profile', icon: FaUserTie, tourKey: 'perfil' },
     { to: '/painel/empresa?secao=configuracoes', labelKey: 'sidebar.settings', icon: FaCog },
   ]

@@ -36,6 +36,8 @@ Não enfraqueça Rules para fazer um fluxo funcionar. `ProtectedRoute`, localSto
 
 **HIGH-RISK:** pagamentos/Mercado Pago, saques, saldo, `functions/src/mercadoPagoCore.cjs`; Firestore/Storage Rules; autenticação, autorização e roles; Functions críticas como `functions/src/indicacoesCore.cjs`; ranking/compatibilidade ao alterar regra de negócio; uploads sensíveis/currículos; alterações de schema e migrações de dados; arquitetura crítica. Nessas áreas, use branch separada, analise o fluxo completo, execute testes relacionados, explique efeitos de segurança e obtenha revisão humana antes de integrar à `main`. Na pré-produção, a revisão pode ser feita pelo desenvolvedor responsável; não exige approval formal de outra pessoa no GitHub.
 
+O assistente de candidatos / RAG (`functions/src/assistente/`, `assistenteCandidatosApi`) também é **HIGH-RISK**: dados de currículos, autorização, sanitização e envio a IA exigem testes, revisão de privacidade e revisão humana. Citações validadas não garantem que a interpretação do modelo seja correta.
+
 Os setores do modo empresarial (Administrador da Empresa, Chefe de Departamento, Reitoria/Auditoria e RH) não devem ser apresentados como isolamento server-side completo. Verifique identidades, Rules e transições antes de afirmar RBAC seguro.
 
 ## Firebase, pagamentos e IA

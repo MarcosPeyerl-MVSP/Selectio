@@ -624,7 +624,8 @@
     "publish": "Publish",
     "approved": "Approved",
     "sectors": "Departments",
-    "jobFlow": "Job workflow"
+    "jobFlow": "Job workflow",
+    "assistant": "Candidate assistant"
   },
   "notFound": "Page not found",
   "photoEditor": {

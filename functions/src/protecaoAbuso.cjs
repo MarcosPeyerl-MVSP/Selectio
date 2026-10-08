@@ -2,6 +2,7 @@ const { createHash } = require('node:crypto')
 const { Timestamp } = require('firebase-admin/firestore')
 
 const POLITICAS = Object.freeze({
+  ...require('./assistente/config.cjs').POLITICAS_ASSISTENTE,
   analisar: { minuto: 6, dia: 100 },
   finalizar: { minuto: 12, dia: 200 },
   financeiro: { minuto: 20, dia: 300 }

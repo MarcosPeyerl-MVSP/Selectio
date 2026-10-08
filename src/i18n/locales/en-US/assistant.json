@@ -1,0 +1,30 @@
+{
+  "title": "Candidate assistant",
+  "intro": "Explore professional evidence from candidates referred to one of your company's jobs.",
+  "review": "Answers support analysis and must be reviewed by the team responsible for the recruitment process.",
+  "selectJob": "Job", "chooseJob": "Select a job", "newConversation": "New conversation", "refresh": "Refresh documents",
+  "noJobs": "Your company has no jobs yet.", "jobsLimit": "The first 50 jobs are shown. Jobs outside this limit are not available in this MVP.",
+  "selectFirst": "Select a job to start.", "candidateCount": "{{count}} candidates available", "noCandidates": "No candidates have been referred to this job yet.",
+  "partialSources": "Some resumes are missing or have no extractable text. Analysis uses available professional sources without automatic OCR.",
+  "loading": "Loading jobs…", "indexing": "Preparing documents…", "sending": "Retrieving evidence and preparing an answer…",
+  "conversation": "Candidate conversation", "user": "You", "assistant": "Assistant", "question": "Your question", "inputHelp": "Enter sends. Shift + Enter adds a new line.", "send": "Send",
+  "sources": "Sources", "sourceLink": "View source {{id}}", "viewCandidate": "View candidate: {{name}}", "suggestionsLabel": "Suggested questions",
+  "suggestions": {
+    "technical": "Compare adherence to the job's technical requirements",
+    "experience": "Which candidates have documented experience related to this job?",
+    "leadership": "Show documented evidence of professional leadership",
+    "missing": "Which mandatory requirements lack supporting evidence?",
+    "differences": "Summarize the main documented differences between candidates"
+  },
+  "sourceTypes": { "resume": "Resume", "form": "Referral form" },
+  "fields": { "resume": "Extracted text", "cargoAtual": "Current role", "anosExperiencia": "Declared experience", "escolaridade": "Education", "proficienciaIdiomas": "Languages", "hardSkills": "Technical skills", "pontosFortes": "Professional strengths", "destaquesProjetos": "Projects", "narrativa": "Referral narrative", "observacoesProfissionais": "Professional notes" },
+  "limitations": { "human_review": "Review the sources before using this analysis. The assistant does not decide hiring or rejection.", "insufficient_evidence": "I did not find enough evidence in the retrieved materials. This does not mean the skill is absent.", "partial_sources": "Some sources are incomplete. Only selected excerpts were analyzed; documents may contain additional information.", "no_candidates": "No candidates are available for this job.", "professional_only": "Compare professional criteria only. The assistant does not use personal or protected attributes or execute hiring decisions.", "initiative_only": "A resume cannot establish personality. This comparison only considers documented evidence of professional initiative." },
+  "errors": {
+    "entrada_invalida": "Check your question and its size limits.", "sessao_expirada": "Sign in again to use the assistant.", "acesso_negado": "You do not have access to this job or these candidates.", "vaga_inexistente": "This job is no longer available.",
+    "muitos_candidatos": "This job exceeds the MVP limit of 24 candidates. Analysis was stopped to avoid an incomplete comparison.",
+    "curriculo_nao_autorizado": "A resume's ownership could not be verified. Review its registration before continuing.", "indice_desatualizado": "Documents changed or the index expired. Refresh documents before asking again.",
+    "limite_uso": "Usage limit reached. Wait before trying again.", "limite_provider": "The AI service reached its quota. Try again later.",
+    "provider_nao_configurado": "The AI assistant is not configured in this environment yet.", "privacidade_provider": "Sending data to the AI service has not been enabled for this environment yet.",
+    "provider_timeout": "The AI service took too long to respond. Try again later.", "provider_indisponivel": "Assistant unavailable. Try again later.", "resposta_invalida": "The answer failed source validation. Rephrase your question or try again."
+  }
+}

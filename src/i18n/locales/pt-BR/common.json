@@ -624,7 +624,8 @@
     "publish": "Publicar",
     "approved": "Aprovadas",
     "sectors": "Setores",
-    "jobFlow": "Fluxo de vagas"
+    "jobFlow": "Fluxo de vagas",
+    "assistant": "Assistente de candidatos"
   },
   "notFound": "Página não encontrada",
   "photoEditor": {

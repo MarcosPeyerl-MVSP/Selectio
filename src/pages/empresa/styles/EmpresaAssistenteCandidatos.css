@@ -1,0 +1,25 @@
+.candidate-assistant { width: 100%; max-width: 980px; margin: 0 auto; animation: selectioSlideUp .44s var(--ease-premium) both; }
+.candidate-assistant h1 { font-size: var(--page-title-size); color: var(--primary-dark); }
+.candidate-assistant p { line-height: 1.7; margin: 12px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.assistant-notice { background: var(--surface-soft); border-left: 3px solid var(--primary); padding: 12px 16px; }
+.assistant-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 24px 0; }
+.assistant-toolbar select { flex: 1; min-width: 180px; max-width: 100%; }
+.candidate-assistant button, .candidate-assistant select, .candidate-assistant textarea { min-height: 44px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); color: var(--text); font: inherit; }
+.candidate-assistant button { cursor: pointer; transition: var(--transition); }
+.candidate-assistant button:hover:not(:disabled) { border-color: var(--primary); color: var(--primary-dark); }
+.candidate-assistant button:disabled { opacity: .55; cursor: not-allowed; }
+.assistant-transcript { max-height: 65vh; overflow-y: auto; scroll-padding: 16px; }
+.assistant-message { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 20px; margin: 16px 0; }
+.assistant-message--user { margin-left: 10%; background: var(--surface-soft); }
+.assistant-message h2, .assistant-message h3 { font-size: 16px; }
+.assistant-message a { color: var(--primary-dark); text-decoration: underline; }
+.assistant-message summary { cursor: pointer; min-height: 44px; padding: 12px 0; line-height: 1.6; }
+.assistant-message blockquote { margin: 8px 0 16px; padding: 12px; background: var(--surface-soft); line-height: 1.7; overflow-wrap: anywhere; }
+.assistant-limitation { color: var(--muted); font-size: 13px; }
+.assistant-suggestions, .assistant-profile-links { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
+.candidate-assistant form { margin-top: 24px; }
+.candidate-assistant form label { display: block; margin-bottom: 8px; }
+.candidate-assistant textarea { width: 100%; resize: vertical; }
+.candidate-assistant form button { background: var(--primary); color: var(--white); }
+.candidate-assistant form button:hover:not(:disabled) { background: var(--primary); color: var(--white); filter: brightness(.92); }
+@media (max-width: 600px) { .assistant-toolbar select { flex-basis: 100%; } .assistant-message { padding: 16px; } .assistant-message--user { margin-left: 0; } }

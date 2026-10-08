@@ -5,6 +5,31 @@ const { getStorage } = require('firebase-admin/storage')
 const { criarServicoIndicacoes } = require('./src/indicacoesCore.cjs')
 const { criarLimitador, validarCorpoJson } = require('./src/protecaoAbuso.cjs')
 const { defineSecret, defineString } = require('firebase-functions/params')
+const { criarServicoAssistente } = require('./src/assistente/assistenteCandidatosCore.cjs')
+const { criarGeminiProvider } = require('./src/assistente/provider.cjs')
+const { LIMITES } = require('./src/assistente/config.cjs')
+
+const geminiApiKey = defineSecret('GEMINI_API_KEY')
+const assistantModel = defineString('ASSISTANT_GEMINI_MODEL', { default: 'gemini-2.5-flash-lite' })
+const assistantDataPolicy = defineString('ASSISTANT_DATA_POLICY', { default: 'disabled' })
+
+exports.assistenteCandidatosApi = onCall({
+  region: 'southamerica-east1', timeoutSeconds: 120, memory: '1GiB', concurrency: 2, maxInstances: 2,
+  minInstances: 0, secrets: [geminiApiKey], enforceAppCheck: process.env.FUNCTIONS_EMULATOR !== 'true'
+}, async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Entre novamente.', { motivo: 'sessao_expirada' })
+  try { validarCorpoJson(request.rawRequest, LIMITES.corpo + 500) }
+  catch { throw new HttpsError('invalid-argument', 'Requisição inválida.', { motivo: 'entrada_invalida' }) }
+  const provider = criarGeminiProvider({ key: geminiApiKey.value(), model: assistantModel.value(), policy: assistantDataPolicy.value(),
+    fictionalEmulator: process.env.FUNCTIONS_EMULATOR === 'true' && Boolean(process.env.FIRESTORE_EMULATOR_HOST && process.env.STORAGE_EMULATOR_HOST) })
+  try {
+    return await criarServicoAssistente({ db: getFirestore(), bucket: getStorage().bucket(), provider }).executar(request.auth.uid, request.data)
+  } catch (error) {
+    if (error instanceof HttpsError) throw error
+    // Não registra erro do provider/SDK: pode conter chave, pergunta ou dados de documentos.
+    throw new HttpsError('internal', 'Assistente indisponível.', { motivo: 'provider_indisponivel' })
+  }
+})
 
 const { handleMercadoPagoRequest } = require('./src/mercadoPagoCore.cjs')
 

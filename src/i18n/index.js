@@ -16,12 +16,15 @@ import ptPublic from './locales/pt-BR/public.json'
 import ptReferrer from './locales/pt-BR/referrer.json'
 import enInstitutional from './locales/en-US/institutional.json'
 import ptInstitutional from './locales/pt-BR/institutional.json'
+import enAssistant from './locales/en-US/assistant.json'
+import ptAssistant from './locales/pt-BR/assistant.json'
 
 export const supportedLanguages = ['pt-BR', 'en-US']
 export const defaultLanguage = 'pt-BR'
 
 const resources = {
   'pt-BR': {
+    assistant: ptAssistant,
     institutional: ptInstitutional,
     admin: ptAdmin,
     auth: ptAuth,
@@ -31,6 +34,7 @@ const resources = {
     referrer: ptReferrer
   },
   'en-US': {
+    assistant: enAssistant,
     institutional: enInstitutional,
     admin: enAdmin,
     auth: enAuth,
@@ -60,7 +64,7 @@ i18n
     supportedLngs: supportedLanguages,
     fallbackLng: defaultLanguage,
     defaultNS: 'common',
-    ns: ['common', 'auth', 'public', 'admin', 'company', 'referrer', 'institutional'],
+    ns: ['common', 'auth', 'public', 'admin', 'company', 'referrer', 'institutional', 'assistant'],
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],

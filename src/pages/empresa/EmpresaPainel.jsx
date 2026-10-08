@@ -26,6 +26,7 @@ import PageLoader from '../../components/ui/PageLoader'
 import EmpresaEntrevistas from './EmpresaEntrevistas'
 import { EmpresaFluxoEmpresarial, EmpresaSetoresEmpresariais } from './EmpresaModoEmpresarial'
 import EmpresaPagamentos from './EmpresaPagamentos'
+import EmpresaAssistenteCandidatos from './EmpresaAssistenteCandidatos'
 import EmpresaPerfil from './EmpresaPerfil'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { buscarPerfilUsuario, marcarTourUsuarioConcluido } from '../../services/firestoreUsers'
@@ -291,6 +292,8 @@ function PainelEmpresa() {
         <EmpresaPerfil empresa={empresa} onUserUpdate={setEmpresa} />
       ) : activeSection === 'entrevistas' ? (
         <EmpresaEntrevistas empresa={empresa} />
+      ) : activeSection === 'assistente' ? (
+        <EmpresaAssistenteCandidatos />
       ) : activeSection === 'pagamentos' ? (
         <EmpresaPagamentos empresa={empresa} />
       ) : activeSection === 'aprovacoes' ? (
