@@ -1,7 +1,9 @@
+<!-- PR é opcional na pré-produção. Use este template para revisar mudanças grandes, segurança, pagamentos, Rules, migrações e features relevantes. -->
+
 ## O que mudou e por quê?
 
 <!-- Descreva o problema e o comportamento resultante. -->
-Issue relacionada:
+Issue relacionada (se houver):
 Tipo de mudança: <!-- correção / funcionalidade / documentação / manutenção / refactor -->
 Áreas afetadas:
 
@@ -36,4 +38,4 @@ Tipo de mudança: <!-- correção / funcionalidade / documentação / manutenç�
 - [ ] Upload / currículo
 - [ ] Migração
 
-Para itens marcados: descreva análise do fluxo completo, segurança e testes específicos acima. Exige revisão humana antes do merge.
+Para itens marcados: descreva análise do fluxo completo, segurança e testes específicos acima. HIGH-RISK exige revisão humana antes do merge; na pré-produção, ela pode ser feita pelo desenvolvedor responsável, sem approval formal de outra pessoa.

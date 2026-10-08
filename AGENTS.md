@@ -18,9 +18,13 @@ Para comportamento técnico, a ordem de confiança é: código atual → testes 
 
 ## Git e escopo
 
-Trate `main` como branch de produção: branch curta → PR → CI → review → merge. Não criar `develop`. Use `feat/`, `fix/`, `chore/`, `docs/` ou `refactor/` conforme [CONTRIBUTING.md](CONTRIBUTING.md).
+Enquanto a Selectio estiver em pré-produção com um desenvolvedor principal, `main` é a linha principal de desenvolvimento. Mudanças pequenas e de baixo risco podem ser feitas diretamente nela: trabalho local → revisar diff → checks relevantes → commit → push → confirmar GitHub Actions. Branch, Issue, PR e approval não são obrigatórios para toda tarefa. Este fluxo não autoriza push, merge ou deploy automático sem solicitação.
 
-Preserve trabalho local do usuário. Não sobrescreva alterações, não faça force-push em `main`, `git clean` ou `git reset --hard` automaticamente. Nunca use `--no-verify` ou desative hooks para contornar falhas. `prepare` configura `.githooks`; pre-commit verifica staged e pre-push verifica o histórico enviado.
+Use branch separada para mudanças grandes, experimentais, arriscadas, longas, paralelas a outro trabalho ou HIGH-RISK. Exemplos: `feat/nome`, `fix/nome`, `chore/nome`, `experiment/nome`. PR é opcional e útil para revisão. Não criar `develop`. Consulte [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Reavalie PR obrigatório e proteção de branch antes de produção real, usuários externos, pagamentos reais ou atuação simultânea de mais desenvolvedores.
+
+Sempre confira `git status` antes de alterar e revise `git diff` antes de concluir e antes de push. Preserve trabalho local do usuário. Nunca faça force-push em `main`, sobrescreva trabalho local ou use `git clean` de forma destrutiva; não execute `git reset --hard` automaticamente. Nunca use `--no-verify` ou desative hooks para contornar falhas. `prepare` configura `.githooks`; pre-commit verifica staged e pre-push verifica o histórico enviado.
 
 Altere apenas o necessário. Renomeações massivas, upgrades grandes, troca de framework/banco, migração para TypeScript, microservices e refactors não relacionados exigem tarefa explícita.
 
@@ -30,7 +34,7 @@ Nunca commite ou imprima secrets, credenciais ou dados pessoais. `VITE_*` é pú
 
 Não enfraqueça Rules para fazer um fluxo funcionar. `ProtectedRoute`, localStorage, botões e rotas escondidos não são autorização. Valide identidade, ownership, perfil e entrada no servidor/Rules, com menor privilégio. O Admin SDK requer validações explícitas nas Functions. Trate uploads, MIME declarado e currículos como não confiáveis.
 
-**HIGH-RISK:** pagamentos, saques, saldo, `functions/src/mercadoPagoCore.cjs`; Firestore/Storage Rules; autenticação, autorização e roles; `functions/src/indicacoesCore.cjs`; ranking/compatibilidade; uploads/currículos; alterações de schema/dados. Nessas áreas, analise o fluxo completo, execute testes relacionados, explique efeitos de segurança e exija revisão humana antes do merge.
+**HIGH-RISK:** pagamentos/Mercado Pago, saques, saldo, `functions/src/mercadoPagoCore.cjs`; Firestore/Storage Rules; autenticação, autorização e roles; Functions críticas como `functions/src/indicacoesCore.cjs`; ranking/compatibilidade ao alterar regra de negócio; uploads sensíveis/currículos; alterações de schema e migrações de dados; arquitetura crítica. Nessas áreas, use branch separada, analise o fluxo completo, execute testes relacionados, explique efeitos de segurança e obtenha revisão humana antes de integrar à `main`. Na pré-produção, a revisão pode ser feita pelo desenvolvedor responsável; não exige approval formal de outra pessoa no GitHub.
 
 Os setores do modo empresarial (Administrador da Empresa, Chefe de Departamento, Reitoria/Auditoria e RH) não devem ser apresentados como isolamento server-side completo. Verifique identidades, Rules e transições antes de afirmar RBAC seguro.
 

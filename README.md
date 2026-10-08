@@ -400,15 +400,9 @@ npm run i18n:check
 
 Consulte [CONTRIBUTING.md](CONTRIBUTING.md) para o fluxo da equipe, [AGENTS.md](AGENTS.md) para instruções de desenvolvimento por agentes e [PROJECT_STATE.md](PROJECT_STATE.md) para o snapshot operacional e suas limitações de verificação.
 
-Fluxo sugerido:
+Na pré-produção, com um desenvolvedor principal, mudanças pequenas e de baixo risco podem seguir diretamente na `main`: atualizar a base preservando trabalho local → implementar → revisar diff → executar checks relevantes → commit → push → confirmar o CI.
 
-1. Crie uma branch a partir da base principal.
-2. Instale dependências com `npm install` e `npm run functions:install`.
-3. Faça alterações pequenas, revisáveis e alinhadas aos padrões existentes.
-4. Atualize testes ou traduções quando mudar comportamento visível.
-5. Execute lint, build e testes relevantes.
-6. Rode `npm run security:check` antes de enviar.
-7. Abra um pull request com contexto, prints quando houver UI e lista de validações executadas.
+Use branches para mudanças grandes, experimentais, longas, paralelas ou de alto risco, conforme CONTRIBUTING. PRs e Issues são ferramentas opcionais de organização e revisão; não usamos `develop`. Reavalie PR obrigatório e proteção de branch antes de produção real, usuários externos, pagamentos reais ou mais desenvolvedores atuando simultaneamente. Push/merge não autoriza deploy automático.
 
 ## Roadmap
 

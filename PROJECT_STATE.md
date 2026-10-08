@@ -7,7 +7,7 @@ Last verified:
 - Branch: `main` no início; working tree limpo.
 - Branch desta tarefa: `chore/agent-governance`.
 
-Este é o estado observado no commit-base, acrescido da documentação desta tarefa. Revalide antes de usar; não é certificação de produção. **VERIFICADO** abaixo significa inspeção local, salvo quando a consulta remota é explicitamente identificada.
+Este é o snapshot técnico observado no commit-base acima. Revisão do processo em 2026-10-08, baseada em `00863f6`, com working tree inicialmente limpo em `chore/agent-governance`: modelo de desenvolvimento atualizado conforme orientação do responsável. Esta revisão documental não revalida toda a arquitetura ou a configuração remota. Revalide antes de usar; não é certificação de produção. **VERIFICADO** abaixo significa inspeção local, salvo quando a consulta remota é explicitamente identificada.
 
 ## Product
 
@@ -47,11 +47,13 @@ Coleções observadas nas Rules e nos serviços: `users`, `empresas`, `indicador
 - `tests`: unitários, emuladores Firestore/Storage (Rules, indicações, cotas e pagamentos concorrentes), API HTTP no emulador Functions; Node 22/Java 21.
 - `audit`: `npm audit --package-lock-only --omit=dev --audit-level=high` na raiz e em `functions`.
 - `build`: build de produção.
-- `security`: agregador exige sucesso de todos os anteriores. Este é o nome a exigir na proteção de branch.
+- `security`: agregador exige sucesso de todos os anteriores, inclusive em push direto à `main`. É o check a considerar caso proteção de branch seja adotada futuramente.
 
 `tests/` cobre compatibilidade/rubrica/elegibilidade, extração PDF/DOCX, CSV, metadados de currículos, onboarding, dashboard e redirects; suites de emuladores cobrem acesso/ownership, snapshots, duplicidade, cotas, assinatura, concorrência, dinheiro inválido e API HTTP. Não há suíte E2E de navegador versionada. Existência de testes não comprova execução atual nem cobre todos os cenários financeiros.
 
-**Executado nesta revisão (Node 24.1.0):** `security:check`, `security:test`, `lint`, `i18n:check`, `build` e `deploy:check` passaram; `test:unit` passou com 43 testes, zero falhas ou skips. Build avisou sobre chunks acima de 500 kB e a suite de extração emitiu aviso do parser PDF, sem falhar. Emuladores, `test:functions` e npm audit não foram executados: esta tarefa alterou somente documentação/templates, sem runtime, regras ou dependências.
+**Executado na revisão técnica de 2026-10-01 (Node 24.1.0), não repetido integralmente em 2026-10-08:** `security:check`, `security:test`, `lint`, `i18n:check`, `build` e `deploy:check` passaram; `test:unit` passou com 43 testes, zero falhas ou skips. Build avisou sobre chunks acima de 500 kB e a suite de extração emitiu aviso do parser PDF, sem falhar. Emuladores, `test:functions` e npm audit não foram executados: aquela tarefa alterou somente documentação/templates, sem runtime, regras ou dependências.
+
+Na revisão de processo de 2026-10-08, `security:check`, `lint`, `i18n:check` e `build` passaram. Build manteve aviso de chunks acima de 500 kB. Diff e links dos documentos foram revisados. Unitários, emuladores, testes de Functions e npm audit não foram repetidos: somente documentação/processo foi alterado.
 
 ## Known technical debt / risks
 
@@ -74,11 +76,19 @@ Proteções já presentes, não pendências a reabrir sem evidência: cotas tran
 
 ## Current development workflow
 
-**VERIFICADO localmente:** início limpo em `main`; `core.hooksPath=.githooks`, prepare, scanner staged no pre-commit e scanner do histórico enviado no pre-push. Criada `chore/agent-governance` sem alterar trabalho existente. A convenção passa a ser branch curta → PR → CI → review → main, sem develop; consulte [CONTRIBUTING.md](CONTRIBUTING.md).
+**VERIFICADO localmente em 2026-10-01:** início limpo em `main`; `core.hooksPath=.githooks`, prepare, scanner staged no pre-commit e scanner do histórico enviado no pre-push. Criada `chore/agent-governance` sem alterar trabalho existente. A retomada em 08/10 começou limpa nessa branch, no commit `00863f6`.
 
 **VERIFICADO remotamente em 2026-10-01:** [API da branch main](https://api.github.com/repos/MarcosPeyerl-MVSP/Selectio/branches/main) retornou o mesmo SHA local, `protected: false`, `protection.enabled: false` e checks obrigatórios vazios. Consulta administrativa `/branches/main/protection` retornou 403 (integração sem acesso); regras efetivas adicionais não foram auditadas. Não foi alterada configuração remota.
 
-Ação manual no GitHub: exigir PR, ao menos 1 approval, status check `security`, bloquear force pushes e deletion de `main`. Confirmar aplicação efetiva e eventuais restrições do plano com administrador; permissões administrativas/plano não foram verificados.
+**Current development model — informado pelo responsável, atualizado em 2026-10-08:**
+
+- Projeto em pré-produção, com um desenvolvedor principal.
+- `main` usada como linha principal de desenvolvimento; mudanças pequenas e de baixo risco seguem trabalho local → diff → checks → commit → push → confirmar CI.
+- CI roda em push; os checks locais continuam necessários antes de enviar.
+- Branches usadas seletivamente para mudanças grandes, experimentais, arriscadas, longas, paralelas ou HIGH-RISK. PR é opcional; revisão humana de HIGH-RISK permanece necessária, sem approval formal de outra pessoa neste estágio.
+- Issues/templates ajudam a organizar trabalho e não são etapas obrigatórias. Sem develop; consulte [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Branch protection não é requisito do fluxo de pré-produção escolhido; a ausência registrada em 01/10 não é uma pendência urgente de processo. O estado remoto não foi consultado novamente em 08/10. Reavalie PR obrigatório e proteção antes de produção real, usuários externos, pagamentos reais ou mais desenvolvedores simultâneos. Nessa revisão futura, considere o check `security` e bloqueios de force-push/deletion; não há exigência de 1 approval agora.
 
 ## Divergências documentais / do not assume
 
@@ -90,7 +100,7 @@ Ação manual no GitHub: exigir PR, ao menos 1 approval, status check `security`
 
 ## Next engineering priorities
 
-1. Aplicar e confirmar proteção de `main` e usar PRs pequenas com review humano.
+1. Manter mudanças pequenas, diff revisado e checks locais/CI; usar branches para risco elevado e reavaliar proteção de `main` nos gatilhos acima.
 2. Antes de ampliar uso público, tratar projeção pública de vagas, cotas de uploads/operações e requisitos reais de isolamento por setor.
 3. Antes de dinheiro real, completar conciliação, compensações e idempotência de saque, com cenários sandbox revisados.
 4. Verificar configuração remota/recuperação e priorizar paginação, índices e retenção com base no volume real.
