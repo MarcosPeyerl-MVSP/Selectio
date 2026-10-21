@@ -2,6 +2,7 @@
 
 :root {
   --primary: #b61c2f;
+  --primary-light: #ce3044;
   --primary-dark: #6a0f21;
   --page-title-size: clamp(1.75rem, 2.5vw, 2.5rem);
   --page-title-leading: 1.2;
@@ -44,6 +45,7 @@
 }
 
 :root[data-theme='dark'] {
+  --primary-light: #e45468;
   --info: #93c5fd;
   --info-bg: #172b46;
   --danger: #ff9aa6;
@@ -191,8 +193,7 @@ main {
 :root[data-theme='dark'] .empresa-candidate-search,
 :root[data-theme='dark'] .candidate-tabs,
 :root[data-theme='dark'] .empresa-candidate-tabs button,
-:root[data-theme='dark'] .placeholder-photo,
-:root[data-theme='dark'] .bar {
+:root[data-theme='dark'] .placeholder-photo {
   background: var(--surface-soft);
   border-color: var(--border);
   color: var(--text);

@@ -1,7 +1,7 @@
 .toast-viewport {
   position: fixed;
   right: 22px;
-  bottom: 22px;
+  top: max(22px, env(safe-area-inset-top));
   z-index: 1200;
   display: grid;
   gap: 12px;
@@ -100,7 +100,7 @@
 @keyframes toastIn {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.98);
+    transform: translateY(-10px) scale(0.98);
   }
 
   to {
@@ -112,6 +112,6 @@
 @media (max-width: 560px) {
   .toast-viewport {
     right: 16px;
-    bottom: 16px;
+    top: max(16px, env(safe-area-inset-top));
   }
 }

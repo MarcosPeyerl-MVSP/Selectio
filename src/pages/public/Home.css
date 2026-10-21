@@ -30,13 +30,15 @@
 /* Tipografia principal do banner. */
 .hero-text h1 {
   font-size: 58px;
+  font-weight: 700;
   line-height: 1;
   margin-bottom: 22px;
   letter-spacing: -2px;
 }
 
 .hero-text h1 strong {
-  color: var(--primary);
+  color: var(--primary-light);
+  font-weight: inherit;
 }
 
 .hero-text p {
@@ -295,21 +297,21 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: rgba(182, 28, 47, 0.3);
-  border: 1px solid color-mix(in srgb, var(--primary) 34%, var(--surface));
+  background: color-mix(in srgb, var(--primary-light) 30%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--primary-light) 46%, var(--border));
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .indicator.active {
-  background: var(--primary);
+  background: var(--primary-light);
   width: 32px;
   border-radius: 999px;
-  box-shadow: 0 4px 12px rgba(182, 28, 47, 0.3);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--primary-light) 30%, transparent);
 }
 
 .indicator:hover {
-  background: rgba(182, 28, 47, 0.6);
+  background: var(--primary-light);
   transform: scale(1.2);
 }
 
@@ -641,7 +643,6 @@
 }
 
 :root[data-theme='dark'] .hero-modelo .tag,
-:root[data-theme='dark'] .hero-text h1 strong,
 :root[data-theme='dark'] .info-box strong {
   color: var(--primary);
 }
@@ -676,18 +677,4 @@
 :root[data-theme='dark'] .carousel-btn:hover {
   background: color-mix(in srgb, var(--primary) 84%, var(--primary-dark));
   border-color: var(--primary-dark);
-}
-
-:root[data-theme='dark'] .indicator {
-  background: color-mix(in srgb, var(--primary-dark) 30%, var(--surface));
-  border-color: color-mix(in srgb, var(--primary-dark) 46%, var(--border));
-}
-
-:root[data-theme='dark'] .indicator.active {
-  background: var(--primary-dark);
-  box-shadow: 0 4px 12px rgba(255, 154, 166, 0.2);
-}
-
-:root[data-theme='dark'] .indicator:hover {
-  background: color-mix(in srgb, var(--primary-dark) 68%, var(--surface));
 }

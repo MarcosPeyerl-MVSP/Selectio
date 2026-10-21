@@ -100,6 +100,7 @@ html, body, #root {
   color: var(--muted);
   font-size: 16px;
   pointer-events: none;
+  z-index: 1;
 }
 
 /* Cria espaço para o ícone à esquerda do input. */
@@ -136,7 +137,6 @@ html, body, #root {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(182, 28, 47, 0.12);
-  transform: translateY(-1px);
 }
 
 .login-form select:focus {

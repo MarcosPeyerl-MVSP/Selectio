@@ -32,7 +32,6 @@ import {
 function Login() {
   const { t } = useTranslation('auth')
   const [form, setForm] = useState({ login: '', senha: '' })
-  const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -62,7 +61,6 @@ function Login() {
   }, [carregandoSessao, navigate, perfilSessao, redirectTo])
 
   const showError = (message) => {
-    setError(message)
     toast.error(message)
   }
 
@@ -108,7 +106,6 @@ function Login() {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-    setError('')
     setSuccess('')
 
     const login = form.login.trim()
@@ -116,7 +113,6 @@ function Login() {
 
     if (!login || !senha) {
       const message = t('errors.fillCredentials')
-      setError(message)
       toast.warning(message)
       return
     }
@@ -159,7 +155,6 @@ function Login() {
   }
 
   const handleGoogleLogin = async () => {
-    setError('')
     setSuccess('')
 
     try {
@@ -174,7 +169,6 @@ function Login() {
       if (!perfil) {
         await signOut(auth)
         const message = t('errors.googleMissingProfile')
-        setError(message)
         toast.warning(message)
         setLoading(false)
         return
@@ -198,14 +192,12 @@ function Login() {
 
   const handleSetorSubmit = async (event) => {
     event.preventDefault()
-    setError('')
     setSuccess('')
 
     if (!pendingPerfilEmpresarial) return
 
     if (!setorForm.senha.trim()) {
       const message = t('errors.sectorPasswordRequired')
-      setError(message)
       toast.warning(message)
       return
     }
@@ -216,7 +208,6 @@ function Login() {
 
     if (!setor || !senhaHashSalva || senhaHashDigitada !== senhaHashSalva) {
       const message = t('errors.sectorPasswordIncorrect')
-      setError(message)
       toast.error(message)
       return
     }
@@ -247,14 +238,12 @@ function Login() {
   }
 
   const handlePasswordReset = async () => {
-    setError('')
     setSuccess('')
 
     const email = form.login.trim()
 
     if (!email) {
       const message = t('errors.resetEmailRequired')
-      setError(message)
       toast.warning(message)
       return
     }
@@ -324,8 +313,6 @@ function Login() {
                 </div>
               </label>
 
-              {error && <p className="login-error">{error}</p>}
-
               <button type="submit" className="login-button">
                 {t('login.accessSector')}
               </button>
@@ -383,7 +370,6 @@ function Login() {
               </button>
             </label>
 
-            {error && <p className="login-error">{error}</p>}
             {success && <p className="login-success">{success}</p>}
 
             <button type="submit" className="login-button" disabled={loading}>
