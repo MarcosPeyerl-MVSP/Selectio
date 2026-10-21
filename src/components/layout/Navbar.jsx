@@ -110,7 +110,7 @@ function Navbar() {
   }
 
   return (
-    <header className="navbar">
+    <header className={`navbar${session.type === 'publico' ? ' navbar-public' : ''}`}>
       <Link to="/" aria-label={`Selectio — ${t('navigation.home')}`}>
         <img className="logo-img" src={logoVermelho} alt="Selectio" />
       </Link>

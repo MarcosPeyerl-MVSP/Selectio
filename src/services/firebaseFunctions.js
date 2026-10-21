@@ -37,10 +37,16 @@ export const chamarFirebaseFunction = async (caminho, payload, fallback) => {
       signal: AbortSignal.timeout(45000)
     })
   } catch {
-    throw new Error(`API indisponível em ${functionsApiUrl}.`)
+    const error = new Error(`API indisponível em ${functionsApiUrl}.`)
+    error.code = 'functions/network-error'
+    throw error
   }
 
   const dados = await resposta.json().catch(() => ({}))
-  if (!resposta.ok) throw new Error(dados.error || fallback)
+  if (!resposta.ok) {
+    const error = new Error(dados.error || fallback)
+    error.status = resposta.status
+    throw error
+  }
   return dados
 }

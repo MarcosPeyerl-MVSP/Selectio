@@ -26,7 +26,7 @@ import AvatarProtegido from '../../components/ui/AvatarProtegido'
 import PainelRankingCompatibilidade from '../../components/compatibilidade/PainelRankingCompatibilidade'
 import { atualizarStatusCandidato, listarCandidatosPorEmpresa } from '../../services/firestoreCandidatos'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
-import { listarPagamentosPorEmpresa } from '../../services/firestorePagamentos'
+import { listarPagamentosPorEmpresa, obterCheckoutUrlPagamento } from '../../services/firestorePagamentos'
 import { useToast } from '../../hooks/useToast'
 import { formatDate as formatLocalizedDate } from '../../i18n/formatters'
 import { isModoEmpresarial, podeGerenciarCandidatosEmpresa } from '../../utils/modoEmpresarial'
@@ -272,7 +272,8 @@ function CandidatosEmpresa() {
     setPagamentos((current) => [
       {
         id: pagamento.pagamentoId,
-        mercadoPagoPreferenceId: pagamento.preferenceId,
+        mercadoPagoPreferenceId: pagamento.preferenceId || pagamento.mercadoPagoPreferenceId || '',
+        ambiente: pagamento.ambiente,
         status: pagamento.status || 'pending',
         valor: pagamento.valor || paymentCandidate.recompensaValorFixo || paymentCandidate.recompensaValor || 0,
         candidatoId: paymentCandidate.id,
@@ -281,11 +282,11 @@ function CandidatosEmpresa() {
         indicadorId: paymentCandidate.indicadorId || paymentCandidate.indicadorUid || '',
         vagaTitulo: paymentCandidate.vagaTitulo,
         indicadorNome: paymentCandidate.indicadorNome,
-        checkoutUrl: pagamento.sandboxInitPoint || pagamento.checkoutUrl || pagamento.initPoint,
-        sandboxCheckoutUrl: pagamento.sandboxInitPoint || '',
+        checkoutUrl: obterCheckoutUrlPagamento(pagamento),
+        sandboxCheckoutUrl: pagamento.sandboxInitPoint || pagamento.sandboxCheckoutUrl || '',
         criadoEm: new Date().toISOString()
       },
-      ...current
+      ...current.filter((item) => item.id !== pagamento.pagamentoId)
     ])
   }
 

@@ -1,3 +1,7 @@
+const fs = require('node:fs')
+const path = require('node:path')
+const { parseEnv } = require('node:util')
+
 // Valida configuracao sem imprimir valores de .env.
 async function main() {
   const { loadEnv } = await import('vite')
@@ -16,6 +20,18 @@ async function main() {
     if (apiUrl.protocol !== 'https:' || ['localhost', '127.0.0.1'].includes(apiUrl.hostname)) {
       throw new Error('VITE_MERCADO_PAGO_API_URL deve usar HTTPS em producao.')
     }
+  }
+  // .env.local das Functions pertence ao emulador e nao configura o deploy.
+  const functionsEnv = {}
+  for (const file of ['.env', `.env.${env.VITE_FIREBASE_PROJECT_ID}`]) {
+    const filePath = path.join(process.cwd(), 'functions', file)
+    if (fs.existsSync(filePath)) Object.assign(functionsEnv, parseEnv(fs.readFileSync(filePath, 'utf8')))
+  }
+  if (!functionsEnv.APP_URL || new URL(functionsEnv.APP_URL).origin !== appUrl.origin) {
+    throw new Error('Configure APP_URL nas Functions com a mesma origem de VITE_APP_URL para evitar falhas de CORS e retorno do checkout.')
+  }
+  if (!['sandbox', 'production'].includes(functionsEnv.MP_ENVIRONMENT)) {
+    throw new Error('Configure MP_ENVIRONMENT como sandbox ou production no arquivo de deploy das Functions.')
   }
   console.log('Configuracao local de deploy validada. Confirme enforcement e dominios no console Firebase.')
 }

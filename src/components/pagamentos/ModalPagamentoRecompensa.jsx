@@ -13,6 +13,7 @@ import {
 } from '../../services/firestorePagamentos'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
 import { formatCurrency } from '../../i18n/formatters'
+import { obterChaveErroCheckout } from '../../utils/mercadoPagoCheckout'
 
 function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onClose, onCreated }) {
   const { t } = useTranslation('company')
@@ -72,14 +73,14 @@ function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onCl
     try {
       const pagamento = await criarPagamentoRecompensa(montarDadosPagamento())
       onCreated?.(pagamento)
-      const url = pagamento.sandboxInitPoint || pagamento.checkoutUrl || pagamento.initPoint
+      const url = obterCheckoutUrlPagamento(pagamento)
 
       if (!url) throw new Error('URL de checkout ausente.')
 
-      abrirCheckout(url, toast, t)
+      window.location.assign(url)
     } catch (error) {
       console.error('Falha ao continuar o checkout:', error)
-      toast.error(t('payments.modal.createError'))
+      toast.error(t(`payments.modal.${obterChaveErroCheckout(error)}`))
     } finally {
       setCarregando(false)
     }
@@ -112,23 +113,12 @@ function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onCl
 
       onCreated?.(pagamento)
 
-      const url = pagamento.sandboxInitPoint || pagamento.checkoutUrl || pagamento.initPoint
-      if (url) {
-        if (url.includes('sandbox.mercadopago')) {
-          toast.success(t('payments.modal.sandboxCreated'))
-          return
-        }
-
-        abrirCheckout(url, toast, t)
-        onClose()
-        return
-      }
-
-      toast.success(t('payments.modal.preferenceCreated'))
-      onClose()
+      const url = obterCheckoutUrlPagamento(pagamento)
+      if (!url) throw new Error('URL de checkout ausente.')
+      window.location.assign(url)
     } catch (error) {
       console.error('Falha ao criar o checkout:', error)
-      toast.error(t('payments.modal.createError'))
+      toast.error(t(`payments.modal.${obterChaveErroCheckout(error)}`))
     } finally {
       setCarregando(false)
     }
@@ -227,23 +217,6 @@ function ModalPagamentoRecompensa({ candidato, empresa, pagamentoExistente, onCl
       </section>
     </div>
   )
-}
-
-function abrirCheckout(url, toast, t) {
-  if (url.includes('sandbox.mercadopago')) {
-    const checkout = window.open(url, '_blank')
-
-    if (!checkout) {
-      window.location.href = url
-      return
-    }
-
-    checkout.opener = null
-    toast.info(t('payments.modal.sandboxOpened'))
-    return
-  }
-
-  window.location.href = url
 }
 
 function obterRecompensaFixa(candidato) {

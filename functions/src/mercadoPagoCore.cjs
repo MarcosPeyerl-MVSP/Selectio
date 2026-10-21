@@ -113,8 +113,12 @@ async function criarPreferencia(req, res, usuario) {
     return
   }
 
+  // Contas de teste com APP_USR usam init_point. Confirma a identidade antes
+  // de reservar ou retomar uma cobranca para nao abrir uma conta real em sandbox.
+  const modoCheckout = await resolverModoCheckout()
+
   if (existente?.pendente && obterCheckoutUrlPagamento(existente.pendente)) {
-    const pagamentoReutilizavel = await validarPagamentoPendente(existente.pendente)
+    const pagamentoReutilizavel = await validarPagamentoPendente(existente.pendente, modoCheckout)
 
     if (pagamentoReutilizavel) {
       responderJson(res, 200, respostaPagamentoExistente(pagamentoReutilizavel))
@@ -209,7 +213,7 @@ async function criarPreferencia(req, res, usuario) {
     throw error
   }
 
-  const checkoutUrl = escolherCheckoutUrl(preferencia)
+  const checkoutUrl = escolherCheckoutUrl(preferencia, modoCheckout)
 
   if (!checkoutUrl) {
     responderJson(res, 502, { error: 'O Mercado Pago nao retornou uma URL de checkout.' })
@@ -277,7 +281,9 @@ async function sincronizarPagamento(req, res, usuario) {
 async function receberWebhookMercadoPago(req, res, requestUrl) {
   const dados = await lerJson(req).catch(() => ({}))
 
-  if (!validarWebhookMercadoPago(req, requestUrl, dados)) {
+  const motivoRejeicao = motivoWebhookInvalido(req, requestUrl, dados)
+  if (motivoRejeicao) {
+    console.warn('Webhook Mercado Pago rejeitado.', { code: motivoRejeicao })
     responderJson(res, 401, { error: 'Assinatura do webhook invalida.' })
     return
   }
@@ -608,7 +614,7 @@ async function notificarStatusCandidatoBackend({ candidatoId, candidato, empresa
   await Promise.allSettled(tarefas)
 }
 
-async function validarPagamentoPendente(pagamento) {
+async function validarPagamentoPendente(pagamento, modoCheckout) {
   const preferenceId = textoSeguro(pagamento?.mercadoPagoPreferenceId)
   if (!preferenceId) return null
 
@@ -621,7 +627,7 @@ async function validarPagamentoPendente(pagamento) {
     throw error
   }
 
-  const checkoutUrl = escolherCheckoutUrl(preferencia)
+  const checkoutUrl = escolherCheckoutUrl(preferencia, modoCheckout)
   if (!checkoutUrl) return null
 
   const pagamentoAtualizado = {
@@ -660,17 +666,23 @@ async function sincronizarPagamentoMercadoPago({ pagamentoId, preferenceId, paym
       || await buscarPagamentoPorPreferencia(contexto.pagamento.mercadoPagoPreferenceId)
 
   if (!pagamentoMp) {
+    const checkoutReparado = !contexto.paymentId && await repararReferenciaSandbox(contexto)
     return {
       encontrado: false,
       pagamentoId: contexto.pagamentoId,
       status: contexto.pagamento.status || 'pending',
-      externalReference: contexto.pagamento.externalReference || ''
+      externalReference: contexto.pagamento.externalReference || '',
+      checkoutReparado: Boolean(checkoutReparado)
     }
   }
 
   const referencia = textoSeguro(pagamentoMp.external_reference)
 
-  if (!referencia || referencia !== contexto.pagamento.externalReference) {
+  const referenciaReparada = contexto.pagamento.ambiente === 'sandbox'
+    && contexto.pagamento.externalReference?.length > 256
+    && contexto.pagamento.externalReferenceReparada === montarReferenciaExterna({ pagamentoId: contexto.pagamentoId })
+    && referencia === contexto.pagamento.externalReferenceReparada
+  if (!referencia || (referencia !== contexto.pagamento.externalReference && !referenciaReparada)) {
     erro(403, 'Pagamento retornado nao pertence ao registro interno.')
   }
 
@@ -678,6 +690,57 @@ async function sincronizarPagamentoMercadoPago({ pagamentoId, preferenceId, paym
     pagamentoId: contexto.pagamentoId,
     pagamentoMp
   })
+}
+
+async function repararReferenciaSandbox({ pagamentoId, pagamento }) {
+  if (pagamento.ambiente !== 'sandbox' || pagamento.creditado
+    || !['created', 'pending'].includes(pagamento.status)
+    || pagamento.mercadoPagoPaymentId || !pagamento.mercadoPagoPreferenceId
+    || String(pagamento.externalReference || '').length <= 256
+    || extrairPagamentoIdDaReferencia(pagamento.externalReference) !== pagamentoId) return false
+
+  // Nao cria nem cancela cobrancas. Reparo restrito a contas de teste APP_USR.
+  if (await resolverModoCheckout() !== 'test_user') return false
+  const vendedor = await chamarMercadoPago('/users/me')
+  const path = `/checkout/preferences/${encodeURIComponent(pagamento.mercadoPagoPreferenceId)}`
+  const preferencia = await chamarMercadoPago(path)
+  const referenciaNova = montarReferenciaExterna({ pagamentoId })
+  const total = (preferencia.items || []).reduce((soma, item) => soma + Number(item.unit_price) * Number(item.quantity), 0)
+  if (!vendedor.id || String(preferencia.collector_id) !== String(vendedor.id)
+    || preferencia.metadata?.pagamentoId !== pagamentoId
+    || ![pagamento.externalReference, referenciaNova].includes(preferencia.external_reference)
+    || !preferencia.items?.length || preferencia.items.some(item => item.currency_id !== moedaPadrao)
+    || !Number.isFinite(total) || !Number.isFinite(Number(pagamento.valor))
+    || Math.abs(total - Number(pagamento.valor)) >= 0.01) return false
+
+  // Uma busca por referencia pode omitir pagamentos que ainda nao sao visiveis;
+  // confira tambem todas as ordens associadas e recuse historico incompleto.
+  const ordens = await chamarMercadoPago(`/merchant_orders/search?preference_id=${encodeURIComponent(pagamento.mercadoPagoPreferenceId)}`)
+  if (!Array.isArray(ordens.elements) || !Number.isFinite(Number(ordens.total))
+    || Number(ordens.total) !== ordens.elements.length
+    || ordens.elements.some(ordem => ordem.payments?.length || Number(ordem.paid_amount || 0) > 0)) return false
+  const pagamentosNovos = await chamarMercadoPago(`/v1/payments/search?${new URLSearchParams({ external_reference: referenciaNova, limit: '1' })}`)
+  if (pagamentosNovos.paging?.total !== 0) return false
+
+  const pagamentoRef = db.collection('pagamentos').doc(pagamentoId)
+  const preparado = await db.runTransaction(async tx => {
+    const atual = (await tx.get(pagamentoRef)).data()
+    if (!atual || atual.ambiente !== 'sandbox' || atual.creditado
+      || !['created', 'pending'].includes(atual.status) || atual.mercadoPagoPaymentId
+      || atual.mercadoPagoPreferenceId !== pagamento.mercadoPagoPreferenceId
+      || atual.externalReference !== pagamento.externalReference
+      || Number(atual.valor) !== Number(pagamento.valor)) return false
+    // Persiste a segunda referencia ANTES do PUT: confirmações concorrentes
+    // continuam conciliaveis nos dois formatos, inclusive apos timeout/retry.
+    tx.update(pagamentoRef, { externalReferenceReparada: referenciaNova })
+    return true
+  })
+  if (!preparado) return false
+  if (preferencia.external_reference !== referenciaNova) {
+    const atualizada = await chamarMercadoPago(path, { method: 'PUT', body: JSON.stringify({ external_reference: referenciaNova }) })
+    if (atualizada.external_reference !== referenciaNova) erro(502, 'Nao foi possivel confirmar a correcao do checkout.')
+  }
+  return true
 }
 
 async function resolverPagamentoInterno({ pagamentoId, preferenceId, paymentId }) {
@@ -888,9 +951,9 @@ async function criarPreferenciaMercadoPago({ pagamentoId, tentativaPreferenciaId
         currency_id: moedaPadrao
       }],
       back_urls: {
-        success: `${appUrl}/painel/empresa?secao=pagamentos&status=success`,
-        failure: `${appUrl}/painel/empresa?secao=pagamentos&status=failure`,
-        pending: `${appUrl}/painel/empresa?secao=pagamentos&status=pending`
+        success: `${appUrl}/painel/empresa?secao=pagamentos&pagamento_id=${encodeURIComponent(pagamentoId)}&status=success`,
+        failure: `${appUrl}/painel/empresa?secao=pagamentos&pagamento_id=${encodeURIComponent(pagamentoId)}&status=failure`,
+        pending: `${appUrl}/painel/empresa?secao=pagamentos&pagamento_id=${encodeURIComponent(pagamentoId)}&status=pending`
       },
       binary_mode: false,
       notification_url: obterWebhookUrl(),
@@ -986,7 +1049,17 @@ async function marcarPagamentoComoFalhou({ pagamentoRef, transacaoRef, pagamento
   })
 }
 
-async function notificarPagamento({ pagamentoId, pagamento, statusAnterior = '', statusAtual }) {
+async function notificarPagamento(contexto) {
+  try {
+    await enviarNotificacoesPagamento(contexto)
+  } catch {
+    // O pagamento ja foi persistido; uma falha de notificacao nao deve aparentar
+    // falha da cobranca nem induzir o usuario a pagar novamente.
+    console.error('Falha ao enviar notificacao de pagamento.', { pagamentoId: contexto.pagamentoId })
+  }
+}
+
+async function enviarNotificacoesPagamento({ pagamentoId, pagamento, statusAnterior = '', statusAtual }) {
   const status = normalizarStatus(statusAtual)
   const info = infoStatusPagamento(status)
 
@@ -1141,15 +1214,26 @@ function respostaPagamentoExistente(pagamento) {
 }
 
 function obterCheckoutUrlPagamento(pagamento) {
-  return pagamento?.sandboxCheckoutUrl || pagamento?.checkoutUrl || ''
+  return pagamento?.checkoutUrl
+    || (pagamento?.ambiente === 'sandbox' ? pagamento.sandboxCheckoutUrl : '') || ''
 }
 
-function escolherCheckoutUrl(preferencia) {
-  if (obterMpEnvironment() === 'sandbox') {
-    return preferencia.sandbox_init_point || preferencia.init_point || ''
-  }
+async function resolverModoCheckout() {
+  if (obterMpEnvironment() !== 'sandbox') return 'production'
+  const token = textoSeguro(process.env.MERCADO_PAGO_ACCESS_TOKEN)
+  if (!token.startsWith('APP_USR-')) return 'sandbox'
 
-  return preferencia.init_point || preferencia.sandbox_init_point || ''
+  const vendedor = await chamarMercadoPago('/users/me')
+  if (!Array.isArray(vendedor.tags) || !vendedor.tags.includes('test_user')) {
+    erro(400, 'O ambiente sandbox exige credenciais de uma conta de teste do vendedor.')
+  }
+  return 'test_user'
+}
+
+function escolherCheckoutUrl(preferencia, modoCheckout) {
+  return modoCheckout === 'sandbox'
+    ? preferencia.sandbox_init_point || ''
+    : preferencia.init_point || ''
 }
 
 function criarPagamentoId({ empresaId, candidatoId }) {
@@ -1164,23 +1248,11 @@ function notificacaoId(...partes) {
     .slice(0, 180)
 }
 
-function montarReferenciaExterna({
-  pagamentoId,
-  empresaId,
-  indicadorId,
-  vagaId,
-  candidatoId,
-  indicacaoId
-}) {
-  return [
-    'selectio',
-    pagamentoId,
-    empresaId,
-    indicadorId || 'sem-indicador',
-    vagaId || 'sem-vaga',
-    candidatoId || 'sem-candidato',
-    indicacaoId || 'sem-indicacao'
-  ].join(':')
+function montarReferenciaExterna({ pagamentoId }) {
+  // Somente a chave de conciliacao. Os demais IDs ja pertencem ao registro
+  // interno e a metadata; concatena-los pode exceder o tamanho do provedor.
+  // pagamentoId tem no maximo 180 caracteres: a referencia fica em ate 189.
+  return `selectio:${pagamentoId}`
 }
 
 function extrairPagamentoIdDaReferencia(referencia) {
@@ -1310,8 +1382,12 @@ async function autenticarRequisicao(req) {
 }
 
 function validarWebhookMercadoPago(req, requestUrl, dados) {
+  return !motivoWebhookInvalido(req, requestUrl, dados)
+}
+
+function motivoWebhookInvalido(req, requestUrl, dados) {
   const segredo = textoSeguro(process.env.MP_WEBHOOK_SECRET)
-  if (!segredo) return false
+  if (!segredo) return 'segredo_ausente'
 
   const assinatura = textoSeguro(req.headers['x-signature'])
   const requestId = textoSeguro(req.headers['x-request-id'])
@@ -1328,13 +1404,13 @@ function validarWebhookMercadoPago(req, requestUrl, dados) {
     })
   )
 
-  if (!partes.ts || !partes.v1 || !requestId || !dataId) return false
-  if (!/^\d{1,30}$/.test(dataId) || !/^\d+$/.test(partes.ts) || !/^[a-f0-9]{64}$/i.test(partes.v1)) return false
+  if (!partes.ts || !partes.v1 || !requestId || !dataId) return 'assinatura_incompleta'
+  if (!/^\d{1,30}$/.test(dataId) || !/^\d+$/.test(partes.ts) || !/^[a-f0-9]{64}$/i.test(partes.v1)) return 'formato_invalido'
   // Aceita timestamps em segundos ou milissegundos; evita replay indefinido.
   const timestamp = Number(partes.ts) * (partes.ts.length <= 10 ? 1000 : 1)
-  if (!Number.isFinite(timestamp) || Math.abs(Date.now() - timestamp) > 10 * 60 * 1000) return false
+  if (!Number.isFinite(timestamp) || Math.abs(Date.now() - timestamp) > 10 * 60 * 1000) return 'timestamp_fora_da_janela'
   const bodyId = textoSeguro(dados?.data?.id || dados?.id).toLowerCase()
-  if (bodyId && bodyId !== dataId) return false
+  if (bodyId && bodyId !== dataId) return 'id_divergente'
 
   const manifesto = `id:${dataId};request-id:${requestId};ts:${partes.ts};`
   const esperado = crypto
@@ -1342,12 +1418,12 @@ function validarWebhookMercadoPago(req, requestUrl, dados) {
     .update(manifesto)
     .digest('hex')
 
-  if (esperado.length !== partes.v1.length) return false
+  if (esperado.length !== partes.v1.length) return 'assinatura_divergente'
 
   return crypto.timingSafeEqual(
     Buffer.from(esperado, 'utf8'),
     Buffer.from(partes.v1, 'utf8')
-  )
+  ) ? '' : 'assinatura_divergente'
 }
 
 function aplicarCors(res, origem) {

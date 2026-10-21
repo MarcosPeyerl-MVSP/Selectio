@@ -20,6 +20,27 @@
   display: block;
 }
 
+@media (min-width: 901px) {
+  .navbar-public {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .navbar-public > a {
+    justify-self: start;
+  }
+
+  .navbar-public .navbar-right {
+    justify-self: end;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1050px) {
+  .navbar-public {
+    padding-inline: 24px;
+  }
+}
+
 .nav-links {
   flex: 1;
   display: flex;
@@ -374,6 +395,10 @@
     gap: 18px;
     overflow-x: auto;
     font-size: 12px;
+  }
+
+  .navbar-public .nav-links {
+    justify-content: center;
   }
 
   .user-actions {

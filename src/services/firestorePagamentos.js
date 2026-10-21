@@ -10,6 +10,7 @@ import {
 
 import { db } from './firebase'
 import { chamarFirebaseFunction, obterFunctionsApiUrl } from './firebaseFunctions'
+export { obterCheckoutUrlPagamento } from '../utils/mercadoPagoCheckout'
 
 const pagamentosCollection = collection(db, 'pagamentos')
 const movimentacoesCollection = collection(db, 'movimentacoesFinanceiras')
@@ -76,10 +77,6 @@ export const listarTransacoesPagamentoPorEmpresa = async (empresaId) => {
 
   return documentos.docs.map(mapearDocumento).filter(Boolean).sort(ordenarPorCriacao)
 }
-
-export const obterCheckoutUrlPagamento = (pagamento) => (
-  pagamento?.sandboxCheckoutUrl || pagamento?.checkoutUrl || ''
-)
 
 export const listarPagamentosPorEmpresa = async (empresaId) => {
   if (!empresaId) return []

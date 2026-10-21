@@ -9,9 +9,9 @@ import PageLoader from '../../components/ui/PageLoader'
 import { useToast } from '../../hooks/useToast'
 import { formatCurrency, formatDate } from '../../i18n/formatters'
 import { getFirebaseUid } from '../../services/identidadeFirebase'
+import { obterRetornoCheckout, limparRetornoCheckout } from '../../utils/mercadoPagoCheckout'
 import {
   listarPagamentosPorEmpresa,
-  obterMercadoPagoBackendUrl,
   obterCheckoutUrlPagamento,
   sincronizarPagamentoMercadoPago
 } from '../../services/firestorePagamentos'
@@ -25,7 +25,6 @@ function EmpresaPagamentos({ empresa }) {
   const [carregando, setCarregando] = useState(true)
   const [sincronizandoId, setSincronizandoId] = useState('')
   const retornoProcessado = useRef('')
-  const backendUrl = obterMercadoPagoBackendUrl()
   const formatDateTime = (value) => formatDate(value, {
     dateStyle: 'short',
     timeStyle: 'short'
@@ -41,33 +40,26 @@ function EmpresaPagamentos({ empresa }) {
       }
 
       try {
-        const paymentId = searchParams.get('payment_id') || searchParams.get('collection_id')
+        const retorno = obterRetornoCheckout(searchParams)
+        const retornoId = retorno && JSON.stringify(retorno)
 
-        if (paymentId && retornoProcessado.current !== paymentId) {
-          retornoProcessado.current = paymentId
-          const pagamentoAtualizado = await sincronizarPagamentoMercadoPago({ paymentId, empresaId })
-
-          if (pagamentoAtualizado?.status === 'approved') {
-            toast.success(t('payments.testApproved'))
-          } else if (pagamentoAtualizado?.status === 'pending') {
-            toast.warning(t('payments.stillPending'))
-          } else {
-            toast.error(t('payments.notApproved'))
+        if (retorno && retornoProcessado.current !== retornoId) {
+          retornoProcessado.current = retornoId
+          try {
+            const atualizado = await sincronizarPagamentoMercadoPago({ ...retorno, empresaId })
+            if (atualizado?.status === 'approved') {
+              toast.success(t(atualizado.ambiente === 'sandbox' ? 'payments.testApproved' : 'payments.approvedBalance'))
+            } else if (!atualizado?.encontrado || atualizado.status === 'pending') {
+              toast.warning(t('payments.stillPending'))
+            } else {
+              toast.error(t('payments.notApproved'))
+            }
+            setSearchParams(limparRetornoCheckout(searchParams), { replace: true })
+          } catch {
+            // A falha na consulta do provedor nao deve esconder o historico.
+            retornoProcessado.current = ''
+            toast.warning(t('payments.returnSyncError'))
           }
-
-          const parametrosLimpos = new URLSearchParams(searchParams)
-          ;[
-            'collection_id',
-            'collection_status',
-            'external_reference',
-            'merchant_order_id',
-            'payment_id',
-            'payment_type',
-            'preference_id',
-            'site_id',
-            'status'
-          ].forEach((parametro) => parametrosLimpos.delete(parametro))
-          setSearchParams(parametrosLimpos, { replace: true })
         }
 
         const dados = await listarPagamentosPorEmpresa(empresaId)
@@ -106,8 +98,12 @@ function EmpresaPagamentos({ empresa }) {
         empresaId
       })
 
-      if (resultado?.status === 'approved') {
-        toast.success(t('payments.approvedBalance'))
+      if (resultado?.checkoutReparado) {
+        toast.success(t('payments.checkoutRepaired'))
+      } else if (!resultado?.encontrado) {
+        toast.info(t('payments.noUpdate'))
+      } else if (resultado.status === 'approved') {
+        toast.success(t(resultado.ambiente === 'sandbox' ? 'payments.testApproved' : 'payments.approvedBalance'))
       } else if (resultado?.status === 'pending') {
         toast.warning(t('payments.stillPending'))
       } else if (resultado?.status) {
@@ -135,10 +131,6 @@ function EmpresaPagamentos({ empresa }) {
         <span>{t('payments.eyebrow')}</span>
         <h1>{t('payments.title')}</h1>
         <p>{t('payments.description')}</p>
-        <div className="empresa-pagamentos-env">
-          <strong>{t('payments.localEnvironment')}</strong>
-          <span>{backendUrl || t('payments.backendNotConfigured')}</span>
-        </div>
       </header>
 
       <section className="empresa-pagamentos-metricas">
@@ -175,12 +167,11 @@ function EmpresaPagamentos({ empresa }) {
                 </span>
               </div>
 
-              {pagamento.status === 'pending' && (
+              {['created', 'pending'].includes(pagamento.status) && (
                 <div className="empresa-pagamento-acoes">
                   {obterCheckoutUrlPagamento(pagamento) && (
                     <a
                       href={obterCheckoutUrlPagamento(pagamento)}
-                      target={obterCheckoutUrlPagamento(pagamento).includes('sandbox.mercadopago') ? '_blank' : undefined}
                       rel="noreferrer"
                     >
                       <FaExternalLinkAlt /> {t('payments.continueCheckout')}
