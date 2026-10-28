@@ -139,3 +139,52 @@ Selectio/
 | `movimentacoesFinanceiras` | Créditos, saques e movimentações |
 | `notificacoes` | Notificações por usuário |
 | `saques` | Solicitações de saque |
+
+## Pré-requisitos
+
+- Node.js 22 ou superior, recomendado para manter compatibilidade com as Functions.
+- npm, pois o projeto usa `package-lock.json`.
+- Firebase CLI, via `npx firebase` ou instalação global.
+- Projeto Firebase com Authentication, Firestore, Storage e Cloud Functions habilitados.
+- Conta Mercado Pago para executar o fluxo real ou sandbox de pagamentos.
+
+
+## Mercado Pago
+
+A API financeira roda na Function v2 `mercadoPagoApi`, com runtime Node.js 22 e região `southamerica-east1`.
+
+Principais responsabilidades:
+
+- `GET /health`: diagnóstico básico da API.
+- `POST /criar-preferencia`: cria checkout para recompensa de candidato contratado.
+- `POST /sincronizar-pagamento`: sincroniza status de pagamento com o Mercado Pago.
+- `POST /solicitar-saque`: registra solicitação de saque do indicador.
+- `POST /webhook/mercado-pago`: recebe notificações assinadas do Mercado Pago.
+
+Consulte a documentação detalhada em [`docs/mercado-pago-functions.md`](./docs/mercado-pago-functions.md).
+
+## Compatibilidade de Candidatos
+
+O módulo de compatibilidade usa uma rubrica configurável por vaga. A empresa define requisitos, pesos e critérios de revisão. O motor calcula nota, cobertura, evidências, alertas e discrepâncias entre formulário e currículo.
+
+O worker de análise:
+
+- extrai texto de PDFs com `pdfjs-dist`;
+- usa OCR com `tesseract.js` quando o PDF não possui texto suficiente e o navegador oferece suporte;
+- extrai DOCX com `mammoth`;
+- carrega modelo semântico local via `@huggingface/transformers` por CDN;
+- aplica fallback lexical quando a análise semântica não está disponível;
+- sanitiza dados pessoais antes de expor evidências.
+
+O ranking é um apoio à revisão humana e não rejeita candidatos automaticamente.
+
+
+Idiomas suportados:
+
+- `pt-BR`, idioma padrão.
+- `en-US`.
+
+
+## Equipe
+
+TODO: informar autor, equipe responsável ou organização mantenedora.
