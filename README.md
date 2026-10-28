@@ -186,5 +186,6 @@ Idiomas suportados:
 
 
 ## Equipe
-
-TODO: informar autor, equipe responsável ou organização mantenedora.
+- `Kalil Barreto`: Diretor Administrativo e Programador Front-end.
+- `Gustavo de Amorim`: Diretor de Tecnologias e Programador Back-end.
+- `Marcos Peyerl`: Diretor de Projetos e Analista de Sistemas.
