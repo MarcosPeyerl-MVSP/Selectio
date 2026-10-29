@@ -1,15 +1,6 @@
 /* Objetivo do arquivo: definir a aparência da página de login,
    incluindo centralização do formulário, campos, botões e links auxiliares. */
 
-/* Define base visual da página e garante ocupação total da tela. */
-html, body, #root {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  background: var(--background);
-}
-
 /* Container principal que centraliza o card de login na tela. */
 .login-container {
   min-height: 100vh; 

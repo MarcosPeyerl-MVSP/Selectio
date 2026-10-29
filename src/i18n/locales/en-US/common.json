@@ -20,7 +20,7 @@
   "navigation": {
     "home": "Home",
     "jobs": "Jobs",
-    "dashboard": "Dashboard",
+    "dashboard": "Panel",
     "signUp": "Sign up",
     "login": "Log in"
   },
@@ -598,7 +598,7 @@
     "close": "Close side menu",
     "expand": "Expand sidebar",
     "collapse": "Collapse sidebar",
-    "referrerPanel": "REFERRER DASHBOARD",
+    "referrerPanel": "REFERRER PANEL",
     "companyPanel": "COMPANY DASHBOARD",
     "departmentHead": "DEPARTMENT HEAD",
     "rectoryAudit": "RECTORY OR AUDIT",

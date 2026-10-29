@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { prepararCriterioParaExibicao } from '../../../functions/shared/apresentacaoCompatibilidade.mjs'
 import './ValidacaoIndicacao.css'
 
 export default function ValidacaoIndicacao({ analise, atual, analisando, erro, onAnalisar, saving }) {
@@ -23,7 +24,7 @@ export default function ValidacaoIndicacao({ analise, atual, analisando, erro, o
         <details>
           <summary>{t('referralCompatibility.details')}</summary>
           <ul className="validacao-indicacao-criterios">
-            {resultado.criterios.filter((c) => c.peso > 0 && c.resultado !== 'nao_aplicavel').map((criterio) => (
+            {resultado.criterios.filter((c) => c.peso > 0 && c.resultado !== 'nao_aplicavel').map(prepararCriterioParaExibicao).map((criterio) => (
               <li key={criterio.id}>
                 <strong>{t(`company:compatibilityRubric.weightLabels.${criterio.id}`)}</strong>
                 <span>{t(`company:compatibility.results.${criterio.resultado}`)}</span>

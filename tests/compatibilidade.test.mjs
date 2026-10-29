@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { prepararCriterioParaExibicao } from '../functions/shared/apresentacaoCompatibilidade.mjs'
 
 import {
   avaliarCompatibilidade,
@@ -38,6 +39,55 @@ const criarVaga = (overrides = {}) => ({
     }
   },
   ...overrides
+})
+
+test('previa agrupa repeticoes de snapshots sem perder resultados ou fontes diferentes', () => {
+  const criterio = {
+    id: 'hardSkills', pontos: 35,
+    detalhes: [
+      { descricao: 'Sênior', resultado: 'atende' },
+      { descricao: '  SÊNIOR ', resultado: 'atende' },
+      { descricao: 'Se\u0302nior', resultado: 'atende' },
+      { descricao: 'Sênior', resultado: 'atende_parcialmente' },
+      { descricao: 'Sênior', resultado: 'atende', fonte: 'formulario' },
+      { descricao: 'React Native', resultado: 'atende' },
+      { descricao: 'React', resultado: 'atende_parcialmente' },
+      { descricao: ' ', resultado: 'atende' }
+    ],
+    evidencias: ['Atuação com React Native.', ' ATUAÇÃO  com React Native. ', 'Comunicação.']
+  }
+  const original = structuredClone(criterio)
+  const exibicao = prepararCriterioParaExibicao(criterio)
+  assert.deepEqual(exibicao.detalhes, [criterio.detalhes[0], ...criterio.detalhes.slice(3, 7)])
+  assert.deepEqual(exibicao.evidencias, ['Atuação com React Native.', 'Comunicação.'])
+  assert.equal(exibicao.pontos, 35)
+  assert.deepEqual(criterio, original)
+  assert.deepEqual(prepararCriterioParaExibicao({ id: 'experiencia' }), {
+    id: 'experiencia', detalhes: [], evidencias: []
+  })
+})
+
+test('motor deduplica evidencias antes do limite sem mudar detalhes ou pontuacao', () => {
+  const resultado = avaliarCompatibilidade({
+    candidato: {},
+    vaga: criarVaga({ rubricaCompatibilidade: {
+      ...criarVaga().rubricaCompatibilidade,
+      requisitosObrigatorios: ['React Native', 'JavaScript', 'CSS3', 'HTML5', 'Sênior', 'Comunicação', 'Git', 'Python', 'Java', 'SQL', 'Docker'],
+      requisitosDesejaveis: [],
+      pesos: { hardSkills: 100, experiencia: 0, escolaridade: 0, idiomas: 0, modeloTrabalho: 0, responsabilidades: 0 }
+    } }),
+    textoCurriculo: 'Atuação Sênior com React Native JavaScript CSS3 HTML5. Comunicação com a equipe. Controle de versões com Git. Automação com Python. Desenvolvimento com Java. Consultas SQL. Containers Docker.'
+  })
+  const criterio = resultado.criterios.find((item) => item.id === 'hardSkills')
+  assert.equal(criterio.detalhes.length, 11)
+  assert.ok(criterio.detalhes.every((item) => item.resultado === 'atende'))
+  assert.equal(resultado.nota, 100)
+  assert.equal(resultado.notaPrecisa, 100)
+  assert.equal(criterio.evidencias.length, 5)
+  assert.equal(new Set(criterio.evidencias).size, 5)
+  assert.ok(criterio.evidencias.some((texto) => texto.includes('Comunicação')))
+  assert.ok(criterio.evidencias.some((texto) => texto.includes('Java.')))
+  assert.ok(!criterio.evidencias.some((texto) => texto.includes('Docker')))
 })
 
 test('rubrica ativa exige criterios e pesos totalizando cem', () => {

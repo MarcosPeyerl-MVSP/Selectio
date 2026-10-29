@@ -1,4 +1,5 @@
 import { normalizarRubricaDaVaga, textoParaLista } from './rubricaCompatibilidade.mjs'
+import { deduplicarEvidencias } from './apresentacaoCompatibilidade.mjs'
 
 export const ANALISE_VERSAO = '2.1.0'
 
@@ -413,7 +414,7 @@ const criarCriterio = ({ id, categoria, titulo, peso, resultado, evidencias = []
     pontos: arredondar(pesoAplicavel * fatorFinal),
     pontosPrecisos: pesoAplicavel * fatorFinal,
     cobertura: arredondar(Math.max(0, Math.min(1, cobertura)), 3),
-    evidencias: evidencias.filter(Boolean).map(sanitizarTextoCurriculo).filter(Boolean).slice(0, 5),
+    evidencias: deduplicarEvidencias(evidencias.filter(Boolean).map(sanitizarTextoCurriculo)).slice(0, 5),
     detalhes
   }
 }

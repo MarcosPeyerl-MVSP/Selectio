@@ -31,13 +31,13 @@
     }
   },
   "panel": {
-    "eyebrow": "WELCOME - Main dashboard",
+    "eyebrow": "WELCOME - Main panel",
     "greeting": "Welcome,",
     "defaultName": "Referrer",
     "description": "Explore opportunities, manage candidates, and track your growth in one place.",
-    "shortcuts": "Referrer dashboard shortcuts",
+    "shortcuts": "Referrer panel shortcuts",
     "registerCandidate": "Register candidate",
-    "loading": "Loading referrer dashboard...",
+    "loading": "Loading referrer panel...",
     "loadingPerformance": "Loading performance indicators...",
     "cards": {
       "jobs": { "title": "Jobs", "description": "Explore open opportunities and find the right job for each person in your network.", "action": "Explore jobs" },
